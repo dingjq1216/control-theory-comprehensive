@@ -1,0 +1,1583 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="zh-CN" xml:lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>第 36 章　功能安全与可靠性基础 · 控制大综合</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    span.underline{text-decoration: underline;}
+    div.column{display: inline-block; vertical-align: top; width: 50%;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    ul.task-list{list-style: none;}
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+  <link rel="stylesheet" href="assets/book.css" />
+  <script src="assets/katex/katex.min.js"></script>
+  <script>document.addEventListener("DOMContentLoaded", function () {
+   var mathElements = document.getElementsByClassName("math");
+   var macros = [];
+   for (var i = 0; i < mathElements.length; i++) {
+    var texText = mathElements[i].firstChild;
+    if (mathElements[i].tagName == "SPAN") {
+     katex.render(texText.data, mathElements[i], {
+      displayMode: mathElements[i].classList.contains('display'),
+      throwOnError: false,
+      macros: macros,
+      fleqn: false
+     });
+  }}});
+  </script>
+  <link rel="stylesheet" href="assets/katex/katex.min.css" />
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+  <link rel="stylesheet" href="assets/site.css" />
+</head>
+<body>
+<nav class="topnav"><a class="home" href="index.html">目录</a><span class="pos">036 / 115</span><span class="pager"><a href="ch035.html">上一章</a><a href="ch037.html">下一章</a></span></nav>
+
+<nav id="TOC" role="doc-toc">
+<ul>
+<li><a href="#第36章-功能安全与可靠性基础">第36章 功能安全与可靠性基础</a>
+<ul>
+<li><a href="#动机与要解决的问题">36.1 动机与要解决的问题</a></li>
+<li><a href="#定义与数学基础">36.2 定义与数学基础</a></li>
+<li><a href="#推导与性质">36.3 推导与性质</a></li>
+<li><a href="#离散对应与数值实现">36.4 离散对应与数值实现</a></li>
+<li><a href="#工程含义与适用边界">36.5 工程含义与适用边界</a></li>
+<li><a href="#仿真与验证">36.6 仿真与验证</a></li>
+<li><a href="#小结与常见错误">36.7 小结与常见错误</a></li>
+</ul></li>
+</ul>
+</nav>
+<h1 id="第36章-功能安全与可靠性基础">第36章 功能安全与可靠性基础</h1>
+<p>上一章讨论的是“多个主体各自优化时系统会停在哪里”。那一章隐含了一个更强的假设：<strong>所有设备都还在正常工作</strong>。控制器算得出、执行器动得了、传感器读得准，剩下的问题只是“怎么让它们配合得更好”。</p>
+<p>现实里这个假设最先破。温度变送器会漂移、安全栅会烧、逻辑 solver 会死机、切断阀会卡在中位。<strong>功能安全要回答的不是“控制系统性能好不好”，而是“当这些环节坏掉时，被控过程还能不能停在安全状态”。</strong> 这两件事的评价体系几乎没有交集：一个跟踪误差 0.1% 的控制回路，可能在传感器断线时把一个放热反应送进失控；反过来，一个粗糙但带独立联锁的反应釜，能在同样故障下安然停车。</p>
+<p>这一章把“坏了会怎样”拆成可计算的量：<strong>要多可靠、坏了多久能发现、发现后多久能恢复。</strong> 三个量分别对应 SIL 等级、诊断覆盖率与测试周期、平均修复时间与可用度。后面关于容错控制与安全仪表系统的章节，全部建立在这三个量的语言之上。</p>
+<h2 id="动机与要解决的问题">36.1 动机与要解决的问题</h2>
+<h3 id="从功能对不对到坏了会怎样">36.1.1 从“功能对不对”到“坏了会怎样”</h3>
+<p>控制系统的常规评价是“给定输入，输出是否按要求变化”：超调多大、调节时间多长、稳态误差多少。<strong>这套评价默认系统是完好的，它衡量的是“设计得好不好”。</strong></p>
+<p>功能安全换了一个问法：<strong>给定一个故障，过程是否仍处于安全状态？</strong> 它衡量的不是设计水平，而是<strong>故障发生后的后果</strong>。两个问法的差别可以用一句话概括：</p>
+<blockquote>
+<p><strong>性能问的是“正常时有多好”，安全问的是“异常时有多坏”。</strong></p>
+</blockquote>
+<p>工程上这两件事必须分开做，而且必须由不同的通道实现。反应釜的温度联锁不能复用温度控制回路的那支热电偶——<strong>因为控制回路坏了，联锁也跟着坏，这正是最需要联锁的时候。</strong> 这条“独立”要求不是官僚规定，它是从大量事故里总结出来的结构性结论。</p>
+<h3 id="三个必须回答的定量问题">36.1.2 三个必须回答的定量问题</h3>
+<p>功能安全的所有标准、表格与计算，最终都在回答三个问题。</p>
+<p><strong>第一，要多可靠？</strong> 这是<strong>安全完整性</strong>问题：在需要动作的那一刻，安全功能失效的概率是多少。量化指标是<strong>平均需求失效概率</strong> <span class="math inline">\mathrm{PFD_{avg}}</span>，它被划分成 SIL1–SIL4 四档。<strong>这个量不是“设备好坏”的形容词，而是一个可以被计算、被验证、被审计的数字。</strong></p>
+<p><strong>第二，坏了多久能发现？</strong> 这是<strong>诊断与测试</strong>问题。未检出的危险失效会一直潜伏，直到下一次需求出现才暴露。潜伏期越长，平均失效概率越高。<strong>量化指标有两个：诊断覆盖率 <span class="math inline">DC</span>（在线能发现多少）与证明测试周期 <span class="math inline">T</span>（离线能兜住多少）。</strong></p>
+<p><strong>第三，发现后多久能恢复？</strong> 这是<strong>维修性</strong>问题。量化指标是平均修复时间 <span class="math inline">\mathrm{MTTR}</span>，它与失效间隔一起决定<strong>可用度</strong>。<strong>安全性与可用性经常互相拉扯：越保守的联锁越安全，也越容易误停车。</strong></p>
+<p>三个问题构成一条链：<strong>可靠性决定“多久坏一次”，诊断与测试决定“坏了多久才知道”，维修性决定“知道后多久能好”。</strong> 缺任何一环，“安全”就只是一句口号。</p>
+<h3 id="一个贯穿全章的例子反应釜温度联锁">36.1.3 一个贯穿全章的例子：反应釜温度联锁</h3>
+<p>设一台带夹套冷却的放热反应釜，正常工艺温度 85 ℃，联锁动作值 110 ℃，动作是切断进料并全开冷却水。<strong>假设做过放热失控实验：冷却水中断后，从 85 ℃ 升到 110 ℃ 约 8 min，从 110 ℃ 升到不可逆分解温度约 12 min。</strong></p>
+<p>安全功能的要求由此确定：</p>
+<ul>
+<li><strong>动作必须在 8 min 内完成</strong>，否则联锁还没来得及动作，温度已经越过动作值；</li>
+<li><strong>误动作的代价</strong>是每停一次损失一批料，约 6 h 产能；</li>
+<li><strong>要求的安全等级</strong>由风险评估给出（§36.5.2 会走一遍 LOPA），本例取 <strong>SIL2</strong>，即 <span class="math inline">\mathrm{PFD_{avg}}\in[10^{-3},10^{-2})</span>。</li>
+</ul>
+<p>安全回路包含三部分：<strong>传感（温度变送器 TT-101）、逻辑（安全 PLC 的联锁程序）、执行（切断阀 XV-101 与冷却水阀）。</strong> 三者串联，任何一环失效，安全功能就失效。<strong>这个“串联”结构是后面所有计算的起点</strong>（§36.3.1）。</p>
+<h3 id="与相邻章的接口">36.1.4 与相邻章的接口</h3>
+<ul>
+<li><strong>与第 35 章</strong>：上一章把安全写成约束（式 35-22），本章把“约束是否被满足”变成可验证的概率指标。<strong>约束博弈回答“怎么在安全集合内优化”，功能安全回答“这个安全集合本身有多可信”。</strong></li>
+<li><strong>与第 32 章</strong>：学习型控制器没有“设计文档”可查，它的失效模式是分布外的。<strong>本章的验证方法对学习型控制器只能覆盖“接口与兜底”，覆盖不了“策略本身”</strong>——这一点在 §36.5.5 会明确划界。</li>
+<li><strong>与第 44/106 章（PID）</strong>：常规控制回路不承担安全功能，本章不重复 PID 整定；<strong>但只要回路被赋予安全职责，就必须按本章的独立性、诊断与测试要求重做。</strong></li>
+<li><strong>与第 58/80 章（MPC）</strong>：MPC 的约束处理是“运行中不越界”，功能安全是“越界前能兜住”。<strong>MPC 不能替代 SIS</strong>，因为它与被控过程共享模型、共享传感器、共享执行器。</li>
+<li><strong>与后续容错控制与 SIS 章节</strong>：本章给指标与算法，后续章节给架构（冗余切换、故障重构）与工程实现（SIS 组态、旁路管理）。</li>
+</ul>
+<h3 id="本章的走法">36.1.5 本章的走法</h3>
+<p>§36.2 建立词汇与公式：失效率、可靠度、可用度、冗余结构、失效分类、SIL/PL、共因失效、诊断覆盖率。§36.3 推导四类结构的 <span class="math inline">\mathrm{PFD_{avg}}</span>，给出共因地板、故障树最小割集、FMEA 的量化用法。§36.4 讲离散实现：怎么把连续时间模型写成测试周期模型，怎么用解析、马尔可夫、蒙特卡洛三条路互相验证。§36.5 给工程边界：SIL 定级、七种不该上 SIS 的场合、软件与系统性失效。§36.6 用六组实验把每个公式跑一遍。§36.7 收口。</p>
+<h3 id="本章不做什么">36.1.6 本章不做什么</h3>
+<p>边界先划清，后面才好读。</p>
+<p><strong>其一，不推导任何控制算法。</strong> PID 的整定与实现见第 44/106 章，MPC 的约束处理见第 58/80 章，Smith 预估见第 47/107 章。<strong>本章只关心“这些回路失效时的后果”，不关心它们正常时怎么工作。</strong></p>
+<p><strong>其二，不做器件选型与接线设计。</strong> 什么型号的变送器、哪个品牌的卡件、端子怎么排——<strong>这些是详细设计阶段的工作，本章只给“要多可靠、要多独立”的输入条件。</strong></p>
+<p><strong>其三，不给认证流程与文档模板。</strong> 第三方认证的申请、审核、发证是一套独立的程序，<strong>本章只讲“认证要看哪些数”。</strong></p>
+<p><strong>其四，不覆盖信息安全。</strong> SIS 被网络攻击导致失效，属于 IEC 62443 那条线，<strong>与本章的随机硬件失效是两套完全不同的方法论</strong>：一个讲“元件会坏”，一个讲“有人想让它坏”。<strong>两套都要做，但不能互相替代。</strong></p>
+<p><strong>其五，不覆盖人因工程的完整方法。</strong> §36.5.9 只讲“人的失效怎么进 LOPA 的账”，不讲控制室设计、报警管理、班组配置——<strong>那些是另一门课。</strong></p>
+<p><strong>一句话概括本章的边界：它只回答“一个安全功能有多可信”，不回答“这个功能该怎么实现”。</strong> 后者是后续容错控制与 SIS 章节的内容。</p>
+<h2 id="定义与数学基础">36.2 定义与数学基础</h2>
+<h3 id="失效率可靠度与-mtbf">36.2.1 失效率、可靠度与 MTBF</h3>
+<p><strong>失效率</strong> <span class="math inline">\lambda</span> 定义为“在 <span class="math inline">t</span> 时刻仍正常的设备，在下一单位时间内失效的概率”：</p>
+<p><span class="math display">
+\lambda(t)=\lim_{\Delta t\to0}\frac{P(t&lt;T_f\le t+\Delta t\mid T_f&gt;t)}{\Delta t}.
+</span></p>
+<p>工程上最常用的是<strong>常数失效率</strong>假设，此时寿命服从指数分布，可靠度为</p>
+<p><span class="math display">
+R(t)=e^{-\lambda t}. \tag{36-1}
+</span></p>
+<p>平均失效前时间随之是</p>
+<p><span class="math display">
+\mathrm{MTBF}=\int_0^\infty R(t)\,\mathrm{d}t=\frac{1}{\lambda}. \tag{36-2}
+</span></p>
+<p><strong>单位换算必须先统一。</strong> 失效率常用 FIT（1 FIT <span class="math inline">=10^{-9}</span>/h），<span class="math inline">\mathrm{MTBF}</span> 常用年或小时。本章统一用“每小时”，<span class="math inline">1\ \text{年}=8760\ \text{h}</span>。<strong>单位不统一是这类计算最常见的错误，而且错得很隐蔽：<span class="math inline">10^{-6}</span>/h 与 <span class="math inline">10^{-6}</span>/年差 8760 倍，恰好跨越两个 SIL 等级。</strong></p>
+<p>常数失效率假设对应浴盆曲线的<strong>中段（有用寿命期）</strong>。早期失效靠老化筛选剔除，耗损失效靠预防性更换规避，<strong>中间那一段才是 SIL 计算的对象</strong>。把浴盆曲线两端的问题塞进指数模型，是另一类常见错误。</p>
+<h3 id="可用度与-mttr">36.2.2 可用度与 MTTR</h3>
+<p>可修复系统的核心指标是<strong>可用度</strong>，即“任意时刻设备处于可用状态的概率”。在“失效—修复”交替的简化模型下，</p>
+<p><span class="math display">
+A=\frac{\mathrm{MTBF}}{\mathrm{MTBF}+\mathrm{MTTR}}=\frac{1/\lambda}{1/\lambda+\mathrm{MTTR}}. \tag{36-3}
+</span></p>
+<p><strong>可靠度与可用度是两个不同的量，混用会导致完全相反的结论。</strong> 可靠度是“一段时间内不出故障的概率”，单调下降；可用度是“长期看有多少时间能用”，是一个稳态比值。<strong>一个每 100 h 坏一次、每次 10 min 修好的设备，可用度高达 0.998，但它在任何一次 8 min 的需求窗口里都可能正好坏着。</strong> 安全功能关心的是后者——<strong>需求出现的那一刻它在不在</strong>，而不是长期平均。</p>
+<h3 id="冗余结构与可靠性框图">36.2.3 冗余结构与可靠性框图</h3>
+<p>把安全回路的三个环节画成串联框图，就得到最基础的可靠性模型：<strong>串联系统任一环失效则整体失效</strong>，其可靠度是各环可靠度之积。要提高可靠性，只能加冗余。</p>
+<p>图 36-1 给出三种最常见的结构。</p>
+<figure>
+<img src="figs/ch036/fig_036_01_architectures.svg" alt="图 36-1　三种冗余结构的可靠性框图：单通道、双通道并联、三取二" /><figcaption aria-hidden="true">图 36-1　三种冗余结构的可靠性框图：单通道、双通道并联、三取二</figcaption>
+</figure>
+<ul>
+<li><strong>1oo1</strong>：一个通道，失效即失效。结构最简单，<span class="math inline">\mathrm{PFD_{avg}}</span> 最高。</li>
+<li><strong>1oo2</strong>：两个通道并联，<strong>两个都失效才失效</strong>。安全性最好，但任一通道误动就停车，<strong>误跳闸率翻倍</strong>。</li>
+<li><strong>2oo3</strong>：三个通道表决，<strong>两个及以上失效才失效</strong>。安全性与误跳闸率都优于 1oo1，代价是通道数与接线成本，以及“三路都要独立”这个苛刻前提。</li>
+</ul>
+<p>表 36-1 把四种结构放在一起比较。<strong>注意“误跳闸倾向”这一列——它经常被忽略，却是现场最痛的一项。</strong></p>
+<p>表 36-1　常见冗余结构的比较</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">结构</th>
+<th style="text-align: left;">安全功能失效条件</th>
+<th style="text-align: left;"><span class="math inline">\mathrm{PFD_{avg}}</span> 量级（<span class="math inline">T=1</span> 年）</th>
+<th style="text-align: left;">误跳闸倾向</th>
+<th style="text-align: left;">典型用途</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">1oo1</td>
+<td style="text-align: left;">单通道失效</td>
+<td style="text-align: left;"><span class="math inline">10^{-3}</span></td>
+<td style="text-align: left;">低</td>
+<td style="text-align: left;">SIL1、非关键联锁</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">1oo2</td>
+<td style="text-align: left;">两通道同时失效</td>
+<td style="text-align: left;"><span class="math inline">10^{-5}</span></td>
+<td style="text-align: left;"><strong>高</strong>（任一误动即停）</td>
+<td style="text-align: left;">SIL3、高危险场合</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">2oo2</td>
+<td style="text-align: left;">任一通道失效</td>
+<td style="text-align: left;"><span class="math inline">10^{-3}</span></td>
+<td style="text-align: left;">低</td>
+<td style="text-align: left;">高可用、低安全要求</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">2oo3</td>
+<td style="text-align: left;">两通道及以上失效</td>
+<td style="text-align: left;"><span class="math inline">10^{-5}</span></td>
+<td style="text-align: left;">很低</td>
+<td style="text-align: left;">SIL3、既要安全又要连续</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">2oo4</td>
+<td style="text-align: left;">三通道及以上失效</td>
+<td style="text-align: left;"><span class="math inline">10^{-6}</span></td>
+<td style="text-align: left;">很低</td>
+<td style="text-align: left;">SIL4、极关键场合</td>
+</tr>
+</tbody>
+</table>
+<h3 id="失效的分类危险与否检出与否">36.2.4 失效的分类：危险与否、检出与否</h3>
+<p>功能安全里所有失效被两个维度切开，形成四类（表 36-2）。<strong>这两个维度缺一不可：只分“危险/安全”会漏掉诊断，只分“检出/未检出”会漏掉方向。</strong></p>
+<p>表 36-2　失效的四分类</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">类别</th>
+<th style="text-align: left;">含义</th>
+<th style="text-align: left;">对安全功能的影响</th>
+<th style="text-align: left;">典型处理</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><span class="math inline">\lambda_{DD}</span></td>
+<td style="text-align: left;">危险、可检出</td>
+<td style="text-align: left;">直接削弱安全功能，但能及时报警</td>
+<td style="text-align: left;">在线诊断 + 定期维修</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><span class="math inline">\lambda_{DU}</span></td>
+<td style="text-align: left;">危险、不可检出</td>
+<td style="text-align: left;">潜伏，直到需求出现才暴露</td>
+<td style="text-align: left;">证明测试（周期 <span class="math inline">T</span>）</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><span class="math inline">\lambda_{SD}</span></td>
+<td style="text-align: left;">安全、可检出</td>
+<td style="text-align: left;">导致误跳闸，不削弱安全</td>
+<td style="text-align: left;">诊断 + 抑制误动</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><span class="math inline">\lambda_{SU}</span></td>
+<td style="text-align: left;">安全、不可检出</td>
+<td style="text-align: left;">潜伏的误跳闸风险</td>
+<td style="text-align: left;">证明测试</td>
+</tr>
+</tbody>
+</table>
+<p><strong>只有 <span class="math inline">\lambda_{DU}</span> 进入 <span class="math inline">\mathrm{PFD_{avg}}</span> 的主项</strong>，因为它是“需要动作时才发现动不了”的那一类。<span class="math inline">\lambda_{DD}</span> 通过缩短暴露时间（<span class="math inline">\mathrm{MTTR}</span>）间接贡献，<span class="math inline">\lambda_{SD}</span> 与 <span class="math inline">\lambda_{SU}</span> 影响的是误跳闸率与可用度。</p>
+<p>由此定义<strong>安全失效分数</strong>：</p>
+<p><span class="math display">
+\mathrm{SFF}=\frac{\lambda_{SD}+\lambda_{DD}}{\lambda_{SD}+\lambda_{SU}+\lambda_{DD}+\lambda_{DU}}. \tag{36-4}
+</span></p>
+<p>SFF 衡量“这个设备坏的时候，有多大比例是往安全侧坏的”。<strong>它与诊断覆盖率 <span class="math inline">DC</span> 是两个不同的量</strong>：SFF 描述失效的<strong>方向分布</strong>，<span class="math inline">DC</span> 描述诊断的<strong>发现能力</strong>（§36.2.8）。</p>
+<h3 id="sil-等级把可靠变成区间">36.2.5 SIL 等级：把“可靠”变成区间</h3>
+<p>安全完整性等级（SIL）是 IEC 61508 对“安全功能可信程度”的分档。低要求模式下用平均需求失效概率划分：</p>
+<p><span class="math display">
+\mathrm{PFD_{avg}}=\frac{1}{T}\int_0^{T}\mathrm{PFD}(t)\,\mathrm{d}t, \tag{36-5}
+</span></p>
+<p>表 36-3 给出分档。<strong>注意区间是“越小越好”，且 SIL4 只用于极少数场合</strong>——每提高一级，成本大约翻倍，而收益是概率上的边际改善。</p>
+<p>表 36-3　SIL 等级与 <span class="math inline">\mathrm{PFD_{avg}}</span>（低要求模式）</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">SIL</th>
+<th style="text-align: left;"><span class="math inline">\mathrm{PFD_{avg}}</span> 区间</th>
+<th style="text-align: left;">风险降低因子 <span class="math inline">1/\mathrm{PFD_{avg}}</span></th>
+<th style="text-align: left;">典型场合</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">4</td>
+<td style="text-align: left;"><span class="math inline">10^{-5}\sim10^{-4}</span></td>
+<td style="text-align: left;"><span class="math inline">10^4\sim10^5</span></td>
+<td style="text-align: left;">核工业、大规模有毒气体</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">3</td>
+<td style="text-align: left;"><span class="math inline">10^{-4}\sim10^{-3}</span></td>
+<td style="text-align: left;"><span class="math inline">10^3\sim10^4</span></td>
+<td style="text-align: left;">化工高危反应、紧急停车</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">2</td>
+<td style="text-align: left;"><span class="math inline">10^{-3}\sim10^{-2}</span></td>
+<td style="text-align: left;"><span class="math inline">10^2\sim10^3</span></td>
+<td style="text-align: left;">一般过程联锁（本例）</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">1</td>
+<td style="text-align: left;"><span class="math inline">10^{-2}\sim10^{-1}</span></td>
+<td style="text-align: left;"><span class="math inline">10\sim10^2</span></td>
+<td style="text-align: left;">单回路保护、辅助联锁</td>
+</tr>
+</tbody>
+</table>
+<p><strong>“高要求模式”用每小时失效频率 <span class="math inline">\mathrm{PFH}</span> 而不是 <span class="math inline">\mathrm{PFD_{avg}}</span></strong>，因为需求连续出现（比如汽车制动、电梯平层），“潜伏到下次测试”这个前提不成立。两个模式的换算关系是 <span class="math inline">\mathrm{PFH}\approx\mathrm{PFD_{avg}}/T</span>，<strong>但这个换算只在你清楚 <span class="math inline">T</span> 是什么的时候成立。</strong></p>
+<h3 id="iso-13849机械安全的另一套语言">36.2.6 ISO 13849：机械安全的另一套语言</h3>
+<p>机械领域用的是 ISO 13849 的<strong>性能等级（PL a–e）</strong>，它与 SIL 的思路相同、刻度不同。核心概念是<strong>类别（Category）</strong>，从 B 到 4，规定了结构冗余与诊断能力的最低要求（表 36-4）。</p>
+<p>表 36-4　ISO 13849 的类别与结构要求</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">类别</th>
+<th style="text-align: left;">结构要求</th>
+<th style="text-align: left;">诊断要求</th>
+<th style="text-align: left;">典型 <span class="math inline">\mathrm{PFD_{avg}}</span> 量级</th>
+<th style="text-align: left;">对应 PL（大致）</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">B</td>
+<td style="text-align: left;">单通道，基本安全原则</td>
+<td style="text-align: left;">无</td>
+<td style="text-align: left;"><span class="math inline">10^{-2}</span></td>
+<td style="text-align: left;">PL b</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">1</td>
+<td style="text-align: left;">单通道，用成熟件与成熟原则</td>
+<td style="text-align: left;">无</td>
+<td style="text-align: left;"><span class="math inline">10^{-2}</span></td>
+<td style="text-align: left;">PL c</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">2</td>
+<td style="text-align: left;">单通道 + 周期性测试</td>
+<td style="text-align: left;">有测试</td>
+<td style="text-align: left;"><span class="math inline">10^{-3}</span></td>
+<td style="text-align: left;">PL d</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">3</td>
+<td style="text-align: left;">双通道，单点故障不丧失功能</td>
+<td style="text-align: left;">部分</td>
+<td style="text-align: left;"><span class="math inline">10^{-4}</span></td>
+<td style="text-align: left;">PL d/e</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">4</td>
+<td style="text-align: left;">双通道，单点故障可检出</td>
+<td style="text-align: left;">高</td>
+<td style="text-align: left;"><span class="math inline">10^{-5}</span></td>
+<td style="text-align: left;">PL e</td>
+</tr>
+</tbody>
+</table>
+<p><strong>两套标准不能混用，但可以对照。</strong> 一个常见错误是“用 SIL2 的器件去满足 PL d 的要求”——<strong>器件等级不等于系统等级，系统等级由结构、诊断、测试共同决定。</strong> 本章的计算方法对两套标准都适用，只是指标名称与分档边界不同。</p>
+<h3 id="共因失效与-beta-因子">36.2.7 共因失效与 <span class="math inline">\beta</span> 因子</h3>
+<p>冗余的前提是“几个通道独立失效”。<strong>这个前提在工程上几乎从不严格成立</strong>：同一路电源、同一套软件、同一个安装位置、同一批次的器件、同一次维护操作，都会让两个通道同时失效。这类失效叫<strong>共因失效（CCF）</strong>。</p>
+<p>最常用的量化模型是<strong><span class="math inline">\beta</span> 因子模型</strong>：把总失效率拆成独立部分与共因部分，</p>
+<p><span class="math display">
+\lambda_{\text{indep}}=(1-\beta)\lambda,\qquad
+\lambda_{\text{ccf}}=\beta\lambda. \tag{36-6}
+</span></p>
+<p><span class="math inline">\beta</span> 是“共因部分占总失效的比例”，经验值在 1%–10% 之间，<strong>软件共因可以接近 100%</strong>（§36.3.11 会讲为什么）。<span class="math inline">\beta</span> 的取值不能靠猜，IEC 61508-6 给了一张打分表，按“分离、多样性、环境、经验、诊断”等维度累加，<strong>打分结果通常在 1%–5%</strong>。</p>
+<p><strong><span class="math inline">\beta</span> 的破坏力在下一节会用数字展示：它给冗余结构设了一个地板，无论加多少通道都压不下去。</strong></p>
+<h3 id="诊断覆盖率与安全失效分数">36.2.8 诊断覆盖率与安全失效分数</h3>
+<p><strong>诊断覆盖率</strong> <span class="math inline">DC</span> 定义为“被在线诊断发现的危险失效占全部危险失效的比例”：</p>
+<p><span class="math display">
+DC=\frac{\lambda_{DD}}{\lambda_{DD}+\lambda_{DU}}. \tag{36-7}
+</span></p>
+<p>它与 SFF 的区别一句话说清：<strong>SFF 说“坏的时候往哪边坏”，<span class="math inline">DC</span> 说“坏的时候能不能马上知道”。</strong></p>
+<p><span class="math inline">DC</span> 的分档在标准里有明确说法：<span class="math inline">DC&lt;60\%</span> 为低，<span class="math inline">60\%\le DC&lt;90\%</span> 为中，<span class="math inline">90\%\le DC&lt;99\%</span> 为高，<span class="math inline">DC\ge99\%</span> 为极高。<strong>这四个档位直接对应诊断设计的复杂度与成本</strong>：<span class="math inline">60\%</span> 靠量程检查与看门狗就能做到，<span class="math inline">99\%</span> 需要比较法、时序检查甚至模型-based 诊断。</p>
+<p><strong><span class="math inline">DC</span> 的价值在于它把“潜伏”变成“暴露”</strong>：检出后的失效按 <span class="math inline">\mathrm{MTTR}</span> 修复，未检出的才按 <span class="math inline">T/2</span> 潜伏。这条差别在 §36.3.2 会变成一个加法项。</p>
+<h3 id="安全生命周期指标从哪里来">36.2.9 安全生命周期：指标从哪里来</h3>
+<p>所有指标都不是凭空定的，它们来自<strong>安全生命周期</strong>。完整流程有十几个阶段，工程上可以压成五步：</p>
+<ol type="1">
+<li><strong>危险与风险分析</strong>：找出危险源，评估后果与频率（HAZOP、风险矩阵）。</li>
+<li><strong>安全要求分配</strong>：确定需要哪些安全功能、每项要什么 SIL（LOPA）。</li>
+<li><strong>设计与实现</strong>：选结构、选器件、定测试周期、写安全程序。</li>
+<li><strong>验证与确认</strong>：算 <span class="math inline">\mathrm{PFD_{avg}}</span>、做故障注入测试、做 SIL 验证。</li>
+<li><strong>运行与变更管理</strong>：定期证明测试、旁路审批、变更后再验证。</li>
+</ol>
+<p><strong>这五步里，第三步之后的所有工作都依赖第二步的 SIL 定级。</strong> 定高了浪费钱，定低了是隐患——而“定级”本身是风险评估的结论，不是控制工程师能单独决定的。<strong>这也是本章反复强调“指标要能追溯到危险分析”的原因。</strong></p>
+<h3 id="浴盆曲线公式只在中段成立">36.2.10 浴盆曲线：公式只在中段成立</h3>
+<p>式 36-1 的指数分布不是“设备的通用规律”，而是“设备在有用寿命期内的近似”。把失效率画成时间的函数，曲线形状像浴盆，三段各有各的机理：</p>
+<ul>
+<li><strong>早期失效段</strong>：失效率随时间下降。原因是制造缺陷、装配应力、运输损伤、焊点虚接。这一段的失效率可能是稳态值的几倍到几十倍。</li>
+<li><strong>有用寿命段</strong>：失效率近似常数。失效由随机的外部事件引起——电压尖峰、颗粒污染、误操作、环境突变。<strong>这一段才是本章公式的对象。</strong></li>
+<li><strong>耗损失效段</strong>：失效率随时间上升。原因是磨损、腐蚀、疲劳、绝缘老化、密封件硬化。</li>
+</ul>
+<p>用 Weibull 分布可以把三段写成一条式子：</p>
+<p><span class="math display">
+\lambda(t)=\frac{\beta}{\eta}\Big(\frac{t}{\eta}\Big)^{\beta-1},
+</span></p>
+<p><span class="math inline">\beta&lt;1</span> 对应递减段、<span class="math inline">\beta=1</span> 对应常数段（退化为指数分布）、<span class="math inline">\beta&gt;1</span> 对应递增段，<span class="math inline">\eta</span> 是特征寿命。</p>
+<p>三段对应三种完全不同的处理手段，<strong>混用会导致方向性错误</strong>：</p>
+<p><strong>其一，早期失效靠老化筛选。</strong> 出厂前在高温、高循环下运行一段时间，把“短命”的个体提前淘汰。筛选的代价不只是成本——<strong>筛选本身消耗寿命</strong>，对耗损型器件（继电器、电解电容、密封件）尤其如此。所以筛选强度要与器件的 <span class="math inline">\beta</span> 匹配：早期失效占主导的批次值得重筛，已经进入耗损期的批次越筛越糟。</p>
+<p><strong>其二，耗损失效靠预防性更换。</strong> 在失效率开始上升之前整批换掉。这条做法的定量依据是 <span class="math inline">\beta</span>。设某阀门的密封件 <span class="math inline">\beta=3</span>、<span class="math inline">\eta=20</span> 年，则瞬时失效率正比于 <span class="math inline">t^{2}</span>：<strong>第 15 年是第 5 年的 9 倍。</strong> 把一支用了 15 年的阀门按“常数失效率”直接代进 <span class="math inline">T/2</span>，会低估近一个数量级。<strong>这也是为什么“证明测试”不能替代“到期更换”——测试只能更早发现失效，不能降低失效率。</strong></p>
+<p><strong>其三，中段才是 SIL 计算的对象。</strong> 中段的长度由设计裕度、工况强度、维护水平共同决定。同一型号在高温、高振动、频繁起停的工况下，耗损段的起点会前移好几年。厂商 FMEDA 报告给的是参考工况下的 <span class="math inline">\lambda</span>，<strong>工况一变，中段的长度就变了，这就是 §36.4.5 强调“FMEDA 要修正”的原因。</strong></p>
+<p><strong>这一段还解释了两件工程上的反常现象。</strong> 一是“新设备反而更不可靠”：刚投运的 SIS 前三个月的失效率可能是稳态值的几倍，所以投运初期要加密巡检，<strong>并且不能把这段数据直接拿去估计 <span class="math inline">\lambda</span>。</strong> 二是“现场数据算出来的 <span class="math inline">\lambda</span> 偏大”：维修记录里混着早期失效与耗损失效，不分段就直接平均，得到的 <span class="math inline">\lambda</span> 会被两端抬高，进而导致过度设计。<strong>数据清洗的第一步是按投运时间分段，而不是先算平均值。</strong></p>
+<h3 id="需求率决定用哪个指标">36.2.11 需求率决定用哪个指标</h3>
+<p>式 36-5 定义的 <span class="math inline">\mathrm{PFD_{avg}}</span> 有一个隐含前提：<strong>需求是稀少的。</strong> 稀少到什么程度？IEC 61508 的判据是“需求频率不大于每年一次，且不大于测试频率的两倍”。满足这个前提叫<strong>低要求模式</strong>。</p>
+<p>不满足时有两种情况。<strong>高要求模式</strong>：需求频繁出现，比如汽车制动、电梯平层、燃烧器熄火保护——此时“潜伏到下次测试”这个前提根本不成立，指标要换成每小时失效频率 <span class="math inline">\mathrm{PFH}</span>。<strong>连续模式</strong>：安全功能一直在执行，失效立即体现，比如燃烧器的火焰监测。</p>
+<p>判据的实际用法是先数需求率，再选指标：</p>
+<ul>
+<li><strong>反应釜联锁</strong>：初始事件（冷却水中断）频率约 <span class="math inline">0.3</span>/年，远低于每年一次 → 低要求模式 → 用 <span class="math inline">\mathrm{PFD_{avg}}</span>。</li>
+<li><strong>汽包液位低低联锁</strong>：正常波动就可能触发，一年动作几十次 → 已经接近高要求模式，<strong>继续用 <span class="math inline">\mathrm{PFD_{avg}}</span> 会高估安全性。</strong></li>
+<li><strong>机泵轴承温度联锁</strong>：一年动作几次但每次都是真实需求 → 仍是低要求模式，不能因为“动作过”就当成高要求。</li>
+</ul>
+<p>换算关系 <span class="math inline">\mathrm{PFH}\approx\mathrm{PFD_{avg}}/T</span> 的适用条件值得单独说清。它是“把潜伏期摊平到整个周期”的结果：低要求模式下，每次需求遇到失效的概率是 <span class="math inline">\mathrm{PFD_{avg}}</span>；若需求率是 <span class="math inline">\nu</span>（次/小时），则每小时因失效而未动作的期望次数是 <span class="math inline">\nu\cdot\mathrm{PFD_{avg}}</span>。把它记作 <span class="math inline">\mathrm{PFH}</span>，得</p>
+<p><span class="math display">
+\mathrm{PFH}=\nu\cdot\mathrm{PFD_{avg}},
+</span></p>
+<p><strong>只有当 <span class="math inline">\nu=1/T</span> 时，它才等于 <span class="math inline">\mathrm{PFD_{avg}}/T</span>。</strong> 需求率比 <span class="math inline">1/T</span> 高一个数量级，<span class="math inline">\mathrm{PFH}</span> 就高一个数量级——<strong>这就是“直接拿 <span class="math inline">\mathrm{PFD_{avg}}</span> 除以 <span class="math inline">T</span>”会出错的地方。</strong></p>
+<p>一个具体的对照：1oo1、<span class="math inline">\lambda_{DU}=10^{-6}</span>/h、<span class="math inline">T=8760</span> h，低要求模式下 <span class="math inline">\mathrm{PFD_{avg}}=4.38\times10^{-3}</span>，落在 SIL1。若需求率升到 100 次/年，<span class="math inline">\mathrm{PFH}=100/8760\times4.38\times10^{-3}\approx5.0\times10^{-5}</span>/h，按高要求模式的刻度（SIL1 为 <span class="math inline">10^{-5}\sim10^{-4}</span>/h）<strong>仍然落在 SIL1</strong>。<strong>等级标签一样，两个数字却差两个数量级——所以“SIL2”这三个字符本身不说明任何问题，除非同时说清是低要求还是高要求。</strong></p>
+<p><strong>报告的第一行应当写模式，而不是写等级。</strong> 这一条在评审时最容易分辨专业与否：写“该 SIF 为低要求模式，<span class="math inline">\mathrm{PFD_{avg}}=4.4\times10^{-3}</span>，SIL1”是完整的；写“该回路 SIL1”则什么也没说。</p>
+<h3 id="异构冗余把-beta-降下来的唯一工程手段">36.2.12 异构冗余：把 <span class="math inline">\beta</span> 降下来的唯一工程手段</h3>
+<p>§36.2.7 说冗余的前提是独立。<strong>提高独立性最有效的手段不是“多买一套一样的”，而是“买一套不一样的”</strong>——这就是异构冗余（diverse redundancy）。</p>
+<p><strong>同型冗余的共因清单很长</strong>：同一型号的同一批次、同一份固件、同一个安装位置、同一次校验、同一个供货商。<strong>异构冗余把这些项逐条砍掉</strong>：温度测量用一支热电偶加一支热电阻，两者原理不同（热电势对电阻）、芯片不同、固件不同、甚至供货商不同。剩下的共因只有“工艺侧”的那几项——<strong>插入深度不够、保护套管结垢、接线盒进水、环境温度超出两者共同的范围。</strong> 这些恰恰是 §36.2.7 打分表里最难通过、也最容易被忽略的项。</p>
+<p><strong>收益可以算出来。</strong> 同型 1oo2、<span class="math inline">\beta=0.05</span>、<span class="math inline">\lambda_{DU}T=8.76\times10^{-3}</span>，得 <span class="math inline">2.42\times10^{-4}</span>。若异构把 <span class="math inline">\beta</span> 降到 0.01，则</p>
+<p><span class="math display">
+(1-0.01)^2\frac{(\lambda_{DU}T)^2}{3}+0.01\frac{\lambda_{DU}T}{2}
+=2.51\times10^{-5}+4.38\times10^{-5}
+=6.89\times10^{-5},
+</span></p>
+<p><strong>好了 3.5 倍，而且这个改善是“不增加通道数”得到的。</strong> 与 §36.3.12 的结论对照：<strong>在共因主导的区间里，降 <span class="math inline">\beta</span> 的杠杆比加通道大得多。</strong></p>
+<p><strong>异构还附带一个诊断收益。</strong> 两路不同原理的读数可以持续比对，<strong>偏差超过阈值就报警</strong>——这等于给“漂移”这一类失效加了一个在线诊断，<span class="math inline">DC</span> 随之提高。同型冗余做不到这一点，因为两路会一起漂，比对永远“一致”。</p>
+<p><strong>代价有三条，必须一起算：</strong></p>
+<ul>
+<li><strong>一致性判据要放宽。</strong> 两种器件的响应时间、精度、温度系数都不同，正常工况下两路读数本来就有偏差。<strong>判据放宽，误报率上升；判据收紧，误跳闸上升。</strong> 这个阈值要在调试阶段用实际数据定，不能拍。</li>
+<li><strong>备件与校验要两套。</strong> 两种变送器、两种校验规程、两套备件。<strong>这是异构冗余唯一确定会增加的运行成本。</strong></li>
+<li><strong>“多样性”不能消除工艺侧共因。</strong> 结垢、堵塞、安装位置错误对两路同时有效。<strong>这也是为什么打分表里“分离”与“环境”两项的权重不低于“多样性”。</strong></li>
+</ul>
+<p><strong>边界要说清：异构冗余降低的是随机硬件失效的共因，降不了系统性失效。</strong> 若两路信号最终进同一个安全 PLC、由同一份程序做表决，<strong>软件与逻辑这一层的共因仍然是 1</strong>（§36.3.11）。<strong>异构要一路做到底，只做传感器那一半，收益会被后半段吃掉。</strong></p>
+<h3 id="可靠性框图的三个陷阱">36.2.13 可靠性框图的三个陷阱</h3>
+<p>图 36-1 那种框图看着简单，<strong>画错的方式却很多，而且每一种都会让算出来的 <span class="math inline">\mathrm{PFD}</span> 偏小。</strong></p>
+<p><strong>陷阱一：把共因画成独立的并联支路。</strong> 图上两个方块并排，看上去“互为备用”；实际它们共享同一个 24 V 电源、同一张 I/O 卡、同一根电缆桥架。<strong>框图只表达“逻辑上并联”，不表达“物理上独立”。</strong> 这两件事的差距就是 §36.2.7 的 <span class="math inline">\beta</span>——<strong>画图时必须把共享的部分单独画成一个串联方块</strong>，否则算的时候会忘记它。</p>
+<p><strong>陷阱二：方块粒度太粗，把共享部件藏进去。</strong> 把“温度检测”画成一个方块，实际它包含热电偶、补偿导线、安全栅、AI 通道、卡件电源。<strong>两路“独立”的检测如果接在同一张 AI 卡的两个通道上，它们共享多路开关与 A/D——这就是一条隐秘的共因路径。</strong> 粒度应当细到“能区分共享与不共享”为止：<strong>共用一张卡，就画一张卡的方块；共用一路电源，就画一路电源的方块。</strong></p>
+<p><strong>陷阱三：把非串并联结构硬套公式。</strong> 环形、桥式、交叉表决这些结构既不是纯串联也不是纯并联，<strong>式 36-8 与式 36-9 都不适用。</strong> 典型的例子是“三台泵两两互备”或“三个控制器交叉通信”，<strong>这类结构要用状态枚举或马尔可夫（§36.3.9），不能拆成串并联再相乘。</strong></p>
+<p><strong>还有一条与“并联”有关的直觉要纠正：图上并联的是“功能”，实际并联的往往是“信号”。</strong> 两路信号进同一个控制器、由同一份程序做表决——<strong>信号层并联，逻辑层串联。</strong> 这也是 §36.2.12 说“异构要一路做到底”的原因：<strong>只把传感器做成两路，逻辑那一层的共因仍然是 1。</strong></p>
+<p><strong>画完框图的最后一个动作，是逐对方块问一句“这两个之间共享了什么”。</strong> 答案写不出来，才能标“独立”。</p>
+<h3 id="sifsissil三个词不能互换">36.2.14 SIF、SIS、SIL：三个词不能互换</h3>
+<p>这三个词在中文资料里经常混着用，<strong>但它们指的不是一回事，混用会在评审时直接暴露问题。</strong></p>
+<p><strong>SIF（安全仪表功能）是“功能”</strong>：一条“检测到 X 就做 Y”的完整回路，比如“温度高于 110 ℃ 就切断进料并开冷却水”。<strong>它有明确的输入、逻辑与输出，可以单独定级。</strong></p>
+<p><strong>SIS（安全仪表系统）是“实现这些功能的系统”</strong>：一组控制器、I/O、现场仪表、执行器，<strong>通常同时承载几十条 SIF。</strong> 它是一个物理实体，有硬件配置、有组态、有机柜。</p>
+<p><strong>SIL（安全完整性等级）是“某个 SIF 的可靠程度”</strong>：按 <span class="math inline">\mathrm{PFD_{avg}}</span> 的区间分成四档。<strong>它属于 SIF，不属于 SIS，也不属于任何一台设备。</strong></p>
+<p>由此得出两条措辞纪律：</p>
+<p><strong>其一，“这个 SIS 是 SIL3”这句话是错的</strong>（除非该 SIS 只承载一条 SIF）。正确说法是“<strong>这个 SIS 里有 3 条 SIL3 的 SIF、17 条 SIL2 的 SIF</strong>”。<strong>等级是逐条功能定的，不是给整套系统贴一个标签。</strong> 这条差别很实际：一个 SIS 的公共部件（电源、机柜、通信）若失效，会同时打掉多条 SIF——<strong>它们各自的 SIL 都还好，但共因让它们一起失效。</strong> 这正是 §36.2.7 与 §36.2.13 反复强调共享的原因。</p>
+<p><strong>其二，“这个变送器是 SIL3”也是错的。</strong> 器件有“按某标准认证可用于 SIL3 回路”的说法，那是<strong>器件证书</strong>，不是系统的 SIL。<strong>系统等级由结构、诊断、测试周期共同决定</strong>（§36.2.6 已就 ISO 13849 说过同一件事）。</p>
+<p><strong>一个便于记忆的类比：</strong> SIF 是“一条安全要求”，SIS 是“实现它的硬件与软件”，SIL 是“这条要求被满足到了什么程度”。<strong>三者是“要求—实现—验证”的关系，任何一个都不能替代另一个说话。</strong></p>
+<h3 id="三个换算现场口算用">36.2.15 三个换算，现场口算用</h3>
+<p>评审桌上最常听到的三种口算错误，都可以用三个固定换算避免。</p>
+<p><strong>其一，FIT 与 <span class="math inline">\lambda</span>。</strong> <span class="math inline">1000\ \text{FIT}=10^{-6}</span>/h。<strong>记住“1000 FIT 就是百万分之一每小时”，其余按比例推。</strong></p>
+<p><strong>其二，<span class="math inline">\lambda</span> 与 MTBF。</strong> <span class="math inline">1000</span> FIT 对应 <span class="math inline">\mathrm{MTBF}=10^{6}</span> h，<strong>约 114 年。</strong> 这条换算的价值在于纠正直觉：<strong>“114 年才坏一次”听起来很可靠，但它对应的 <span class="math inline">\mathrm{PFD_{avg}}</span> 是 <span class="math inline">4.38\times10^{-3}</span>，只够 SIL1。</strong> 可靠与安全不是一回事，这就是最直观的例子。</p>
+<p><strong>其三，年与小时。</strong> <span class="math inline">1</span> 年 <span class="math inline">=8760</span> h，<span class="math inline">1</span> 次/年 <span class="math inline">=1.14\times10^{-4}</span>/h。<strong>这两个数要背下来，因为需求率、测试频率、误跳闸率的单位经常在这两者之间跳。</strong></p>
+<p><strong>再补一个把 <span class="math inline">\mathrm{PFD}</span> 翻译成“多少年一次”的换算。</strong> <span class="math inline">\mathrm{PFD}=10^{-3}</span> 的含义是“一千次需求里失败一次”；若需求率是 <span class="math inline">0.3</span>/年，则期望间隔约 <span class="math inline">1/(0.3\times10^{-3})\approx3300</span> 年。<strong>这个数不是“安全”，它只是“概率上的间隔”</strong>——<strong>三千三百年里任何一次需求都可能正好赶上失效，而且一旦赶上就是事故。</strong> 所以报 <span class="math inline">\mathrm{PFD}</span> 时不要换算成“多少年一次”，那会把概率说成周期，<strong>掩盖了“下一次需求就可能是那一次”这个事实。</strong></p>
+<h2 id="推导与性质">36.3 推导与性质</h2>
+<h3 id="串联回路三段相乘还是三段相加">36.3.1 串联回路：三段相乘还是三段相加</h3>
+<p>回到 §36.1.3 的反应釜，安全回路是“传感—逻辑—执行”串联。<strong>串联系统的可靠度是各段之积</strong>：</p>
+<p><span class="math display">
+R_{\text{sys}}(t)=\prod_{i=1}^{m}R_i(t)
+=\exp\Big(-\sum_{i=1}^{m}\lambda_i t\Big). \tag{36-8}
+</span></p>
+<p><strong>所以串联系统的失效率是各段之和</strong>，这一点常被误解成“取最大的那个”。三段的失效率相加，意味着<strong>最差的那一段不会被好的那一段“平均掉”</strong>——一支每年坏一次的阀门，配再好的变送器也救不回来。</p>
+<p>对 <span class="math inline">\mathrm{PFD_{avg}}</span> 来说，当各段都远小于 1 时，串联的 <span class="math inline">\mathrm{PFD_{avg}}</span> 近似为各段之和：</p>
+<p><span class="math display">
+\mathrm{PFD_{sys}}\approx\sum_{i=1}^{m}\mathrm{PFD}_i . \tag{36-9}
+</span></p>
+<p><strong>这个“相加”是功能安全里最有用的近似</strong>，因为它直接告诉你：<strong>要提升一个数量级，必须把每一段都提升，或者把最差的那一段换掉。</strong> §36.5.1 会用一个具体算例展示“只改最弱环节”的效果。</p>
+<h3 id="单通道-1oo1-的-mathrmpfd_avg">36.3.2 单通道 1oo1 的 <span class="math inline">\mathrm{PFD_{avg}}</span></h3>
+<p>设通道的未检出危险失效率为 <span class="math inline">\lambda_{DU}</span>，证明测试周期为 <span class="math inline">T</span>。<strong>失效在周期内随机发生，且直到测试才被发现</strong>，于是从失效到被发现的时间在 <span class="math inline">[0,T]</span> 上均匀分布。若失效发生在测试后 <span class="math inline">t</span> 时刻，则从 <span class="math inline">t</span> 到下次测试的这段时间里，安全功能一直处于失效状态，失效概率为 1。因此</p>
+<p><span class="math display">
+\mathrm{PFD}(t)=\lambda_{DU}\,t,\qquad
+\mathrm{PFD_{avg}}=\frac{1}{T}\int_0^T\lambda_{DU}t\,\mathrm{d}t
+=\frac{\lambda_{DU}T}{2}. \tag{36-10}
+</span></p>
+<p><strong>这个 <span class="math inline">T/2</span> 是整章最重要的一个系数。</strong> 它的含义是“平均潜伏半个测试周期”。代入本章的数值（<span class="math inline">\lambda_{DU}=10^{-6}</span>/h、<span class="math inline">T=8760</span> h）：</p>
+<p><span class="math display">
+\mathrm{PFD_{avg}}=\frac{10^{-6}\times8760}{2}=4.38\times10^{-3},
+</span></p>
+<p><strong>落在 SIL1 区间。</strong> 这个结果值得停下来看一眼：<strong>一支失效率 1000 FIT 的变送器，即使一年做一次证明测试，单通道也只能到 SIL1。</strong> 想上 SIL2，只有三条路——降失效率、缩短测试周期、加冗余。E1 会把这四条路的代价算清楚。</p>
+<p>若考虑修复时间，检出失效的贡献是 <span class="math inline">\lambda_{DD}\cdot\mathrm{MTTR}</span>，于是</p>
+<p><span class="math display">
+\mathrm{PFD_{avg}}\approx\lambda_{DU}\frac{T}{2}+\lambda_{DD}\,\mathrm{MTTR}. \tag{36-11}
+</span></p>
+<p><strong>注意两项的量级差</strong>：<span class="math inline">T/2</span> 是几千小时，<span class="math inline">\mathrm{MTTR}</span> 是几小时，所以第二项只有在 <span class="math inline">\lambda_{DD}\gg\lambda_{DU}</span>（即诊断覆盖率很高）时才不可忽略。<strong>这也解释了为什么“高诊断覆盖率”能把单通道推到 SIL2</strong>（§36.3.6）。</p>
+<h3 id="双通道-1oo2平方项的来历">36.3.3 双通道 1oo2：平方项的来历</h3>
+<p>1oo2 要两个通道同时失效才失效。<strong>在“两者独立”的假设下</strong>，时刻 <span class="math inline">t</span> 两个都失效的概率是 <span class="math inline">(\lambda_{DU}t)^2</span>，于是</p>
+<p><span class="math display">
+\mathrm{PFD_{avg}}=\frac{1}{T}\int_0^T(\lambda_{DU}t)^2\,\mathrm{d}t
+=\frac{\lambda_{DU}^2T^2}{3}. \tag{36-12}
+</span></p>
+<p>代入同样的数：<span class="math inline">(10^{-6}\times8760)^2/3=2.56\times10^{-5}</span>，<strong>从 SIL1 直接跳到 SIL3</strong>。E1 的实测正是 <span class="math inline">2.558\times10^{-5}</span>。</p>
+<p><strong>这里的“平方”是全部收益的来源，也是全部脆弱性的来源。</strong> 它依赖“两个通道独立失效”这一假设；一旦失效相关（共因），平方项就被线性项取代。<strong>这就是为什么 §36.3.5 的 <span class="math inline">\beta</span> 因子能把 SIL3 打回 SIL2。</strong></p>
+<h3 id="三取二-2oo3为什么它比-1oo2-更适合现场">36.3.4 三取二 2oo3：为什么它比 1oo2 更适合现场</h3>
+<p>2oo3 有三个通道，任意两个失效才失效。时刻 <span class="math inline">t</span> 恰好两个失效的概率是 <span class="math inline">\binom{3}{2}(\lambda_{DU}t)^2</span>，对 <span class="math inline">t</span> 平均时除以 <span class="math inline">T</span> 与积分产生的 <span class="math inline">1/3</span> 相消：</p>
+<p><span class="math display">
+\mathrm{PFD_{avg}}=\frac{1}{T}\int_0^T 3(\lambda_{DU}t)^2\,\mathrm{d}t
+=\lambda_{DU}^2T^2. \tag{36-13}
+</span></p>
+<p>代入本章数值：<span class="math inline">(10^{-6}\times8760)^2=7.67\times10^{-5}</span>，<strong>仍是 SIL3，但比 1oo2 差 3 倍。</strong></p>
+<p><strong>为什么工程上仍大量用 2oo3？因为它的误跳闸率远低于 1oo2。</strong> 1oo2 里任一通道误动就停车（误跳闸率近似加倍），2oo3 要两个通道同时误动才停车（误跳闸率按平方下降）。E6 的实测是：1oo2 的误跳闸率 <span class="math inline">4.0\times10^{-6}</span>/h，2oo3 只有 <span class="math inline">1.92\times10^{-10}</span>/h——<strong>差了四个数量级。</strong></p>
+<p><strong>所以“1oo2 更安全”这句话只在“安全性”这一个维度上成立。</strong> 把误跳闸带来的停产、频繁起停对设备的损伤、以及操作工因频繁误报而旁路联锁的风险算进来，2oo3 往往是更优解。<strong>这是本章第一个“指标之间必须权衡”的例子，不是最后一个。</strong></p>
+<h3 id="共因失效给冗余设一个地板">36.3.5 共因失效：给冗余设一个地板</h3>
+<p>把 <span class="math inline">\beta</span> 因子模型代进 1oo2：两个通道同时因共因失效的概率是 <span class="math inline">\beta\lambda_{DU}t</span>，于是</p>
+<p><span class="math display">
+\mathrm{PFD_{avg}}\approx
+\underbrace{(1-\beta)^2\frac{\lambda_{DU}^2T^2}{3}}_{\text{独立部分}}
++\underbrace{\beta\frac{\lambda_{DU}T}{2}}_{\text{共因部分}} . \tag{36-14}
+</span></p>
+<p><strong>第二项与通道数无关</strong>，它只跟单通道失效率、<span class="math inline">\beta</span>、<span class="math inline">T</span> 有关。这意味着：<strong>无论加多少通道，<span class="math inline">\mathrm{PFD_{avg}}</span> 都不会低于 <span class="math inline">\beta\lambda_{DU}T/2</span>。</strong></p>
+<p>代入 <span class="math inline">\lambda_{DU}=10^{-6}</span>/h、<span class="math inline">T=8760</span> h，这个地板是 <span class="math inline">4.38\times10^{-3}\beta</span>：</p>
+<ul>
+<li><span class="math inline">\beta=0.01</span>：地板 <span class="math inline">4.38\times10^{-5}</span>（SIL3 边缘）；</li>
+<li><span class="math inline">\beta=0.02</span>：地板 <span class="math inline">8.76\times10^{-5}</span>（SIL3）；</li>
+<li><span class="math inline">\beta=0.05</span>：地板 <span class="math inline">2.19\times10^{-4}</span>（SIL3）；</li>
+<li><span class="math inline">\beta=0.10</span>：地板 <span class="math inline">4.38\times10^{-4}</span>（SIL2）。</li>
+</ul>
+<p>E2 的实测与这条地板线完全吻合：<span class="math inline">\beta</span> 从 0 加到 0.10，1oo2 的 <span class="math inline">\mathrm{PFD_{avg}}</span> 从 <span class="math inline">2.56\times10^{-5}</span> 涨到 <span class="math inline">4.59\times10^{-4}</span>，<strong>共因部分占比从 0 涨到 95.5%。</strong> 也就是说，<span class="math inline">\beta=0.1</span> 时，<strong>冗余带来的好处有 95% 被共因吃掉了</strong>，1oo2 相对 1oo1 的改善倍数从 171.2 跌到 9.5。</p>
+<figure>
+<img src="figs/ch036/fig_036_03_beta.svg" alt="图 36-3　共因失效因子给冗余结构设下的地板：\beta 越大，1oo2 与 2oo3 越接近 1oo1" /><figcaption aria-hidden="true">图 36-3　共因失效因子给冗余结构设下的地板：<span class="math inline">\beta</span> 越大，1oo2 与 2oo3 越接近 1oo1</figcaption>
+</figure>
+<p><strong>这条结论的工程含义是：想靠冗余上 SIL3，必须先证明“通道之间真的独立”。</strong> 独立不是画在图上，而是体现在物理上——<strong>分开的电源、分开的 I/O 卡、不同的传感器原理、分开的电缆路径、分开的维护班次。</strong> IEC 61508-6 的打分表之所以有效，就是因为它把这些“物理上的分开”折算成了 <span class="math inline">\beta</span> 的数字。</p>
+<h3 id="诊断覆盖率把潜伏期换成修复期">36.3.6 诊断覆盖率：把潜伏期换成修复期</h3>
+<p>带诊断的单通道（记作 1oo1D）把危险失效分成两半：<span class="math inline">DC</span> 那部分在线检出、按 <span class="math inline">\mathrm{MTTR}</span> 修复，<span class="math inline">1-DC</span> 那部分继续潜伏到证明测试。于是</p>
+<p><span class="math display">
+\mathrm{PFD_{avg}}\approx DC\cdot\lambda_{DU}\,\mathrm{MTTR}
++(1-DC)\cdot\lambda_{DU}\frac{T}{2}. \tag{36-15}
+</span></p>
+<p>代入 <span class="math inline">T=8760</span> h、<span class="math inline">\mathrm{MTTR}=8</span> h、<span class="math inline">\lambda_{DU}=10^{-6}</span>/h：</p>
+<ul>
+<li><span class="math inline">DC=0</span>：<span class="math inline">4.38\times10^{-3}</span>（退化为 1oo1，SIL1）；</li>
+<li><span class="math inline">DC=0.90</span>：<span class="math inline">4.45\times10^{-4}</span>（SIL2，改善 9.8 倍）；</li>
+<li><span class="math inline">DC=0.99</span>：<span class="math inline">5.17\times10^{-5}</span>（SIL3，改善 84.7 倍）。</li>
+</ul>
+<figure>
+<img src="figs/ch036/fig_036_04_dc.svg" alt="图 36-4　诊断覆盖率把潜伏期换成修复期：DC 从 0.9 提到 0.99，PFD 再降一个数量级" /><figcaption aria-hidden="true">图 36-4　诊断覆盖率把潜伏期换成修复期：DC 从 0.9 提到 0.99，PFD 再降一个数量级</figcaption>
+</figure>
+<p><strong><span class="math inline">DC</span> 的收益不是线性的，而是“越接近 1 越值钱”。</strong> 从 0 到 0.5 只改善 2 倍，从 0.9 到 0.99 又改善 8.6 倍。原因很直白：<strong>被诊断吃掉的那部分从“潜伏几千小时”变成“修复几小时”，比值是 <span class="math inline">T/(2\,\mathrm{MTTR})\approx548</span>；所以 <span class="math inline">DC</span> 每提高一点，就有更多比例享受到这个 548 倍的折扣。</strong></p>
+<p><strong>但 <span class="math inline">DC</span> 有天花板，而且天花板来自“诊断本身也会失效”。</strong> 诊断逻辑通常与被诊断通道共享一部分硬件与软件，<strong>当共因失效发生时，诊断和被诊断对象一起坏</strong>。这就是为什么 IEC 61508 对“高 <span class="math inline">DC</span>”要求额外的诊断独立性证明——<strong>否则 <span class="math inline">DC=0.99</span> 只是纸面上的数字。</strong></p>
+<h3 id="故障树与最小割集">36.3.7 故障树与最小割集</h3>
+<p><span class="math inline">T/2</span> 与平方项都是“单点公式”。真实系统由多段、多冗余组成，<strong>故障树</strong>是把它们串起来的图形化方法：顶事件是“安全功能失效”，向下用与门、或门分解到基本事件。</p>
+<p>图 36-6 给出一个五基本事件的算例：顶事件 <span class="math inline">=(A\wedge B)\vee(C\wedge D)\vee E</span>。<strong>它的三条最小割集是 <span class="math inline">\{A,B\}</span>、<span class="math inline">\{C,D\}</span>、<span class="math inline">\{E\}</span></strong>——最小割集就是“能让顶事件发生的最小事件组合”，它直接对应“要防哪几种同时失效”。</p>
+<figure>
+<img src="figs/ch036/fig_036_06_fault_tree.svg" alt="图 36-6　故障树算例：三条最小割集与它们的概率排序" /><figcaption aria-hidden="true">图 36-6　故障树算例：三条最小割集与它们的概率排序</figcaption>
+</figure>
+<p>顶事件概率的精确值要靠容斥或状态枚举，工程上常用<strong>稀有事件近似</strong>——把各割集概率直接相加：</p>
+<p><span class="math display">
+P_{\text{top}}\approx\sum_{j}P(C_j). \tag{36-16}
+</span></p>
+<p>E5 给了两个算例，结论很有意思：</p>
+<ul>
+<li><strong>单事件主导</strong>（<span class="math inline">p_E=10^{-2}</span>，另两条割集各 <span class="math inline">2\times10^{-6}</span>）：精确值 <span class="math inline">1.000396\times10^{-2}</span>，近似值 <span class="math inline">1.000400\times10^{-2}</span>，相对偏差 <strong>0.000%</strong>；</li>
+<li><strong>三割集相当</strong>（三条各 <span class="math inline">2\times10^{-4}</span>）：精确值 <span class="math inline">5.9988\times10^{-4}</span>，近似值 <span class="math inline">6.0000\times10^{-4}</span>，相对偏差 <strong>+0.020%</strong>。</li>
+</ul>
+<p><strong>近似总是偏大，因为割集之间的交集被重复计算了。</strong> 偏差的量级大致是“割集概率的平方除以总和”，所以只要顶事件概率小于 <span class="math inline">10^{-2}</span>，近似就够用。<strong>真正需要精确值的场合是“割集之间高度重叠”</strong>（比如几条割集共享同一个电源故障），这时必须做状态枚举。</p>
+<p><strong>故障树真正的价值不在算概率，而在排序。</strong> 把三条割集的概率一列，改进顺序就出来了：<strong>在本例中，<span class="math inline">\{E\}</span> 比另两条大四个数量级，先处理 <span class="math inline">E</span>，其余都是噪声。</strong> 这正是 FMEA 与故障树在工程上的用法——<strong>不是算出一个小数点后三位的概率，而是找出“最该改的那一个”。</strong></p>
+<h3 id="fmea-与-rpn定性分析的定量外壳">36.3.8 FMEA 与 RPN：定性分析的定量外壳</h3>
+<p>故障模式与影响分析（FMEA）逐条列出“部件—失效模式—影响—检测手段”，是功能安全里唯一能在设计早期做的分析。它的定量外壳是<strong>风险优先数</strong>：</p>
+<p><span class="math display">
+\mathrm{RPN}=S\times O\times D, \tag{36-17}
+</span></p>
+<p><span class="math inline">S</span> 是严重度（1–10）、<span class="math inline">O</span> 是发生度（1–10）、<span class="math inline">D</span> 是难检度（1–10）。表 36-5 是反应釜回路的一个片段。</p>
+<p>表 36-5　反应釜安全回路的 FMEA 片段（RPN <span class="math inline">=S\times O\times D</span>）</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">部件</th>
+<th style="text-align: left;">失效模式</th>
+<th style="text-align: left;">局部影响</th>
+<th style="text-align: left;"><span class="math inline">S</span></th>
+<th style="text-align: left;"><span class="math inline">O</span></th>
+<th style="text-align: left;"><span class="math inline">D</span></th>
+<th style="text-align: left;">RPN</th>
+<th style="text-align: left;">处置</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">温度变送器</td>
+<td style="text-align: left;">漂移偏高</td>
+<td style="text-align: left;">联锁迟动</td>
+<td style="text-align: left;">8</td>
+<td style="text-align: left;">4</td>
+<td style="text-align: left;">6</td>
+<td style="text-align: left;">192</td>
+<td style="text-align: left;">加双支热电偶比对</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">切断阀</td>
+<td style="text-align: left;">卡涩不动作</td>
+<td style="text-align: left;">进料切不断</td>
+<td style="text-align: left;">10</td>
+<td style="text-align: left;">3</td>
+<td style="text-align: left;">8</td>
+<td style="text-align: left;">240</td>
+<td style="text-align: left;">加部分行程测试</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">数字输出卡</td>
+<td style="text-align: left;">输出粘滞</td>
+<td style="text-align: left;">阀门不动作</td>
+<td style="text-align: left;">7</td>
+<td style="text-align: left;">2</td>
+<td style="text-align: left;">4</td>
+<td style="text-align: left;">56</td>
+<td style="text-align: left;">选诊断型 DO 卡</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">冷却水阀</td>
+<td style="text-align: left;">开度不足</td>
+<td style="text-align: left;">移热不够</td>
+<td style="text-align: left;">9</td>
+<td style="text-align: left;">2</td>
+<td style="text-align: left;">5</td>
+<td style="text-align: left;">90</td>
+<td style="text-align: left;">加阀位反馈</td>
+</tr>
+</tbody>
+</table>
+<p><strong>RPN 的三个数都是主观打分，这是它最大的弱点。</strong> 同一个失效，两个工程师给出的 <span class="math inline">O</span> 可以差两倍，<span class="math inline">D</span> 可以差三倍，<strong>RPN 相差六倍</strong>。所以 RPN 只能用来<strong>排序</strong>，不能用来<strong>判定“是否安全”</strong>——判定要靠 SIL 计算与可容忍风险准则。</p>
+<p><strong>第二个弱点更隐蔽：RPN 对“严重度”不敏感。</strong> <span class="math inline">S=10,O=1,D=1</span> 的 RPN 是 10，<span class="math inline">S=2,O=3,D=3</span> 的 RPN 是 18——<strong>后者排在前面，但前者才是不可接受的风险。</strong> 工程做法是先按 <span class="math inline">S</span> 分层，层内再按 RPN 排序；<strong>永远不要用一个乘积把不可接受的风险“稀释”掉。</strong></p>
+<h3 id="马尔可夫模型把修复也画进去">36.3.9 马尔可夫模型：把修复也画进去</h3>
+<p><span class="math inline">\mathrm{PFD_{avg}}</span> 的公式都假设“失效后不修，直到测试”。<strong>若修复是连续的（在线诊断 + 随时可修），更合适的工具是马尔可夫状态模型。</strong></p>
+<p>以单通道为例，两个状态：正常（0）与失效（1），失效率 <span class="math inline">\lambda</span>、修复率 <span class="math inline">\mu=1/\mathrm{MTTR}</span>。稳态方程给出</p>
+<p><span class="math display">
+A=\frac{\mu}{\lambda+\mu}=\frac{1}{1+\lambda\,\mathrm{MTTR}} . \tag{36-18}
+</span></p>
+<p><strong>这与式 36-3 在 <span class="math inline">\lambda\,\mathrm{MTTR}\ll1</span> 时一致</strong>，说明两套推导是自洽的。马尔可夫模型的价值在于它能处理“部分失效”“降级运行”“多状态修复”这些公式覆盖不了的情形，代价是<strong>状态数随部件数指数增长</strong>——四个部件各两状态就是 16 个状态，八个部件就是 256 个。</p>
+<p><strong>工程上的分界线是：能用 <span class="math inline">\mathrm{PFD_{avg}}</span> 公式的场合不要上马尔可夫；需要区分多种降级状态、或修复率与状态相关时，才用马尔可夫。</strong> 这与第 32 章“能用动态规划就不要上函数逼近”是同一条思路。</p>
+<h3 id="安全性与可用性的权衡">36.3.10 安全性与可用性的权衡</h3>
+<p>把 E6 的结果并排看，权衡就很清楚（表 36-6）。</p>
+<p>表 36-6　三种结构的安全性与可用性（E6 实测，<span class="math inline">\beta=0.05</span>）</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">结构</th>
+<th style="text-align: left;"><span class="math inline">\mathrm{PFD_{avg}}</span></th>
+<th style="text-align: left;">误跳闸率（/h）</th>
+<th style="text-align: left;">年误停时间（h）</th>
+<th style="text-align: left;">SIL</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">1oo1</td>
+<td style="text-align: left;"><span class="math inline">4.380\times10^{-3}</span></td>
+<td style="text-align: left;"><span class="math inline">2.000\times10^{-6}</span></td>
+<td style="text-align: left;">0.14</td>
+<td style="text-align: left;">SIL1</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">1oo2</td>
+<td style="text-align: left;"><span class="math inline">2.421\times10^{-4}</span></td>
+<td style="text-align: left;"><span class="math inline">4.000\times10^{-6}</span></td>
+<td style="text-align: left;">0.28</td>
+<td style="text-align: left;">SIL3</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">2oo3</td>
+<td style="text-align: left;"><span class="math inline">2.883\times10^{-4}</span></td>
+<td style="text-align: left;"><span class="math inline">1.920\times10^{-10}</span></td>
+<td style="text-align: left;">约 0</td>
+<td style="text-align: left;">SIL3</td>
+</tr>
+</tbody>
+</table>
+<p><strong>1oo2 把安全性提高了 18 倍，代价是误跳闸率翻倍、年误停从 0.14 h 涨到 0.28 h。</strong> 对反应釜这种“停一次损失 6 h 产能”的场合，这 0.14 h 的增量其实可以接受；<strong>但对连续生产、误停一次要重新开车 8 h 的装置，这个增量就可能超过安全收益。</strong></p>
+<p><strong>2oo3 是“既要又要”的解</strong>：<span class="math inline">\mathrm{PFD_{avg}}</span> 与 1oo2 同量级，误跳闸率却低了四个数量级。<strong>它的代价不在运行，而在建设与维护</strong>——三套独立的传感器、三套 I/O、更大的接线柜、更复杂的一致性测试。<strong>所以选型的本质是“用建设成本换运行成本”，而不是单纯比 <span class="math inline">\mathrm{PFD_{avg}}</span> 的小数点。</strong></p>
+<h3 id="系统性失效公式管不到的那一半">36.3.11 系统性失效：公式管不到的那一半</h3>
+<p>前面所有公式都只适用于<strong>随机硬件失效</strong>。还有一类失效叫<strong>系统性失效</strong>：设计缺陷、软件错误、规格书漏项、集成错误、人为操作错误。<strong>它们的共同特点是“不是随机发生的，也不能用失效率描述”。</strong></p>
+<p>三条必须记住的性质：</p>
+<p><strong>其一，系统性失效不服从指数分布。</strong> 一个软件缺陷要么存在要么不存在，不会“每小时以 <span class="math inline">10^{-6}</span> 的概率出现”。<strong>用 <span class="math inline">\mathrm{PFD_{avg}}</span> 去算软件，是把不适用的工具用在了不适用的问题上。</strong></p>
+<p><strong>其二，系统性失效的共因因子接近 1。</strong> 两套冗余通道如果跑同一份软件、由同一个团队编写，那么软件缺陷会同时让两路失效。<strong>这就是 §36.2.7 里“软件共因可以接近 100%”的含义，也是“多样性”（不同实现、不同语言、不同团队）在 SIL3 以上被强制要求的原因。</strong></p>
+<p><strong>其三，对付系统性失效只能靠“过程”，不能靠“计算”。</strong> IEC 61508 的软件部分给的是<strong>技术措施表</strong>（编码规范、形式化方法、边界值测试、独立验证），而不是公式。<strong>它们降低的是“缺陷被引入的概率”，不是“每小时失效的概率”。</strong></p>
+<p><strong>这条分界对本章的适用范围至关重要：<span class="math inline">\mathrm{PFD_{avg}}</span> 只覆盖随机硬件失效，占比通常在 50% 以下；剩下的部分要靠过程保证。</strong> 把 SIL 证书当成“整个系统安全”的证明，是功能安全领域最根本的误解。</p>
+<h3 id="一般-koon通道数不是越多越好">36.3.12 一般 kooN：通道数不是越多越好</h3>
+<p>式 36-12 与式 36-13 只覆盖了两种结构。把它们合起来，可以得到任意 kooN 的通式。<strong>kooN 的含义是“<span class="math inline">n</span> 个通道中有 <span class="math inline">k</span> 个同意就动作”，于是安全功能失效需要 <span class="math inline">n-k+1</span> 个通道同时失效。</strong> 记 <span class="math inline">m=n-k+1</span>，则</p>
+<p><span class="math display">
+\mathrm{PFD_{avg}}=\binom{n}{m}\frac{\lambda_{DU}^{\,m}T^{\,m}}{m+1}.
+</span></p>
+<p><strong>两个因子分工明确：指数 <span class="math inline">m</span> 决定“要几个同时坏”，组合数 <span class="math inline">\binom{n}{m}</span> 决定“有多少种坏法”。</strong> 前者是收益的来源，后者是代价的来源。</p>
+<p>代入本章数值（<span class="math inline">\lambda_{DU}T=8.76\times10^{-3}</span>），四种结构的差别三句话就能说清：</p>
+<ul>
+<li><strong>1oo2</strong>（<span class="math inline">m=2</span>，<span class="math inline">\binom{2}{2}=1</span>）：<span class="math inline">2.56\times10^{-5}</span>；</li>
+<li><strong>2oo3</strong>（<span class="math inline">m=2</span>，<span class="math inline">\binom{3}{2}=3</span>）：<span class="math inline">7.67\times10^{-5}</span>，<strong>是 1oo2 的 3 倍</strong>，多出来的通道全变成了“多一种坏法”；</li>
+<li><strong>2oo4</strong>（<span class="math inline">m=3</span>，<span class="math inline">\binom{4}{3}=4</span>）：<span class="math inline">6.72\times10^{-7}</span>，<strong>比 2oo3 好 114 倍</strong>；</li>
+<li><strong>1oo3</strong>（<span class="math inline">m=3</span>，<span class="math inline">\binom{3}{3}=1</span>）：<span class="math inline">1.68\times10^{-7}</span>，<strong>比 2oo4 还好 4 倍</strong>。</li>
+</ul>
+<p><strong>“2oo4 比 2oo3 好、1oo3 又比 2oo4 好”这个排序值得记下来</strong>，因为它推翻了一个很常见的直觉——“通道越多越安全”。<strong>真正决定安全性的是 <span class="math inline">m</span>，也就是“要几个同时失效”，而不是 <span class="math inline">n</span>。</strong> 2oo4 的 <span class="math inline">m=3</span> 是因为“两个同意就动作”意味着剩下两个还能把它否掉；1oo3 的 <span class="math inline">m=3</span> 是因为“一个同意就动作”，必须三个全坏。<strong>同样三个通道坏掉，1oo3 早就动作了，2oo4 还在等第四个。</strong></p>
+<p><strong>但 1oo3 的误跳闸率是 1oo1 的 3 倍，2oo3 只有 <span class="math inline">6\lambda_S^2\mathrm{MTTR}</span> 量级。</strong> 所以“最安全”与“最可用”在 kooN 家族里始终是两个端点，2oo3 之所以成为现场主力，是因为它落在两者之间。<strong>表 36-1 里 2oo4 的 <span class="math inline">10^{-6}</span> 量级，正确的读法是“它的 <span class="math inline">m=3</span>”，而不是“它的通道多”。</strong></p>
+<p><strong>组合数这一项还有一层代价。</strong> 当 <span class="math inline">n</span> 大而 <span class="math inline">m</span> 小时，<span class="math inline">\binom{n}{m}</span> 增长很快：3oo5 的 <span class="math inline">\binom{5}{3}=10</span>，2oo5 的 <span class="math inline">\binom{5}{4}=5</span>。<strong>系数一大，独立项的“平方级收益”就被吃掉相当一部分</strong>，同时通道数与接线、卡件、机柜空间、一致性测试的成本线性增长。<strong>这就是工程上很少见到 <span class="math inline">n&gt;4</span> 的原因：不是因为做不到，而是因为性价比在 <span class="math inline">n=4</span> 之后急剧下降。</strong></p>
+<p><strong>最后是那个无法回避的地板。</strong> 把共因项加回来，任意 kooN 都有</p>
+<p><span class="math display">
+\mathrm{PFD_{avg}}\ge\beta\frac{\lambda_{DU}T}{2},
+</span></p>
+<p><strong>它与 <span class="math inline">n</span>、<span class="math inline">k</span>、<span class="math inline">m</span> 全都无关。</strong> 取 <span class="math inline">\beta=0.05</span>、<span class="math inline">\lambda_{DU}T=8.76\times10^{-3}</span>，地板是 <span class="math inline">2.19\times10^{-4}</span>——<strong>它比 1oo2、2oo3、2oo4、1oo3 四者的独立项都大。</strong> 换句话说，<strong>在 <span class="math inline">\beta=0.05</span> 时，1oo2 与 2oo3 的实测值分别是 <span class="math inline">2.42\times10^{-4}</span> 与 <span class="math inline">2.88\times10^{-4}</span>，而 2oo4 与 1oo3 按通式加共因项等于 <span class="math inline">2.19\times10^{-4}</span> 与 <span class="math inline">2.19\times10^{-4}</span>——后两个数与地板完全相同，因为它们的独立项已经小到看不见。</strong> 想靠“再加一个通道”跨过 SIL 边界，在共因没控制住之前是徒劳的。</p>
+<h3 id="测试覆盖率公式里那个没写出来的假设">36.3.13 测试覆盖率：公式里那个没写出来的假设</h3>
+<p>式 36-10 到式 36-15 都隐含一个假设：<strong>证明测试能把全部未检出的危险失效暴露出来。</strong> 工程上这个假设几乎从不成立。一支切断阀每年做一次全行程测试，能发现“卡死”，但发现不了“关不严”和“关得慢”——<strong>后者需要带压差、带流量地测，而那往往要停车。</strong></p>
+<p>于是要引入<strong>测试覆盖率</strong> <span class="math inline">t_c</span>，定义为“证明测试实际能暴露的未检出危险失效占全部 <span class="math inline">\lambda_{DU}</span> 的比例”。把 <span class="math inline">\lambda_{DU}</span> 拆成两半：被测出的 <span class="math inline">t_c\lambda_{DU}</span> 按 <span class="math inline">T/2</span> 潜伏，<strong>测不出的 <span class="math inline">(1-t_c)\lambda_{DU}</span> 一直潜伏到设备更换</strong>，等效测试周期是设备寿命 <span class="math inline">T_{\text{life}}</span>：</p>
+<p><span class="math display">
+\mathrm{PFD_{avg}}\approx t_c\lambda_{DU}\frac{T}{2}
++(1-t_c)\lambda_{DU}\frac{T_{\text{life}}}{2}.
+</span></p>
+<p>取 <span class="math inline">t_c=0.9</span>、<span class="math inline">T=8760</span> h、<span class="math inline">T_{\text{life}}=20</span> 年 <span class="math inline">=175200</span> h、<span class="math inline">\lambda_{DU}=10^{-6}</span>/h：</p>
+<ul>
+<li>第一项 <span class="math inline">0.9\times10^{-6}\times4380=3.94\times10^{-3}</span>；</li>
+<li>第二项 <span class="math inline">0.1\times10^{-6}\times87600=8.76\times10^{-3}</span>；</li>
+<li>合计 <span class="math inline">1.27\times10^{-2}</span>，<strong>落在 SIL1，比“假设 <span class="math inline">t_c=1</span>”时的 <span class="math inline">4.38\times10^{-3}</span> 差了 2.9 倍。</strong></li>
+</ul>
+<p><strong>比例很说明问题：只占 10% 的“测不到”部分，贡献了总量的 69%。</strong> 原因是它的暴露时间是 <span class="math inline">T_{\text{life}}/2</span>，而覆盖到的那部分是 <span class="math inline">T/2</span>，<strong>两者相差 20 倍</strong>——所以哪怕未覆盖率只有 10%，也足以主导总量。<strong>这条结论的实践含义是：报告里写 <span class="math inline">\mathrm{PFD_{avg}}</span> 时必须同时写 <span class="math inline">t_c</span> 的定义与依据，否则这个数只是“假设出来的”。</strong></p>
+<p><strong>部分行程测试（PST）是把 <span class="math inline">t_c</span> 提上去的主要手段。</strong> 阀门在不停车的情况下走 10%–20% 行程再返回，能覆盖卡涩、摩擦力增大、气源压力不足这几类失效，<strong>但覆盖不了阀座泄漏与关闭时间超标。</strong> 一个典型的失效模式分布是“卡涩 60%、泄漏 25%、关不快 15%”，若 PST 对卡涩的覆盖是 0.9、对其余两类是 0，则整阀的等效 <span class="math inline">t_c=0.54</span>。<strong>把这个数代进上面的式子，<span class="math inline">T</span> 的有效值被拉长，SIL2 就可能守不住——这就是“每年都测了”却算不出等级的真实原因。</strong></p>
+<p><strong>PST 本身也有风险。</strong> 阀门走出去回不来、返回位置不到位、测试后忘记恢复——<strong>测试是系统风险最高的时刻，这一条在 §36.5.9 还会展开。</strong> 所以 PST 的设计要包含“测试后确认”这一步，而不是“发个命令看它动了就算完”。</p>
+<h3 id="修复项为什么只算检出部分">36.3.14 修复项为什么只算检出部分</h3>
+<p>式 36-11 的第二项写成 <span class="math inline">\lambda_{DD}\cdot\mathrm{MTTR}</span> 而不是 <span class="math inline">\lambda_{DU}\cdot\mathrm{MTTR}</span>，这一点常被看漏。<strong>理由很直接：只有被检出的失效才会进入修复流程；未检出的失效根本不知道要修，只能等测试。</strong> 把 <span class="math inline">\lambda_{DU}</span> 也乘上 <span class="math inline">\mathrm{MTTR}</span> 是重复计算——它已经在 <span class="math inline">T/2</span> 那一项里了。</p>
+<p>这一项的物理含义是“<strong>平均有多少时间比例处于’知道坏了但还没修好’的状态</strong>”。它与可用度的关系可以直接对上：由式 36-18，</p>
+<p><span class="math display">
+A=\frac{1}{1+\lambda\,\mathrm{MTTR}}\approx1-\lambda\,\mathrm{MTTR},
+</span></p>
+<p><strong>不可用度近似等于 <span class="math inline">\lambda\,\mathrm{MTTR}</span>。</strong> 所以式 36-11 的第二项不是“另一个公式”，而是“把不可用度搬到 <span class="math inline">\mathrm{PFD_{avg}}</span> 里”。两条推导在这里接上，<strong>这也是 §36.4.7 第 3 条自检（串联可分解）能够成立的原因。</strong></p>
+<p><strong>但这一项的前提比它看上去脆弱。</strong> 它假设“检出即开始修、修的时间就是 <span class="math inline">\mathrm{MTTR}</span>”。三种常见情形会让它偏小：</p>
+<ul>
+<li><strong>诊断只报警不停机。</strong> 此时暴露时间不是 <span class="math inline">\mathrm{MTTR}</span>，而是“操作员发现—判断—处置”的总时间，<strong>典型是 <span class="math inline">\mathrm{MTTR}</span> 的 2–5 倍</strong>，而且随班组、班次波动。</li>
+<li><strong>检出后要停车才能修。</strong> <span class="math inline">\mathrm{MTTR}</span> 里必须含上“等停车窗口”的时间，<strong>可能是几十小时到几天</strong>，这一项就不再可忽略。</li>
+<li><strong>备件不到、资质人员不在。</strong> 这属于管理问题，但它如实反映在 <span class="math inline">\mathrm{MTTR}</span> 里；<strong>用“标准值 8 h”填表而现场实际是 72 h，是把风险藏进了假设。</strong></li>
+</ul>
+<p><strong>所以 <span class="math inline">\mathrm{MTTR}</span> 的取值要来自维修记录，而不是来自“行业典型值”。</strong> 这一条与 §36.4.5 对 <span class="math inline">\lambda</span> 的要求是同一条纪律：<strong>能追溯到记录的数字才能进报告，其余只能进草稿。</strong></p>
+<h3 id="误跳闸率sil-公式里没有的那一半">36.3.15 误跳闸率：SIL 公式里没有的那一半</h3>
+<p><span class="math inline">\mathrm{PFD_{avg}}</span> 只描述“该动时不动”。<strong>与之对称的另一个指标是“不该动时乱动”</strong>，即误跳闸率（spurious trip rate）。它不进 SIL 计算，<strong>但它决定这套联锁在现场能不能活得下去。</strong></p>
+<p>三种结构的误跳闸率量级差别极大，推导思路与 <span class="math inline">\mathrm{PFD}</span> 完全对称，只是把“危险失效”换成“安全失效”：</p>
+<ul>
+<li><strong>1oo1</strong>：任一安全失效直接导致停车，<span class="math inline">\mathrm{STR}\approx\lambda_S</span>；</li>
+<li><strong>1oo2</strong>：两通道并联，<strong>任一通道误动即停</strong>，<span class="math inline">\mathrm{STR}\approx2\lambda_S</span>；</li>
+<li><strong>2oo3</strong>：要两个通道同时误动才表决出停车，<span class="math inline">\mathrm{STR}\approx6\lambda_S^2\mathrm{MTTR}</span>。</li>
+</ul>
+<p><strong>2oo3 的系数 6 值得解释一句：</strong> 三个通道里选两个有 <span class="math inline">\binom{3}{2}=3</span> 种组合，每种组合又有“谁先坏”两种次序，合起来是 6；后面乘 <span class="math inline">\lambda_S^2\mathrm{MTTR}</span> 表示“第二个通道在第一个修复之前也坏掉”。<strong>这个式子是工程近似，严格值要用马尔可夫模型（§36.3.9）——量级一致就够用，因为它的用途是排序而不是定值。</strong></p>
+<p>代入 <span class="math inline">\lambda_S=2\times10^{-6}</span>/h、<span class="math inline">\mathrm{MTTR}=8</span> h：</p>
+<ul>
+<li>1oo1：<span class="math inline">2.0\times10^{-6}</span>/h，年误停 <span class="math inline">0.0175\times8=0.14</span> h；</li>
+<li>1oo2：<span class="math inline">4.0\times10^{-6}</span>/h，年误停 0.28 h；</li>
+<li>2oo3：<span class="math inline">1.92\times10^{-10}</span>/h，年误停约 <span class="math inline">1.3\times10^{-5}</span> h，<strong>等于没有</strong>。</li>
+</ul>
+<p><strong>三者横跨四个数量级，而它们的 <span class="math inline">\mathrm{PFD_{avg}}</span> 只差 18 倍。</strong> 这就是 §36.3.10 那张表的核心：<strong>安全性是一个轴，可用性是另一个轴，两个轴的刻度完全不同，不能用一个数比较。</strong></p>
+<p><strong>误跳闸率为什么必须报，理由不在经济账，而在它通过“旁路”反过来摧毁 <span class="math inline">\mathrm{PFD}</span>。</strong> 一套年误停十几次的联锁，操作工会怎么做？<strong>在检修时把它旁路掉，然后“忘了恢复”。</strong> 一旦进入 §36.5.8 的算术，<span class="math inline">5\%</span> 的旁路时间就等价于 <span class="math inline">\mathrm{PFD}=0.05</span>——<strong>比任何冗余结构的计算值都大两个数量级。</strong> 换句话说：</p>
+<blockquote>
+<p><strong>误跳闸率高的联锁，最终会被现场“用脚投票”改成不存在的联锁。</strong></p>
+</blockquote>
+<p><strong>所以选型时必须同时报两个数：<span class="math inline">\mathrm{PFD_{avg}}</span> 与 <span class="math inline">\mathrm{STR}</span>（或年误停小时）。</strong> 只报前者的方案在评审桌上很好看，投运半年后就会被旁路。<strong>这也是 2oo3 在“既要安全又要连续”的装置上成为主力的真正原因——不是它的 <span class="math inline">\mathrm{PFD}</span> 更低，而是它的误跳闸率低到操作工愿意让它一直投着。</strong></p>
+<h3 id="与-lopa-的接口mathrmpfd-乘上需求率才有意义">36.3.16 与 LOPA 的接口：<span class="math inline">\mathrm{PFD}</span> 乘上需求率才有意义</h3>
+<p><span class="math inline">\mathrm{PFD_{avg}}</span> 单独看只是一个抽象的概率。<strong>它唯一的正确用法是与需求率相乘</strong>：</p>
+<p><span class="math display">
+\text{剩余风险}\ (\text{/年})=\nu\times\prod_{i}\mathrm{PFD}_i ,
+</span></p>
+<p><span class="math inline">\nu</span> 是初始事件频率，乘积遍历所有独立保护层（含 SIS）。<strong>量纲是“每年期望发生次数”，这才是能与可容忍风险直接比较的数。</strong></p>
+<p>用本章的例子走一遍。初始事件（冷却水中断）<span class="math inline">\nu=0.3</span>/年，BPCS 温度控制 <span class="math inline">\mathrm{PFD}=0.1</span>，操作员响应 <span class="math inline">\mathrm{PFD}=0.1</span>，SIS <span class="math inline">\mathrm{PFD}=2.678\times10^{-3}</span>（§36.5.1 方案 A）：</p>
+<p><span class="math display">
+0.3\times0.1\times0.1\times2.678\times10^{-3}
+=8.03\times10^{-6}\ \text{/年}.
+</span></p>
+<p><strong>可容忍风险若定为 <span class="math inline">10^{-5}</span>/年，方案 A 刚好通过，余量只有 1.25 倍。</strong> 这解释了 §36.5.1 为什么还要讨论方案 B——<strong>余量这么薄，任何一处参数变差（阀门老化、测试延期）都会把它推过线。</strong></p>
+<p><strong>这条乘法也解释了 LOPA 的三条纪律为什么必须遵守。</strong> 若把“操作员看温度”与“班长巡检”算成两层，各取 0.1，风险就被凭空除以 10——<strong>而它们共享同一批人、同一个班次，实际上只有一层</strong>（§36.5.9）。<strong>乘法只对独立层成立，不独立的层乘进去就是造假。</strong></p>
+<p><strong>反过来，这也说明“提高 SIL”不是唯一手段。</strong> 从 <span class="math inline">2.678\times10^{-3}</span> 压到 <span class="math inline">5.378\times10^{-4}</span>（方案 B）风险降 5 倍；而把 BPCS 的控制品质从 <span class="math inline">\mathrm{PFD}=0.1</span> 提到 <span class="math inline">0.05</span>，风险同样降 2 倍，<strong>成本可能低得多。</strong> LOPA 的价值就在于把这些杠杆摆在同一张表上，<strong>让人看见“哪一层最便宜”。</strong></p>
+<p><strong>最后一个常见错误：把 <span class="math inline">\mathrm{PFD_{avg}}</span> 当成“每年的失效次数”。</strong> 它是“每次需求失效的概率”，<strong>没有量纲</strong>；乘上需求率才有“每年次数”。<strong>需求率是 0.3/年还是 100/年，同一个 <span class="math inline">\mathrm{PFD}</span> 对应的风险差 300 倍。</strong></p>
+<h2 id="离散对应与数值实现">36.4 离散对应与数值实现</h2>
+<h3 id="三个时间尺度">36.4.1 三个时间尺度</h3>
+<p>功能安全的公式里同时出现三个时间量，<strong>混淆它们是计算错误的主要来源</strong>：</p>
+<ul>
+<li><strong>任务时间</strong>：一次需求从出现到必须完成动作的时间。本例是 8 min。</li>
+<li><strong>测试周期</strong> <span class="math inline">T</span>：两次证明测试之间的间隔。典型是 6 个月到 2 年。</li>
+<li><strong>修复时间</strong> <span class="math inline">\mathrm{MTTR}</span>：发现失效到恢复功能的时间。典型是 2–24 h。</li>
+</ul>
+<p>三者的量级是 <span class="math inline">10^{-1}</span> h、<span class="math inline">10^{3}</span> h、<span class="math inline">10^{1}</span> h。<strong><span class="math inline">\mathrm{PFD_{avg}}</span> 的公式只关心后两个</strong>；任务时间不进公式，它进的是“安全功能响应时间”这条独立的规格要求。<strong>把任务时间代进 <span class="math inline">T/2</span> 是一个常见错误，会让 <span class="math inline">\mathrm{PFD_{avg}}</span> 小三个数量级。</strong></p>
+<h3 id="三条计算路线">36.4.2 三条计算路线</h3>
+<p>同一个 <span class="math inline">\mathrm{PFD_{avg}}</span> 可以用三种方法算，<strong>它们应当互相印证，而不是互相替代</strong>：</p>
+<p><strong>解析式</strong>：§36.3 的公式。优点是快、可解释、能手算校验；缺点是只覆盖少数标准结构，且假设“失效在周期内均匀分布”。</p>
+<p><strong>马尔可夫</strong>：把状态与转移画出来，解稳态或瞬态方程。优点是能处理降级、部分失效、相关修复；缺点是状态数指数增长，且转移率必须齐全。</p>
+<p><strong>蒙特卡洛</strong>：抽样失效时刻，直接统计“需求出现时功能是否失效”。优点是什么结构都能算、能带不确定度；缺点是要跑很多样本才能估到 <span class="math inline">10^{-5}</span> 量级。</p>
+<p><strong>工程顺序建议：先解析（拿量级）→ 再马尔可夫（补结构）→ 最后蒙特卡洛（验算）</strong>。反过来（先跑蒙特卡洛再找公式）通常是因为不知道自己在算什么。</p>
+<h3 id="一个十行的最小实现">36.4.3 一个十行的最小实现</h3>
+<p>下面这段把 §36.3 的三个公式写成代码。<strong>它的用途是当“手算器”</strong>：任何工具给出的数，先在这里对一遍。</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 三种结构的 PFDavg（低要求模式，常数失效率）</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>lam, T, beta <span class="op">=</span> <span class="fl">1e-6</span>, <span class="fl">8760.0</span>, <span class="fl">0.05</span>      <span class="co"># /h, h, 无量纲</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>p1 <span class="op">=</span> lam <span class="op">*</span> T <span class="op">/</span> <span class="dv">2</span>                                        <span class="co"># 1oo1</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>p2 <span class="op">=</span> (<span class="dv">1</span> <span class="op">-</span> beta)<span class="op">**</span><span class="dv">2</span> <span class="op">*</span> lam<span class="op">**</span><span class="dv">2</span> <span class="op">*</span> T<span class="op">**</span><span class="dv">2</span> <span class="op">/</span> <span class="dv">3</span> <span class="op">+</span> beta <span class="op">*</span> lam <span class="op">*</span> T <span class="op">/</span> <span class="dv">2</span>   <span class="co"># 1oo2</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>p3 <span class="op">=</span> (<span class="dv">1</span> <span class="op">-</span> beta)<span class="op">**</span><span class="dv">2</span> <span class="op">*</span> lam<span class="op">**</span><span class="dv">2</span> <span class="op">*</span> T<span class="op">**</span><span class="dv">2</span> <span class="op">+</span> beta <span class="op">*</span> lam <span class="op">*</span> T <span class="op">/</span> <span class="dv">2</span>       <span class="co"># 2oo3</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">&quot;1oo1 </span><span class="sc">%.3e</span><span class="st">  1oo2 </span><span class="sc">%.3e</span><span class="st">  2oo3 </span><span class="sc">%.3e</span><span class="st">&quot;</span> <span class="op">%</span> (p1, p2, p3))</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="co"># 实测 1oo1 4.380e-03  1oo2 2.421e-04  2oo3 2.883e-04</span></span></code></pre></div>
+<p><strong>三行代码，三个结论立刻可见：</strong> 单通道只能到 SIL1；加一个通道（并考虑 <span class="math inline">\beta=0.05</span> 的共因）到 SIL3；再加一个通道反而略差（<span class="math inline">2.883\times10^{-4}</span> 对 <span class="math inline">2.421\times10^{-4}</span>），<strong>因为 2oo3 的独立项系数是 1oo2 的 3 倍，而共因项两者相同。</strong> 这个“多一个通道反而更差”的反直觉结果，正是共因主导时的典型特征。</p>
+<h3 id="蒙特卡洛要多少样本">36.4.4 蒙特卡洛要多少样本</h3>
+<p><span class="math inline">\mathrm{PFD_{avg}}</span> 是一个小概率。<strong>用蒙特卡洛估 <span class="math inline">p</span>，相对标准误约为 <span class="math inline">1/\sqrt{Np}</span>。</strong> 要达到 10% 的精度，需要</p>
+<p><span class="math display">
+N\approx\frac{100}{p}. \tag{36-19}
+</span></p>
+<p>对 <span class="math inline">p=5\times10^{-6}</span>，<span class="math inline">N\approx2\times10^{7}</span>——<strong>这就是 E4 每个结构跑两千万个样本的原因。</strong> 若只跑一百万，1oo2 的估计会上下浮动 40% 以上，<strong>看起来“和解析式对不上”，其实是样本不够。</strong></p>
+<p>E4 的实测印证了这一点：1oo1（<span class="math inline">p\approx2\times10^{-3}</span>）的相对偏差 <span class="math inline">+0.61\%</span>，1oo2（<span class="math inline">p\approx5.3\times10^{-6}</span>）的相对偏差 <span class="math inline">-2.50\%</span>，2oo3 是 <span class="math inline">+3.75\%</span>——<strong>概率越小，同样的样本量下偏差越大，这是统计涨落，不是模型错。</strong></p>
+<p><strong>工程含义：蒙特卡洛只适合“验证量级”，不适合“精确定值”。</strong> 报 <span class="math inline">\mathrm{PFD_{avg}}</span> 时应当报解析值，并附一句“蒙特卡洛在 2×10⁷ 样本下与解析值相差 X%”，<strong>这比报一个蒙特卡洛点估计更诚实。</strong></p>
+<h3 id="失效率数据从哪来">36.4.5 失效率数据从哪来</h3>
+<p>四类来源，可信度依次递减：</p>
+<p><strong>其一，现场数据（OREDA、企业自己的维修记录）。</strong> 最可信，因为它对应真实工况。<strong>缺点是样本少、置信区间宽</strong>——一个部件十年坏了三次，<span class="math inline">\lambda</span> 的 90% 置信区间可以跨一个数量级。</p>
+<p><strong>其二，厂商 FMEDA 报告。</strong> 器件级 <span class="math inline">\lambda_{DD}</span>、<span class="math inline">\lambda_{DU}</span>、<span class="math inline">\beta</span> 都有，<strong>但它是按“参考工况”算的</strong>，温度、振动、负载率一变就要修正。</p>
+<p><strong>其三，通用数据库（如 exida SERH）。</strong> 适合早期估算，<strong>不适合作为 SIL 验证的唯一依据</strong>。</p>
+<p><strong>其四，MIL-HDBK-217 之类的老标准。</strong> <strong>不要用于功能安全计算。</strong> 它面向军工电子、假设与现场差异大，且早已停止维护。<strong>用它算出来的 <span class="math inline">\lambda</span> 往往偏保守一个数量级，导致过度设计；也可能对某些器件偏乐观。</strong></p>
+<p><strong>“proven in use”（在用证明）是另一条路</strong>：若某部件在相似工况下累计运行了足够长的时间且无失效记录，可以据此给出 <span class="math inline">\lambda</span> 的上界。<strong>它的前提是“相似”必须可论证</strong>——工况、维护、负载都要对得上，否则只是把无知包装成了数据。</p>
+<p><strong>在用证明要站得住，三条必须同时成立：</strong> 一是相似工况，温度、介质、负载率、起停次数都在同一档；二是足够的累计运行时间，通常要求达到目标 <span class="math inline">\mathrm{MTBF}</span> 的若干倍，否则上界宽得没有意义；三是完整的失效记录。<strong>第三条最容易被糊弄——“没有维修记录”可能是真的没坏，也可能是坏了没记。</strong> 用后者当“零失效”，等于拿管理漏洞去证明设备可靠。<strong>审这份证据时，要问的不是“坏了没有”，而是“坏了会不会被记下来”。</strong></p>
+<h3 id="四个数值细节">36.4.6 四个数值细节</h3>
+<p><strong>其一，不要用 float32。</strong> <span class="math inline">10^{-8}</span> 量级的量与 <span class="math inline">10^{4}</span> 量级的量同处一个表达式时，float32 的 7 位有效数字不够。<strong>全部用双精度。</strong></p>
+<p><strong>其二，小概率用对数表示与比较。</strong> <span class="math inline">\mathrm{PFD_{avg}}</span> 跨越 <span class="math inline">10^{-6}</span> 到 <span class="math inline">10^{-1}</span>，线性刻度上看不出差别。<strong>画图用对数轴，报告里用“<span class="math inline">4.38\times10^{-3}</span>”而不是“0.00438”。</strong></p>
+<p><strong>其三，单位在变量名里写死。</strong> <code>lam_per_h</code>、<code>T_h</code>、<code>mttr_h</code>——<strong>Python 不会替你检查单位，命名是唯一廉价的手段。</strong></p>
+<p><strong>其四，不要对已经平均过的量再取平均。</strong> 若工具输出的是 <span class="math inline">\mathrm{PFD_{avg}}</span>，不要再除以 <span class="math inline">T</span> 去“换算成 <span class="math inline">\mathrm{PFH}</span>”——<strong><span class="math inline">T</span> 已经被平均掉了，再除一次等于重复计算。</strong> 这是 SIL 验证报告里最常见的算术错误。</p>
+<h3 id="怎么验证一个-sil-计算工具">36.4.7 怎么验证一个 SIL 计算工具</h3>
+<p>商业 SIL 计算软件的输出不能直接采信。<strong>四个自检用例，任何一个不过就不要用</strong>：</p>
+<ol type="1">
+<li><strong>令 <span class="math inline">\beta=1</span></strong>：1oo2 的 <span class="math inline">\mathrm{PFD_{avg}}</span> 应当等于 1oo1（共因吞掉全部冗余）。</li>
+<li><strong>令 <span class="math inline">\beta=0</span>、<span class="math inline">T\to0</span></strong>：<span class="math inline">\mathrm{PFD_{avg}}\to0</span>（测试无限快则无潜伏）。</li>
+<li><strong>串联分解</strong>：把三段串联的 <span class="math inline">\mathrm{PFD_{avg}}</span> 与三段各自之和比较，偏差应在百分之一量级。</li>
+<li><strong>与手算对照</strong>：用 §36.4.3 的十行代码对同一组输入，<strong>数量级必须一致。</strong></li>
+</ol>
+<p><strong>这四条本质上是“极限检验 + 可分解性检验”</strong>，与第 18 章验证辨识算法、第 27 章验证网络训练用的是同一套思路：<strong>先看极限，再看分解，最后才看具体数字。</strong></p>
+<h3 id="精确算故障树容斥与不交化">36.4.8 精确算故障树：容斥与不交化</h3>
+<p>式 36-16 是近似。精确值来自“至少一条割集全部发生”这个事件的概率，标准做法是容斥：</p>
+<p><span class="math display">
+P_{\text{top}}=\sum_j P(C_j)-\sum_{i&lt;j}P(C_i\cap C_j)
++\sum_{i&lt;j&lt;k}P(C_i\cap C_j\cap C_k)-\cdots
+</span></p>
+<p><strong>符号交替，项数是 <span class="math inline">2^{m}-1</span>。</strong> <span class="math inline">m=10</span> 是一千项，<span class="math inline">m=20</span> 是一百万项，<span class="math inline">m=30</span> 是十亿项——<strong>所以精确计算只在割集很少、或者割集之间高度重叠时才值得做。</strong></p>
+<p>用 E5 的第二个算例验一遍。三条割集概率相同、各自独立（<span class="math inline">p=2\times10^{-4}</span>），此时</p>
+<p><span class="math display">
+P_{\text{top}}=1-(1-p)^3=3p-3p^2+p^3
+=6.0000\times10^{-4}-1.2\times10^{-7}+8\times10^{-12}
+=5.99880\times10^{-4},
+</span></p>
+<p><strong>与 E5 报的精确值 <span class="math inline">5.9988\times10^{-4}</span> 逐位对上。</strong> 二阶项 <span class="math inline">1.2\times10^{-7}</span> 相对总量是 <span class="math inline">2\times10^{-4}</span>，<strong>这就是“偏差 +0.020%”的来源</strong>——它不是代码误差，而是近似的固有偏差。</p>
+<p><strong>工程上真正需要精确值的场合只有一类：割集共享基本事件。</strong> 设两条割集 <span class="math inline">\{X,Y\}</span> 与 <span class="math inline">\{X,Z\}</span> 共享 <span class="math inline">X</span>，且 <span class="math inline">P(X)=0.1</span>、<span class="math inline">P(Y)=P(Z)=0.05</span>。近似给出 <span class="math inline">2\times0.005=0.01</span>；精确值是 <span class="math inline">P(X)P(Y\cup Z)=0.1\times(0.05+0.05-0.0025)=0.00975</span>。<strong>两者只差 2.5%，看起来没事——但若 <span class="math inline">P(X)</span> 升到 0.5，近似给出 <span class="math inline">0.05</span>，精确值是 <span class="math inline">0.5\times0.0975=0.04875</span>，仍然接近。</strong> 真正危险的不是“共享一个事件”，而是<strong>割集之间几乎完全重合</strong>：两条割集只差一个事件、且那个事件的概率接近 1，此时二阶项与一阶项同量级，近似会偏大一倍。</p>
+<p><strong>“不交化”是把容斥的 <span class="math inline">2^m</span> 项压成 <span class="math inline">m</span> 项的技巧。</strong> 把割集按字典序排好，第 <span class="math inline">k</span> 项写成“<span class="math inline">C_k</span> 发生且前 <span class="math inline">k-1</span> 条都不发生”，各项互斥，直接相加即精确。代价是每一项要做布尔化简，<strong>手工做容易出错，工程上用 BDD（二元决策图）实现</strong>——它的规模对多数实际故障树是线性的。</p>
+<p><strong>判据可以写得很干脆：若 <span class="math inline">\sum_j P(C_j)&lt;10^{-2}</span>，直接用式 36-16；否则先看割集之间有没有共享事件，有就上 BDD。</strong> 这条判据覆盖了九成以上的现场故障树。</p>
+<h3 id="蒙特卡洛的三条降方差路线">36.4.9 蒙特卡洛的三条降方差路线</h3>
+<p>直接抽样的流程很短：对每个通道抽一个失效时刻，判断需求时刻它是否已失效，统计“该失效的通道数达到阈值”的比例。<strong>它的成本由 <span class="math inline">N\approx100/p</span> 决定（式 36-19），这就是 <span class="math inline">p=5\times10^{-6}</span> 时要两千万样本的原因。</strong></p>
+<p>三条降方差路线，按实现难度排序：</p>
+<p><strong>其一，分层抽样。</strong> 把 <span class="math inline">[0,T]</span> 分成 <span class="math inline">K</span> 层，每层抽同样多的样本。<strong>它消除的是“层间不均衡”</strong>——直接抽样里可能整整一层一个失效都没抽到，而另一层抽到十几个。对 <span class="math inline">T/2</span> 这类平滑的被积函数，分层能把方差降一个数量级，实现只需要把随机数改成“层号 + 层内偏移”。</p>
+<p><strong>其二，对偶变量。</strong> 每抽一个 <span class="math inline">u</span> 就同时用 <span class="math inline">1-u</span> 跑一遍，两个样本负相关，平均后方差下降。<strong>实现成本几乎为零，但收益依赖被积函数的单调性</strong>——<span class="math inline">\mathrm{PFD}</span> 对失效时刻是单调的，所以这里有效。</p>
+<p><strong>其三，重要性抽样。</strong> 把抽样分布改成“更容易失效”的分布（比如把 <span class="math inline">\lambda</span> 乘 10），每个样本乘一个似然比权重修正回来。<strong>这是唯一能把 <span class="math inline">10^{-6}</span> 量级的估计压到 <span class="math inline">10^{5}</span> 样本量级的手段</strong>，代价是要自己设计偏置分布，且权重方差可能很大——<strong>设计不好会比直接抽样更糟。</strong></p>
+<p><strong>三条路线都建立在一个前提上：结构判定必须写对。</strong> 1oo2 与 2oo3 在代码里只差一行（“失效通道数 <span class="math inline">\ge2</span>” 对 “<span class="math inline">\ge2</span> 且总通道数 3”），结果差 3 倍。<strong>共因抽样也容易写错：共因失效率是 <span class="math inline">\beta\lambda</span>，不是 <span class="math inline">\lambda</span>。</strong> 本章代码初版就犯过这个错——把共因的抽样率写成 <span class="math inline">\lambda</span> 后，<span class="math inline">\beta=0.1</span> 情形的偏差达到 <span class="math inline">+838\%</span>；<strong>这个错误不是统计涨落，因为它只有一个方向。</strong></p>
+<p><strong>报告蒙特卡洛结果时应当给三个数：点估计、标准误、样本量。</strong> 只给点估计等于让人无法判断“这个数与解析式的差是模型问题还是样本问题”——<strong>而这两件事的处理方式完全相反：前者要改模型，后者只要加样本。</strong></p>
+<h3 id="敏感性哪个输入最值得核实">36.4.10 敏感性：哪个输入最值得核实</h3>
+<p><span class="math inline">\mathrm{PFD_{avg}}</span> 对三个输入的敏感度并不相同，<strong>这决定了核实工作的优先级</strong>。</p>
+<p>对 1oo1，<span class="math inline">\mathrm{PFD}=\lambda T/2</span>，<span class="math inline">\lambda</span> 与 <span class="math inline">T</span> 的弹性都是 1：<strong>两者各错 20%，结果各错 20%。</strong> 对 1oo2 的独立项，弹性都是 2：<strong><span class="math inline">\lambda</span> 或 <span class="math inline">T</span> 错 20%，结果错 44%。</strong> 对共因项，弹性是 1，但它的基数大。</p>
+<p>把弹性与基数乘起来，才看得出谁重要。以 <span class="math inline">\beta=0.05</span>、<span class="math inline">\lambda_{DU}T=8.76\times10^{-3}</span> 的 1oo2 为例：</p>
+<ul>
+<li>独立项 <span class="math inline">2.3\times10^{-5}</span>，弹性 2，<strong>绝对敏感度约 <span class="math inline">4.6\times10^{-5}</span> 每单位相对变化</strong>；</li>
+<li>共因项 <span class="math inline">2.19\times10^{-4}</span>，弹性 1，<strong>绝对敏感度 <span class="math inline">2.19\times10^{-4}</span></strong>。</li>
+</ul>
+<p><strong>共因项的绝对敏感度是独立项的 4.8 倍。</strong> 也就是说，<strong>把 <span class="math inline">\beta</span> 从 0.05 核实到 0.04，比把 <span class="math inline">\lambda</span> 从 <span class="math inline">1.0\times10^{-6}</span> 核实到 <span class="math inline">0.8\times10^{-6}</span> 更有价值。</strong> 这与 §36.6.3 的结论一致，但这里给出了它的一般形式：<strong>先按弹性排序，再乘以各项的量级。</strong></p>
+<p>由此得到核实工作的优先顺序：<strong>第一，<span class="math inline">\beta</span> 的打分依据；第二，<span class="math inline">T</span> 的实际覆盖率 <span class="math inline">t_c</span>（§36.3.13）；第三，<span class="math inline">\lambda</span> 的工况修正；最后才是 <span class="math inline">\lambda</span> 的第三位有效数字。</strong> 反过来做（花两周去查器件的 FIT 值，却让 <span class="math inline">\beta</span> 直接填 0.01）是这类计算里最常见的资源错配。</p>
+<h3 id="一份可复核的报告该有哪几个数">36.4.11 一份可复核的报告该有哪几个数</h3>
+<p>前面所有公式都可以写进一行代码，<strong>但报告的作用不是给结论，是让别人能重算。</strong> 判断一份 SIL 验证报告是否合格，最简单的办法是：<strong>把结论遮住，只看输入，能不能自己算出同一个数。</strong> 按这个标准，报告里至少要有八个量，缺一个就不可复核：</p>
+<ol type="1">
+<li><strong>结构</strong>（1oo1 / 1oo2 / 2oo3 …），<strong>并附独立性证据</strong>——独立电源、独立 I/O、独立电缆路径、异构与否。没有这一条，“结构”只是个代号。</li>
+<li><strong><span class="math inline">\lambda_{DU}</span> 与 <span class="math inline">\lambda_{DD}</span></strong>，逐段给出，注明来源（现场记录 / FMEDA / 数据库）与工况修正系数。</li>
+<li><strong><span class="math inline">\beta</span></strong>，附打分表与得分项。<strong>直接写“<span class="math inline">\beta=0.01</span>”的报告等于没写。</strong></li>
+<li><strong><span class="math inline">DC</span></strong>，附诊断方法与验证记录。<strong>“采用了先进诊断”不是证据。</strong></li>
+<li><strong><span class="math inline">T</span></strong>，附“这个周期在现场真的执行得了”的说明——有没有停车窗口、PST 能不能做。</li>
+<li><strong><span class="math inline">t_c</span></strong>，附“哪些失效模式覆盖不到”的清单（§36.3.13）。</li>
+<li><strong><span class="math inline">\mathrm{MTTR}</span></strong>，来自维修记录的中位数，不是行业典型值。</li>
+<li><strong>需求模式与任务时间</strong>，低要求还是高要求、任务时间多少、响应时间怎么分解（§36.5.7）。</li>
+</ol>
+<p><strong>最常见的缺口是第 3、6、7 三项。</strong> 报告里写满 <span class="math inline">\lambda</span> 的六位有效数字，<span class="math inline">\beta</span> 却只有一个数、<span class="math inline">t_c</span> 根本没出现、<span class="math inline">\mathrm{MTTR}</span> 直接填 8 h——<strong>这种报告的精度是假精度：输入的不确定度在百分之几十，输出却报到小数点后三位。</strong></p>
+<p><strong>还有一条格式要求：给出“最弱环节”的占比。</strong> 像 §36.5.1 那样把三段的比例列出来（阀门 81.8%、PLC 16.4%、变送器 1.9%），评审人一眼就能看出该改哪里。<strong>没有这张比例表，报告就只是“达标”两个字，不能指导任何决策。</strong></p>
+<h3 id="从-pid-到可计算的段四步拆法">36.4.12 从 P&amp;ID 到可计算的段：四步拆法</h3>
+<p>公式都要求“先分段”。<strong>分段分错，后面算得再准也没用。</strong> 工程上有四步可循。</p>
+<p><strong>第一步，沿安全功能走一遍全链。</strong> 从“检测”到“动作”把所有元件列出来，<strong>一个都不能漏</strong>：热电偶（含保护套管）、补偿导线、安全栅、AI 通道、控制器 CPU、联锁程序、DO 通道、中间继电器、电磁阀、气源、阀体与执行机构。<strong>最容易漏的是安全栅与中间继电器——它们不在 P&amp;ID 上，而在机柜里。</strong></p>
+<p><strong>第二步，把串联的元件并成段。</strong> 段内元件互相串联，乘起来与顺序无关，所以可以合并。<strong>合并的依据是“这一段能不能只用一个 <span class="math inline">\lambda_{DU}</span> 描述”</strong>——能，就并；不能，就拆。</p>
+<p><strong>第三步，把共享的部分单独提出来。</strong> 24 V 电源、机柜风扇、接地、电缆桥架、UPS、维护班组——<strong>这些不属于任何一段，却同时影响所有段</strong>。它们应当作为独立的共因项（或作为 <span class="math inline">\beta</span> 的打分依据），<strong>而不是塞进某一段的 <span class="math inline">\lambda</span> 里。</strong> 这一步做对了，<span class="math inline">\beta</span> 才有依据；做错了，<span class="math inline">\beta</span> 只能拍。</p>
+<p><strong>第四步，给每段定五个数：</strong> <span class="math inline">\lambda_{DU}</span>、<span class="math inline">\beta</span>、<span class="math inline">DC</span>、<span class="math inline">T</span>、<span class="math inline">t_c</span>。<strong>缺任何一个，这一段就不可计算</strong>（§36.4.11）。</p>
+<p><strong>分段的粒度判据只有一条：段内应当只有一个主导失效模式。</strong> 若某一段里既有“漂移”又有“卡涩”，说明它该拆——<strong>因为这两种失效的 <span class="math inline">DC</span> 与 <span class="math inline">t_c</span> 完全不同，混在一起取平均会把两个数都算错。</strong></p>
+<p><strong>按这四步重拆 §36.5.1 的三段，会得到五段：</strong> 热电偶与套管、变送器、AI 卡、CPU 与程序、DO 加电磁阀加阀体。<strong>比例也随之变化</strong>：原来“执行”一段占 81.8%，拆开后能看清阀体与电磁阀贡献了大部分，而 DO 卡只占很小一块。<strong>这个更细的分解才指向正确的改进动作</strong>——该换的是阀，不是 DO 卡。</p>
+<p><strong>最后一条经验：分段的详细程度应当与“改进决策”匹配。</strong> 如果拆到二十段，每段的 <span class="math inline">\lambda</span> 都查不到数据，<strong>精度反而是假的</strong>；如果只分三段，又看不出该改哪里。<strong>五到八段是多数过程工业回路的合适粒度。</strong></p>
+<h2 id="工程含义与适用边界">36.5 工程含义与适用边界</h2>
+<h3 id="例子的收口反应釜联锁的完整设计">36.5.1 例子的收口：反应釜联锁的完整设计</h3>
+<p>回到贯穿例子。假设三段各自的参数如下（典型值，仅作演示）：</p>
+<ul>
+<li><strong>温度变送器</strong>：<span class="math inline">\lambda_{DU}=5\times10^{-7}</span>/h，采用 1oo2 双支，<span class="math inline">\beta=0.02</span>；</li>
+<li><strong>安全 PLC 逻辑</strong>：<span class="math inline">\lambda_{DU}=1\times10^{-7}</span>/h，1oo1；</li>
+<li><strong>切断阀</strong>：<span class="math inline">\lambda_{DU}=5\times10^{-7}</span>/h，1oo1；</li>
+<li>统一取 <span class="math inline">T=8760</span> h。</li>
+</ul>
+<p>逐段计算：</p>
+<p><span class="math display">
+\begin{aligned}
+\mathrm{PFD}_{\text{TT}}&amp;=(1-0.02)^2\frac{(5\times10^{-7}\times8760)^2}{3}
++0.02\times\frac{5\times10^{-7}\times8760}{2}
+\approx4.99\times10^{-5},\\
+\mathrm{PFD}_{\text{PLC}}&amp;=\frac{1\times10^{-7}\times8760}{2}
+=4.38\times10^{-4},\\
+\mathrm{PFD}_{\text{XV}}&amp;=\frac{5\times10^{-7}\times8760}{2}
+=2.19\times10^{-3}.
+\end{aligned}
+</span></p>
+<p>串联相加：<span class="math inline">4.99\times10^{-5}+4.38\times10^{-4}+2.19\times10^{-3}=2.678\times10^{-3}</span>，<strong>落在 SIL2 区间，满足要求。</strong></p>
+<p><strong>但三段的比例很难看</strong>：阀门占 <span class="math inline">81.8\%</span>、PLC 占 <span class="math inline">16.4\%</span>、变送器只占 <span class="math inline">1.9\%</span>。<strong>这意味着传感部分的冗余几乎白做。</strong> 把阀门也改成 1oo2（<span class="math inline">\beta=0.02</span>）后，<span class="math inline">\mathrm{PFD_{XV}}</span> 降到 <span class="math inline">4.99\times10^{-5}</span>，总 <span class="math inline">\mathrm{PFD}</span> 变成 <span class="math inline">5.378\times10^{-4}</span>，<strong>跨进 SIL3。</strong></p>
+<p>表 36-7 把三个方案并列。<strong>这张表是全章最该记住的一张——它说明“提升安全等级”的正确做法是补最弱环节，而不是把已经很好的环节再做一遍。</strong></p>
+<p>表 36-7　反应釜联锁的三个方案（<span class="math inline">T=8760</span> h）</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">方案</th>
+<th style="text-align: left;">传感</th>
+<th style="text-align: left;">逻辑</th>
+<th style="text-align: left;">执行</th>
+<th style="text-align: left;">总 <span class="math inline">\mathrm{PFD_{avg}}</span></th>
+<th style="text-align: left;">SIL</th>
+<th style="text-align: left;">评价</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">A（现状）</td>
+<td style="text-align: left;">1oo2</td>
+<td style="text-align: left;">1oo1</td>
+<td style="text-align: left;">1oo1</td>
+<td style="text-align: left;"><span class="math inline">2.678\times10^{-3}</span></td>
+<td style="text-align: left;">SIL2</td>
+<td style="text-align: left;">阀门占 81.8%，冗余白做</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">B（只改阀）</td>
+<td style="text-align: left;">1oo2</td>
+<td style="text-align: left;">1oo1</td>
+<td style="text-align: left;">1oo2</td>
+<td style="text-align: left;"><span class="math inline">5.378\times10^{-4}</span></td>
+<td style="text-align: left;">SIL3</td>
+<td style="text-align: left;">同样的钱，跨一级</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">C（全冗余）</td>
+<td style="text-align: left;">1oo2</td>
+<td style="text-align: left;">1oo2</td>
+<td style="text-align: left;">1oo2</td>
+<td style="text-align: left;"><span class="math inline">1.088\times10^{-4}</span></td>
+<td style="text-align: left;">SIL3</td>
+<td style="text-align: left;">相对 B 仅改善 4.9 倍，成本翻倍</td>
+</tr>
+</tbody>
+</table>
+<p><strong>方案 C 是“过度设计”的典型</strong>：花了两倍的钱，只把 <span class="math inline">\mathrm{PFD}</span> 从 <span class="math inline">5.4\times10^{-4}</span> 降到 <span class="math inline">1.1\times10^{-4}</span>，<strong>而后者已经在 SIL3 区间内，再往下走对风险的实际贡献很小。</strong> 这正是 §36.3.1“相加”结构的直接推论。</p>
+<h3 id="sil-定级风险矩阵与-lopa">36.5.2 SIL 定级：风险矩阵与 LOPA</h3>
+<p>SIL 不是拍脑袋定的，两条常用路径：</p>
+<p><strong>风险矩阵</strong>：把“后果严重度”与“暴露频率”各分几档，交叉查表。<strong>优点是快，缺点是粗</strong>——同一格里的不同场景可能差一个数量级。</p>
+<p><strong>LOPA（保护层分析）</strong>：把风险拆成“初始事件频率 × 各独立保护层的失效概率”，与可容忍风险比较，差额就是 SIS 需要提供的风险降低因子。</p>
+<p>以本例走一遍：初始事件（冷却水中断）频率 <span class="math inline">0.3</span>/年；现有保护层有两个——BPCS 的温度控制（<span class="math inline">\mathrm{PFD}=0.1</span>）与操作员响应（<span class="math inline">\mathrm{PFD}=0.1</span>）。剩余风险</p>
+<p><span class="math display">
+0.3\times0.1\times0.1=3\times10^{-3}\ \text{/年}.
+</span></p>
+<p>若可容忍风险是 <span class="math inline">10^{-5}</span>/年，则还需降低 300 倍，即 SIS 的 <span class="math inline">\mathrm{PFD_{avg}}\le3.3\times10^{-3}</span>——<strong>落在 SIL2 区间，与 §36.1.3 的假设一致。</strong></p>
+<p><strong>LOPA 的三条纪律：</strong></p>
+<ul>
+<li><strong>每个保护层必须独立</strong>：共用传感器的两层只能算一层。</li>
+<li><strong>保护层的 <span class="math inline">\mathrm{PFD}</span> 不能随便取小</strong>：BPCS 取 0.1、报警+操作员取 0.1 是行业惯例，<strong>再小就需要证据。</strong></li>
+<li><strong>初始事件频率要有来源</strong>：来自历史数据或数据库，不能“感觉差不多”。</li>
+</ul>
+<h3 id="七种不该上-sis-的场合">36.5.3 七种不该上 SIS 的场合</h3>
+<p>这一节是“劝退清单”。<strong>SIS 是最后一道防线，不是第一道。</strong></p>
+<p><strong>其一，危险可以被本质安全设计消除。</strong> 减小持液量、改用不反应的溶剂、降低储存温度——<strong>消除危险比控制危险可靠得多，且不需要维护。</strong></p>
+<p><strong>其二，危险主要来自操作规程。</strong> 若事故链的根因是“操作工按错顺序”，那么改程序、改界面、加防错比加联锁有效。</p>
+<p><strong>其三，需求率极高。</strong> 如果一年要动作上百次，那它已经不是“安全功能”而是“常规控制”，<strong>应当改造工艺或改控制方案，而不是堆一个高 SIL 的 SIS。</strong></p>
+<p><strong>其四，没有独立传感器可用。</strong> 若只能复用控制回路的那支热电偶，共因会让 SIS 与控制同时失效——<strong>这种情况下算出来的 SIL 是假的。</strong></p>
+<p><strong>其五，执行器做不到失效安全。</strong> 阀门卡涩、电机没有弹簧复位，SIS 发出命令也无效。<strong>先改执行机构，再谈 SIL。</strong></p>
+<p><strong>其六，维护能力跟不上。</strong> 证明测试做不到、旁路没有审批、备件不到位——<strong><span class="math inline">\mathrm{PFD_{avg}}</span> 的公式假设“测试真的做了”，做不到就是纸面数字。</strong></p>
+<p><strong>其七，安全功能本身会引入更大风险。</strong> 频繁误跳闸导致的起停、泄压、排料，可能比它防的事故更危险。<strong>这条最容易被忽略，也最需要在 HAZOP 里专门讨论。</strong></p>
+<h3 id="三个现场">36.5.4 三个现场</h3>
+<p><strong>反应釜（过程工业）。</strong> 典型 SIL2，结构多为 1oo2 或 2oo3，<strong>关键是证明测试的可执行性</strong>——阀门部分行程测试（PST）能在不停车的情况下覆盖大部分卡涩失效，这是把 <span class="math inline">DC</span> 从 0 提到 0.7 以上的常用手段。</p>
+<p><strong>电梯（机械安全）。</strong> 按 ISO 13849 定 PL，门锁与超速保护通常要求 PL d（对应 Category 3）。<strong>它的特点是需求率低但后果确定</strong>，且<strong>误动作的直接受害者就是乘客</strong>，所以“误跳闸”在这里不是经济问题而是安全问题。</p>
+<p><strong>AGV（移动机器人）。</strong> 速度限制、防撞、急停通常要求 PL d。<strong>难点在“传感器覆盖范围”</strong>：激光雷达的盲区、反光板的误检、地面湿滑导致的制动距离变化，都会让“检测到就停得住”这个假设失效。<strong>这类系统的安全功能必须做在独立的安全控制器上，不能跑在负责导航的那台工控机上</strong>——这与第 35 章的多智能体协调是两套完全独立的机制。</p>
+<h3 id="软件与学习型组件">36.5.5 软件与学习型组件</h3>
+<p>软件失效是系统性的，所以对它的要求是<strong>过程</strong>而不是<strong>指标</strong>：</p>
+<ul>
+<li><strong>V 模型</strong>：需求—设计—实现—单元测试—集成测试—确认，每一层都要有可追溯的验证记录。</li>
+<li><strong>编码规范与静态分析</strong>：限制语言子集（不用动态内存、不用递归、限定循环上界），用工具做数据流与控制流检查。</li>
+<li><strong>独立验证</strong>：SIL3 以上要求验证者与开发者不重合。</li>
+<li><strong>形式化方法</strong>：对极关键逻辑（如联锁表决）用模型检验或定理证明，成本高但能覆盖穷举测试覆盖不到的组合。</li>
+</ul>
+<p><strong>学习型组件的位置必须划清：它可以做“建议”，不能做“安全功能”。</strong> 原因是三条：<strong>训练分布无法穷举、失效模式无法枚举、行为无法用需求文档完整描述。</strong> 工程上的可行架构是——<strong>学习型控制器只输出建议值，经一个可验证的屏蔽层（安全包络）后才下发</strong>，屏蔽层本身按本章的方法做 SIL 认证。<strong>这样“不可验证的部分”被限制在不影响安全的范围内。</strong></p>
+<h3 id="与相邻章的接口-1">36.5.6 与相邻章的接口</h3>
+<ul>
+<li><strong>与容错控制章节</strong>：本章算“失效概率”，容错控制解决“失效后怎么重构”。<strong>前者是设计依据，后者是运行手段，两者共用同一套失效分类（表 36-2）。</strong></li>
+<li><strong>与 SIS 章节</strong>：本章给指标与结构选型，SIS 章节给组态、旁路管理、证明测试规程。</li>
+<li><strong>与第 35 章</strong>：多智能体的安全约束应当由本章的屏蔽层兜底；<strong>把安全完全交给学习型智能体，在功能安全框架里是不可接受的。</strong></li>
+<li><strong>与第 58/80 章（MPC）</strong>：MPC 可以在正常范围内处理约束，<strong>但它不构成独立保护层</strong>——共享模型与传感器这一点就决定了它不能计入 LOPA。</li>
+</ul>
+<h3 id="安全要求规格书该写什么">36.5.7 安全要求规格书该写什么</h3>
+<p>SIL 定级之后、选型之前，必须有一份<strong>安全要求规格书（SRS）</strong>。它把“要什么”写死，后面的设计、采购、验证都以它为判据。<strong>一份能通过评审的 SRS 至少有十条内容：</strong></p>
+<ol type="1">
+<li><strong>功能描述</strong>：输入是什么、逻辑是什么、输出是什么。本例是“TT-101 高于 110 ℃ 持续 2 s → 关 XV-101、开 XV-102”。</li>
+<li><strong>触发值与延时</strong>：动作值、回差、延时。<strong>延时 2 s 是为了滤掉尖峰，但它计入响应时间，必须写清。</strong></li>
+<li><strong>目标 SIL 与 <span class="math inline">\mathrm{PFD_{avg}}</span></strong>：写“低要求模式、SIL2、<span class="math inline">\mathrm{PFD_{avg}}\le10^{-2}</span>”。</li>
+<li><strong>响应时间分解</strong>：传感 3 s、PLC 扫描 0.1 s、DO 与继电器 0.05 s、阀门全行程 8 s，<strong>合计 11.2 s</strong>；相对 480 s 的任务时间有 43 倍余量。<strong>只写“响应时间 &lt; 8 min”是不合格的，因为无法验证。</strong></li>
+<li><strong>结构与独立性要求</strong>：1oo2 双支热电偶、独立于 BPCS 的 I/O 卡与机柜、独立电源。</li>
+<li><strong>诊断与测试要求</strong>：<span class="math inline">DC\ge0.9</span>、<span class="math inline">T=6</span> 个月、<span class="math inline">t_c\ge0.9</span>、PST 每季度一次。</li>
+<li><strong>误跳闸限制</strong>：年误停不超过 0.5 h，对应误跳闸率上限。</li>
+<li><strong>复位策略</strong>：手动复位，且复位条件为“温度低于 95 ℃ 持续 5 min”。</li>
+<li><strong>失效安全方向</strong>：逐台执行器写明失电位置。</li>
+<li><strong>验证方法与记录</strong>：FAT、SAT、回路校验、SIL 验证报告、测试记录保存年限。</li>
+</ol>
+<p><strong>第 8 条与第 9 条是最容易漏的两条，而且漏了会直接变成事故。</strong></p>
+<p><strong>先说复位。</strong> 若联锁做成自动复位，温度降到 109 ℃ 时阀门重新打开、进料恢复、温度再升到 110 ℃——<strong>这不是联锁，这是一个振荡器。</strong> 每一次循环都在给反应釜加热，直到某个环节失效。<strong>所以复位必须是手动的，而且要有复位条件</strong>（工艺侧确认危险已消除），<strong>手动复位不是“保守”，它是联锁逻辑的一部分。</strong></p>
+<p><strong>再说失效安全方向。</strong> 同一条联锁上挂着两个阀：进料阀 XV-101 的失效安全方向是“失电关”，冷却水阀 XV-102 的失效安全方向是“失电开”。<strong>若把“失电关”当成通用规则套到冷却水阀上，事故工况下冷却水反而被切断——安全功能把事故做大了。</strong> 这一条必须逐台写清，因为气开/气关的选型、电磁阀的常开/常闭、以及失气位置都由它决定。<strong>“安全方向”不是设备属性，而是“这台设备在这个工艺位置上应该往哪边走”。</strong></p>
+<h3 id="旁路唯一一项管理直接决定数值的环节">36.5.8 旁路：唯一一项“管理直接决定数值”的环节</h3>
+<p>旁路是功能安全里最特殊的一件事：<strong>它不改硬件、不改软件、不改计算，却能让前面所有公式失效。</strong></p>
+<p><strong>三种旁路，危险程度依次上升。</strong> 一是<strong>软件旁路</strong>（HMI 上的 bypass 功能）：有记录、有画面提示，相对可控。二是<strong>硬线短接</strong>（端子排上的跨接线）：只有打开柜门才看得见。三是<strong>强制</strong>（force，在 PLC 里把输入点锁成固定值）：<strong>没有人能从画面上看出来，只有打开程序才能发现。</strong> 现场事故调查里，“某个点被强制了三年没人知道”并不罕见。</p>
+<p><strong>旁路期间的安全功能等于不存在</strong>，这一点可以定量。若一年有 5% 的时间处于旁路，则这 5% 里需求一出现就是失效，等效</p>
+<p><span class="math display">
+\mathrm{PFD_{avg}}\ge0.05\times1+0.95\times\mathrm{PFD_{calc}}\approx0.05 .
+</span></p>
+<p><strong>0.05 比 1oo2 的 <span class="math inline">2.4\times10^{-4}</span> 大两百倍，比 SIL1 的上限 <span class="math inline">10^{-1}</span> 也差不了多少。</strong> 也就是说，<strong>5% 的旁路时间，把一套 SIL3 的系统拉到了“连 SIL1 都勉强”。</strong> 这条算术是“旁路必须有时限、有审批、有补偿措施”的最硬的理由——<strong>它不是管理教条，它是数量级。</strong></p>
+<p><strong>配套的四件事，缺一不可：</strong></p>
+<ul>
+<li><strong>补偿措施</strong>：旁路期间加临时独立报警、加密巡检、限制负荷、禁止高风险操作（进料、升温、切换）。</li>
+<li><strong>三方审批</strong>：工艺、安全、仪表各签一次；<strong>只有仪表签字等于没签。</strong></li>
+<li><strong>硬时限</strong>：不超过一个班次或一次检修窗口；到期未恢复必须升级上报。</li>
+<li><strong>台账与统计</strong>：按回路累计旁路小时数，<strong>月度公示</strong>。这个数比任何“安全意识培训”都有效。</li>
+</ul>
+<p><strong>还有一条容易漏的叠加风险：测试窗口与旁路窗口往往重合。</strong> 证明测试本身就要把回路置于“不保护”状态，如果此时工艺正在进料升温，就是最坏组合。<strong>所以测试计划要和排产计划一起排，不能由仪表车间单方面决定。</strong></p>
+<h3 id="人的因素与维护引入的失效">36.5.9 人的因素与维护引入的失效</h3>
+<p>LOPA 里给“报警 + 操作员响应”的 <span class="math inline">\mathrm{PFD}</span> 惯例是 0.1，这个数不是随便定的，它对应一组前提：<strong>报警清晰、有书面处置步骤、有定期演练、从报警到必须动作的时间足够（通常要求 10 min 以上）。</strong> 任何一个前提不成立，实际值就会偏离：<strong>没有演练时可以是 0.3–0.5，有清晰步骤且反复演练时可以到 0.01。</strong> 差 30 倍。</p>
+<p><strong>人的失效也是共因。</strong> 三个“独立”保护层如果都靠人：同一班组、同一班次、同一份操作规程、同一次培训——<strong>它们在失效上高度相关，只能算一层。</strong> 这是 LOPA 评审里最常见的重复计数：把“操作员看温度”“操作员看压力”“班长巡检”算成三层，实际是一层。</p>
+<p><strong>维护引入的失效比设备失效更值得警惕</strong>，因为它不服从任何失效率模型，而且集中在“测试”这个动作上：</p>
+<ul>
+<li><strong>测试后未复位</strong>：旁路忘记摘、阀门手轮忘记恢复、联锁开关留在“检修”位。IEC 61511 给的典型量级是每次测试 <span class="math inline">10^{-2}\sim10^{-3}</span> 的概率。</li>
+<li><strong>量程与组态改错</strong>：换变送器后量程没改，110 ℃ 对应 4–20 mA 的刻度全错，<strong>联锁在错误的温度上动作。</strong></li>
+<li><strong>接线接反</strong>：热电偶极性接反，温度上升时读数下降——<strong>联锁永远不动作，而且自诊断看不出来。</strong></li>
+<li><strong>“临时”改动固化</strong>：为了开车方便把延时从 2 s 改成 60 s，之后没人改回来。</li>
+</ul>
+<p><strong>把“未复位”这个概率代进计算，会得到一个刺眼的结论。</strong> 一年做 2 次证明测试、每次 <span class="math inline">10^{-2}</span> 的未复位概率，则平均约有 <span class="math inline">2\times10^{-2}</span> 的时间比例处于“回路不保护”状态——<strong>等效 <span class="math inline">\mathrm{PFD}</span> 不低于 <span class="math inline">2\times10^{-2}</span>，比 1oo2 的计算值大两个数量级。</strong> 换句话说，<strong>在低要求模式下，人的一次疏忽可以完全覆盖掉硬件冗余带来的全部收益。</strong></p>
+<p><strong>对策不是“加强培训”，而是把测试当成一次受控的变更：</strong></p>
+<ul>
+<li><strong>测试票</strong>：谁测、测什么、旁路哪些点、几点恢复，全部写在票上。</li>
+<li><strong>测试后功能确认</strong>：不只是“看阀门动了”，而是“阀门到位的反馈 + 回路电流校验 + 联锁试验”三样齐全。</li>
+<li><strong>双人复核</strong>：一人操作、一人核对，<strong>核对的人要有权叫停。</strong></li>
+<li><strong>状态可视化</strong>：旁路与强制在 HMI 上常驻显示，<strong>不允许“隐藏”这个功能。</strong></li>
+</ul>
+<p><strong>这三条与 §36.6.7 的可用度结论是同一件事的两面：安全系统的真实水平不由计算决定，而由“测试怎么做、旁路怎么管、人怎么失误”决定。</strong> 计算给出的是上限，管理决定实际落在哪里。</p>
+<h3 id="从设计到运维五个节点与它们的交付物">36.5.10 从设计到运维：五个节点与它们的交付物</h3>
+<p>功能安全是一条链，链上每个节点都要留一份<strong>能被下一个人使用</strong>的东西。<strong>没有交付物，节点就等于没做。</strong></p>
+<p><strong>节点一，危险分析。</strong> 交付物是危险清单与可容忍风险准则（HAZOP 记录、风险矩阵）。<strong>它决定了“什么叫做够安全”</strong>，后面所有数字都是相对它而言的。缺失的后果最严重：<strong>没有准则，SIL 定级就只能靠供应商推荐。</strong></p>
+<p><strong>节点二，SIL 定级。</strong> 交付物是 LOPA 表：初始事件频率、各保护层 <span class="math inline">\mathrm{PFD}</span>、剩余风险、所需风险降低因子。<strong>这张表要能被非仪表专业的人读懂</strong>，因为它最终是工艺与安全部门签字的东西。</p>
+<p><strong>节点三，安全要求规格书。</strong> 交付物是 §36.5.7 那十条。<strong>这是全链唯一一份“设计输入”，也是最容易被写成“满足规范要求”这六个字的地方。</strong> 一份合格的 SRS 应当能让另一个厂家照着它做出同样的系统。</p>
+<p><strong>节点四，设计与验证。</strong> 交付物是 SIL 验证报告（§36.4.11 的八个量）加 FAT/SAT 记录。<strong>FAT 查逻辑、SAT 查回路，两者不能互相替代</strong>——FAT 时阀门还没接管路，SAT 时才能看到全行程时间与真实压差。</p>
+<p><strong>节点五，运维。</strong> 交付物是证明测试台账、旁路台账、变更记录。<strong>这一节点最没有技术含量，却决定了前面四个节点的成果能不能保住</strong>（§36.5.8、§36.5.9 的算术已经说明了这一点）。</p>
+<p><strong>链上最常见的一处断裂在节点三到节点四之间。</strong> SRS 里没写测试周期与覆盖率，验证时就只能用“行业默认值”（一年一测、<span class="math inline">t_c=1</span>）；<strong>默认值算出来的漂亮结果，到运维阶段发现测试根本做不到，于是 PFD 回到真实值而没人重算。</strong> 这条断裂不会在现场立刻出事，它会在几年后的一次事故调查里被发现。</p>
+<p><strong>另一处断裂在节点五内部：测试记录与计算脱节。</strong> 计算假设 <span class="math inline">T=8760</span> h，实际因为等停车窗口拖到 14000 h，<strong>没有任何机制把这个偏差反馈回 SIL 验证报告。</strong> 工程做法是把“实际测试间隔”作为 KPI 定期统计，超期即触发重算——<strong>这一条比任何精度更高的公式都值钱。</strong></p>
+<h3 id="定高了与定低了的代价">36.5.11 定高了与定低了的代价</h3>
+<p>SIL 定级最容易被误解成“越高越好”。<strong>实际上两头都有代价，而且代价的类型不同。</strong></p>
+<p><strong>定低了的代价是显性的</strong>：剩余风险超过可容忍值。补救只有两条——加独立保护层，或者做 ALARP 论证说明“再降不现实”。<strong>后者需要成本-收益的证据，不是一句“行业惯例”。</strong></p>
+<p><strong>定高了的代价是隐性的，而且会反噬。</strong> 每提高一级，典型增量是：冗余通道（硬件翻倍）、诊断（<span class="math inline">DC</span> 从 0.6 提到 0.9 以上）、测试频次（<span class="math inline">T</span> 从一年缩到半年甚至季度）、文档与认证（验证报告、独立审核）。<strong>成本大致翻倍，而风险只改善一个数量级——边际收益递减得非常快。</strong></p>
+<p><strong>更麻烦的是测试频次这一项会反噬安全性。</strong> <span class="math inline">T</span> 减半意味着测试次数翻倍，而每次测试都是一次旁路窗口（§36.5.8）、一次人为失误的机会（§36.5.9）。<strong>把 <span class="math inline">T</span> 从 8760 h 缩到 4380 h，公式上 <span class="math inline">\mathrm{PFD}</span> 减半；实际上多出来的那次测试，可能带来 <span class="math inline">10^{-2}</span> 量级的“未复位”风险。</strong> 两者相抵，<strong>加密测试的净收益可能接近于零，甚至为负。</strong></p>
+<p><strong>这条张力可以写成一句判断：</strong></p>
+<blockquote>
+<p><strong>安全等级越高，运维负担越重；运维负担一旦超出组织能力，系统实际的安全水平反而下降。</strong></p>
+</blockquote>
+<p><strong>所以定级的终点是两个条件同时满足：风险低于可容忍值，且已做到“合理可行的最低水平”（ALARP）。</strong> 后者是定性的，但它挡住了“为了保险起见再上一级”这种把成本转嫁给运维的做法。<strong>一份好的定级报告会明确写出“为什么不再提高一级”，而不只是“为什么达到这一级”。</strong></p>
+<h2 id="仿真与验证">36.6 仿真与验证</h2>
+<h3 id="实验设置与复现约定">36.6.1 实验设置与复现约定</h3>
+<p>六组实验共用种子 <code>SEED = 20261136</code>，纯 numpy 实现，不依赖任何 SIL 计算软件。<strong>理由与前几章一致：数字必须能一行行查回去。</strong> 全部实验在 py311 下总耗时约 4 s。</p>
+<p>统一参数：<span class="math inline">\lambda_{DU}=10^{-6}</span>/h（约 1000 FIT）、<span class="math inline">\lambda_S=2\times10^{-6}</span>/h、<span class="math inline">\mathrm{MTTR}=8</span> h、<span class="math inline">T</span> 在 500–8760 h 之间取。<strong>这组参数不是“典型器件”，而是为了让四条结构线在图 36-2 上分得开</strong>；真实器件的 <span class="math inline">\lambda</span> 通常小一个数量级。</p>
+<p>六组实验的分工：</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">实验</th>
+<th style="text-align: left;">对象</th>
+<th style="text-align: left;">回答的问题</th>
+<th style="text-align: left;">对应小节</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">E1</td>
+<td style="text-align: left;">四种结构 × 六个 <span class="math inline">T</span></td>
+<td style="text-align: left;">结构与测试周期各值多少</td>
+<td style="text-align: left;">§36.6.2</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">E2</td>
+<td style="text-align: left;"><span class="math inline">\beta</span> 从 0 到 0.2</td>
+<td style="text-align: left;">共因把冗余吃掉多少</td>
+<td style="text-align: left;">§36.6.3</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">E3</td>
+<td style="text-align: left;"><span class="math inline">DC</span> 从 0 到 0.99</td>
+<td style="text-align: left;">诊断能把单通道推到多高</td>
+<td style="text-align: left;">§36.6.4</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">E4</td>
+<td style="text-align: left;">解析 vs 蒙特卡洛</td>
+<td style="text-align: left;">两条路是否自洽</td>
+<td style="text-align: left;">§36.6.5</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">E5</td>
+<td style="text-align: left;">五事件故障树</td>
+<td style="text-align: left;">最小割集与近似误差</td>
+<td style="text-align: left;">§36.6.6</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">E6</td>
+<td style="text-align: left;">三种结构的误跳闸与可用度</td>
+<td style="text-align: left;">安全与可用怎么权衡</td>
+<td style="text-align: left;">§36.6.7</td>
+</tr>
+</tbody>
+</table>
+<h3 id="e1结构与测试周期的双重代价">36.6.2 E1：结构与测试周期的双重代价</h3>
+<p>E1 扫了六个测试周期与四种结构，结果见表 36-8 与图 36-2。</p>
+<p>表 36-8　四种结构的 <span class="math inline">\mathrm{PFD_{avg}}</span> 随测试周期变化（E1 实测，<span class="math inline">\lambda_{DU}=10^{-6}</span>/h）</p>
+<table>
+<colgroup>
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;"><span class="math inline">T</span>（h）</th>
+<th style="text-align: left;">1oo1</th>
+<th style="text-align: left;">1oo2</th>
+<th style="text-align: left;">2oo3</th>
+<th style="text-align: left;">2oo3（<span class="math inline">\beta=0.1</span>）</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">500</td>
+<td style="text-align: left;"><span class="math inline">2.500\times10^{-4}</span></td>
+<td style="text-align: left;"><span class="math inline">8.333\times10^{-8}</span></td>
+<td style="text-align: left;"><span class="math inline">2.500\times10^{-7}</span></td>
+<td style="text-align: left;"><span class="math inline">2.520\times10^{-5}</span></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">1000</td>
+<td style="text-align: left;"><span class="math inline">5.000\times10^{-4}</span></td>
+<td style="text-align: left;"><span class="math inline">3.333\times10^{-7}</span></td>
+<td style="text-align: left;"><span class="math inline">1.000\times10^{-6}</span></td>
+<td style="text-align: left;"><span class="math inline">5.081\times10^{-5}</span></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">2000</td>
+<td style="text-align: left;"><span class="math inline">1.000\times10^{-3}</span></td>
+<td style="text-align: left;"><span class="math inline">1.333\times10^{-6}</span></td>
+<td style="text-align: left;"><span class="math inline">4.000\times10^{-6}</span></td>
+<td style="text-align: left;"><span class="math inline">1.032\times10^{-4}</span></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">4000</td>
+<td style="text-align: left;"><span class="math inline">2.000\times10^{-3}</span></td>
+<td style="text-align: left;"><span class="math inline">5.333\times10^{-6}</span></td>
+<td style="text-align: left;"><span class="math inline">1.600\times10^{-5}</span></td>
+<td style="text-align: left;"><span class="math inline">2.130\times10^{-4}</span></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">6000</td>
+<td style="text-align: left;"><span class="math inline">3.000\times10^{-3}</span></td>
+<td style="text-align: left;"><span class="math inline">1.200\times10^{-5}</span></td>
+<td style="text-align: left;"><span class="math inline">3.600\times10^{-5}</span></td>
+<td style="text-align: left;"><span class="math inline">3.292\times10^{-4}</span></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">8760</td>
+<td style="text-align: left;"><span class="math inline">4.380\times10^{-3}</span></td>
+<td style="text-align: left;"><span class="math inline">2.558\times10^{-5}</span></td>
+<td style="text-align: left;"><span class="math inline">7.674\times10^{-5}</span></td>
+<td style="text-align: left;"><span class="math inline">5.002\times10^{-4}</span></td>
+</tr>
+</tbody>
+</table>
+<figure>
+<img src="figs/ch036/fig_036_02_pfd_vs_T.svg" alt="图 36-2　\mathrm{PFD_{avg}} 随证明测试周期的变化：四条线的斜率不同，说明冗余与测试不是等效手段" /><figcaption aria-hidden="true">图 36-2　<span class="math inline">\mathrm{PFD_{avg}}</span> 随证明测试周期的变化：四条线的斜率不同，说明冗余与测试不是等效手段</figcaption>
+</figure>
+<p><strong>三条读数。</strong></p>
+<p><strong>第一，1oo1 与 <span class="math inline">T</span> 成正比，1oo2 与 <span class="math inline">T^2</span> 成正比，2oo3 也与 <span class="math inline">T^2</span> 成正比。</strong> 图 36-2 是对数坐标，<strong>直线的斜率就是幂次</strong>：1oo1 斜率 1，另两条斜率 2。这意味着<strong>缩短测试周期对冗余结构的收益是平方级的</strong>——<span class="math inline">T</span> 减半，1oo1 的 <span class="math inline">\mathrm{PFD}</span> 减半，1oo2 减到四分之一。<strong>这是“高 SIL 系统必须频繁测试”的定量理由。</strong></p>
+<p><strong>第二，<span class="math inline">T=8760</span> 时，1oo2 相对 1oo1 改善 171.2 倍，2oo3 改善 57.1 倍，而带 <span class="math inline">\beta=0.1</span> 的 2oo3 只改善 8.8 倍。</strong> 三者的差别全部来自共因项——<strong>独立项的差别只有 3 倍，共因项把差距拉到了 20 倍。</strong></p>
+<p><strong>第三，<span class="math inline">T=500</span> 时 1oo2 的 <span class="math inline">\mathrm{PFD_{avg}}</span> 已经到 <span class="math inline">8.3\times10^{-8}</span>，远低于 SIL4 的下界。</strong> 但<strong>这个数没有工程意义</strong>：真实系统的 <span class="math inline">\mathrm{PFD_{avg}}</span> 会被共因、系统性失效、以及“测试本身可能不完整”卡在 <span class="math inline">10^{-5}</span> 附近。<strong>公式给出的极小值只在“完全独立、测试完全有效”的假设下成立，这两个假设在工程上都不成立。</strong></p>
+<h3 id="e2共因把冗余吃掉多少">36.6.3 E2：共因把冗余吃掉多少</h3>
+<p>E2 固定 <span class="math inline">T=8760</span> h，扫 <span class="math inline">\beta\in\{0,0.01,0.02,0.05,0.1,0.2\}</span>。结果已在 §36.3.5 与图 36-3 中给出，这里只补两条容易被忽略的读数。</p>
+<p><strong>其一，<span class="math inline">\beta=0.02</span> 时，1oo2 的 <span class="math inline">\mathrm{PFD}</span> 恰好卡在 <span class="math inline">1.12\times10^{-4}</span>，刚从 SIL3 掉到 SIL2 的边界附近；而 2oo3 在同样的 <span class="math inline">\beta</span> 下是 <span class="math inline">1.61\times10^{-4}</span>，已经明确落在 SIL2。</strong> 也就是说，<strong>“三取二”对共因比“双通道并联”更敏感</strong>——因为它的独立项本来就大 3 倍，共因项一加就更难守住 SIL3。</p>
+<p><strong>其二，共因占比在 <span class="math inline">\beta=0.01</span> 时就已经超过 60%（1oo2 为 63.6%，2oo3 为 36.8%）。</strong> 这个数很反直觉：<strong>只要 1% 的失效是共因，冗余的收益就已经被吃掉大半。</strong> 原因是独立项本身就是 <span class="math inline">\lambda^2</span> 量级，非常小；共因项是 <span class="math inline">\lambda</span> 量级，哪怕系数只有 0.01，也足以主导。</p>
+<p><strong>工程含义：<span class="math inline">\beta</span> 的估计误差比 <span class="math inline">\lambda</span> 的估计误差更重要。</strong> <span class="math inline">\lambda</span> 差 20%，<span class="math inline">\mathrm{PFD}</span> 差 20%；<span class="math inline">\beta</span> 从 0.02 差到 0.05，1oo2 的 <span class="math inline">\mathrm{PFD}</span> 从 <span class="math inline">1.12\times10^{-4}</span> 变成 <span class="math inline">2.42\times10^{-4}</span>，<strong>差 2.2 倍，足以跨越一个 SIL 边界。</strong></p>
+<h3 id="e3诊断能把单通道推到多高">36.6.4 E3：诊断能把单通道推到多高</h3>
+<p>E3 的结果（§36.3.6）可以压成一句话：<strong><span class="math inline">DC</span> 从 0 提到 0.9，单通道从 SIL1 到 SIL2；提到 0.99，到 SIL3。</strong></p>
+<p>三点补充：</p>
+<p><strong>其一，<span class="math inline">DC=0.7</span> 是“投入产出比”的拐点。</strong> 从 0 到 0.7 只改善 3.3 倍，从 0.7 到 0.9 改善 3 倍，从 0.9 到 0.99 再改善 8.6 倍。<strong>前 70% 靠简单手段（量程、变化率、看门狗），后 30% 靠比较法与模型，成本陡增。</strong></p>
+<p><strong>其二，<span class="math inline">DC</span> 与 <span class="math inline">\beta</span> 不能同时“都要”。</strong> 诊断本身若与被诊断通道共因，高 <span class="math inline">DC</span> 就是假的。<strong>工程上必须回答：“诊断用的那路信号，和被测信号共享了什么？”</strong> 若共享电源、共享 A/D、共享同一支传感器，<span class="math inline">DC</span> 的实际值要打折。</p>
+<p><strong>其三，<span class="math inline">DC</span> 只对 <span class="math inline">\lambda_{DU}</span> 有效。</strong> 它不能降低共因失效，也不能降低系统性失效。<strong>所以“加诊断”永远不能替代“加独立性”。</strong></p>
+<h3 id="e4两条路是否自洽">36.6.5 E4：两条路是否自洽</h3>
+<p>E4 在 <span class="math inline">T=4000</span> h 下，对四种情形各跑 10 个种子 × 200 万样本。结果：</p>
+<ul>
+<li>1oo1：解析 <span class="math inline">2.0000\times10^{-3}</span>，蒙特卡洛 <span class="math inline">2.0122\times10^{-3}</span>，偏差 <span class="math inline">+0.61\%</span>；</li>
+<li>1oo2：解析 <span class="math inline">5.3333\times10^{-6}</span>，蒙特卡洛 <span class="math inline">5.2000\times10^{-6}</span>，偏差 <span class="math inline">-2.50\%</span>；</li>
+<li>2oo3：解析 <span class="math inline">1.6000\times10^{-5}</span>，蒙特卡洛 <span class="math inline">1.6600\times10^{-5}</span>，偏差 <span class="math inline">+3.75\%</span>；</li>
+<li>2oo3（<span class="math inline">\beta=0.1</span>）：解析 <span class="math inline">2.1296\times10^{-4}</span>，蒙特卡洛 <span class="math inline">2.1890\times10^{-4}</span>，偏差 <span class="math inline">+2.79\%</span>。</li>
+</ul>
+<figure>
+<img src="figs/ch036/fig_036_05_monte_carlo.svg" alt="图 36-5　蒙特卡洛与解析式的对照：偏差都在统计涨落范围内，共因情形主导项一致" /><figcaption aria-hidden="true">图 36-5　蒙特卡洛与解析式的对照：偏差都在统计涨落范围内，共因情形主导项一致</figcaption>
+</figure>
+<p><strong>四条偏差都在 4% 以内，且方向不一致（两正两负），这正是“统计涨落”的特征。</strong> 如果四条都往同一方向偏，就要怀疑模型不一致（比如蒙特卡洛里漏了 <span class="math inline">\beta</span> 项）；如果偏差随 <span class="math inline">p</span> 减小而系统性增大，那是样本量问题（§36.4.4）。</p>
+<p><strong>图 36-5 用的是 800 万样本而不是两千万，因此误差棒比正文的偏差更大。</strong> 这张图的目的是展示“误差棒与解析值重叠”，而不是精确定值——<strong>这一点在图上必须看得出来，否则读者会误以为蒙特卡洛可以替代解析式计算。</strong></p>
+<h3 id="e5最小割集与近似误差">36.6.6 E5：最小割集与近似误差</h3>
+<p>E5 的两个算例已在 §36.3.7 给出。补充三点：</p>
+<p><strong>其一，“单事件主导”是故障树的常态，不是特例。</strong> 真实系统里总有一两条割集的概率比其余大几个数量级——<strong>因为单点失效（一个电源、一个共用阀门、一次误操作）的概率远高于两个独立事件同时发生。</strong></p>
+<p><strong>其二，稀有事件近似的误差方向是确定的：永远偏大。</strong> 因为交集被重复计数。偏差量级约等于“割集概率之和的平方除以 2”，本例中 <span class="math inline">6\times10^{-4}</span> 的平方量级是 <span class="math inline">2\times10^{-7}</span>，相对 <span class="math inline">6\times10^{-4}</span> 是 <span class="math inline">3\times10^{-4}</span>，与实测 <span class="math inline">+0.020\%</span> 同量级。</p>
+<p><strong>其三，最小割集的数量本身就是设计质量的指标。</strong> 一个顶事件有 20 条最小割集，说明有 20 种“两两组合”能让它失效——<strong>这通常意味着冗余设计有漏洞，或者共因没控制住。</strong> 好的设计应当让最小割集少而长（每条含多个基本事件）。</p>
+<h3 id="e6安全与可用的权衡">36.6.7 E6：安全与可用的权衡</h3>
+<p>E6 的结果见表 36-6 与 §36.3.10 的讨论。这里补两条与可用度有关的读数。</p>
+<p><strong>其一，可用度对 <span class="math inline">\mathrm{MTTR}</span> 极不敏感，因为 <span class="math inline">\lambda\,\mathrm{MTTR}\ll1</span>。</strong> 取 <span class="math inline">\lambda_{DU}+\lambda_S=3\times10^{-6}</span>/h，<span class="math inline">\mathrm{MTTR}</span> 从 1 h 变到 72 h，可用度只从 <span class="math inline">0.999997</span> 降到 <span class="math inline">0.999784</span>——<strong>变化不到万分之二。</strong></p>
+<p><strong>其二，真正决定“停机时间”的是误跳闸率，不是 <span class="math inline">\mathrm{MTTR}</span>。</strong> 1oo1 的年误停 0.14 h、1oo2 是 0.28 h、2oo3 约等于 0——<strong>这三个数的差别来自误跳闸率，而不是修复速度。</strong> 所以“提高可用度”的正确做法是<strong>减少误跳闸</strong>（改用 2oo3、加延时确认、加多信号表决），而不是“修得更快”。</p>
+<p><strong>这条结论与很多人的直觉相反。</strong> 直觉上“坏得快修”应当提高可用度，但在安全系统里，<strong>设备很少坏，坏的时候往往是被误触发</strong>。<strong>修得快只是缩短了每次误停的时长，减少误停的次数才是数量级的改善。</strong></p>
+<h3 id="交叉核对六组实验之间应当自洽">36.6.8 交叉核对：六组实验之间应当自洽</h3>
+<p><strong>其一，E1 与手算。</strong> <span class="math inline">T=8760</span> 时 1oo1 的 <span class="math inline">4.380\times10^{-3}</span> 与 <span class="math inline">\lambda_{DU}T/2</span> 完全一致；1oo2 的 <span class="math inline">2.558\times10^{-5}</span> 与 <span class="math inline">\lambda^2T^2/3</span> 一致；2oo3 的 <span class="math inline">7.674\times10^{-5}</span> 与 <span class="math inline">\lambda^2T^2</span> 一致。<strong>三条公式三条线，互相对上。</strong></p>
+<p><strong>其二，E2 与 E1。</strong> E2 在 <span class="math inline">\beta=0</span> 处给出 1oo2 的 <span class="math inline">2.56\times10^{-5}</span>，正是 E1 在 <span class="math inline">T=8760</span>、<span class="math inline">\beta=0</span> 的值。<strong>同一个数从两条代码路径出来，说明 <span class="math inline">\beta</span> 项没有写错。</strong></p>
+<p><strong>其三，E3 与 E1。</strong> E3 在 <span class="math inline">DC=0</span> 处给出 <span class="math inline">4.38\times10^{-3}</span>，等于 E1 的 1oo1。<strong><span class="math inline">DC=0</span> 必须退化为无诊断，这是式 36-15 的极限检验。</strong></p>
+<p><strong>其四，E6 与 E2。</strong> E6 用 <span class="math inline">\beta=0.05</span> 得 1oo2 的 <span class="math inline">2.421\times10^{-4}</span>，E2 在同一 <span class="math inline">\beta</span> 下是 <span class="math inline">2.42\times10^{-4}</span>。<strong>一致。</strong></p>
+<p><strong>其五，E4 与解析式。</strong> 四条偏差都在 4% 内且方向不一，<strong>符合统计涨落。</strong></p>
+<p><strong>五处都对上，才说明这六组实验是同一套模型、同一套单位。</strong> 只要有一处对不上，先查单位，再查 <span class="math inline">\beta</span> 项，最后查结构定义（1oo2 与 2oo3 的失效条件最容易写反）。</p>
+<h3 id="没有做的实验以及为什么">36.6.9 没有做的实验，以及为什么</h3>
+<p><strong>其一，没有做真实 SIL 认证流程的复现。</strong> 那需要完整的 FMEDA、共因打分表、证明测试规程与第三方审核，<strong>不是一段代码能覆盖的。</strong></p>
+<p><strong>其二，没有做软件失效的定量模型。</strong> 理由已在 §36.3.11 说明：软件不服从指数分布，<strong>任何“软件失效率”的数字都是伪定量。</strong></p>
+<p><strong>其三，没有做动态需求（高要求模式）的仿真。</strong> 高要求模式下 <span class="math inline">\mathrm{PFH}</span> 与需求率耦合，需要把过程模型一起建进来，<strong>属于具体工程案例，不适合放在入门章。</strong></p>
+<p><strong>这三件事没做，恰恰划出了本章的边界：本章给的是“随机硬件失效的定量方法 + 系统性失效的定性纪律”，不是一份完整的认证方案。</strong></p>
+<h3 id="复现约定与数字清单">36.6.10 复现约定与数字清单</h3>
+<p>本章所有数字由 <code>code/ch036_sim.py</code> 一次运行给出，正文不取整、不二次修约。<strong>重跑的两条命令：</strong></p>
+<pre><code>&quot;D:\Anaconda3\envs\py311\python.exe&quot; code/ch036_sim.py
+&quot;D:\Anaconda3\envs\py311\python.exe&quot; code/ch036_figs.py</code></pre>
+<p>第一条打印六组实验的全部数值，第二条把六张图写进 <code>figs/ch036/</code>（SVG 与 PDF 各一份）。<strong>图与正文用的是同一份函数输出，不存在“图上一套、文里一套”的可能。</strong></p>
+<p>重跑结果与本章不一致时，按这个顺序排查：</p>
+<ol type="1">
+<li><strong>随机数流</strong>：种子固定为 <code>20261136</code>，但 numpy 的 <code>Generator</code> 与旧的 <code>RandomState</code> 流不同，换版本会变。<strong>这是最常见的“数字对不上”。</strong></li>
+<li><strong>抽样顺序</strong>：先抽通道失效时刻再抽共因时刻，与反过来抽，会消耗不同的随机数。<strong>顺序一变，同一种子给出不同结果，这是正常的。</strong></li>
+<li><strong>累加顺序</strong>：两千万个样本求和，成对求和与顺序求和的末位不同，相对误差在 <span class="math inline">10^{-15}</span> 量级，<strong>不影响任何结论。</strong></li>
+<li><strong>蒙特卡洛的统计涨落</strong>：偏差在 <span class="math inline">\pm4\%</span> 内属正常（§36.6.5）。<strong>不要为了让数字好看去换种子——那是把统计涨落改成了挑选结果。</strong></li>
+</ol>
+<p><strong>六组实验的关键数字，一页看完：</strong></p>
+<ul>
+<li>E1（<span class="math inline">T=8760</span>）：1oo1 <span class="math inline">4.380\times10^{-3}</span>、1oo2 <span class="math inline">2.558\times10^{-5}</span>、2oo3 <span class="math inline">7.674\times10^{-5}</span>、2oo3（<span class="math inline">\beta=0.1</span>）<span class="math inline">5.002\times10^{-4}</span>；</li>
+<li>E2：1oo2 的共因占比从 0 涨到 0.982，<span class="math inline">\beta=0.01</span> 时已是 0.636；</li>
+<li>E3：<span class="math inline">DC</span> 从 0 到 0.99，1oo1 从 <span class="math inline">4.38\times10^{-3}</span> 降到 <span class="math inline">5.17\times10^{-5}</span>，改善 84.7 倍；</li>
+<li>E4：四种情形的蒙特卡洛偏差 <span class="math inline">+0.61\%</span>、<span class="math inline">-2.50\%</span>、<span class="math inline">+3.75\%</span>、<span class="math inline">+2.79\%</span>；</li>
+<li>E5：单事件主导偏差 0.000%，三割集相当偏差 <span class="math inline">+0.020\%</span>；</li>
+<li>E6：年误停 0.14 h / 0.28 h / 约 0，可用度 <span class="math inline">0.999997</span> 到 <span class="math inline">0.999784</span>。</li>
+</ul>
+<p><strong>这 19 个数字就是本章的全部实测量。</strong> 其余数字都是公式代入，<strong>任何一个都能用 §36.4.3 那十行代码复算。</strong></p>
+<h3 id="把参数换成现场值会怎样">36.6.11 把参数换成现场值会怎样</h3>
+<p>本章统一取 <span class="math inline">\lambda_{DU}=10^{-6}</span>/h（1000 FIT），这个值偏大。<strong>真实智能变送器的 <span class="math inline">\lambda_{DU}</span> 常在 <span class="math inline">5\times10^{-8}</span>/h 量级（50 FIT），切断阀约 <span class="math inline">2\times10^{-7}</span>/h。</strong> 参数换成现场值，结论会变，而且变化的方向很有教育意义。</p>
+<p>取 <span class="math inline">\lambda_{DU}=5\times10^{-8}</span>/h、<span class="math inline">T=8760</span> h，单通道 1oo1 得</p>
+<p><span class="math display">
+\mathrm{PFD_{avg}}=\frac{5\times10^{-8}\times8760}{2}=2.19\times10^{-4},
+</span></p>
+<p><strong>直接落在 SIL3——一支变送器、一年一测。</strong> 这个结果显然与工程经验不符，说明公式里少算了东西。把三块“地板”逐层加回来：</p>
+<ul>
+<li><strong>共因地板</strong>（1oo2、<span class="math inline">\beta=0.05</span>）：<span class="math inline">0.05\times2.19\times10^{-4}=1.10\times10^{-5}</span>；</li>
+<li><strong>测试覆盖率地板</strong>（<span class="math inline">t_c=0.9</span>、<span class="math inline">T_{\text{life}}=20</span> 年）：<span class="math inline">0.1\times5\times10^{-8}\times87600=4.38\times10^{-4}</span>；</li>
+<li><strong>旁路地板</strong>（年旁路 5%）：<span class="math inline">0.05</span>。</li>
+</ul>
+<p><strong>三块地板的数量级是 <span class="math inline">10^{-5}</span>、<span class="math inline">10^{-4}</span>、<span class="math inline">10^{-2}</span>，一个比一个大一个数量级。</strong> 最终决定实际安全水平的不是公式算出的 <span class="math inline">2.19\times10^{-4}</span>，而是最大那块——<strong>旁路。</strong></p>
+<p><strong>这条排序是本章最实用的结论之一：</strong></p>
+<blockquote>
+<p><strong>改进顺序应当是“先管旁路、再提测试覆盖率、最后才谈冗余”。</strong></p>
+</blockquote>
+<p><strong>而绝大多数项目的做法正好相反</strong>：先讨论上 1oo2 还是 2oo3，把 <span class="math inline">\mathrm{PFD}</span> 从 <span class="math inline">10^{-4}</span> 压到 <span class="math inline">10^{-5}</span>，<strong>却让 5% 的旁路时间和 10% 的测试盲区原封不动。</strong> 这相当于把水桶最短的那块板擦得更亮。</p>
+<p><strong>这也解释了 §36.6.1 为什么故意用偏大的 <span class="math inline">\lambda</span>：</strong> 参数一大，结构与测试周期的差异在图 36-2 上才分得开，读者才能看清“公式里各因素各占多少”。<strong>真实项目的计算反而很早就收敛——不是算不动，而是算到 <span class="math inline">10^{-5}</span> 以下就没有意义了，因为旁路和覆盖率早就把地板放在那里。</strong></p>
+<h3 id="六组实验的共同局限">36.6.12 六组实验的共同局限</h3>
+<p>把话说在前面：<strong>这六组实验验证的是“公式与代码自洽”，不是“公式适用于你的装置”。</strong> 四条共同局限：</p>
+<p><strong>其一，全部假设常数失效率。</strong> 一旦设备进入耗损期（§36.2.10），实际 <span class="math inline">\lambda</span> 随时间上升，<strong>表 36-8 的每一行都会偏低，而且偏低得越来越多。</strong></p>
+<p><strong>其二，全部假设测试瞬时完成、且不影响工艺。</strong> 真实测试要几十分钟到几小时，<strong>这段时间里安全功能不存在</strong>；本章的公式里没有这一项，它被算进了 §36.5.8 的“旁路地板”。</p>
+<p><strong>其三，修复时间只用均值。</strong> 马尔可夫与蒙特卡洛里都用了单一 <span class="math inline">\mathrm{MTTR}</span>，而实际修复时间是对数正态分布——<strong>少数几次“等备件”的长修复，会显著抬高不可用度</strong>，均值掩盖了它。</p>
+<p><strong>其四，样本量只够验证量级。</strong> E4 的两千万样本在 <span class="math inline">p\approx5\times10^{-6}</span> 时给出约 3% 的标准误，<strong>这已经是“能确认模型没写错”的下限，远不足以支撑“精确到小数点后两位”的结论。</strong></p>
+<p><strong>所以本章实验的定位是“标定公式”，不是“替代工程计算”。</strong> 拿到自己的项目上时，要替换的不是代码，而是四个输入：<span class="math inline">\lambda</span> 的来源、<span class="math inline">\beta</span> 的打分、<span class="math inline">T</span> 与 <span class="math inline">t_c</span> 的实际值、<span class="math inline">\mathrm{MTTR}</span> 的记录值。<strong>这四样一换，公式给的就是工程数；不换，它只是一道练习题。</strong></p>
+<h3 id="本章数字与图表的对应关系">36.6.13 本章数字与图表的对应关系</h3>
+<p>最后交代一句图与数的对应，方便对照检查。</p>
+<p><strong>图 36-1</strong> 是结构示意，不含数据，<strong>三个面板分别是表 36-1 里的 1oo1、1oo2、2oo3 三行。</strong> <strong>图 36-2</strong> 画的是表 36-8 的四个列，<strong>对数坐标下斜率即幂次</strong>（§36.6.2 的读数一）。<strong>图 36-3</strong> 画 E2 的 <span class="math inline">\beta</span> 扫描，那条点线是 1oo1 的基准 <span class="math inline">4.38\times10^{-3}</span>——<strong>所有冗余曲线最终都要向它靠拢</strong>，图右上方标注的“结构冗余失效”指的就是这个收敛。<strong>图 36-4</strong> 画 E3 的 <span class="math inline">DC</span> 扫描，<strong>横轴是线性刻度</strong>，所以“越接近 1 越陡”的视觉效果才出得来。<strong>图 36-5</strong> 是 E4 的柱状对照，8 个种子各一百万样本（合计八百万），误差棒比正文的多千万样本方案更大（§36.6.5 已说明）。<strong>图 36-6</strong> 是故障树，右侧的割集排序用的是 E5 的第二个算例“三割集相当”——<strong>因为这个算例的三条割集同量级，排序框才有内容可写；第一个算例里 <span class="math inline">\{E\}</span> 独占四个数量级，画出来反而看不出结构。</strong></p>
+<p><strong>六张图里只有图 36-5 带不确定度，其余都是确定性的公式曲线。</strong> 这个差别在阅读时要留意：<strong>曲线上的点不需要误差棒，柱状图上的点必须有。</strong></p>
+<h2 id="小结与常见错误">36.7 小结与常见错误</h2>
+<h3 id="十条要点">36.7.1 十条要点</h3>
+<p><strong>第一，性能与安全是两套评价。</strong> 性能问“正常时多好”，安全问“异常时多坏”。<strong>同一个回路不能既做控制又做保护，因为它们的失效是共因的。</strong></p>
+<p><strong>第二，三个量构成一条链。</strong> 可靠性（多久坏一次）、诊断与测试（多久发现）、维修性（多久恢复）。<strong>缺一环，“安全”就只是口号。</strong></p>
+<p><strong>第三，SIL 是区间，不是标签。</strong> <span class="math inline">\mathrm{PFD_{avg}}</span> 落在哪个区间就是哪一级，<strong>器件等级不等于系统等级。</strong></p>
+<p><strong>第四，单通道 + 一年一测只能到 SIL1。</strong> 本章算例给出 <span class="math inline">4.38\times10^{-3}</span>。<strong>要上 SIL2，必须降 <span class="math inline">\lambda</span>、缩 <span class="math inline">T</span>、加冗余或加诊断，四条路选一条。</strong></p>
+<p><strong>第五，冗余的收益是平方级的，前提是独立。</strong> 1oo2 的 <span class="math inline">\mathrm{PFD}</span> 是 <span class="math inline">\lambda^2T^2/3</span>；一旦共因主导，平方项被线性项取代。</p>
+<p><strong>第六，共因是冗余的天花板。</strong> 地板 <span class="math inline">\beta\lambda T/2</span> 与通道数无关。<strong><span class="math inline">\beta=0.01</span> 就能吃掉 60% 以上的收益。</strong></p>
+<p><strong>第七，诊断把潜伏期换成修复期，比值约 <span class="math inline">T/(2\,\mathrm{MTTR})</span>。</strong> 所以 <span class="math inline">DC</span> 越接近 1 越值钱，<strong>但诊断本身不能与被诊断对象共因。</strong></p>
+<p><strong>第八，串联的 <span class="math inline">\mathrm{PFD}</span> 是各段之和。</strong> <strong>提升等级要补最弱环节</strong>；把已经很好的环节再做一遍，收益趋近于零（表 36-7 的方案 C）。</p>
+<p><strong>第九，故障树的价值在排序，不在算概率。</strong> 稀有事件近似偏大但够用；<strong>真正要做的是找出概率最大的那条割集。</strong></p>
+<p><strong>第十，软件失效是系统性的，只能用过程对付。</strong> <strong><span class="math inline">\mathrm{PFD_{avg}}</span> 只覆盖随机硬件失效</strong>；SIL 证书不等于系统安全。</p>
+<h3 id="一页验收清单">36.7.2 一页验收清单</h3>
+<p>表 36-9 是本章的验收清单。<strong>设计评审时逐行过，任何一行答不上来就是缺口。</strong></p>
+<p>表 36-9　安全仪表功能的设计验收清单</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">序号</th>
+<th style="text-align: left;">检查项</th>
+<th style="text-align: left;">合格判据</th>
+<th style="text-align: left;">不通过的典型症状</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">1</td>
+<td style="text-align: left;">危险分析</td>
+<td style="text-align: left;">有 HAZOP 记录与可容忍风险准则</td>
+<td style="text-align: left;">只有“经验上一直这么做”</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">2</td>
+<td style="text-align: left;">SIL 定级</td>
+<td style="text-align: left;">由 LOPA 或风险矩阵给出，可追溯</td>
+<td style="text-align: left;">SIL 由供应商推荐</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">3</td>
+<td style="text-align: left;">独立性</td>
+<td style="text-align: left;">传感器、逻辑、执行与 BPCS 物理分开</td>
+<td style="text-align: left;">复用控制回路的变送器</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">4</td>
+<td style="text-align: left;">结构选择</td>
+<td style="text-align: left;">与 SIL、误跳闸代价匹配</td>
+<td style="text-align: left;">一律用 1oo2，误停频繁</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">5</td>
+<td style="text-align: left;">共因评估</td>
+<td style="text-align: left;">有 <span class="math inline">\beta</span> 打分记录，<span class="math inline">\beta</span> 有依据</td>
+<td style="text-align: left;"><span class="math inline">\beta</span> 直接取 0.01</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">6</td>
+<td style="text-align: left;">诊断覆盖率</td>
+<td style="text-align: left;"><span class="math inline">DC</span> 有测试证据，且诊断独立</td>
+<td style="text-align: left;">声称 <span class="math inline">DC=0.99</span> 无验证</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">7</td>
+<td style="text-align: left;">测试周期</td>
+<td style="text-align: left;"><span class="math inline">T</span> 可执行，测试覆盖率有定义</td>
+<td style="text-align: left;"><span class="math inline">T</span> 定了但从未做过</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">8</td>
+<td style="text-align: left;">响应时间</td>
+<td style="text-align: left;">从检测到动作的全链条时间 &lt; 任务时间</td>
+<td style="text-align: left;">只算 PLC 扫描周期</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">9</td>
+<td style="text-align: left;">误跳闸评估</td>
+<td style="text-align: left;">有年误停时间估算与对策</td>
+<td style="text-align: left;">只算安全性不算可用性</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">10</td>
+<td style="text-align: left;">变更管理</td>
+<td style="text-align: left;">旁路有审批、有期限、有补偿措施</td>
+<td style="text-align: left;">旁路长期挂着</td>
+</tr>
+</tbody>
+</table>
+<p><strong>最容易漏的是第 8 行和第 10 行。</strong> 前者只算控制器、不算阀门全行程时间；后者把旁路当“临时措施”长期保留，<strong>而旁路期间的安全功能等于不存在。</strong></p>
+<p><strong>清单的用法是“逐行签字”，不是“通读一遍”。</strong> 每一行都要填上对应的文件号或记录编号，签字的人对这些编号负责——<strong>这才叫验收，否则只是确认“我们讨论过”。</strong></p>
+<h3 id="选型结构怎么挑">36.7.3 选型：结构怎么挑</h3>
+<p>表 36-10 把四种结构与典型需求对齐。<strong>它是决策表，不是性能排序表。</strong></p>
+<p>表 36-10　冗余结构的选型</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">需求</th>
+<th style="text-align: left;">推荐结构</th>
+<th style="text-align: left;">理由</th>
+<th style="text-align: left;">需要配套</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">SIL1、误停代价低</td>
+<td style="text-align: left;">1oo1</td>
+<td style="text-align: left;">最简单、成本最低</td>
+<td style="text-align: left;">定期测试</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">SIL2、可用性要求一般</td>
+<td style="text-align: left;">1oo1D 或 1oo2</td>
+<td style="text-align: left;">诊断或冗余任选其一</td>
+<td style="text-align: left;">高 <span class="math inline">DC</span> 或低 <span class="math inline">\beta</span></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">SIL3、误停代价高</td>
+<td style="text-align: left;">2oo3</td>
+<td style="text-align: left;">安全与误跳闸兼顾</td>
+<td style="text-align: left;">三路独立、一致性测试</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">SIL3、误停代价低</td>
+<td style="text-align: left;">1oo2</td>
+<td style="text-align: left;">结构最省</td>
+<td style="text-align: left;">严格控 <span class="math inline">\beta</span></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">SIL4</td>
+<td style="text-align: left;">2oo4 或多重冗余</td>
+<td style="text-align: left;">单点故障不足以失效</td>
+<td style="text-align: left;">多样性、形式化验证</td>
+</tr>
+</tbody>
+</table>
+<p><strong>选型的第一问不是“要多安全”，而是“误停一次值多少钱”。</strong> 这个问题答不上来，2oo3 与 1oo2 之间的选择就只能靠拍脑袋。</p>
+<h3 id="十条常见错误">36.7.4 十条常见错误</h3>
+<p><strong>错误一：用 SIL 等级评价器件而不是系统。</strong> 买了一个 SIL3 的变送器，不等于回路是 SIL3。</p>
+<p><strong>错误二：把 <span class="math inline">\mathrm{PFD_{avg}}</span> 当成“每年失效概率”。</strong> 它是“每次需求失效的概率”，与需求率无关；<strong>需求率一高，必须换 <span class="math inline">\mathrm{PFH}</span>。</strong></p>
+<p><strong>错误三：单位不统一。</strong> <span class="math inline">10^{-6}</span>/h 与 <span class="math inline">10^{-6}</span>/年差 8760 倍，<strong>恰好跨两个 SIL 等级。</strong></p>
+<p><strong>错误四：<span class="math inline">\beta</span> 取 0 或取得很小以求“好看”。</strong> 共因是物理事实，取 0 只是把风险藏起来。</p>
+<p><strong>错误五：加了冗余就认为共因解决了。</strong> 同一电源、同一软件、同一维护班次，冗余等于没加。</p>
+<p><strong>错误六：把 <span class="math inline">DC</span> 当成“万能提升”。</strong> 诊断与被诊断对象共因时，高 <span class="math inline">DC</span> 是假的；而且 <span class="math inline">DC</span> 对系统性失效无效。</p>
+<p><strong>错误七：只算 <span class="math inline">\mathrm{PFD}</span>，不算误跳闸。</strong> 频繁误停会导致旁路，<strong>旁路期间的安全功能等于零</strong>——这是最危险的隐性失效。</p>
+<p><strong>错误八：测试周期定了但测试覆盖率没定义。</strong> “每年测一次”若只测了传感器没测阀门，<strong>阀门的 <span class="math inline">T</span> 实际是无穷大。</strong></p>
+<p><strong>错误九：忽略响应时间的全链条。</strong> 传感器延迟、PLC 扫描、阀门全行程，<strong>三者相加才是响应时间</strong>；只算 PLC 会低估一个数量级。</p>
+<p><strong>错误十：把学习型控制器放进安全回路。</strong> 训练分布无法穷举、失效模式无法枚举，<strong>它只能做建议，不能做保护。</strong></p>
+<h3 id="与后续章节的衔接">36.7.5 与后续章节的衔接</h3>
+<p>本章给的是“失效概率怎么算、结构怎么选、测试怎么做”。<strong>再往前一步是三个方向：一是“失效后怎么继续运行”，这是容错控制；二是“安全仪表系统怎么组态与运维”，这是 SIS 章节；三是“怎么证明整套系统达到了目标”，这是验证与认证。</strong></p>
+<p><strong>如果只记住一句话：安全不是“加一个联锁”，而是“用独立的结构、可验证的测试、有限的共因，把失效概率压到可容忍的水平，并且承认剩下的部分只能靠过程保证”。</strong></p>
+<p><strong>本章所有公式都服务于同一个目的：把“安全”这个形容词，变成能被别人复核的数字。</strong> 数字算得再准，只要输入的 <span class="math inline">\beta</span>、<span class="math inline">T</span>、<span class="math inline">t_c</span> 是拍的，这份计算就仍然是一个形容词。</p>
+<h3 id="术语对照">36.7.6 术语对照</h3>
+<p>表 36-11 汇总本章术语。<strong>它的用途是查“我用的词是不是标准里的那个词”。</strong></p>
+<p>表 36-11　本章术语对照</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">中文</th>
+<th style="text-align: left;">英文</th>
+<th style="text-align: left;">一句话含义</th>
+<th style="text-align: left;">常见误用</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">安全完整性等级</td>
+<td style="text-align: left;">SIL</td>
+<td style="text-align: left;">按 <span class="math inline">\mathrm{PFD_{avg}}</span> 分的四档</td>
+<td style="text-align: left;">当成器件属性</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">平均需求失效概率</td>
+<td style="text-align: left;"><span class="math inline">\mathrm{PFD_{avg}}</span></td>
+<td style="text-align: left;">需求出现时功能失效的平均概率</td>
+<td style="text-align: left;">当成年失效概率</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">每小时失效频率</td>
+<td style="text-align: left;">PFH</td>
+<td style="text-align: left;">高要求模式下的对应指标</td>
+<td style="text-align: left;">与 <span class="math inline">\mathrm{PFD_{avg}}</span> 混用</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">安全失效分数</td>
+<td style="text-align: left;">SFF</td>
+<td style="text-align: left;">失效中往安全侧走的比例</td>
+<td style="text-align: left;">与 <span class="math inline">DC</span> 混同</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">诊断覆盖率</td>
+<td style="text-align: left;">DC</td>
+<td style="text-align: left;">在线能发现的危险失效比例</td>
+<td style="text-align: left;">不计诊断独立性</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">共因失效</td>
+<td style="text-align: left;">CCF</td>
+<td style="text-align: left;">多通道同时失效</td>
+<td style="text-align: left;">认为冗余天然独立</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">共因因子</td>
+<td style="text-align: left;"><span class="math inline">\beta</span></td>
+<td style="text-align: left;">共因占总失效的比例</td>
+<td style="text-align: left;">取 0 或凭感觉取</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">证明测试</td>
+<td style="text-align: left;">proof test</td>
+<td style="text-align: left;">定期验证安全功能仍可用</td>
+<td style="text-align: left;">只测传感器不测阀门</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">最小割集</td>
+<td style="text-align: left;">minimal cut set</td>
+<td style="text-align: left;">能让顶事件发生的最小组合</td>
+<td style="text-align: left;">与“故障路径”混用</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">风险优先数</td>
+<td style="text-align: left;">RPN</td>
+<td style="text-align: left;"><span class="math inline">S\times O\times D</span></td>
+<td style="text-align: left;">用它判定安全性</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">保护层分析</td>
+<td style="text-align: left;">LOPA</td>
+<td style="text-align: left;">逐层算风险降低</td>
+<td style="text-align: left;">把非独立层重复计数</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">误跳闸</td>
+<td style="text-align: left;">spurious trip</td>
+<td style="text-align: left;">无危险时误动作</td>
+<td style="text-align: left;">只算安全性不算它</td>
+</tr>
+</tbody>
+</table>
+<p><strong>最容易混的是“<span class="math inline">\mathrm{PFD_{avg}}</span> 与 PFH”、“SFF 与 <span class="math inline">DC</span>”、“RPN 与 SIL”。</strong> 前一对是模式不同（低要求 vs 高要求），中间一对是方向与能力之分，最后一对是“排序工具”与“判定准则”之分。</p>
+<h3 id="三个自测题">36.7.7 三个自测题</h3>
+<p><strong>题一。</strong> 某联锁用 1oo2 双通道，<span class="math inline">\lambda_{DU}=2\times10^{-7}</span>/h、<span class="math inline">\beta=0.05</span>、<span class="math inline">T=8760</span> h。求 <span class="math inline">\mathrm{PFD_{avg}}</span> 与 SIL。若把 <span class="math inline">T</span> 缩短到 4380 h，<span class="math inline">\mathrm{PFD_{avg}}</span> 变成多少？</p>
+<p><strong>参考答案：</strong> 独立项 <span class="math inline">(0.95)^2(2\times10^{-7}\times8760)^2/3=9.23\times10^{-6}</span>，共因项 <span class="math inline">0.05\times2\times10^{-7}\times4380=4.38\times10^{-5}</span>，合计 <span class="math inline">5.30\times10^{-5}</span>，<strong>SIL3</strong>。<span class="math inline">T</span> 减半后独立项降到四分之一（<span class="math inline">2.31\times10^{-6}</span>），共因项减半（<span class="math inline">2.19\times10^{-5}</span>），合计 <span class="math inline">2.42\times10^{-5}</span>，<strong>仍 SIL3，只改善 2.2 倍</strong>——<strong>共因主导时，缩短测试周期的收益被压缩成线性。</strong></p>
+<p><strong>题二。</strong> 一个回路由三段串联：传感 <span class="math inline">1.0\times10^{-4}</span>、逻辑 <span class="math inline">2.0\times10^{-5}</span>、执行 <span class="math inline">8.0\times10^{-4}</span>。总 <span class="math inline">\mathrm{PFD_{avg}}</span> 是多少？达到 SIL2 了吗？若只能改一段，改哪一段？</p>
+<p><strong>参考答案：</strong> 总 <span class="math inline">=9.2\times10^{-4}</span>，<strong>SIL3</strong>（落在 <span class="math inline">10^{-4}\sim10^{-3}</span>）。<strong>注意它已经满足 SIL2 且达到 SIL3</strong>，所以“达到 SIL2”这个问法本身提示要先看目标。若目标是 SIL3 且要求留余量，应当改执行段——它占 <span class="math inline">87\%</span>，改它能把总量降到 <span class="math inline">1.2\times10^{-4}</span> 量级；<strong>改传感段最多只能降到 <span class="math inline">8.2\times10^{-4}</span>，几乎没用。</strong></p>
+<p><strong>题三。</strong> 某安全功能误跳闸率 <span class="math inline">1\times10^{-5}</span>/h，每次误停 6 h。年误停时间是多少？若改用 2oo3，误跳闸率降到 <span class="math inline">10^{-9}</span>/h，节省的时间值多少钱（按每小时产值 2 万元计）？这个收益能否抵消 2oo3 的额外建设成本？</p>
+<p><strong>参考答案：</strong> 年误停 <span class="math inline">=10^{-5}\times8760\times6=0.526</span> h，损失约 1.05 万元/年。改 2oo3 后几乎为零，<strong>年节省约 1 万元</strong>。若 2oo3 的额外建设成本是 30 万元，<strong>静态回收期 30 年</strong>——<strong>从纯经济账看并不划算。</strong> 这说明 2oo3 的选择理由通常不是“省停机费”，而是“误停会引发更危险的工况”或“频繁起停损伤设备”。<strong>这道题的用意是让人分清“经济账”与“安全账”，不要用前者去论证后者。</strong></p>
+<h3 id="一页公式卡">36.7.8 一页公式卡</h3>
+<p>最后把全章的式子收在一页。<strong>建议打印出来贴在工位上，比翻书快。</strong></p>
+<p><strong>基础量：</strong> <span class="math inline">R(t)=e^{-\lambda t}</span>、<span class="math inline">\mathrm{MTBF}=1/\lambda</span>、<span class="math inline">A=1/(1+\lambda\,\mathrm{MTTR})</span>。</p>
+<p><strong>四类失效：</strong> <span class="math inline">\lambda_{DD}</span>、<span class="math inline">\lambda_{DU}</span>、<span class="math inline">\lambda_{SD}</span>、<span class="math inline">\lambda_{SU}</span>；<span class="math inline">\mathrm{SFF}=(\lambda_{SD}+\lambda_{DD})/\sum\lambda</span>；<span class="math inline">DC=\lambda_{DD}/(\lambda_{DD}+\lambda_{DU})</span>。</p>
+<p><strong>结构：</strong></p>
+<ul>
+<li>1oo1：<span class="math inline">\lambda_{DU}T/2+\lambda_{DD}\mathrm{MTTR}</span>；</li>
+<li>1oo2：<span class="math inline">(1-\beta)^2\lambda_{DU}^2T^2/3+\beta\lambda_{DU}T/2</span>；</li>
+<li>2oo3：<span class="math inline">(1-\beta)^2\lambda_{DU}^2T^2+\beta\lambda_{DU}T/2</span>；</li>
+<li>kooN：<span class="math inline">\binom{n}{m}\lambda_{DU}^mT^m/(m+1)</span>，<span class="math inline">m=n-k+1</span>，再加共因项；</li>
+<li>1oo1D：<span class="math inline">DC\cdot\lambda_{DU}\mathrm{MTTR}+(1-DC)\lambda_{DU}T/2</span>。</li>
+</ul>
+<p><strong>三块地板：</strong> 共因 <span class="math inline">\beta\lambda_{DU}T/2</span>；测试覆盖率 <span class="math inline">(1-t_c)\lambda_{DU}T_{\text{life}}/2</span>；旁路 <span class="math inline">\approx</span> 旁路时间占比。</p>
+<p><strong>串联与系统：</strong> <span class="math inline">\mathrm{PFD_{sys}}\approx\sum_i\mathrm{PFD}_i</span>；剩余风险 <span class="math inline">=\nu\prod_i\mathrm{PFD}_i</span>。</p>
+<p><strong>故障树：</strong> <span class="math inline">P_{\text{top}}\approx\sum_jP(C_j)</span>（偏大）；精确值用容斥或不交化。</p>
+<p><strong>误跳闸：</strong> 1oo1 为 <span class="math inline">\lambda_S</span>、1oo2 为 <span class="math inline">2\lambda_S</span>、2oo3 为 <span class="math inline">6\lambda_S^2\mathrm{MTTR}</span>。</p>
+<p><strong>三条判断，比公式更常用：</strong></p>
+<blockquote>
+<p><strong>其一，串联系统的水平由最弱环节决定，不由最强环节决定。</strong> <strong>其二，共因主导时，加通道的收益趋近于零，降 <span class="math inline">\beta</span> 才有意义。</strong> <strong>其三，公式给出的是上限；旁路、测试覆盖率与人的失误决定了实际值。</strong></p>
+</blockquote>
+
+<nav class="footnav"><a href="ch035.html">← 上一章</a><a href="index.html">返回目录</a><a href="ch037.html">下一章 →</a></nav>
+</body>
+</html>

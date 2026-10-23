@@ -1,0 +1,1043 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="zh-CN" xml:lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>第 17 章　非参数辨识 · 控制大综合</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    span.underline{text-decoration: underline;}
+    div.column{display: inline-block; vertical-align: top; width: 50%;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    ul.task-list{list-style: none;}
+  </style>
+  <link rel="stylesheet" href="assets/book.css" />
+  <script src="assets/katex/katex.min.js"></script>
+  <script>document.addEventListener("DOMContentLoaded", function () {
+   var mathElements = document.getElementsByClassName("math");
+   var macros = [];
+   for (var i = 0; i < mathElements.length; i++) {
+    var texText = mathElements[i].firstChild;
+    if (mathElements[i].tagName == "SPAN") {
+     katex.render(texText.data, mathElements[i], {
+      displayMode: mathElements[i].classList.contains('display'),
+      throwOnError: false,
+      macros: macros,
+      fleqn: false
+     });
+  }}});
+  </script>
+  <link rel="stylesheet" href="assets/katex/katex.min.css" />
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+  <link rel="stylesheet" href="assets/site.css" />
+</head>
+<body>
+<nav class="topnav"><a class="home" href="index.html">目录</a><span class="pos">017 / 115</span><span class="pager"><a href="ch016.html">上一章</a><a href="ch018.html">下一章</a></span></nav>
+
+<nav id="TOC" role="doc-toc">
+<ul>
+<li><a href="#第17章-非参数辨识">第17章 非参数辨识</a>
+<ul>
+<li><a href="#动机与要解决的问题">17.1 动机与要解决的问题</a></li>
+<li><a href="#定义与数学基础">17.2 定义与数学基础</a></li>
+<li><a href="#推导与性质">17.3 推导与性质</a></li>
+<li><a href="#离散对应与数值实现">17.4 离散对应与数值实现</a></li>
+<li><a href="#工程含义与适用边界">17.5 工程含义与适用边界</a></li>
+<li><a href="#仿真与验证">17.6 仿真与验证</a></li>
+<li><a href="#小结与常见错误">17.7 小结与常见错误</a></li>
+</ul></li>
+</ul>
+</nav>
+<h1 id="第17章-非参数辨识">第17章 非参数辨识</h1>
+<h2 id="动机与要解决的问题">17.1 动机与要解决的问题</h2>
+<p>第 16 章把辨识拆成五步，最后一步“估计”留给了后面几章。可是现场拿到的第一段数据，通常并不具备跑最小二乘的条件：阶数不知道，噪声从哪个环节进来不知道，甚至连对象在测试幅值下是不是线性的都没有把握。此时硬套一个 ARX，算出十几个系数，也没有任何独立的东西可以拿来判断这些系数对不对。</p>
+<p>非参数辨识提供的就是这个独立参照。它不假设阶数，不假设噪声模型，只回答一个问题：<strong>输入动一下，输出怎么走。</strong> 答案是一条曲线或一张表——阶跃响应、脉冲响应、频率响应。它不写成一阶、二阶，也不写成一串 <span class="math inline">a_i</span>、<span class="math inline">b_j</span>，而是直接给出“第几秒到了多少毫米”。</p>
+<p>正因为不假设结构，非参数结果的可靠性只取决于两件事：激励有没有把该动的频段动到，噪声有没有把曲线糊掉。这两件事恰好是第 16 章反复强调的，所以本章可以把它当作第 16 章的直接延续：实验设计不变，只是把交付物从“一组系数”换成“一条曲线”。</p>
+<h3 id="三条曲线是同一件事的三种写法">17.1.1 三条曲线是同一件事的三种写法</h3>
+<p>对线性时不变对象，阶跃响应 <span class="math inline">s(t)</span>、脉冲响应 <span class="math inline">g(t)</span>、频率响应 <span class="math inline">G(j\omega)</span> 三者严格等价：</p>
+<p><span class="math display">g(t)=\frac{\mathrm{d}s(t)}{\mathrm{d}t},\qquad G(j\omega)=\int_{0}^{\infty}g(t)e^{-j\omega t}\,\mathrm{d}t \tag{17-1}</span></p>
+<p>反过来，<span class="math inline">s(t)=\int_{0}^{t}g(\tau)\,\mathrm{d}\tau</span>，而 <span class="math inline">g(t)</span> 是 <span class="math inline">G(j\omega)</span> 的逆傅里叶变换。所以“测阶跃”“测脉冲”“测频响”不是三种模型，而是同一个模型的三组坐标。选哪一种，取决于现场允许你施加什么激励、你关心哪一段信息。</p>
+<p>坐标不同，误差的分布也不同。阶跃响应在时域上看最直观，但它的高频信息被积分压平了：想看清 20 rad/s 以上的相位，阶跃曲线几乎给不出线索。频率响应在频域上看得最清楚，但时域上的“第几秒到多少”要再做一次逆变换才能得到。脉冲响应介于两者之间：时间分辨率最好，代价是能量最少、最怕噪声。这条互补关系决定了后面四条路线的分工，也决定了本章为什么要把噪声账算得这么细。</p>
+<p>本章仍然使用第 16 章的对象，即式 (16-1) 的三阶惯性加纯延迟：</p>
+<p><span class="math display">G(s)=\frac{1.8}{(0.5s+1)(0.12s+1)(0.03s+1)}e^{-0.04s} \tag{17-2}</span></p>
+<p>三个时间常数 0.5 s、0.12 s、0.03 s，直流增益 1.8，纯延迟 40 ms。它的脉冲响应在 0.26 s 达到峰值 2.273 s<span class="math inline">^{-1}</span>，阶跃上到 90% 需要 1.358 s。这几个数字是本章全部实验的参照物：后面每一条估计曲线，都要和它们对齐。</p>
+<p>用同一个对象有一个好处：第 16 章已经用参数方法把它的系数估出来了，本章的非参数曲线可以直接和“已知正确”的参数模型对照。真实项目里没有这种便利，替代办法是把非参数曲线当作后续参数辨识的验收集——这条用法会在 §17.6.10 展开。</p>
+<h3 id="四条路线各自回答什么问题">17.1.2 四条路线各自回答什么问题</h3>
+<p>按激励形式分，非参数辨识有四种主要做法，见图 17-1。</p>
+<figure>
+<img src="figs/ch017/fig_017_01_routes.svg" alt="图 17-1　非参数辨识的四条路线" /><figcaption aria-hidden="true">图 17-1　非参数辨识的四条路线</figcaption>
+</figure>
+<p><strong>阶跃测试</strong>是现场最常用的。它只需要把执行器从一个值推到另一个值并保持住，对生产的影响最小，操作工也看得懂。它的产物是三个数：增益、表观延迟、上升时间。这三个数足以支撑大部分单回路整定，也是判断“对象有没有大延迟、有没有积分”的最快手段。缺点是它只激励了低频段，而且一次性把对象推离工作点。</p>
+<p><strong>脉冲测试</strong>在理论上最干净：输入是一个近似 <span class="math inline">\delta</span> 函数，输出直接就是 <span class="math inline">g(t)</span>。实际上做不到理想脉冲，只能打一个有宽度的方波，宽度与高度之间存在硬 trade-off——本章实验 2 会把这条 trade-off 量化成一张表。</p>
+<p><strong>相关分析</strong>用一段宽带信号（白噪声或 PRBS）激励，再拿输入输出的互相关去逼近脉冲响应。它的优点是能把噪声平均掉，缺点是要求激励信号本身有足够宽且已知的谱。PRBS 之所以流行，是因为它容易用继电器或 PLC 产生、幅值可控、谱宽可调。</p>
+<p><strong>谱分析</strong>直接估计频率响应，最常用的是 ETFE（empirical transfer function estimate），即互谱除以自谱。它的产物是 Bode 图，与控制器设计所需的语言完全一致；代价是方差大，需要分段平均来压。</p>
+<p>四条路线的对照见表 17-1。表里最后一行“适用场景”是本章最实用的部分：现场选方法时，先看允许施加什么激励，再看关心时域还是频域，最后才看精度。</p>
+<p><strong>表 17-1 四条非参数路线的对照</strong></p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">路线</th>
+<th style="text-align: left;">激励</th>
+<th style="text-align: left;">产物</th>
+<th style="text-align: left;">主要误差源</th>
+<th style="text-align: left;">适用场景</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">阶跃</td>
+<td style="text-align: left;">一个方向的阶跃</td>
+<td style="text-align: left;"><span class="math inline">K</span>、<span class="math inline">d_2</span>、<span class="math inline">t_{90}</span></td>
+<td style="text-align: left;">死区、截断、噪声</td>
+<td style="text-align: left;">单回路整定、快速体检</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">脉冲</td>
+<td style="text-align: left;">窄方波</td>
+<td style="text-align: left;"><span class="math inline">g(t)</span></td>
+<td style="text-align: left;">脉宽展宽、噪声放大</td>
+<td style="text-align: left;">需要时间分辨率、对象快</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">相关分析</td>
+<td style="text-align: left;">白噪声 / PRBS</td>
+<td style="text-align: left;"><span class="math inline">g(t)</span></td>
+<td style="text-align: left;">输入谱形、直流漂移</td>
+<td style="text-align: left;">允许长时间激励、信噪比低</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">谱分析</td>
+<td style="text-align: left;">宽带或多正弦</td>
+<td style="text-align: left;"><span class="math inline">G(j\omega)</span></td>
+<td style="text-align: left;">分段数、泄漏</td>
+<td style="text-align: left;">控制器设计、频域校核</td>
+</tr>
+</tbody>
+</table>
+<p>四条路线不是互斥的。同一次实验的数据往往可以三种都用：一段 PRBS 记录既能做相关分析，也能做谱分析；一段阶跃记录既能读三个特征数，也能做差分得到脉冲响应。图 17-1 里从“现场实验”出发的三条虚线，说的就是这个意思。</p>
+<h3 id="先做体检再做手术">17.1.3 先做体检，再做手术</h3>
+<p>如果把参数辨识比作手术，非参数辨识就是术前体检。体检不告诉你病灶的确切位置，但能告诉你该挂哪个科。这个比喻在工程上有三层具体含义。</p>
+<p>第一层，非参数曲线能直接给出结构判断。本章对象的阶跃响应在起步后按 <span class="math inline">t^3</span> 增长：<span class="math inline">t=0.01</span> s 时 <span class="math inline">y/y(\infty)=8.3\times10^{-5}</span>，与 <span class="math inline">t^3/(6T_1T_2T_3)=9.3\times10^{-5}</span> 只差 11%，三阶的指纹在最初十毫秒就能看出来。反过来，如果一条实测阶跃响应在延迟后 10 ms 内的上翘就明显快于 <span class="math inline">t^3</span>，那么对象里一定有一个小于 0.03 s 的极点没被建模，此时无论把 ARX 阶数加到多少，这个极点都只能靠高频零极点对去“凑”，而凑出来的模型在别的工况下会立刻失效。<strong>阶数不是扫出来的，是看出来的</strong>——先看一眼，再扫，能省掉一半试错。</p>
+<p>第二层，非参数曲线能给出延迟的真实量级。第 16 章用互相关估延迟，分辨率受采样周期限制；本章的表观延迟读数是 0.116 s，而真值是 0.04 s。这两个数差了三倍，原因不是估计错了，而是“2% 穿越点”本身就包含了三个惯性环节的起始段。§17.3.2 会把这件事算清楚：把 0.116 s 当成纯延迟填进控制器，Smith 预估器会补过头，补出一个 76 ms 的假延迟。</p>
+<p>第三层，非参数曲线是最好的验收集。参数模型拟合完之后，把它仿真出的阶跃响应和实测阶跃响应画在同一张图上，重合不重合一眼就能看出来，不需要任何统计量。第 16 章 §16.7.8 提到的“0.1–2 rad/s 应重合到 3 dB 内”，本质上就是用非参数结果给参数模型判卷。</p>
+<p>这三层之外，还有一组更便宜的判断，全靠曲线的“形状特征”。阶跃响应有没有超调，直接回答“有没有共轭复极点”：本章对象单调上升、无超调，所以三个极点都是实数，参数辨识时不必去试二阶振荡结构。末段是否还在缓慢上升，回答“有没有积分环节”：若 5 倍时间常数后曲线仍以固定斜率爬升，说明对象含 <span class="math inline">1/s</span>，此时增益的定义要改成“斜率增益”，否则读数会随记录长度一直变大。脉冲响应过零几次，回答“阶数下界”：过零一次至少说明有两对时间尺度相差较大的极点，过零两次说明结构更复杂。</p>
+<p>这三条形状判断不需要任何计算，看曲线就能得，却能把参数辨识的搜索空间砍掉一大半。<strong>它们也正是“先体检、后手术”最实际的价值：不是给出精确参数，而是排除掉一大类不可能的结构。</strong></p>
+<h3 id="三个真实场景">17.1.4 三个真实场景</h3>
+<p>场景一：一台包装机的送膜轴，只能单向运行。开环打阶跃会让膜松掉，产线要停线重穿。现场能做的只有两种：一是在正常运行时叠加一个小幅值 PRBS，用相关分析取动态；二是利用每次换卷时的自然阶跃，攒够几十次再对齐平均。前者要求激励幅值足够小以保证不影响张力，后者要求每次阶跃的初值、幅值都记下来。两个做法都指向同一个前提：<strong>非参数辨识可以只用“运行时数据”，这是它相对于阶跃测试的最大优势。</strong></p>
+<p>场景二：一台大惯量转台，脉冲打不进去。执行器的加速度限幅决定了最短脉宽 0.2 s，而对象的上升时间是 1.15 s，脉宽与上升时间之比接近 1:6。此时直接脉冲法给出的是一个被 0.2 s 窗口平滑过的响应，峰值必然偏低——本章实验 2 里 0.2 s 脉宽的峰值误差是 <span class="math inline">-5.18\%</span>，而 RMSE 反而升到 0.622，说明平滑带来的偏差比噪声降低带来的收益更大。正确做法是改用阶跃差分或相关分析，而不是硬把脉宽压窄。</p>
+<p>场景三：一台温控箱，时间常数 20 min。任何一次阶跃测试都要等两小时才能读数稳定，而生产排程只给一小时窗口。此时唯一的出路是“少等”：接受截断误差，用模型外推补足稳态。本章实验 5 给的就是这条账：持续时间取 2 s（约 4 倍主导时间常数）时读数偏低 2.78%，取 5 s 时偏低 0.01%。换算到 20 min 的对象上，一小时窗口相当于 3 倍时间常数，读数大约偏低 5%，这个偏差必须在报告里写明，不能当成“测出来的真值”。</p>
+<p>三个场景对应三种约束：不能开环、执行器不够快、时间不够长。它们都不是算法问题，而是“在约束下选哪条路线”的问题。本章 §17.5 会把这张选择表做完整。</p>
+<h3 id="本章路线">17.1.5 本章路线</h3>
+<p>本章按“先定义、再推导、后落地”的顺序展开，与图 17-1 的四条路线对应。</p>
+<p>§17.2 给定义：三种非参数表示、阶跃读数的四个特征量、离散脉冲响应的量纲、ETFE 与相干函数。§17.3 做推导：阶跃读数与真值的关系、死区折算、表观延迟的解析式、脉冲法的噪声放大、相关分析的两种归一、ETFE 的方差。§17.4 讲实现：采样周期怎么选、阶跃测试怎么实施、相关分析和谱分析怎么写、结果怎么存。§17.5 讲边界：什么情况下不该用非参数、现场测试的安全与工时账、交付物该包含什么。§17.6 用六个实验把上述结论逐个量化，每个数字都能由 <code>ch017_sim.py</code> 复算。§17.7 给决策流程、常见错误表和与后续章节的接口。</p>
+<p>全章围绕一个判断：<strong>这条曲线，是在描述对象，还是在描述噪声。</strong> 非参数方法没有结构约束可以“兜底”，一旦激励不足或噪声过大，曲线会照样画出来，只是画的是噪声。能不能看出这一点，是本章要训练的核心能力。</p>
+<h2 id="定义与数学基础">17.2 定义与数学基础</h2>
+<h3 id="三种表示与它们的量纲">17.2.1 三种表示与它们的量纲</h3>
+<p>非参数模型是“输入输出之间的映射”，这个映射可以用三种自变量写出来：时间（阶跃）、时间（脉冲）、频率（频响）。定义本身不难，难的是量纲——本章实验里最容易出错的地方，几乎都在量纲上。</p>
+<p>设输入 <span class="math inline">u</span> 的单位是 V，输出 <span class="math inline">y</span> 的单位是 mm。三个量的单位分别是：</p>
+<ul>
+<li>阶跃响应 <span class="math inline">s(t)</span>：mm，因为它是对单位幅值输入的响应，<span class="math inline">s(\infty)=K</span>；</li>
+<li>脉冲响应 <span class="math inline">g(t)</span>：mm/(V·s)，通常写成 s<span class="math inline">^{-1}</span>（增益 1.8 mm/V 提出去之后）；</li>
+<li>频率响应 <span class="math inline">G(j\omega)</span>：mm/V，与 <span class="math inline">g(t)</span> 的傅里叶变换同量纲。</li>
+</ul>
+<p>三者之间的关系已由式 (17-1) 给出。要注意的是，工程上说的“脉冲响应”经常指<strong>离散</strong>脉冲响应 <span class="math inline">g_k</span>，它是无量纲的（每 V 输入对应多少 mm 输出）。两者的换算是 <span class="math inline">g_k\approx T_s\,g(t_k)</span>，即离散序列是连续曲线在采样点上的面积切片。本章 §17.3.4 会看到，漏掉这个 <span class="math inline">T_s</span> 会让相关分析的结果差 100 倍——实验里第一次跑出 <span class="math inline">-99\%</span> 的误差，原因就是它。</p>
+<h3 id="卷积三个表示的共同源头">17.2.2 卷积：三个表示的共同源头</h3>
+<p>对线性时不变对象，任意输入下的输出是脉冲响应与输入的卷积：</p>
+<p><span class="math display">y(t)=\int_{0}^{\infty}g(\tau)\,u(t-\tau)\,\mathrm{d}\tau \tag{17-3}</span></p>
+<p>把 <span class="math inline">u</span> 取成单位阶跃，得到 <span class="math inline">y(t)=\int_0^t g(\tau)\,\mathrm{d}\tau=s(t)</span>；把 <span class="math inline">u</span> 取成 <span class="math inline">\delta(t)</span>，得到 <span class="math inline">y(t)=g(t)</span>；两边做傅里叶变换，得到 <span class="math inline">Y(j\omega)=G(j\omega)U(j\omega)</span>。三条路线之所以等价，就是因为它们都在解同一个卷积方程，只是选择了不同的“探针”。</p>
+<p>这里有一个容易被忽略的前提：式 (17-3) 成立要求对象线性且时不变，并且初始条件为零。实际测试中“零初始条件”意味着必须先让对象在工作点上稳定下来再施加激励，否则阶跃响应里会混进初始瞬态。§17.4.2 会把这条写成操作步骤。</p>
+<h3 id="阶跃读数的四个特征量">17.2.3 阶跃读数的四个特征量</h3>
+<p>阶跃响应里能读出的量很多，工程上常用的只有四个，定义如下。</p>
+<p>稳态增益：</p>
+<p><span class="math display">\hat K=\frac{y_{\mathrm{ss}}-y_0}{\Delta u} \tag{17-4}</span></p>
+<p>其中 <span class="math inline">y_0</span> 是阶跃施加前一段的均值，<span class="math inline">y_{\mathrm{ss}}</span> 是末段均值，<span class="math inline">\Delta u</span> 是指令幅值。注意分母用的是<strong>指令幅值</strong>而不是执行器实际输出幅值——这个区别在 §17.3.1 会变成一条死区折算公式。</p>
+<p>表观延迟（2% 穿越）：</p>
+<p><span class="math display">d_2=\min\left\{t:\;y(t)-y_0\ge 0.02\,(y_{\mathrm{ss}}-y_0)\right\} \tag{17-5}</span></p>
+<p>上升时间：</p>
+<p><span class="math display">t_r=t_{90}-t_{10} \tag{17-6}</span></p>
+<p>其中 <span class="math inline">t_{10}</span>、<span class="math inline">t_{90}</span> 分别是响应达到总变化量 10% 与 90% 的时刻。</p>
+<p>这四个量的定义看似随意，每一处都有原因。<strong>为什么用 2% 而不是 0%</strong>：零穿越点会被噪声与量化淹没；本章 0.72 mm 的阶跃跳变上，2% 相当于 14 μm，约为 5 μm 噪声的三倍，是一个“噪声打不穿”的门槛。<strong>为什么用 10%–90% 而不是 0%–100%</strong>：两端都是渐近的，用端点定义会让上升时间对噪声极其敏感；10%–90% 落在曲线最陡的区间，读数最稳。<strong>为什么用末段均值而不是最后一个点</strong>：单点读数带一个噪声样本的方差，取末段 50 个点平均可以把方差压到 1/50。</p>
+<p>这三个选择都能折算成具体的精度。末段 50 点平均后，均值的标准差是 <span class="math inline">5/\sqrt{50}=0.7</span> μm，除以 720 μm 的跳变是 0.10%——这正好是表 17-7 里 0.40 V 时增益标准差的量级（实测 0.20%，多出来的一倍来自量化）。若改成末段 10 点平均，这个数会变成 0.22%，与实测一起翻倍；若用最后一个点，则变成 0.7%，比实测差三倍半。<strong>平均几个点不是随便定的，它直接决定增益读数的精度上限。</strong></p>
+<p>这些选择的代价是<strong>读数不等于参数</strong>。以本章对象为例，式 (17-2) 的纯延迟是 40 ms，而 2% 穿越点读到 116 ms，二者相差 76 ms。这不是误差，是定义带来的系统性差异。§17.3.2 会给出解析式，说明这 76 ms 是从哪来的、什么情况下可以忽略。</p>
+<h3 id="离散脉冲响应">17.2.4 离散脉冲响应</h3>
+<p>采样之后，卷积变成求和：</p>
+<p><span class="math display">y[k]=\sum_{j=0}^{k}g_j\,u[k-j] \tag{17-7}</span></p>
+<p><span class="math inline">g_j</span> 就是<strong>离散脉冲响应</strong>，也叫 Markov 参数。它的物理含义很直接：在第 0 拍给一个单位脉冲，第 <span class="math inline">j</span> 拍的输出就是 <span class="math inline">g_j</span>（假设初值为零，且脉冲宽度等于一拍）。</p>
+<p><span class="math inline">g_j</span> 无量纲，<span class="math inline">g(t)</span> 的量纲是 s<span class="math inline">^{-1}</span>，二者关系是</p>
+<p><span class="math display">g(t_k)\approx \frac{g_k}{T_s},\qquad g_k\approx T_s\,g(t_k) \tag{17-8}</span></p>
+<p>这个换算是离散与连续之间唯一的桥。它的误差来自“一拍内的能量被集中到采样点上”，量级是 <span class="math inline">O(\omega T_s)</span>；本章 <span class="math inline">T_s=0.01</span> s、关心到 60 rad/s，<span class="math inline">\omega T_s=0.6</span>，在这个频段已经不能算小，所以式 (17-8) 只在高频段失效，低频段够用。</p>
+<p>式 (17-7) 还有一个用途：它是第 18–20 章所有参数模型的公共起点。ARX 的系数、状态空间的 <span class="math inline">(A,B,C,D)</span>、甚至阶跃响应的前若干点，都可以由 <span class="math inline">g_j</span> 表示。§17.4.5 会给这条桥的具体用法。</p>
+<h3 id="频率响应与-etfe">17.2.5 频率响应与 ETFE</h3>
+<p>对式 (17-7) 两边做离散傅里叶变换，得到 <span class="math inline">Y(e^{j\omega T_s})=G(e^{j\omega T_s})U(e^{j\omega T_s})</span>。把它解出来，就是最朴素的频率响应估计：</p>
+<p><span class="math display">\hat G(e^{j\omega T_s})=\frac{Y_N(e^{j\omega T_s})}{U_N(e^{j\omega T_s})}=\frac{\sum_{k=0}^{N-1}y[k]e^{-j\omega kT_s}}{\sum_{k=0}^{N-1}u[k]e^{-j\omega kT_s}} \tag{17-9}</span></p>
+<p>这就是 ETFE。它的形式简单到让人怀疑，但性质并不简单：在没有噪声时，<span class="math inline">\hat G</span> 在 DFT 频点上<strong>精确等于</strong>真值（只差一个 <span class="math inline">e^{-j\omega T_s/2}</span> 的零阶保持相位）；有噪声时，误差是 <span class="math inline">\hat G-G=N_y/U</span>，分母小的地方误差就大。</p>
+<p>把一段长记录切成 <span class="math inline">M</span> 段、每段做一次 ETFE 再平均，得到工程上常用的 H1 估计：</p>
+<p><span class="math display">\hat G(e^{j\omega T_s})=\frac{\sum_{i=1}^{M}Y_i(\omega)U_i^{*}(\omega)}{\sum_{i=1}^{M}\left|U_i(\omega)\right|^{2}} \tag{17-10}</span></p>
+<p>它等价于“互谱除以自谱”，<span class="math inline">\hat G=S_{uy}/S_{uu}</span>。分子分母都做了平均，噪声在分子上被平均掉、在分母上被平均成正的偏置，所以只要 <span class="math inline">M</span> 足够大、输入谱在关心频段不为零，估计就收敛。</p>
+<p>单段 ETFE 与平均后的 H1 有一个容易被误解的差别。单段 ETFE 的方差与 <span class="math inline">|U(\omega)|^2</span> 成反比，而记录越长，单个频点上的 <span class="math inline">|U|^2</span> 越大，方差确实按 <span class="math inline">1/N</span> 下降；但与此同时频点也变密了，画在图上就是“点更多、每点都抖”。<strong>曲线看起来没变好，是因为你把新增的信息都花在了更密的点上，而不是花在压低已有频点的抖动上。</strong> 分段平均改变了这件事：它把长记录切成 <span class="math inline">M</span> 段，每段的频点稀疏、方差大，平均后每个频点的方差降到 <span class="math inline">1/M</span>，点还是那么多，抖动却小了。这就是 §17.6.6 里“段长从 512 增到 1024、误差先降后平”的直接解释。</p>
+<h3 id="相干函数这条曲线可不可信">17.2.6 相干函数：这条曲线可不可信</h3>
+<p>ETFE 有一个讨厌的性质：无论数据里有没有信息，它都会画出一条曲线。判断“这条曲线是不是噪声”，靠相干函数：</p>
+<p><span class="math display">\gamma^{2}(\omega)=\frac{\left|S_{uy}(\omega)\right|^{2}}{S_{uu}(\omega)S_{yy}(\omega)},\qquad 0\le\gamma^{2}\le1 \tag{17-11}</span></p>
+<p><span class="math inline">\gamma^2=1</span> 表示输出的全部功率都能由输入线性解释；<span class="math inline">\gamma^2=0</span> 表示两者无关。中间值有两个来源：噪声（输出里有输入解释不了的部分）和非线性（同一输入在不同幅值下响应不同）。</p>
+<p>工程上把 <span class="math inline">\gamma^2&lt;0.5</span> 的频段视为“不可用”，不要在这些频点上做模型拟合或控制器设计。本章实验 4 里，分段 512 点时 1–10 rad/s 的平均相干是 0.920，分段 4096 点时升到 0.998——同一段数据，只是平均的段数不同，可信度就差了一档。这条对比说明相干函数不仅衡量数据质量，也衡量<strong>你用掉多少数据</strong>。</p>
+<p>两个来源可以用一次实验分开：<strong>把激励幅值加倍，再算一次相干。</strong> 若相干明显上升，说明原来那一段是被噪声压住的，加大幅值就能救；若相干几乎不动，说明输出里有一部分根本不由输入线性决定——那是非线性、时变或未测扰动，加大幅值只会让它更严重。这个判别只需要一次额外测试，比争论“是噪声还是非线性”有效得多。本章对象在幅值越过死区、又没进饱和时相干最高，正是因为这两条边界之外才会有额外的非线性成分。</p>
+<h3 id="四条路线在数学上是同一件事">17.2.7 四条路线在数学上是同一件事</h3>
+<p>把式 (17-7) 与式 (17-3) 对照可以看出，阶跃、脉冲、相关、谱四条路线都在估计同一个 <span class="math inline">g</span>，区别只在“用什么输入去激发它、用什么算子把它从数据里取出来”：</p>
+<ul>
+<li>阶跃：输入是单位阶跃，取的是 <span class="math inline">g</span> 的积分，所以只对低频敏感；</li>
+<li>脉冲：输入是近似 <span class="math inline">\delta</span>，直接读出 <span class="math inline">g</span>，所以对噪声最敏感；</li>
+<li>相关：用 <span class="math inline">r_{uu}</span> 做匹配滤波，把 <span class="math inline">g</span> 从噪声里“捞”出来，效果取决于 <span class="math inline">r_{uu}</span> 的形状；</li>
+<li>谱：在频域做除法，等价于逐频点的最小二乘，方差取决于每个频点上的信噪比。</li>
+</ul>
+<p>四条路线的误差结构完全不同，但都遵守同一条守恒律：<strong>时间分辨率与噪声抑制不能同时最优</strong>。脉冲法的时间分辨率是一拍，代价是每个点只有一个样本的能量；相关法把 <span class="math inline">N</span> 个样本的能量都用来估一个点，代价是时间分辨率退化到输入自相关的宽度。§17.3 会把这条守恒律写成公式。</p>
+<h3 id="持续激励输入谱决定能辨识什么">17.2.8 持续激励：输入谱决定能辨识什么</h3>
+<p>把式 (17-7) 按样本排开，写成一列向量：</p>
+<p><span class="math display">\underbrace{\begin{bmatrix}y[n_{\rm lag}]\\ y[n_{\rm lag}+1]\\ \vdots\\ y[N-1]\end{bmatrix}}_{Y}=\underbrace{\begin{bmatrix}u[n_{\rm lag}]&amp;u[n_{\rm lag}-1]&amp;\cdots&amp;u[0]\\ u[n_{\rm lag}+1]&amp;u[n_{\rm lag}]&amp;\cdots&amp;u[1]\\ \vdots&amp;&amp;&amp;\vdots\\ u[N-1]&amp;u[N-2]&amp;\cdots&amp;u[N-n_{\rm lag}]\end{bmatrix}}_{\Phi}\underbrace{\begin{bmatrix}g_0\\ g_1\\ \vdots\\ g_{n_{\rm lag}-1}\end{bmatrix}}_{g}</span></p>
+<p>这就是非参数辨识的回归形式，和后面第 18 章的最小二乘是同一个方程，只是未知数换成了 <span class="math inline">g_j</span>。能不能唯一解出 <span class="math inline">g</span>，取决于 <span class="math inline">\Phi</span> 的秩与条件数；而 <span class="math inline">\Phi</span> 完全由输入序列 <span class="math inline">u</span> 的移位堆叠而成，所以<strong>输入的性质决定了能辨识什么</strong>，这一点和数据量无关。</p>
+<p>最极端的是常值输入。<span class="math inline">u</span> 恒定，<span class="math inline">\Phi</span> 的所有列只差一个常数倍，秩为 1，只能定出一个数——总增益。这正是“不打阶跃就没有动态信息”的代数解释。</p>
+<p>阶跃输入比常值好，但好得有限。<span class="math inline">\Phi</span> 的列是彼此错位的阶跃，形式上是满秩的，但相邻两列几乎平行，条件数随 <span class="math inline">n_{\rm lag}</span> 迅速恶化。工程后果是：用阶跃数据直接解这个方程，解出的 <span class="math inline">g_j</span> 会剧烈振荡，正负交替；而把它们累加回 <span class="math inline">s(t)</span> 却相当准。<strong>阶跃数据里真正可靠的信息是积分量，不是微分后的 <span class="math inline">g_j</span></strong>——这与 §17.3.3 说的“阶跃差分放大噪声”是同一件事的两种说法。</p>
+<p>PRBS 之所以有效，是因为它把能量铺到了很多频点上。7 级 PRBS 的周期是 <span class="math inline">2^7-1=127</span> 拍，钟周期 0.05 s 时周期 6.35 s，基频 <span class="math inline">1/6.35=0.157</span> Hz，即 0.99 rad/s；它的谱线间隔就是 0.99 rad/s，在 0–60 rad/s 内有一百多条谱线，每条都携带信息。相比之下，单频正弦只给一个频点，多正弦给若干个频点，都不如 PRBS 铺得均匀。</p>
+<p>“持续激励”这个词说的就是这件事：<strong>输入在关心的频段上必须有非零功率，而且不能只有一两个频点。</strong> 判据可以写成输入自相关矩阵正定，也可以写成 <span class="math inline">S_{uu}(\omega)&gt;0</span> 在关心频段成立。工程上不必验证正定性，只需做一件事：把输入谱画出来，看关心频段内有没有凹陷。若某频段的输入功率比峰值低 40 dB 以上，该频段的辨识结果基本是噪声。</p>
+<p>条件数也有直观的工程含义。白噪声输入的 <span class="math inline">\Phi^{\mathsf T}\Phi</span> 接近对角，条件数小，解稳定；PRBS 的 <span class="math inline">\Phi^{\mathsf T}\Phi</span> 是近似 Toeplitz 的，条件数比白噪声大但仍可控；阶跃的条件数随记录长度平方增长。<strong>这就是本章推荐“大幅值阶跃定增益、PRBS 定动态”的代数依据</strong>：两者在 <span class="math inline">\Phi</span> 的条件数上互补。</p>
+<h3 id="有限记录带来的三个必然代价">17.2.9 有限记录带来的三个必然代价</h3>
+<p>前面所有式子都默认记录无限长、初值为零、没有趋势。真实数据三条都不满足，于是有三笔不可避免的代价。</p>
+<p><strong>第一笔，泄漏。</strong> 记录长度不是信号周期的整数倍时，能量会从主频点漏到邻近频点。矩形窗的第一旁瓣只比主瓣低 13.3 dB，Hanning 窗低 31.5 dB，代价是主瓣从 2 个频点展宽到 4 个频点。这就是实验 4 里 512 点分段低频偏高、误差 0.74 dB 的来源：主瓣 4 个频点相当于 4.9 rad/s，而 1–10 rad/s 整段只有约 7 个频点，主瓣吞掉了大半频段。<strong>分辨率与泄漏是一对矛盾</strong>：窗越长主瓣越窄、泄漏越小，但可用于平均的段数越少。</p>
+<p><strong>第二笔，截断。</strong> 阶跃没等到稳态就停止记录，读数必然偏低，偏差随截止时刻按 <span class="math inline">e^{-t_c/T}</span> 衰减。本章 2 s 时偏低 2.78%，5 s 时 0.01%（表 17-9）。这笔代价有明确的对价关系：多等一倍时间，误差从一个可观的百分数降到看不见，但再等下去收益迅速归零。</p>
+<p><strong>第三笔，趋势与初值。</strong> 对象在工作点上缓慢漂移，或者测试开始时还没完全稳定，这些成分都落在低频，与阶跃的稳态信息混在一起。去趋势能压掉一部分，但去趋势的阶次本身是一个选择：一阶去趋势会把极慢的动态也当成漂移扣掉，使增益偏低；不去趋势则漂移全部计入增益，使增益偏高。本章的仿真里没有加漂移，所以这一笔代价没有进入表 17-9；现场数据里它常常是最大的一项。</p>
+<p>三笔代价的共同点是<strong>它们都是偏差，不是方差</strong>。多测几次不能让泄漏消失，也不能让截断误差变小。这与 §17.6.8 的总结一致：非参数辨识的主要矛盾在偏差这一侧。</p>
+<h3 id="离散化带来的两处固定偏差">17.2.10 离散化带来的两处固定偏差</h3>
+<p>除了记录长度，采样本身还会引入两处与数据量无关的偏差。它们都小到容易被忽略，但在中高频段会变成相位误差的主要来源。</p>
+<p><strong>第一处，零阶保持的半拍相位。</strong> 数字系统里执行器在整拍内保持常值，所以离散模型的频响比连续对象多一个 <span class="math inline">e^{-j\omega T_s/2}</span> 因子。ETFE 估的是离散对象的频响，若直接与连续传递函数比，就会多出 <span class="math inline">\omega T_s/2</span> 的相位滞后。本章 <span class="math inline">T_s=0.01</span> s：1 rad/s 时 0.005 rad（0.29°），可以不管；10 rad/s 时 0.05 rad（2.9°），开始有影响；60 rad/s 时 0.3 rad（17.2°），已经是可观的一项。修正只需在估计结果上乘 <span class="math inline">e^{+j\omega T_s/2}</span>，一行代码的事，但忘了它就会把半拍延迟错记到对象头上。</p>
+<p><strong>第二处，延迟取整。</strong> 仿真里把 40 ms 的纯延迟折算成 <span class="math inline">40/10=4</span> 拍，正好整除，没有误差。现场很少这么巧：若真实延迟是 45 ms，按 4.5 拍处理不了，取 4 拍差 5 ms，取 5 拍多 5 ms。5 ms 在 10 rad/s 上是 2.9°，在 60 rad/s 上是 17°——<strong>与半拍相位同量级</strong>。遇到不整除的延迟，要么提高采样率让一拍足够小，要么在模型里显式写出分数延迟，不要靠四舍五入。</p>
+<p>两处偏差还有一条共同的处理原则：<strong>它们可以精确补偿，所以不该出现在“模型不准”的讨论里。</strong> 参数辨识的残差里若出现随频率线性增长的相位误差，第一件事就是查这两项，而不是加阶数。</p>
+<h2 id="推导与性质">17.3 推导与性质</h2>
+<h3 id="阶跃读数为什么会系统性偏低">17.3.1 阶跃读数为什么会系统性偏低</h3>
+<p>式 (17-4) 的分母是<strong>指令</strong>幅值 <span class="math inline">\Delta u</span>，而真正进入对象的是执行器输出。本章的执行器有 10 mV 死区，所以实际幅值是 <span class="math inline">\Delta u-d</span>（只要 <span class="math inline">\Delta u&gt;d</span>）。于是读数与真值的关系是</p>
+<p><span class="math display">\hat K=\frac{K(\Delta u-d)}{\Delta u}=K\left(1-\frac{d}{\Delta u}\right) \tag{17-12}</span></p>
+<p>这条式子解释了一个很常见的现象：<strong>小幅值阶跃测出的增益总是偏低，而且偏低的比例随幅值反比变化</strong>。本章实验 1 的数据把这条曲线量了出来：幅值 0.02 V 时折算系数 0.500，读数 0.9123；幅值 0.05 V 时折算 0.800，读数 1.4439；幅值 0.40 V 时折算 0.975，读数 1.7555；幅值 0.80 V 时折算 0.988，读数 1.7777。每一行的读数都比 <span class="math inline">1.8\times</span> 折算系数略高一点点（例如 0.02 V 那行是 0.9123 对 0.900），差值来自噪声让末段均值略偏正，约 1%。</p>
+<p>这条式子还给出一个实用的判据：若要求增益误差小于 2%，则 <span class="math inline">d/\Delta u&lt;0.02</span>，即 <span class="math inline">\Delta u&gt;50d</span>。10 mV 的死区要求阶跃幅值至少 0.5 V。可幅值又不能太大，否则会撞上饱和或者把对象推出线性区。<strong>可用窗口是 <span class="math inline">\Delta u\in(50d,\;u_{\mathrm{sat}})</span>，窄的时候只有几倍</strong>，这就是为什么现场阶跃测试经常卡在“幅值不够大、读不准”和“幅值太大、非线性”之间。</p>
+<p>式 (17-12) 还提醒一件事：死区折算与噪声是两个独立误差。噪声让读数上下抖动，标准差随幅值下降而上升（表 17-7 里 0.02 V 时是 8.62%，0.80 V 时是 0.10%）；死区让读数单向偏低，且幅值越小偏低越多。二者叠加的结果是“小幅值既不准又不稳”，所以现场原则很简单：<strong>在不出非线性区的前提下，幅值取尽可能大。</strong></p>
+<h3 id="表观延迟里有多少是假的">17.3.2 表观延迟里有多少是“假”的</h3>
+<p>纯延迟 <span class="math inline">L</span> 会让响应整体右移，而惯性环节会让响应“慢慢起步”。2% 穿越点读到的是两者之和，所以 <span class="math inline">d_2&gt;L</span>。这个差值有多大，取决于阶数。</p>
+<p>一阶对象可以精确算。<span class="math inline">y/y(\infty)=1-e^{-(t-L)/T}</span>，令它等于 0.02：</p>
+<p><span class="math display">d_2=L-T\ln(1-0.02)=L+0.0202\,T \tag{17-13}</span></p>
+<p>即多出来的部分只有时间常数的 2%。所以一阶对象的 2% 读数几乎就是纯延迟，用 <span class="math inline">d_2</span> 当 <span class="math inline">L</span> 不会出大错。</p>
+<p>高阶对象完全不同。对 <span class="math inline">n</span> 个时间常数相同的极点，<span class="math inline">y/y(\infty)=1-e^{-x}\sum_{k=0}^{n-1}x^{k}/k!</span>（<span class="math inline">x=t/T</span>），解 2% 得到 <span class="math inline">x_{2\%}</span>：<span class="math inline">n=1</span> 时 0.020，<span class="math inline">n=2</span> 时 0.215，<span class="math inline">n=3</span> 时 0.567，<span class="math inline">n=4</span> 时 1.016。<strong>阶数每加一，2% 穿越点相对时间常数的比例就翻一倍以上。</strong> 也就是说，同样是 0.5 s 的时间常数，一阶对象读出的延迟是 0.01 s，四阶对象读出的延迟是 0.51 s——后者有一半是“假”的。</p>
+<p>本章对象是三个不等的极点，比例落在中间。实验 0 在 1 ms 采样、无噪声、旁路非线性的条件下读到 <span class="math inline">d_2=0.1160</span> s，减去纯延迟 0.040 s 得 0.076 s，除以主导时间常数 0.5 s 等于 0.152：</p>
+<p><span class="math display">\frac{d_2-L}{T_1}=\frac{0.1160-0.0400}{0.500}=0.152 \tag{17-14}</span></p>
+<p>这个数比三阶等极点的 0.567 小得多，原因是另外两个时间常数（0.12 s、0.03 s）比主导的小一个量级以上，它们只在起步的头几十毫秒起作用，很快就不再拖后腿。</p>
+<p>把 0.116 s 当纯延迟用，后果可以算。Smith 预估器（见第 47 章）会按这个数补一个延迟环节，多补的 76 ms 在 10 rad/s 上相当于 <span class="math inline">0.076\times10=0.76</span> rad，即 43.5° 相位；在 2 rad/s 上相当于 8.7°。低频段影响不大，一到中频就把相位裕度吃掉一大半。<strong>补偿过头比不补偿更糟</strong>，因为它会把一个本来稳定的回路推向振荡。</p>
+<p>正确做法是区分两个量。若控制器需要 FOPDT 形式，用半规则从三阶模型折算：保留最大时间常数、把第二个折半并入，<span class="math inline">T=T_1+T_2/2=0.56</span> s，<span class="math inline">L_{\mathrm{eff}}=L_0+T_2/2+T_3=0.13</span> s。这个等效延迟已经吸收了惯性，与读数的 0.116 s 同量级，但它是为控制器设计服务的，不能再当成“物理延迟”往 <span class="math inline">d_2</span> 上加。若只需判断“有没有大延迟”，看 <span class="math inline">d_2</span> 与上升时间之比即可：本章是 <span class="math inline">0.116/1.154=0.10</span>，属于延迟可忽略的一类；比值超过 0.3 才需要考虑专门的延迟补偿。</p>
+<p>这个 0.152 有两个性质，决定了它能不能被搬到别的对象上。</p>
+<p><strong>第一，它对时间尺度是线性的。</strong> 比例 <span class="math inline">0.152</span> 只取决于小时间常数与主导时间常数的<strong>比值</strong>（这里是 0.24 与 0.06）。若整个对象快一倍或慢一倍，<span class="math inline">d_2-L</span> 也跟着快一倍或慢一倍，比例不变。所以现场估算时不必知道绝对时间，只要知道“第二、第三个时间常数是主导的几分之一”，就能估出表观延迟的假成分。反过来说，若两个对象的 <span class="math inline">d_2/T_1</span> 差很多，那多半不是时间尺度不同，而是极点分布不同——这是一个便宜的结构诊断。</p>
+<p><strong>第二，它对小时间常数敏感，但分辨率不高。</strong> 固定 <span class="math inline">T_1=0.5</span> s、<span class="math inline">T_2=0.12</span> s，把 <span class="math inline">T_3</span> 从 0.015 s 增到 0.12 s，<span class="math inline">d_2</span> 依次是 0.107、0.117、0.132、0.153 s——<span class="math inline">T_3</span> 翻一倍只让 <span class="math inline">d_2</span> 加 15 ms；固定 <span class="math inline">T_3</span>、把 <span class="math inline">T_2</span> 从 0.06 s 增到 0.24 s，<span class="math inline">d_2</span> 从 0.101 s 增到 0.140 s。方向上说得通：时间常数越大，起步越慢，2% 点越晚。但<strong>几十毫秒的灵敏度意味着用它反演小时间常数是不划算的</strong>——噪声与量化本身就有这个量级的抖动。要精确的小时间常数，去脉冲响应的起始段或 Bode 图的高频段。</p>
+<p>这两条性质合起来给了一个实用结论：<span class="math inline">d_2</span> 适合判断“量级”和“趋势”，不适合反演“结构”。要结构，去脉冲响应或 Bode 图的高频段；要量级，一把 <span class="math inline">d_2</span> 就够。</p>
+<h3 id="脉冲法的能量账">17.3.3 脉冲法的能量账</h3>
+<p>理想脉冲的能量是无穷大的瞬时功率，物理上做不到。可实现的是一段宽度 <span class="math inline">w</span>、幅值 <span class="math inline">A</span> 的方波，它的“面积”是 <span class="math inline">A\cdot w</span>。把输出除以面积，就得到脉冲响应的估计：</p>
+<p><span class="math display">\hat g(t)=\frac{y(t)}{A\,w},\qquad \sigma_{\hat g}=\frac{\sigma_y}{A\,w} \tag{17-15}</span></p>
+<p>式 (17-15) 的后半是噪声底：脉宽越窄、幅值越小，噪声被放大得越厉害。本章 <span class="math inline">A=1</span> V、<span class="math inline">\sigma_y=5</span> μm，取 <span class="math inline">w=0.02/0.05/0.10/0.20</span> s，噪声底依次是 0.250、0.100、0.050、0.025 s<span class="math inline">^{-1}</span>。真值峰值是 2.273 s<span class="math inline">^{-1}</span>，所以最窄的脉宽下噪声底已经到峰值的 11%。</p>
+<p>但脉宽不是越小越好。真实输入是一个宽度 <span class="math inline">w</span> 的矩形，输出是 <span class="math inline">g</span> 与矩形的卷积，峰值必然被抹平。峰值被压低的比例大致按 <span class="math inline">(w/t_r)^2</span> 增长：<span class="math inline">w</span> 从 0.02 增到 0.20，抹平从可以忽略增到 5% 上下。于是两侧夹出了一个最优区间。</p>
+<p>抹平的量可以再算细一点。矩形脉冲的频域是 <span class="math inline">\mathrm{sinc}(\omega w/2)</span>，<span class="math inline">w=0.05</span> s 时第一个零点在 <span class="math inline">2\pi/w=125.7</span> rad/s，所以关心频段（0–60 rad/s）全都落在主瓣内；20 rad/s 处的衰减只有 <span class="math inline">|\sin0.5|/0.5=0.959</span>，即 −0.36 dB。<strong>这说明方波脉宽主要伤害的是峰值附近的高频成分，而不是整体幅值</strong>——所以 §17.4.6 校验二里“面积仍然对”是有道理的：面积对应直流，直流处 <span class="math inline">\mathrm{sinc}=1</span> 不受影响。</p>
+<p>实验 2 的数据把这条 trade-off 摆得很清楚，见表 17-2。</p>
+<p><strong>表 17-2 直接脉冲法：脉宽与噪声的权衡（真值峰值 2.273 s<span class="math inline">^{-1}</span>）</strong></p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">脉宽 / s</th>
+<th style="text-align: left;">峰值 / s<span class="math inline">^{-1}</span></th>
+<th style="text-align: left;">峰值误差 / %</th>
+<th style="text-align: left;">噪声底 / s<span class="math inline">^{-1}</span></th>
+<th style="text-align: left;">RMSE / s<span class="math inline">^{-1}</span></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">0.02</td>
+<td style="text-align: left;">2.460</td>
+<td style="text-align: left;">+8.21</td>
+<td style="text-align: left;">0.250</td>
+<td style="text-align: left;">0.627</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">0.05</td>
+<td style="text-align: left;">2.325</td>
+<td style="text-align: left;">+2.28</td>
+<td style="text-align: left;">0.100</td>
+<td style="text-align: left;">0.397</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">0.10</td>
+<td style="text-align: left;">2.233</td>
+<td style="text-align: left;">−1.75</td>
+<td style="text-align: left;">0.050</td>
+<td style="text-align: left;">0.445</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">0.20</td>
+<td style="text-align: left;">2.155</td>
+<td style="text-align: left;">−5.18</td>
+<td style="text-align: left;">0.025</td>
+<td style="text-align: left;">0.622</td>
+</tr>
+</tbody>
+</table>
+<p>最窄的 0.02 s 误差是<strong>正的</strong> 8.21%，这与“抹平只会压低峰值”的直觉相反。原因是峰值取的是整条曲线上的最大值：噪声底 0.25 时，几十个噪声样本里的最大值期望比均值高出约 2.5 倍标准差，也就是 0.6 左右，足以把 2.27 的峰值抬到 2.46。<strong>窄脉冲的误差主要来自噪声挑高点，宽脉冲的误差主要来自平滑压峰值</strong>，两者在 0.05–0.10 s 之间交叉，误差落到 2% 以内。这个区间恰好也是本章对象上升时间（1.15 s）的 1/20 到 1/10，可作为一般经验。</p>
+<p>阶跃差分法避开了“打脉冲”的硬件限制：用同一段阶跃数据，取间隔 <span class="math inline">m</span> 拍的两点做差，</p>
+<p><span class="math display">\hat g[k]=\frac{y[k+m]-y[k]}{\Delta u\cdot m\,T_s},\qquad \sigma_{\hat g}=\frac{\sqrt{2}\,\sigma_y}{\Delta u\,m\,T_s} \tag{17-16}</span></p>
+<p>噪声底与 <span class="math inline">m</span> 成反比，时间分辨率也是 <span class="math inline">m</span> 拍。<span class="math inline">m=2</span> 时噪声底 0.884、RMSE 0.976；<span class="math inline">m=5</span> 时 0.354、0.474；<span class="math inline">m=10</span> 时 0.177、0.444；<span class="math inline">m=20</span> 时 0.088、0.609。最好的点落在 <span class="math inline">m=5</span> 到 <span class="math inline">10</span> 之间，与直接脉冲的结论一致。</p>
+<p>注意式 (17-16) 里 <span class="math inline">\Delta u</span> 在分母。阶跃差分的噪声底比直接脉冲低，靠的是 <span class="math inline">\Delta u=0.4</span> V 这个“已经存在的”大信号，而不是靠更窄的时间窗。换句话说，<strong>阶跃差分是把阶跃测试的低频能量借来估高频响应，借得越多（<span class="math inline">m</span> 越小），利息（噪声）越高。</strong></p>
+<h3 id="相关分析用输入的自相关做匹配滤波">17.3.4 相关分析：用输入的自相关做匹配滤波</h3>
+<p>相关分析法的出发点是“用一段已知的输入去和输出做互相关”。设 <span class="math inline">u</span>、<span class="math inline">y</span> 都已去均值，则</p>
+<p><span class="math display">r_{uy}(\tau)=E\left[u(t-\tau)y(t)\right]=\int_{0}^{\infty}g(\theta)\,r_{uu}(\tau-\theta)\,\mathrm{d}\theta \tag{17-17}</span></p>
+<p>即互相关等于“脉冲响应与输入自相关的卷积”。这个式子说明：只有当 <span class="math inline">r_{uu}</span> 接近 <span class="math inline">\delta</span> 函数时，<span class="math inline">r_{uy}</span> 才直接正比于 <span class="math inline">g</span>。</p>
+<p>白噪声满足这一条。<span class="math inline">r_{uu}(\tau)=\sigma_u^{2}\delta(\tau)</span>，代入式 (17-17) 得 <span class="math inline">r_{uy}(\tau)=\sigma_u^{2}g(\tau)</span>，于是</p>
+<p><span class="math display">\hat g_k=\frac{r_{uy}(k)}{r_{uu}(0)\,T_s},\qquad r_{uu}(0)=\sigma_u^{2} \tag{17-18}</span></p>
+<p>分母除 <span class="math inline">T_s</span> 是把离散系数换算成连续脉冲响应，§17.2.1 提醒过这一步。</p>
+<p>PRBS 不满足这一条。它的自相关是一个三角波：<span class="math inline">r_{uu}(l)\approx\sigma_u^{2}(1-|l|/N_c)</span>，<span class="math inline">|l|&lt;N_c</span>，<span class="math inline">N_c</span> 是钟周期对应的拍数。三角波的面积是 <span class="math inline">\sigma_u^{2}N_c</span>，比峰值 <span class="math inline">\sigma_u^{2}</span> 大 <span class="math inline">N_c</span> 倍。若仍用 <span class="math inline">r_{uu}(0)</span> 归一，估计结果会被放大 <span class="math inline">N_c</span> 倍：</p>
+<p><span class="math display">\hat g_k=\frac{r_{uy}(k)}{\left[r_{uu}(0)+2\sum_{l\ge1}r_{uu}(l)\right]T_s} \tag{17-19}</span></p>
+<p>括号里是自相关的<strong>面积</strong>（离散形式），对白噪声它等于 <span class="math inline">r_{uu}(0)</span>，对 PRBS 它等于 <span class="math inline">r_{uu}(0)\cdot N_c</span>。所以式 (17-19) 是更一般的写法，式 (17-18) 只是它在白噪声下的特例。</p>
+<p>相关分析为什么能把噪声压得这么低，可以算清。每个滞后上的估计用了 <span class="math inline">N</span> 对乘积求和，噪声按 <span class="math inline">1/\sqrt{N}</span> 下降。本章 <span class="math inline">N=6000</span>，<span class="math inline">1/\sqrt{6000}=1/77</span>；而阶跃差分每个点只用到两个样本，噪声没有任何平均。两者之比应当是 77 倍，实测的随机误差之比是 <span class="math inline">0.177/0.0026=68</span> 倍——吻合到 12% 以内，差的这部分来自 PRBS 相邻样本不完全独立（自相关在非零滞后上不为零，等效独立样本数比 6000 少一些）。</p>
+<p>这就是“匹配滤波”这个名字的含义：相关分析把整段输入当成一个模板去和输出对齐，模板越长，平均得越彻底。代价写在式 (17-17) 里——模板的形状就是分辨率，<span class="math inline">r_{uu}</span> 有多宽，估出的 <span class="math inline">g</span> 就被抹平多宽。<strong>它用时间分辨率换噪声抑制，换的比例是 <span class="math inline">\sqrt{N}</span> 对 <span class="math inline">N_c</span>。</strong></p>
+<p>实验 3 把两种归一方式的差别量了出来，同一段 60 s 数据、同一个 PRBS，见表 17-3。</p>
+<p><strong>表 17-3 相关分析：两种归一方式的对比（真值峰值 2.273 s<span class="math inline">^{-1}</span>）</strong></p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">输入</th>
+<th style="text-align: left;">归一方式</th>
+<th style="text-align: left;">峰值 / s<span class="math inline">^{-1}</span></th>
+<th style="text-align: left;">峰值误差 / %</th>
+<th style="text-align: left;">RMSE / s<span class="math inline">^{-1}</span></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">PRBS 钟周期 0.05 s</td>
+<td style="text-align: left;"><span class="math inline">r_{uu}(0)</span></td>
+<td style="text-align: left;">12.195</td>
+<td style="text-align: left;">+436.62</td>
+<td style="text-align: left;">7.048</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">PRBS 钟周期 0.05 s</td>
+<td style="text-align: left;">自相关面积</td>
+<td style="text-align: left;">1.878</td>
+<td style="text-align: left;">−17.38</td>
+<td style="text-align: left;">0.303</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">PRBS 钟周期 0.20 s</td>
+<td style="text-align: left;"><span class="math inline">r_{uu}(0)</span></td>
+<td style="text-align: left;">41.376</td>
+<td style="text-align: left;">+1720.64</td>
+<td style="text-align: left;">29.087</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">PRBS 钟周期 0.20 s</td>
+<td style="text-align: left;">自相关面积</td>
+<td style="text-align: left;">1.774</td>
+<td style="text-align: left;">−21.96</td>
+<td style="text-align: left;">0.348</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">白噪声</td>
+<td style="text-align: left;"><span class="math inline">r_{uu}(0)</span></td>
+<td style="text-align: left;">2.113</td>
+<td style="text-align: left;">−7.01</td>
+<td style="text-align: left;">0.278</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">白噪声</td>
+<td style="text-align: left;">自相关面积</td>
+<td style="text-align: left;">2.158</td>
+<td style="text-align: left;">−5.03</td>
+<td style="text-align: left;">0.264</td>
+</tr>
+</tbody>
+</table>
+<p>误差的量级和理论完全对得上：钟周期 0.05 s 对应 <span class="math inline">N_c=5</span>，理论上放大约 5 倍即 +400%，实测 +436.62%；钟周期 0.20 s 对应 <span class="math inline">N_c=20</span>，理论 +1900%，实测 +1720.64%。多出来的部分被三角波的平滑抵消掉一些，所以比理论值略小。<strong>只要输入不是白噪声，用 <span class="math inline">r_{uu}(0)</span> 归一就一定会差一个 <span class="math inline">N_c</span> 倍，而且这个倍数写在你自己的 PRBS 参数里，一眼就能查出来。</strong></p>
+<p>改用面积归一之后，误差降到 <span class="math inline">-17\%</span> 和 <span class="math inline">-22\%</span>，仍是负的，且随钟周期变长而变大。这是分辨率造成的偏差：三角波宽度 <span class="math inline">2N_cT_s</span> 把峰值抹平了，钟周期 0.20 s 时抹平窗口比脉冲响应的主峰还宽，峰值只能被压低。三个被估出的峰值时刻都落在 0.29–0.32 s，与真值 0.26 s 相差 1–2 拍，说明<strong>时延定位没坏，坏的是幅值</strong>。</p>
+<p>这里有一个反直觉的结论。按式 (17-18) 估算随机误差，PRBS 那组的标准差约 0.0026 s<span class="math inline">^{-1}</span>，而实测 RMSE 是 0.303——差两个数量级。也就是说，60 s 数据里相关分析的随机误差已经小到可以忽略，误差<strong>全部来自偏差</strong>。继续加长记录没有用，唯一的出路是把钟周期缩短，而缩短钟周期又会抬高噪声底。这就是 §17.2.7 那条守恒律的具体形态。</p>
+<h3 id="etfe-的方差与平均的极限">17.3.5 ETFE 的方差与平均的极限</h3>
+<p>把 <span class="math inline">M</span> 段估计平均，方差按 <span class="math inline">1/M</span> 下降。近似地，幅值的相对标准差是</p>
+<p><span class="math display">\frac{\sigma_{|\hat G|}}{|G|}\approx\frac{1}{\sqrt{M\,\gamma^{2}}} \tag{17-20}</span></p>
+<p><span class="math inline">\gamma^2</span> 越接近 1，这条式子越准。<span class="math inline">M=31</span> 时理论上是 18%，换算成 dB 约 1.4 dB；实验 4 在 1–10 rad/s 上实测幅值 RMS 是 0.74 dB，比理论好一倍，原因是白噪声输入在这个频段的相干函数接近 1，而且各频点误差并不完全独立。</p>
+<p>这条式子里的 <span class="math inline">\gamma^2</span> 不是装饰。由定义，<span class="math inline">1-\gamma^2=S_{vv}/S_{yy}</span>，即<strong>相干 0.9 意味着输出功率里有 10% 是噪声解释不了的</strong>；相干 0.99 则只有 1%。所以 <span class="math inline">\gamma^2</span> 直接把“每个频点的信噪比”换算成了一个 0 到 1 的数，而式 (17-20) 说：平均 <span class="math inline">M</span> 段的效果，等价于把每个频点的有效信噪比提高 <span class="math inline">M</span> 倍。更精确的推导还会带一个 <span class="math inline">(1-\gamma^2)</span> 因子，相干接近 1 时它趋于零，简化式会把误差估得略大一些——这对工程判断是安全的方向。相干低到 0.5 时，简化式已经不可信，此时不要看估计值，先去看为什么相干这么低。</p>
+<p>平均不是无止境的。实验 4 的数据显示：分段 512 点（31 段）幅值 RMS 0.74 dB、相位 RMS 4.76°、相干 0.920；分段 1024 点（15 段）降到 0.26 dB、2.39°、0.984；再往下分段 2048 点（7 段）是 0.31 dB、2.30°、0.994，分段 4096 点（3 段）是 0.30 dB、2.07°、0.998。<strong>从 31 段到 15 段收益明显，之后停在 0.3 dB 附近不再改善。</strong></p>
+<p>这个地板来自窗函数泄漏与频率分辨率。段越长，频率分辨率越高（0.024 Hz 对 0.195 Hz），但段数越少，平均越不充分；两者的乘积在 1024–2048 点之间达到平衡。工程上的选择原则由此而来：<strong>先把段长选到能分辨你关心的最窄峰，再尽量多分几段。</strong> 关心 1 rad/s 附近的谐振，段长至少要覆盖两个谐振周期；关心的是整体趋势，就可以把段切短多平均几次。</p>
+<h3 id="阶跃测试要持续多久">17.3.6 阶跃测试要持续多久</h3>
+<p>读数取的是末段均值，若记录在响应还没走完时截止，稳态就会被低估。对一阶对象，截止时刻 <span class="math inline">t_c</span> 处的读数误差是</p>
+<p><span class="math display">\frac{\hat K-K}{K}=-e^{-t_c/T} \tag{17-21}</span></p>
+<p>要让误差小于 1%，需要 <span class="math inline">t_c\ge4.6T</span>；小于 0.1%，需要 <span class="math inline">t_c\ge6.9T</span>。</p>
+<p>本章对象有三个时间常数，主导的是 0.5 s，但另两个极点会让收敛比一阶慢一些。实验 5 的数据是：持续 0.5 s 时读数 0.8123（<span class="math inline">-54.87\%</span>）、1.0 s 时 1.4309（<span class="math inline">-20.51\%</span>）、2.0 s 时 1.7500（<span class="math inline">-2.78\%</span>）、3.0 s 时 1.7932（<span class="math inline">-0.38\%</span>）、5.0 s 时 1.7999（<span class="math inline">-0.01\%</span>）、8 s 与 12 s 都是 1.8000（<span class="math inline">-0.00\%</span>）。</p>
+<p>把实测值和式 (17-21) 对照：2 s 对应 <span class="math inline">e^{-4}=1.83\%</span>，实测 2.78%，多出的 0.95 个百分点来自另外两个极点的负残差；3 s 对应 <span class="math inline">e^{-6}=0.25\%</span>，实测 0.38%；5 s 对应 <span class="math inline">e^{-10}=0.005\%</span>，实测 0.01%。<strong>一阶公式给出的时长是必要条件，不是充分条件，实际取 5 倍主导时间常数比较稳妥。</strong></p>
+<p>现场还要多留一段。阶跃前需要至少 5 倍时间常数让对象稳定在工作点上（否则 <span class="math inline">y_0</span> 里混着上一次动作的残余），阶跃后需要 5 倍时间常数读稳态，中间还要留出执行器动作的过渡。按这个算法，一个 0.5 s 的对象一次完整测试要 6 s 左右；一个 20 min 的对象要 4 h。<strong>测试时长是选路线时第一个要算的账，算不下来就得换方法。</strong></p>
+<h3 id="非参数结果能做什么不能做什么">17.3.7 非参数结果能做什么、不能做什么</h3>
+<p>能做的三件事：判断阶数与延迟量级；给参数模型当验收集；在完全不知道结构时先给出一个可用的频域描述，供控制器初步设计（例如用 ETFE 曲线直接读穿越频率和相位裕度）。</p>
+<p>不能做的三件事。<strong>不能外推</strong>：曲线只在激励过的频段和幅值范围内有效，PRBS 只激励到 20 rad/s，就不能拿它判断 100 rad/s 的相位。<strong>不能给解析式</strong>：非参数模型是一张表，控制器设计需要 <span class="math inline">K</span>、<span class="math inline">T</span>、<span class="math inline">L</span> 这样的参数，中间必须做一次拟合，而拟合会引入新的误差。<strong>不能用于不稳定对象</strong>：开环不稳定的对象在阶跃或 PRBS 激励下发散，相关分析和 ETFE 都失去意义，这类对象只能在闭环下辨识（见第 21 章）。</p>
+<p>还有一条容易忽略的限制：非参数方法假定对象在工作点附近线性。若测试幅值把对象推过了饱和或死区边界，得到的曲线是“平均后的等效线性模型”，它在小信号下不成立。§17.5 会把这条写成幅值选择的现场规则。</p>
+<h3 id="正弦与多正弦频域路线的另一条腿">17.3.8 正弦与多正弦：频域路线的另一条腿</h3>
+<p>本章的实验全部用阶跃与随机类输入，没给正弦留位置。但频域路线里正弦类激励有一席之地，原因是它在“单频信噪比”上有别的方法给不了的优势。</p>
+<p>单个正弦激励下，<span class="math inline">u=A\sin\omega_0t</span>，输出的同频分量可以用相关法（相当于锁定放大器）提出来。这一步的噪声抑制能力是 <span class="math inline">1/\sqrt{N}</span> 量级，且<strong>不受输入谱形状的限制</strong>——因为所有能量都压在一条谱线上。若关心的是 3 rad/s 处的相位，用 PRBS 时那条谱线只分到总能量的很小一份，用正弦则全部能量都在那里。这就是为什么精密伺服、液压系统的频响测试至今仍用扫频正弦。</p>
+<p>多正弦把 <span class="math inline">L</span> 个频率不同的正弦叠加，一次测试覆盖 <span class="math inline">L</span> 个频点。它的麻烦在峰值因数：若 <span class="math inline">L</span> 路同相位，峰值是单路幅值的 <span class="math inline">L</span> 倍，10 路各 0.1 V 就是 1.0 V，正好撞上本章执行器的饱和。工程上通过给每路一个不同的初相位（Schroeder 相位）把峰值压到单路幅值的 2–3 倍，代价是波形不再对称，读谱时仍需做完整的 FFT 而不是单频相关。</p>
+<p>PRBS 与多正弦的谱形状也不同，这一点常被忽略。PRBS 经过零阶保持后，谱包络带一个 <span class="math inline">\mathrm{sinc}(\omega T_s/2)</span> 因子；本章 <span class="math inline">T_s=0.05</span> s 时，60 rad/s 处该因子等于 <span class="math inline">|\sin1.5|/1.5=0.665</span>，即 −3.5 dB。也就是说<strong>同样的幅值，PRBS 在高频段的实际激励比低频弱 3.5 dB</strong>，辨识出来的高频段信噪比自然差一截。多正弦可以按需要把幅值谱设计成平坦甚至上升的，这是它的第二个优势。</p>
+<p>代价是对对象的“折腾”更大。正弦激励的峰值因数低但持续时间长，对机械系统的疲劳、对热系统的累计热负荷都更可观；PRBS 每次切换都是一次小阶跃，对摩擦型执行器反而更温和。<strong>选激励不只看辨识精度，还要看对象能承受什么</strong>——这句话在 §17.5 还会出现一次。</p>
+<h2 id="离散对应与数值实现">17.4 离散对应与数值实现</h2>
+<h3 id="采样周期的三条约束">17.4.1 采样周期的三条约束</h3>
+<p>第 16 章给过采样周期的两条相反约束：太慢会丢相位，太快会让回归矩阵条件数爆炸。非参数方法没有回归矩阵，第二条约束消失了，但换来了另外两条。</p>
+<p>第一条是<strong>读数分辨率</strong>。阶跃响应的上升时间要被足够多的点覆盖，否则 10% 与 90% 的穿越点只能靠插值，插值误差会直接进 <span class="math inline">t_r</span>。经验值是上升时间内至少 20 个采样点：<span class="math inline">T_s\le t_r/20</span>。本章 <span class="math inline">t_r=1.154</span> s，得到 <span class="math inline">T_s\le0.058</span> s。这个约束很松，因此阶跃测试常被人用 0.1 s 采样，读数照样能看——只是 <span class="math inline">d_2</span> 会差一拍。</p>
+<p>第二条是<strong>脉冲宽度</strong>。直接脉冲法的脉宽至少要 3–5 个采样点，否则“方波”会被采样成三角波，面积失真。本章最优脉宽 0.05–0.10 s，对应 <span class="math inline">T_s\le0.017</span>–<span class="math inline">0.033</span> s。这条比第一条紧。</p>
+<p>第三条是<strong>频段覆盖</strong>。ETFE 的频率上限是 Nyquist，<span class="math inline">\omega_{\max}=\pi/T_s</span>。要看清 20 rad/s 的相位，<span class="math inline">T_s</span> 必须小于 0.157 s；若要看清 60 rad/s，<span class="math inline">T_s&lt;0.052</span> s。本章取 0.01 s，Nyquist 是 314 rad/s，余量足够。</p>
+<p>三条约束叠起来，本章的可用区间是 <span class="math inline">T_s\in(0.002,\;0.017)</span> s，取 0.01 s 落在了中间。这个区间不算窄，说明非参数方法对采样不敏感——<strong>它不像参数辨识那样，采样快一点就病态。</strong></p>
+<p>但“不敏感”不等于“越快越好”。阶跃差分的噪声底是 <span class="math inline">\sqrt2\sigma_y/(\Delta u\,mT_s)</span>，若保持 <span class="math inline">m</span> 不变而把 <span class="math inline">T_s</span> 减半，噪声底直接翻倍——用更多的点换来了更差的精度。要维持同样的噪声水平，必须把 <span class="math inline">m</span> 也翻倍，于是一拍之内的差分窗口反而拉长，时间分辨率没有改善。<strong>这条式子说明采样率与差分步长是两个绑在一起的旋钮，单独拧一个只会把另一边拧坏。</strong></p>
+<p>采样太快还有一笔更容易被忽略的账：数据量。60 s 记录在 0.01 s 采样下是 6000 点，在 0.001 s 下是 60000 点。相关分析的计算量是 <span class="math inline">O(N\cdot n_{\mathrm{lag}})</span>，6000 点乘 100 个滞后是 60 万次乘加，可忽略；60000 点乘 1000 个滞后是 6000 万次，仍可接受但已经不轻。真正的问题在于存储与传输：现场采集器往往按 1 kHz 存原始数据，一个班次就是几个 GB，事后没人愿意去翻。<strong>采样的实际约束通常不是算法，而是数据管道。</strong></p>
+<h3 id="阶跃测试的实施与数据处理">17.4.2 阶跃测试的实施与数据处理</h3>
+<p>阶跃测试看起来最简单，实际最容易做废。图 17-2 是一次合格的测试应该有的样子。</p>
+<figure>
+<img src="figs/ch017/fig_017_02_step_read.svg" alt="图 17-2　阶跃响应的读数" /><figcaption aria-hidden="true">图 17-2　阶跃响应的读数</figcaption>
+</figure>
+<p>图里标出了四个特征量的位置：10% 与 90% 两条水平线、二者之间的水平双箭头（上升时间）、2% 穿越点（表观延迟 0.116 s 附近）、以及阶跃施加时刻的竖线。读数的定义在 §17.2.3，这里说操作。</p>
+<p><strong>第一步，稳在工作点。</strong> 施加阶跃前至少等待 5 倍主导时间常数，并确认输出的漂移小于噪声的两倍。漂移没消掉，<span class="math inline">y_0</span> 就会偏，增益跟着偏。这一步最容易省，也最容易出事：现场为了赶时间，往往在上一批产品刚下料时就打阶跃，<span class="math inline">y_0</span> 里混着残余振动，读数会偏 5% 以上。</p>
+<p><strong>第二步，确认执行器行程。</strong> 阶跃幅值加上当前工作点，不能超过执行器的线性区。若执行器在 1.0 V 饱和，工作点在 0.6 V，那么正向可用幅值只有 0.4 V。此时要么反向打（从 0.6 到 0.2），要么减小幅值并接受更差的信噪比。<strong>先算行程，再定幅值，不要反过来。</strong></p>
+<p><strong>第三步，施加并记录。</strong> 记录必须包含施加时刻的精确时间戳，且输入输出用同一个时钟。输入是控制器下发的指令还是执行器反馈，要在报告里写明——两者差一个死区，§17.3.1 已经算过这个差别有多大。</p>
+<p>时钟同步这件事值得单独算一笔。若输入与输出各用各的时钟、相差 10 ms，<span class="math inline">d_2</span> 的读数就有 10 ms 的偏差，占本章 76 ms 的 13%；在 10 rad/s 上相当于 5.7° 相位，与半拍零阶保持的误差同量级。<strong>这类误差不会在数据里显出任何异常，只会在与其他测试对比时表现为“每次测的延迟都不一样”。</strong> 可靠的做法是以输入跳变沿为时间零点，让软件时间戳只用于粗定位，不参与读数。</p>
+<p><strong>第四步，去趋势。</strong> 若输出有缓慢漂移（温漂、磨损），先减去一条直线或低阶多项式。去趋势要用<strong>阶跃之前</strong>那段数据拟合，再把直线外推到整段去减；若直接用全段拟合，阶跃本身会被当成趋势扣掉一部分，增益随之偏低。判断有没有漂移很简单：看阶跃前那段的斜率，若在 5 倍时间常数内漂了超过阶跃幅值的 2%，就必须去趋势。</p>
+<p><strong>第五步，量化与异常点。</strong> 编码器量化会把曲线变成阶梯，读数时要用插值而不是取整；异常点（丢包、通信抖动）用中值滤波剔除，不要用均值——均值会把异常点摊到邻近的十几个点上。</p>
+<p><strong>第六步，反向验证。</strong> 有条件时再打一个反向阶跃。正向和反向的读数若差 10% 以上，说明对象有回差或摩擦，线性模型不成立，报告里必须写明。本章对象的执行器有对称死区，正反向读数应当一致；真实设备上不对称是常态。</p>
+<p>这六步里有三步（稳、行程、反向）是“做之前”的事，三步（时间戳、去趋势、异常点）是“做之后”的事。中间真正的“打阶跃”只占几秒钟。<strong>测试的质量由这六步决定，而不是由那几秒决定。</strong></p>
+<h3 id="相关分析的四个实现细节">17.4.3 相关分析的四个实现细节</h3>
+<p>相关分析的公式只有一行，实现时有四个地方必须想清楚，否则结果会差一个常数倍或者整体偏移。</p>
+<p><strong>第一，必须去均值。</strong> 若 <span class="math inline">u</span> 有非零均值，<span class="math inline">r_{uy}</span> 里会混进 <span class="math inline">m_u m_y</span> 的常数项，把整条曲线抬高。PRBS 若用 0/1 编码而不是 <span class="math inline">\pm1</span>，均值就是 0.5，抬高的量级是 <span class="math inline">0.5\times</span> 稳态输出，足以让曲线完全失真。去均值要在相关之前做，不能在结果上减。</p>
+<p><strong>第二，用有偏估计而不是无偏估计。</strong> 离散互相关的两种写法是 <span class="math inline">\frac{1}{N}\sum u[k]y[k+l]</span>（有偏）与 <span class="math inline">\frac{1}{N-l}\sum u[k]y[k+l]</span>（无偏）。后者看起来更“公平”，但它在 <span class="math inline">l</span> 接近 <span class="math inline">N</span> 时方差爆炸，而且会让相关图的尾部翘起来。有偏估计的偏差是 <span class="math inline">O(l/N)</span>，只要 <span class="math inline">n_{\mathrm{lag}}\le N/10</span> 就可以忽略，方差还更小。工程上一律用有偏。</p>
+<p><strong>第三，滞后数取数据长度的 1/10 到 1/4。</strong> 太短看不完动态，太长则尾部全是噪声。本章取 1 s（100 拍），是 60 s 记录的 1/60，足够覆盖脉冲响应的主峰和衰减段。判据是“最后一个滞后上的相关值已经接近 0”；若还没衰减到峰值的 5% 以内，说明滞后数不够。</p>
+<p><strong>第四，归一方式按输入选。</strong> 白噪声用式 (17-18)，PRBS 用式 (17-19)。判断方法很直接：算一下 <span class="math inline">r_{uu}</span> 在 <span class="math inline">l=1</span> 处与 <span class="math inline">l=0</span> 处的比值，白噪声接近 0，PRBS 接近 <span class="math inline">1-1/N_c</span>。这个比值一旦明显大于 0，就必须用面积归一。§17.6 的实验 3 会看到，选错这一条，误差是几百个百分点。</p>
+<p>计算量方面，<span class="math inline">N=6000</span>、<span class="math inline">n_{\mathrm{lag}}=100</span> 时直接双重循环是 60 万次乘加，Python 里用 <code>np.dot</code> 写成一个循环（每次取两个切片）大约几十毫秒。<span class="math inline">N</span> 上万时改用 FFT：互相关等于 <span class="math inline">u</span> 与 <span class="math inline">y</span> 的卷积，而卷积可以用 <span class="math inline">O(N\log N)</span> 的 FFT 算。本章的数据量还在直接法的舒适区，所以代码里没有用 FFT，可读性优先。</p>
+<h3 id="etfe-的五个实现细节">17.4.4 ETFE 的五个实现细节</h3>
+<p>ETFE 的实现比相关分析更琐碎，出错的地方集中在“窗”和“平均”上。</p>
+<p><strong>去均值与去趋势。</strong> 每段数据在加窗之前必须单独去均值，否则窗函数会把直流分量抹成一个宽峰，泄漏到整个低频段。若整段记录有趋势，还要先去趋势；趋势在频域上表现为 <span class="math inline">1/\omega</span> 的尾巴，会让低频幅值系统性偏高。</p>
+<p><strong>窗函数在比值里会抵消。</strong> 这一点常被误解。<span class="math inline">U</span> 与 <span class="math inline">Y</span> 乘的是同一个窗，<span class="math inline">\hat G=Y_w/U_w</span>（单段）或 <span class="math inline">S_{uy}/S_{uu}</span>（多段）中窗的幅度因子同时出现在分子分母，直接约掉。所以<strong>不需要做窗的幅度校正</strong>，只需要窗来抑制泄漏。用 Hanning 而不是矩形，是因为矩形的旁瓣只衰减 13 dB，Hanning 衰减 31 dB。</p>
+<p><strong>重叠 50%。</strong> 分段时相邻段重叠一半，段数大约翻倍，方差按 <span class="math inline">\sqrt{2}</span> 下降；代价是相邻段不再独立，实际收益小于理论值。50% 是工程上的折中，再高的重叠收益递减而计算量线性上升。本章 <code>etfe</code> 函数用 <code>hop = nseg*(1-overlap)</code> 实现，重叠率作为参数暴露出来。</p>
+<p>收益递减的原因是段与段之间的相关性。不重叠时相邻两段用的是完全不同的样本，方差严格按段数的平方根下降；重叠一半后，相邻两段共用一半样本，它们对同一批噪声给出高度相似的估计，等效独立段数增长得比实际段数慢。重叠率再往上（75%、87.5%），段数继续翻倍，但每段新贡献的独立信息越来越少，FFT 次数却跟着翻倍。所以方差曲线在 50% 附近就开始变平，而计算量是线性上升的——<strong>50% 不是一个随手定的习惯值，它是“还能拿到明显收益”的最后一档。</strong></p>
+<p><strong>平均要在功率谱上做，不要在分贝上做。</strong> 先平均 <span class="math inline">S_{uy}</span>、<span class="math inline">S_{uu}</span> 再相除，得到的是 H1 估计；先算每段的 <span class="math inline">\hat G_i</span> 再平均，得到的是算术平均，两者在相干低的地方差别很大。前者对输入功率大的段给更高权重，后者一视同仁。工程上默认用 H1。</p>
+<p><strong>频点要挑，不能全画。</strong> 一段 2048 点的记录有 1025 条谱线，画在 Bode 图上会糊成一片黑。本章插图里每个 1.35 倍频程取一个代表点，既保留趋势又不遮挡。挑点只在画图时做，计算与拟合仍用全部频点。</p>
+<h3 id="从-g_k-到参数模型一座必要的桥">17.4.5 从 <span class="math inline">g_k</span> 到参数模型：一座必要的桥</h3>
+<p>非参数结果的最终用途多半是“给参数辨识做输入”。这座桥有三条通道。</p>
+<p><strong>第一条，Markov 参数直接当状态空间的输入。</strong> 若已知阶数 <span class="math inline">n</span>，把 <span class="math inline">g_1,\dots,g_{2n}</span> 排成 Hankel 矩阵，其秩就是系统的阶数；用它的奇异值分解可以直接构造一个最小实现。这就是第 20 章子空间辨识的雏形，本章只需要知道：<strong><span class="math inline">g_k</span> 里包含了全部信息，只要阶数够。</strong></p>
+<p><strong>第二条，给 ARX 提供初值与阶数判断。</strong> ARX 模型 <span class="math inline">A(z^{-1})y=B(z^{-1})u</span> 的脉冲响应由 <span class="math inline">B/A</span> 决定。反过来，从估出的 <span class="math inline">g_k</span> 可以反解出 <span class="math inline">a_i</span>、<span class="math inline">b_j</span>：<span class="math inline">g</span> 的前 <span class="math inline">n_b+1</span> 项与 <span class="math inline">b</span> 直接相关，之后按 <span class="math inline">a</span> 递推。第 18 章会把这条写成 Prony 类算法。用非参数结果定阶、再用参数方法精修，比直接从零扫阶数稳得多。</p>
+<p><strong>第三条，给频域拟合提供目标。</strong> 第 20 章的频域辨识最小化 <span class="math inline">\sum|\hat G(j\omega_i)-G(j\omega_i;\theta)|^2</span>，其中的 <span class="math inline">\hat G</span> 就来自 ETFE。此时要注意加权：相干函数低的频点权重要小，否则噪声大的频点会把拟合拉偏。</p>
+<p>三条通道有一个共同前提：<span class="math inline">g_k</span> 或 <span class="math inline">\hat G</span> 本身要可信。<strong>先看相干函数，再决定要不要往下走</strong>——这句话在后续每一章都会重复。</p>
+<h3 id="代码结构与三个自校验">17.4.6 代码结构与三个自校验</h3>
+<p>本章的仿真代码集中在 <code>code/ch017_sim.py</code>，函数分工见表 17-4。</p>
+<p><strong>表 17-4 本章仿真代码的函数分工</strong></p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">函数</th>
+<th style="text-align: left;">作用</th>
+<th style="text-align: left;">关键参数</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><code>actuator</code></td>
+<td style="text-align: left;">死区 + 饱和</td>
+<td style="text-align: left;">死区 10 mV、饱和 1.0 V</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>discrete</code></td>
+<td style="text-align: left;">精确 ZOH 离散化</td>
+<td style="text-align: left;"><span class="math inline">T_s</span> 由调用者给</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><code>sim_plant</code></td>
+<td style="text-align: left;">开环仿真（含延迟、噪声）</td>
+<td style="text-align: left;">噪声 5 μm</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>read_step</code></td>
+<td style="text-align: left;">阶跃读数</td>
+<td style="text-align: left;">前 20 拍取 <span class="math inline">y_0</span>、末 50 拍取 <span class="math inline">y_{\mathrm{ss}}</span></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><code>corr_impulse</code></td>
+<td style="text-align: left;">相关分析估 <span class="math inline">g</span></td>
+<td style="text-align: left;"><code>norm</code> 取 <code>peak</code> 或 <code>area</code></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>etfe</code></td>
+<td style="text-align: left;">分段平均 H1 估计</td>
+<td style="text-align: left;">段长、50% 重叠、Hanning 窗</td>
+</tr>
+</tbody>
+</table>
+<p>任何一段非参数估计的代码，跑完都该做三个手算自校验。这三个数不需要任何工具，心算就能得，却能挡住绝大多数“量纲错、方向错、延迟错”的低级错误。</p>
+<p><strong>校验一，终值。</strong> 阶跃幅值 0.4 V、增益 1.8 mm/V，稳态应到 0.72 mm。代码里若算出 0.072 或 7.2，先查单位，再查增益里有没有混进 1000。</p>
+<p><strong>校验二，面积。</strong> 脉冲响应的积分应等于直流增益：<span class="math inline">\int_0^\infty g\,\mathrm{d}t=K=1.8</span>。数值上用 <span class="math inline">\sum g_k T_s</span> 近似。本章 <span class="math inline">g</span> 的峰值 2.273、主峰宽度约 0.8 s，面积大致是 <span class="math inline">2.273\times0.8\times0.5\approx0.91</span>，加上长尾才到 1.8——数量级对得上即可。若算出 18 或 0.18，多半是 <span class="math inline">T_s</span> 除错了一次。</p>
+<p><strong>校验三，起点。</strong> 三阶严格真分子的对象，<span class="math inline">g(0^+)=0</span>，<span class="math inline">g&#39;(0^+)=0</span>，<span class="math inline">g&#39;&#39;(0^+)=K/(T_1T_2T_3)=1000</span>。所以脉冲响应的前几拍应该非常小、然后快速上冲。若第一拍就跳到峰值，说明延迟没建对，或者把阶跃响应当成了脉冲响应。</p>
+<p>三个校验对应三类错误：单位、量纲、时序。它们花不了一分钟，比事后对着一条“看起来差不多”的曲线猜半天有效得多。</p>
+<h3 id="一段数据的完整处理流程">17.4.7 一段数据的完整处理流程</h3>
+<p>把前面几节的做法串起来，就是一条八步流程。每一步都对应一个具体动作，跳过任何一步都会在后面的数上留下痕迹。</p>
+<p><strong>第一步，看原始曲线。</strong> 不急着算，先把 <span class="math inline">u</span>、<span class="math inline">y</span> 画在同一张图上，看三件事：有没有死区平台（<span class="math inline">u</span> 变了而 <span class="math inline">y</span> 不动）、有没有削顶（<span class="math inline">y</span> 到某个值后变平）、末段是否真的平了。本章仿真数据在这一步就能看出死区的存在：0.02 V 的阶跃前 0.1 s 内输出几乎不动。</p>
+<p><strong>第二步，定时间零点。</strong> 阶跃时刻要从 <span class="math inline">u</span> 的跳变沿读，不要用实验记录里的“开始时间”。现场常常是先开记录、几秒后才打阶跃，若按记录起点算延迟，会凭空多出这几秒。</p>
+<p><strong>第三步，去均值与去趋势。</strong> 用阶跃前的 20 拍均值作为 <span class="math inline">y_0</span>，阶跃后的数据减去它。若整段有缓慢漂移，先做一阶去趋势再减 <span class="math inline">y_0</span>；但去趋势要用阶跃前的数据拟合，不能用全段——用全段拟合会把阶跃本身当成趋势扣掉一部分。</p>
+<p><strong>第四步，剔除异常段。</strong> 判据要事先写定，例如“连续 5 拍偏离滑动均值超过 5 倍噪声”或“执行器指令与实际位移不一致超过 10%”。事后按印象剔除是最危险的做法，因为人会不自觉地把不符合预期的段落剔掉。</p>
+<p><strong>第五步，选 <span class="math inline">T_s</span> 与 <span class="math inline">n_{\mathrm{lag}}</span>。</strong> 按 §17.4.1 的三条约束取 <span class="math inline">T_s</span>，按“最后一个滞后上的相关值低于峰值 5%”取 <span class="math inline">n_{\mathrm{lag}}</span>。这两个参数一旦定下，整批数据必须用同一组，否则不同次的曲线没法叠在一起比。</p>
+<p><strong>第六步，估计与归一。</strong> 阶跃走式 (17-4) 到 (17-6)，脉冲走式 (17-15)，相关走式 (17-18) 或 (17-19)，频域走式 (17-10)。归一方式按输入的自相关形状选，不按“习惯”选。</p>
+<p><strong>第七步，三个自校验。</strong> 终值、面积、起点，见本节开头。三个数里只要有一个不对，回头查第五步之前的数据处理，不要查算法。</p>
+<p><strong>第八步，平滑与交付。</strong> 平滑只为画图，不为计算。这一点值得单说：移动平均是一个低通滤波器，<span class="math inline">m</span> 点平均的幅频响应是 <span class="math inline">\left|\frac{\sin(m\omega T_s/2)}{m\sin(\omega T_s/2)}\right|</span>。本章 <span class="math inline">T_s=0.01</span> s、<span class="math inline">m=5</span> 时，3 rad/s 处衰减 0.01 dB（可忽略），10 rad/s 处 0.09 dB，31 rad/s 处 0.87 dB。<strong>平滑对低频几乎无损，对关心频段的高端却有近 1 dB 的削减</strong>，所以平滑后的曲线不能用来读高频幅值，也不能用来做频域拟合。</p>
+<p>流程里有两个容易踩的坑，都不在算法里而在数据准备里。</p>
+<p><strong>坑一，先降采样后滤波。</strong> 若原始采样 100 Hz、想降到 20 Hz 省算力，必须先抗混叠滤波再抽取。本章对象在 60 rad/s 以上仍有可观能量，直接抽取会把 60 rad/s 附近的成分折回 0–30 rad/s（折叠关系 <span class="math inline">\omega_{\rm alias}=|\omega-k\omega_s|</span>），让低频段凭空多出一段“动态”。降采样看起来只是改个数，实际改的是频谱。</p>
+<p><strong>坑二，把不同次的曲线直接平均。</strong> 两次测试的 <span class="math inline">T_s</span>、幅值、工作点只要有一项不同，曲线就不能逐点平均。正确做法是先把每次的特征量（<span class="math inline">K</span>、<span class="math inline">d_2</span>、<span class="math inline">t_r</span>）算出来，对这些标量求均值与标准差；曲线只在条件完全一致时才叠图。</p>
+<h2 id="工程含义与适用边界">17.5 工程含义与适用边界</h2>
+<h3 id="先算工时账再谈方法">17.5.1 先算工时账，再谈方法</h3>
+<p>非参数辨识的现场成本主要是时间，不是算力。一次阶跃测试的时间由三段组成：稳定段 <span class="math inline">5T</span>、动作段（可忽略）、读数段 <span class="math inline">5T</span>。按 §17.3.6 的结论，读数段取 5 倍主导时间常数可以把截断误差压到 0.01%，稳定段同样取 5 倍是为了让 <span class="math inline">y_0</span> 干净。</p>
+<p>本章对象 <span class="math inline">T=0.5</span> s，一次测试 6 s，一个上午能做完几十次，可以正反打、多幅值打、重复打。这是“便宜”的一类。温控箱 <span class="math inline">T=20</span> min，一次测试 4 h，一个班次只够做两次，任何一次失败都要重排产。这是“昂贵”的一类。</p>
+<p>昂贵的对象必须在测试前把方案定死，因为现场没有第二次机会。定方案时要回答五个问题：</p>
+<ol type="1">
+<li>幅值多大？（受死区、饱和、非线性三重限制，见 §17.5.2）</li>
+<li>正向还是反向？工作点在哪一侧余量大？</li>
+<li>记录多长？采样多快？存储够不够？</li>
+<li>失败判据是什么？读到什么数就中止？</li>
+<li>谁来签字？异常时谁能拍板停机？</li>
+</ol>
+<p>第五个问题最容易被工程师忽略，却最影响进度。测试中途若出现超温，操作工不敢擅自停，等工程师赶到已经浪费半小时。<strong>把中止条件写成一句话交给操作工，比写十页方案有用。</strong></p>
+<p>把三类对象放在一起，工时账的形状就清楚了。快对象（伺服轴、小型执行器，<span class="math inline">T&lt;1</span> s）一次测试十几秒，问题在“怎么做”不在“做几次”，可以随便重复、随便换幅值，代价主要是写脚本。中等对象（温度小回路、液位，<span class="math inline">T</span> 在几分钟量级）一次测试几十分钟，需要提前和班组打招呼，重复三五次是上限。慢对象（大窑炉、大储罐，<span class="math inline">T</span> 在小时量级）一次测试占半个班次，基本只有一次机会，全部风险必须靠方案设计提前吸收。</p>
+<p>三类对象对数据的处理策略也随之不同。快对象应该“多测少算”，用重复次数换标准差；慢对象应该“少测精算”，把每一次的原始数据完整存档，事后用不同的窗、不同的分段反复分析，<strong>因为再测一次的代价远高于多算十遍</strong>。本章实验 1 里 100 次重复的做法只适合第一类，搬到第三类上完全不现实。</p>
+<p>还有一笔常被漏算的成本：<strong>恢复时间</strong>。阶跃测试会把对象推离工作点，对连续生产线来说，恢复到原工况可能需要额外的过渡段，有时比测试本身还长。这笔时间不属于辨识，却实实在在占用产线。写方案时把它算进去，才不会在评审时被生产部门一句“停线多久”问住。</p>
+<h3 id="幅值的三重约束">17.5.2 幅值的三重约束</h3>
+<p>§17.3.1 给出下限：<span class="math inline">\Delta u&gt;50d</span> 才能把死区折算误差压到 2% 以内。上限有两个：执行器饱和与对象非线性。本章对象死区 10 mV、饱和 1.0 V，工作点 0.4 V，正向可用幅值就是 0.6 V。于是幅值窗口是 <span class="math inline">(0.5,\;0.6)</span> V，只有 20% 的余量。</p>
+<p>窗口这么窄，现场怎么办？三个办法。</p>
+<p><strong>第一，反向打。</strong> 若工作点在 0.4 V，反向可以打到 <span class="math inline">-0.6</span> V，幅值 1.0 V，窗口立刻宽一倍。代价是要确认反向不会触发下限位或工艺禁区。</p>
+<p><strong>第二，多次平均。</strong> 噪声带来的标准差按 <span class="math inline">1/\sqrt{k}</span> 下降。表 17-7 里 0.02 V 幅值的增益标准差是 8.62%，要压到 2% 需要 <span class="math inline">(8.62/2)^2=18.6</span>，即重复 19 次。19 次短测试的总时长仍可能短于一次长测试，而且每次都在线性区内。<strong>这是小幅值测试唯一可靠的补救办法。</strong></p>
+<p><strong>第三，接受偏差并标定。</strong> 若死区已知（例如出厂标定过 10 mV），可以直接用式 (17-12) 反算：读数 1.6219、幅值 0.10 V、死区 0.01 V，反算真值 <span class="math inline">1.6219\times0.10/0.09=1.802</span>，与 1.8 只差 0.1%。前提是死区稳定——摩擦型死区会随磨损变化，标定值只能用一段时间。</p>
+<p>三个办法可以叠加。工程上的顺序是：先看能不能反向（免费），再决定重复几次（费时），最后才考虑用模型修正（有风险，因为要相信死区的标定值）。</p>
+<h3 id="只能闭环时怎么办">17.5.3 只能闭环时怎么办</h3>
+<p>§17.3.7 说过开环不稳定的对象不能开环测。更常见的情况是“开环能测但不允许测”：温度、压力、流量回路，开环意味着失控。</p>
+<p>闭环下做非参数辨识有三条路。</p>
+<p><strong>第一条，设定值叠加小信号。</strong> 在设定值上叠加一个幅值很小的 PRBS，让闭环把它传递到对象输入端。此时能测的是闭环频响 <span class="math inline">G/(1+GC)</span>，不是 <span class="math inline">G</span> 本身；若控制器 <span class="math inline">C</span> 已知，可以反解出 <span class="math inline">G</span>，但反解会在两端失真。实用判据是：<span class="math inline">|1+GC|</span> 既不能太小（避开灵敏度峰，那里数据被放大成噪声），也不能太大（避开误差放大），工程上取 <span class="math inline">0.5&lt;|1+GC|&lt;5</span>，窗口之外的频段标为不可用。</p>
+<p>两端的失真机理不同，值得分开算。记闭环互补灵敏度 <span class="math inline">T=GC/(1+GC)</span>，则 <span class="math inline">G=T/\left[C(1-T)\right]</span>，取对数微分得 <span class="math inline">\mathrm{d}G/G=\mathrm{d}T/\left[T(1-T)\right]</span>，即 <span class="math inline">T</span> 的相对误差在反解时被放大 <span class="math inline">1/|1-T|=|1+GC|</span> 倍。低频段回路增益大，<span class="math inline">|1+GC|=10</span> 时，<span class="math inline">T</span> 上 0.1% 的误差就变成 <span class="math inline">G</span> 上 1%；<span class="math inline">|1+GC|=20</span> 时变成 2%。更糟的是这一段闭环把输入压小了（<span class="math inline">|U|\propto|S|=1/|1+GC|</span>），信噪比本来就低——<strong>误差放大与激励不足同时发生在低频，所以低频增益几乎不可能从闭环数据里反解出来</strong>。另一端，<span class="math inline">|1+GC|\to0</span> 的频段靠近回路临界点，灵敏度峰把噪声与模型误差一起放大，同样不可用。中间这段才是可用窗口。</p>
+<p><strong>第二条，利用自然激励。</strong> 正常生产中的设定值变化、负荷扰动都是天然的阶跃或方波。把几十次这样的段落对齐、平均，能得到一条等效阶跃响应。前提是每次都记录初值、幅值、以及是否有其他扰动同时发生；不满足的段必须剔除。这条路的成本最低，数据质量最不可控。</p>
+<p><strong>第三条，闭环直接辨识。</strong> 用闭环数据同时估 <span class="math inline">G</span> 和噪声模型，这就是第 21 章的主题。本章只需要强调一点：<strong>闭环下输入与噪声相关，直接套相关分析或 ETFE 会得到有偏结果</strong>，偏差的方向取决于噪声进入点，可能让增益偏高也可能偏低，无法从数据本身判断。</p>
+<p>三条路的共同限制是激励幅值。闭环下叠加的信号必须小到不影响产品质量，而小信号又会被死区和量化吃掉。这是闭环辨识最根本的矛盾：<strong>允许的激励幅值往往小于能激励出动态所需的最小幅值。</strong> 遇到这种对象，只能退而求其次——用正常运行数据做趋势监控（模型变了没有），而不是做精确辨识。</p>
+<h3 id="五种不该用非参数的情形">17.5.4 五种不该用非参数的情形</h3>
+<p>非参数方法常被当成“安全的默认选项”，因为它不假设结构。这个印象在五类情形下是错的。</p>
+<p><strong>第一，需要外推。</strong> 非参数曲线只在激励过的频段和幅值内有效。若控制器带宽会推到 30 rad/s，而数据只激励到 5 rad/s，那么 ETFE 在 30 rad/s 处画出来的曲线是噪声除以噪声，数值可能很大也可能很小，全都不可信。这种场合必须先补激励，或者直接上参数模型（结构提供了外推能力）。</p>
+<p><strong>第二，需要高精度直流增益。</strong> 死区、量化、漂移都集中在直流附近。本章 0.4 V 幅值的增益误差是 0.20%，看起来不错；但当对象带有积分环节或极慢的漂移时，末段均值根本稳不住，增益误差可以到 5% 以上。此时用参数模型（把积分环节写进结构）反而更准。</p>
+<p><strong>第三，对象强非线性或时变。</strong> 非参数结果是一条平均曲线。若对象在测试期间参数漂移了 20%，曲线是这 20% 的平均，用它在任何一个时刻都不准。第 22 章会讨论非线性辨识，那里的做法是先判定非线性类型，再分段建模。</p>
+<p><strong>第四，数据量大到算法跑不动。</strong> 相关分析是 <span class="math inline">O(N\cdot n_{\mathrm{lag}})</span>，ETFE 是 <span class="math inline">O(N\log N)</span> 但需要分段循环。百万点级的数据在嵌入式设备上跑不动，此时要么降采样（前提是不丢关心频段），要么改用递推算法。</p>
+<p><strong>第五，需要给控制器一个解析式。</strong> 现场整定要的是 <span class="math inline">K</span>、<span class="math inline">T</span>、<span class="math inline">L</span> 或 PID 三个参数，非参数曲线给不了。中间必须做一次拟合，而这次拟合的误差可能比直接用参数辨识更大——绕了一圈，反而多了一次信息损失。</p>
+<p>把这五条反过来读，就是非参数方法的适用边界：<strong>激励够宽、幅值够大、对象近似线性时不变、只需要定性判断或给参数辨识做前处理。</strong> 这四条同时满足时，它是最省事、最不容易出错的选择。</p>
+<h3 id="交付物该包含什么">17.5.5 交付物该包含什么</h3>
+<p>一条曲线不是交付物。非参数辨识的交付物至少要包含五项（表 17-5），缺一项接手的人就得重做实验。</p>
+<p><strong>表 17-5 非参数辨识交付物的五项内容</strong></p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">项目</th>
+<th style="text-align: left;">内容</th>
+<th style="text-align: left;">缺了会怎样</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">测试条件</td>
+<td style="text-align: left;">工作点、幅值、方向、时长、采样周期</td>
+<td style="text-align: left;">无法判断曲线在哪个工况下成立</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">原始曲线</td>
+<td style="text-align: left;">阶跃 / 脉冲 / Bode，含时间轴与单位</td>
+<td style="text-align: left;">只能看结论，无法复核</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">特征量</td>
+<td style="text-align: left;"><span class="math inline">K</span>、<span class="math inline">d_2</span>、<span class="math inline">t_{10}</span>、<span class="math inline">t_{90}</span>、<span class="math inline">t_r</span></td>
+<td style="text-align: left;">无法直接用于整定</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">可信度</td>
+<td style="text-align: left;">相干函数、重复次数、标准差</td>
+<td style="text-align: left;">不知道哪段能信</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">处理记录</td>
+<td style="text-align: left;">去趋势、剔除、量化的具体做法</td>
+<td style="text-align: left;">换个人复算不出同样的数</td>
+</tr>
+</tbody>
+</table>
+<p>第四项最常被省略。很多报告只给一条光滑的 Bode 图，不附相干函数；读者无法知道 20 rad/s 之后那段是对象的真实相位，还是噪声。<strong>附一张相干图，成本几乎为零，价值是把“看起来对”变成“知道哪里对”。</strong></p>
+<p>第五项同样重要。同一段数据，去趋势的阶次不同、异常点剔除的阈值不同，读数能差几个百分点。把处理参数写清楚，别人才可能复现；写不清楚，这份结果就只是一次性的。</p>
+<p>交付物还要能“接得住”。原始数据建议按列存成文本或 CSV（时间、指令、实际输入、输出、状态字），不要只存处理后的曲线；文件名里带对象编号、日期、幅值方向，例如 <code>pkg_axis_20261012_pos_0p4V.csv</code>。这样三年后有人要复核，不用去翻实验记录本。<strong>一条曲线的价值，取决于别人能不能在半小时内用你的数据重算出同一条曲线。</strong></p>
+<h3 id="三条常见误用">17.5.6 三条常见误用</h3>
+<p><strong>误用一，把 ETFE 当精确模型。</strong> ETFE 的误差随相干下降而上升，但上升得不是线性的：本章表 17-8 里，平均相干 0.920 的频段幅值误差 0.74 dB，相干 0.998 的频段降到 0.30 dB；而相干跌到 0.5 以下的频点，曲线已经是噪声除以噪声，读出来的数值没有意义。直接拿 ETFE 曲线读穿越频率，在低相干频段会读偏。正确做法是先用相干函数筛频段，再在筛过的频段上做平滑或拟合。</p>
+<p><strong>误用二，把 2% 穿越当纯延迟。</strong> §17.3.2 已经算过，本章对象差 76 ms，在 10 rad/s 上是 43.5° 相位。这个错误在 Smith 预估器上后果最严重，因为预估器会把这个假延迟当成真延迟去补，补出一个不存在的相位超前。</p>
+<p><strong>误用三，用闭环数据直接做开环相关分析。</strong> 闭环下 <span class="math inline">u=-Cy+r</span>，输入里含有反馈回来的噪声，与 <span class="math inline">y</span> 的噪声相关。此时 <span class="math inline">r_{uy}</span> 不再等于 <span class="math inline">g*r_{uu}</span>，多出一项 <span class="math inline">r_{ey}</span>。这一项在低频段尤其大，会让估出的增益偏离。判别方法是比较开环与闭环各做一次的结果；若差 10% 以上，闭环那次不可用。</p>
+<p>三条误用的共同点是“公式没错，前提不成立”。非参数方法的公式都很短，短到让人忘记它们依赖线性、时不变、零初值、输入与噪声无关这四个前提。<strong>每次套公式之前，先问这四个前提成立了几个。</strong></p>
+<h3 id="非线性自检三种现场能做的判据">17.5.7 非线性自检：三种现场能做的判据</h3>
+<p>非参数结果的前提是线性。现场没法做严格的线性检验，但有三个判据只需要已经采到的数据，不用额外设备。</p>
+<p><strong>判据一，幅值扫描后的残差走向。</strong> 这是最有力的一条。把六个幅值的读数按死区折算后与真值比，本章的残差序列是 <span class="math inline">+1.4\%</span>、<span class="math inline">+0.22\%</span>、<span class="math inline">+0.12\%</span>、<span class="math inline">+0.06\%</span>、<span class="math inline">+0.03\%</span>、<span class="math inline">-0.04\%</span>（对应 0.02 至 0.80 V）。残差随幅值单调收敛到零，说明偏离完全由死区解释，对象本身是线性的。若残差在大幅值端反向变大——例如 0.8 V 时读数比折算值低 5%——那是饱和，不是死区；若残差在中间某个幅值出现峰值再回落，说明存在分段非线性（间隙、滞环），死区模型不够用。</p>
+<p><strong>判据二，正反打。</strong> 正向 0.4 V 与反向 <span class="math inline">-0.4</span> V 各做一次，比较折算后的增益。差值小于 2% 可以认为对称；超过 5% 说明存在方向性非线性，常见于阀的死区带、齿轮间隙、重力负载。此时<strong>不能用单方向的读数代表全部工况</strong>，报告里必须写明方向。</p>
+<p><strong>判据三，小幅扰动叠加。</strong> 在大阶跃的平台上叠加一个幅值 0.02 V、频率 5 rad/s 的正弦，看输出同频分量的幅值在平台起点与终点是否相同。若相差超过 10%，说明工作点附近的增益随位置变化，对象强非线性。这一条对液压与气动系统几乎是必做项。</p>
+<p>三条判据的读法可以汇总成表 17-11。</p>
+<p><strong>表 17-11 非线性自检的现象与解释</strong></p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">现象</th>
+<th style="text-align: left;">可能原因</th>
+<th style="text-align: left;">处理</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">折算后残差单调收敛到零</td>
+<td style="text-align: left;">纯死区</td>
+<td style="text-align: left;">按式 (17-12) 折算，可用</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">大幅值端读数偏低 5% 以上</td>
+<td style="text-align: left;">饱和</td>
+<td style="text-align: left;">降低幅值，或把饱和写进模型</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">残差在中间幅值出现峰值</td>
+<td style="text-align: left;">间隙、滞环</td>
+<td style="text-align: left;">换用非线性模型（第 22 章）</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">正反向增益差超过 5%</td>
+<td style="text-align: left;">方向性非线性</td>
+<td style="text-align: left;">分方向建模，报告注明方向</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">平台两端小信号增益差超过 10%</td>
+<td style="text-align: left;">工作点相关非线性</td>
+<td style="text-align: left;">分段线性化，缩小测试区间</td>
+</tr>
+</tbody>
+</table>
+<p>三条判据都是“用已有数据多算一步”，成本几乎为零。<strong>真正昂贵的不是做判据，而是在不知道对象非线性的时候直接把曲线交给控制器设计。</strong></p>
+<h2 id="仿真与验证">17.6 仿真与验证</h2>
+<h3 id="实验设置">17.6.1 实验设置</h3>
+<p>对象与第 16 章完全一致，即式 (17-2)。测量链路上叠加了 5 μm 白噪声与 10 μm 量化，执行器带 10 mV 死区与 1.0 V 饱和。除特别说明，采样周期 0.01 s、记录长度 60 s（6000 点）。</p>
+<p>六个实验各有分工，合起来覆盖本章的四条路线与三类误差：</p>
+<ul>
+<li>实验 0：在理想条件下读一次阶跃，量出“读数”与“参数”的差，作为后面所有比较的参照；</li>
+<li>实验 1：扫幅值，把死区折算与噪声抖动分开量出来；</li>
+<li>实验 2：比较直接脉冲与阶跃差分，量出“时间分辨率—噪声”的权衡；</li>
+<li>实验 3：比较相关分析的两种归一方式，量出输入谱形的影响；</li>
+<li>实验 4：比较 ETFE 的分段长度，量出平均能压掉多少方差；</li>
+<li>实验 5：扫测试时长，量出截断误差。</li>
+</ul>
+<p>所有数字由 <code>code/ch017_sim.py</code> 一次跑出，输入固定的随机种子，因此可以逐位复现。正文里的每一个百分比都能用前几节的公式手算到两位有效数字——这是本章的一个刻意安排：公式与数据必须互相咬合，读者才能判断自己是否真的看懂了。</p>
+<h3 id="实验-0一次合格的阶跃读数">17.6.2 实验 0：一次合格的阶跃读数</h3>
+<p>实验 0 用最理想的采集条件（1 ms 采样、无噪声、旁路非线性）打一个 0.4 V 的阶跃，目的是拿到“读数本身”的基准值，把后面实验中噪声与死区的贡献分离出去。</p>
+<p><strong>表 17-6 实验 0：理想条件下的阶跃读数</strong></p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">特征量</th>
+<th style="text-align: left;">读数</th>
+<th style="text-align: left;">真值</th>
+<th style="text-align: left;">说明</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">稳态增益 <span class="math inline">K</span></td>
+<td style="text-align: left;">1.8000 mm/V</td>
+<td style="text-align: left;">1.8</td>
+<td style="text-align: left;">末段均值，误差小于 0.01%</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">表观延迟 <span class="math inline">d_2</span></td>
+<td style="text-align: left;">0.1160 s</td>
+<td style="text-align: left;">0.040 s</td>
+<td style="text-align: left;">多出的 76 ms 是惯性起步</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><span class="math inline">t_{10}</span></td>
+<td style="text-align: left;">0.2040 s</td>
+<td style="text-align: left;">—</td>
+<td style="text-align: left;">10% 穿越</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><span class="math inline">t_{90}</span></td>
+<td style="text-align: left;">1.3584 s</td>
+<td style="text-align: left;">—</td>
+<td style="text-align: left;">90% 穿越</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">上升时间 <span class="math inline">t_r</span></td>
+<td style="text-align: left;">1.1544 s</td>
+<td style="text-align: left;">—</td>
+<td style="text-align: left;"><span class="math inline">t_{90}-t_{10}</span></td>
+</tr>
+</tbody>
+</table>
+<p>增益读数 1.8000 与真值完全一致，说明式 (17-4) 在没有死区、没有噪声时是精确的。四个有效数字全对，靠的是 1 ms 采样与末段 50 点平均，不是运气。</p>
+<p>延迟的差别最大。真值 40 ms，读数 116 ms，比值 2.9。按式 (17-14)，多出的部分是主导时间常数的 0.152 倍。这个数在 §17.3.2 已经解释过：三个惯性环节串联，响应起步时是 <span class="math inline">t^3</span>，要走到 2% 需要 76 ms。<strong>如果只记住本章一个数字，应该记住这个 0.152</strong>——它是在提醒你，任何“从阶跃曲线读延迟”的操作，读到的都不是纯延迟。</p>
+<p>上升时间 1.154 s 与第 16 章给出的“约 1.32 s 上到 90%”并不矛盾：后者说的是 <span class="math inline">t_{90}</span> 从阶跃时刻算起（1.358 s，含延迟），前者是 10% 到 90% 的跨度。两个数经常被混用，写报告时要把定义写清楚。本章一律用 <span class="math inline">t_r=t_{90}-t_{10}</span>，并在图上同时标出三条水平线，避免歧义。</p>
+<p><span class="math inline">d_2/t_r=0.116/1.154=0.10</span>，这个比值是判断“延迟是否重要”的快速指标。经验上：小于 0.1 可以按无延迟处理，0.1–0.3 需要在整定时留相位余量，大于 0.3 才值得上 Smith 预估或 MPC（见第 47、58 章）。本章对象落在第一档的边缘，所以第 44 章的 PID 整定可以忽略延迟——这也是第 16 章选择它作为基准对象的原因之一。</p>
+<p>这张表还藏着一个关于“哪个读数最脆弱”的答案。2% 点处曲线刚离开零，斜率大约是 <span class="math inline">0.0144/0.076\approx0.19</span> mm/s；5 μm 的噪声除以这个斜率，等于 26 ms 的时间抖动。<span class="math inline">t_{90}</span> 处的斜率约 0.14 mm/s，绝对抖动还更大一些（约 36 ms）。<strong>差别不在绝对抖动，而在基准值</strong>：<span class="math inline">d_2-L</span> 的基准只有 76 ms，26 ms 相当于 34%；<span class="math inline">t_{90}</span> 的基准是 1.27 s，36 ms 只占 3%。所以表观延迟的相对精度最差，而这一点在报告里几乎总是被忽略——写成“延迟 116±26 ms”，读者才会知道这个数是粗的。实验 1 里小幅值下 <span class="math inline">t_{90}</span> 标准差高达 0.33 s，也是同一个机制：台阶状曲线的斜率趋近于零，除出来的时间抖动就被放大到不可用。</p>
+<h3 id="实验-1幅值把读数分成两半">17.6.3 实验 1：幅值把读数分成两半</h3>
+<p>实验 1 对六个幅值各做 100 次阶跃，每次换一个噪声种子，其余条件不变。结果见表 17-7 与图 17-5。</p>
+<figure>
+<img src="figs/ch017/fig_017_05_amplitude.svg" alt="图 17-5　阶跃幅值对读数的影响" /><figcaption aria-hidden="true">图 17-5　阶跃幅值对读数的影响</figcaption>
+</figure>
+<p><strong>表 17-7 实验 1：阶跃幅值对读数的影响（各 100 次，<span class="math inline">T_s=0.01</span> s）</strong></p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">幅值 <span class="math inline">A</span> / V</th>
+<th style="text-align: left;">死区折算 <span class="math inline">(A-d)/A</span></th>
+<th style="text-align: left;">增益均值 / (mm/V)</th>
+<th style="text-align: left;">增益标准差 / %</th>
+<th style="text-align: left;"><span class="math inline">t_{90}</span> 均值 / s</th>
+<th style="text-align: left;"><span class="math inline">t_{90}</span> 标准差 / s</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">0.02</td>
+<td style="text-align: left;">0.500</td>
+<td style="text-align: left;">0.9123</td>
+<td style="text-align: left;">8.62</td>
+<td style="text-align: left;">0.4090</td>
+<td style="text-align: left;">0.3270</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">0.05</td>
+<td style="text-align: left;">0.800</td>
+<td style="text-align: left;">1.4439</td>
+<td style="text-align: left;">1.97</td>
+<td style="text-align: left;">1.1409</td>
+<td style="text-align: left;">0.2715</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">0.10</td>
+<td style="text-align: left;">0.900</td>
+<td style="text-align: left;">1.6219</td>
+<td style="text-align: left;">0.88</td>
+<td style="text-align: left;">1.2295</td>
+<td style="text-align: left;">0.1449</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">0.20</td>
+<td style="text-align: left;">0.950</td>
+<td style="text-align: left;">1.7110</td>
+<td style="text-align: left;">0.42</td>
+<td style="text-align: left;">1.2796</td>
+<td style="text-align: left;">0.0734</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">0.40</td>
+<td style="text-align: left;">0.975</td>
+<td style="text-align: left;">1.7555</td>
+<td style="text-align: left;">0.20</td>
+<td style="text-align: left;">1.3272</td>
+<td style="text-align: left;">0.0337</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">0.80</td>
+<td style="text-align: left;">0.988</td>
+<td style="text-align: left;">1.7777</td>
+<td style="text-align: left;">0.10</td>
+<td style="text-align: left;">1.3362</td>
+<td style="text-align: left;">0.0224</td>
+</tr>
+</tbody>
+</table>
+<p>增益列与式 (17-12) 咬合得极好：把折算系数乘以 1.8，得到 0.900、1.440、1.620、1.710、1.755、1.778，与实测的 0.9123、1.4439、1.6219、1.7110、1.7555、1.7777 逐行对应。相对差从 0.02 V 的 <span class="math inline">+1.4\%</span> 单调缩到 0.80 V 的 <span class="math inline">-0.04\%</span>。这个残差不是随机的：小幅值时噪声让末段均值偏正（相对偏差大），大幅值时死区折算已经扣干净，剩下的 <span class="math inline">-0.04\%</span> 是量化与末段窗口的边角效应。</p>
+<p>标准差列更能说明问题。幅值从 0.02 增到 0.80，增益标准差从 8.62% 降到 0.10%，降了 86 倍。若末段均值的等效噪声是常数，标准差应当与 <span class="math inline">1/A</span> 成正比，也就是降 40 倍；实测降得更多，说明等效噪声本身也小了约一倍。这与量化有关：小幅值时整条曲线只在三四个台阶之间移动，末段均值实际上是在几个离散电平之间跳，量化误差占比远大于大幅值时的 10 μm/0.72 mm。</p>
+<p><span class="math inline">t_{90}</span> 的行为更值得注意。无噪声真值是 1.358 s，但最大幅值 0.80 V 那行的均值只有 1.336 s，偏差 22 ms；最小幅值 0.02 V 那行的均值是 0.409 s，偏差接近 1 s。前一个偏差有明确的来源：90% 点上曲线已经很平，斜率只有 <span class="math inline">0.1\times0.72/0.5\approx0.14</span> mm/s，5 μm 噪声就能让穿越时刻移动 35 ms，取 100 次平均后剩 22 ms 的系统性提前，来自“末段窗口估计的 <span class="math inline">\Delta y</span> 略偏小”。后一个偏差则说明读数已经失效——0.02 V 的阶跃跳变只有 0.036 mm，仅为量化台阶的 3.6 倍，曲线是一串台阶，“90% 点”落在了噪声里。</p>
+<p>图 17-5 把这两件事画在一起。上图是增益均值与误差棒，叠了一条死区折算曲线，能看出实测点沿曲线走，但小幅值端的误差棒长得无法忽略；下图是 <span class="math inline">t_{90}</span> 标准差的对数图。与增益标准差相反，<span class="math inline">t_{90}</span> 的标准差在同样 40 倍幅值范围内只降了 14.6 倍（0.327 s 到 0.022 s），比 <span class="math inline">1/A</span> 慢——时间量对噪声的敏感度不只取决于幅值，还取决于穿越点附近的斜率。小幅值时曲线是台阶状的，斜率几乎为零，横坐标的抖动就无限放大；大幅值时斜率足够，抖动才被压住。</p>
+<p>实验 1 的结论可以直接写成现场规则：<strong>幅值 0.02 V 的数据只能看“有没有响应”，不能读增益；0.05–0.10 V 可以读增益（误差 1%–2%），但不能读 <span class="math inline">t_{90}</span>；0.20 V 以上两个量都可用。</strong> 本章后续实验一律取 0.4 V，正是因为它落在这条线的安全一侧。</p>
+<h3 id="实验-2三种脉冲响应估计的对照">17.6.4 实验 2：三种脉冲响应估计的对照</h3>
+<p>图 17-3 把真值曲线与三种估计叠在一起，同一段数据、同一个噪声水平。</p>
+<figure>
+<img src="figs/ch017/fig_017_03_impulse.svg" alt="图 17-3　三种脉冲响应估计" /><figcaption aria-hidden="true">图 17-3　三种脉冲响应估计</figcaption>
+</figure>
+<p>直接脉冲（0.05 s 脉宽）的曲线在主峰附近基本贴合，峰后有一段轻微的平台——那是方波卷积留下的痕迹，方波的宽度把 <span class="math inline">g</span> 的下降沿拖平了。峰值误差 <span class="math inline">+2.28\%</span>，落在表 17-2 的预期区间内。它的噪声在峰后最明显，曲线呈锯齿状，因为除以面积 <span class="math inline">0.05</span> 把噪声放大了 20 倍。</p>
+<p>阶跃差分（<span class="math inline">m=10</span>，即 0.10 s 间隔）的曲线最光滑，峰值与真值几乎重合，峰后衰减略快。光滑是有代价的：差分是一个 <span class="math inline">[-1,0,\dots,0,+1]</span> 的算子，它对高频的增益是 <span class="math inline">2\sin(\omega mT_s/2)</span>，噪声被 <span class="math inline">\sqrt2</span> 放大后还要再除以 <span class="math inline">\Delta u\,mT_s</span>。<span class="math inline">m</span> 取 10 是权衡的结果，§17.3.3 给出了四个 <span class="math inline">m</span> 的噪声底与 RMSE，最好的落在 5–10 之间。</p>
+<p>相关分析（白噪声输入）的曲线整体最平滑，但峰值明显偏低。这是白噪声自相关“不是理想 <span class="math inline">\delta</span>”的直接后果：有限长度下 <span class="math inline">r_{uu}</span> 在零滞后附近有一个宽度约一拍的鼓包，卷积把峰值抹平了约 7%。它的 RMSE 是三者中最小的（0.278），说明<strong>整体形状最准，峰值最不准</strong>。</p>
+<p>这个反差给出了一条实用的选择原则：<strong>要读峰值和峰值时刻，用脉冲或阶跃差分；要看整条曲线的形状、尤其是长尾，用相关分析。</strong> 两种结果不矛盾，因为它们优化的目标不同——前者的误差集中在幅度上，后者的误差集中在陡变处。</p>
+<p>图 17-3 里三条估计曲线的峰值时刻都落在 0.26–0.30 s，与真值 0.26 s 相差不超过两拍。这说明三种方法对“何时发生”的判断都很可靠，误差主要在“发生多大”。<strong>时延与形状容易估，幅值难估</strong>，这条规律在后面的相关分析与谱分析里还会重复出现。</p>
+<p>三种方法在工程上还有各自的“硬门槛”，选的时候要先过这一关。直接脉冲需要执行器能在脉宽内完成一次完整动作并复位，脉宽短于执行器的最小动作时间就做不了。本章的执行器只建模了死区与饱和、没有速率限制，所以 0.02 s 的脉宽也能打出去，只是误差已经到 +8.21%。阶跃差分只需要一次阶跃，对硬件没有额外要求，代价是噪声：<span class="math inline">\Delta u</span> 越大越好，所以它天然适合“能打大幅值阶跃”的对象。相关分析要求输入持续变化，且记录长度至少是主导时间常数的几十倍，短记录下面积归一本身就不准。</p>
+<p>把门槛与精度放在一起，选择次序就清楚了：<strong>能打大幅值阶跃的，优先阶跃差分；执行器够快、需要单点峰值的，用直接脉冲；只能长时间小幅激励的，用相关分析。</strong> 三者不是替代关系，很多时候同一次测试的数据可以同时跑三条路线，互相印证——本章实验 2 就是这么做的。</p>
+<h3 id="实验-3选错归一方式会差几百个百分点">17.6.5 实验 3：选错归一方式会差几百个百分点</h3>
+<p>表 17-3 的六行数据是本章最刺眼的一组。同一段 60 s 记录、同一个 PRBS 序列、同样的噪声，只因为分母用了 <span class="math inline">r_{uu}(0)</span> 还是自相关面积，峰值估计相差 6.5 倍（12.195 对 1.878）与 23 倍（41.376 对 1.774）。</p>
+<p>这不是数值问题，是概念问题。<span class="math inline">r_{uu}(0)</span> 归一的潜台词是“输入的自相关是一个 <span class="math inline">\delta</span>”，白噪声满足，PRBS 不满足。PRBS 的自相关是一个宽度为 <span class="math inline">2N_c</span> 拍的三角波，面积是峰值的 <span class="math inline">N_c</span> 倍；用峰值归一，等于只算了三角波的中心一根柱子，把其余 <span class="math inline">N_c-1</span> 根的贡献全丢了，结果自然被放大 <span class="math inline">N_c</span> 倍。<strong>这个错误在实际项目里非常常见，因为它不会报错，曲线形状看着也对，只是整体高了几倍。</strong></p>
+<p>面积归一的残余误差是负的，且随钟周期变长而变大：0.05 s 钟周期 <span class="math inline">-17.38\%</span>，0.20 s 钟周期 <span class="math inline">-21.96\%</span>。这部分误差与归一无关，纯粹是分辨率——三角波宽度把脉冲响应的峰值抹平了。0.20 s 的抹平窗口与主峰宽度同量级，峰值被压掉两成是必然的。</p>
+<p>两条误差的来源不同，处理方式也不同。归一错误可以靠换公式一次修好；分辨率不足只能靠缩短钟周期，而缩短钟周期会让每拍的信噪比下降。本章的折中是 0.05 s（5 拍），既把抹平控制在 17% 以内，又保住了 60 s 数据里足够多的独立跳变。</p>
+<p>选择钟周期有一条经验判据：<strong>钟周期不超过主导时间常数的 1/10。</strong> 本章 <span class="math inline">T_1=0.5</span> s，1/10 是 0.05 s，正好落在实验的最优值上。钟周期超过这个值，估计出的 <span class="math inline">g</span> 会把整个上升段抹成一条斜线，峰值必然偏低；钟周期太小（例如 1 拍），PRBS 就退化成白噪声，噪声底上升，而且很多执行器根本跟不上这么快的切换。</p>
+<p>还有一处容易被忽略：表 17-3 里三组输入的幅值都是 0.5，所以峰值可以直接横向比较。若现场为了让 PRBS 不被死区吃掉而把幅值加到 1.0，稳态输出会到 1.8 mm，可能超出量程；若减到 0.1，则死区直接把信号吃掉一半。<strong>PRBS 的幅值也要服从 §17.5.2 的三重约束，它不比阶跃测试自由多少。</strong></p>
+<p>归一错误还有一个连带后果：它同时把<strong>面积</strong>放大了同样的倍数。检查方法就是在 §17.4.6 校验二里做的那件事——算 <span class="math inline">\sum g_kT_s</span> 看它等不等于 1.8。峰值归一时这个和是 1.8 的 <span class="math inline">N_c</span> 倍，一眼就能发现。<strong>峰值可以因为分辨率偏低而偏，面积不会</strong>，所以面积是比峰值更可靠的归一自检量。</p>
+<p>六组估计的峰值时刻都落在 0.29–0.32 s，与真值 0.26 s 差 1–2 拍。这个偏差不随归一方式改变，说明它来自钟周期与延迟取整，而不是幅度标定。0.20 s 钟周期那组偏得最多（0.32 s），与“分辨率越粗、峰值越往后拖”的规律一致：抹平是对称的，但峰后衰减比峰前上升慢，所以抹平后的峰顶会向慢的一侧移动。</p>
+<h3 id="实验-4etfe-的分段长度怎么选">17.6.6 实验 4：ETFE 的分段长度怎么选</h3>
+<p>实验 4 用 8192 点（81.92 s）白噪声输入，按四种段长做分段平均，比较 1–10 rad/s 上的幅值误差、相位误差与平均相干，结果见表 17-8 与图 17-4。</p>
+<figure>
+<img src="figs/ch017/fig_017_04_etfe.svg" alt="图 17-4　ETFE 与分段平均" /><figcaption aria-hidden="true">图 17-4　ETFE 与分段平均</figcaption>
+</figure>
+<p><strong>表 17-8 实验 4：ETFE 分段长度的影响（8192 点，1–10 rad/s 频段）</strong></p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">分段长度</th>
+<th style="text-align: left;">段数</th>
+<th style="text-align: left;">频率分辨率 / Hz</th>
+<th style="text-align: left;">幅值 RMS / dB</th>
+<th style="text-align: left;">相位 RMS / °</th>
+<th style="text-align: left;">平均相干</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">512</td>
+<td style="text-align: left;">31</td>
+<td style="text-align: left;">0.195</td>
+<td style="text-align: left;">0.74</td>
+<td style="text-align: left;">4.76</td>
+<td style="text-align: left;">0.920</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">1024</td>
+<td style="text-align: left;">15</td>
+<td style="text-align: left;">0.098</td>
+<td style="text-align: left;">0.26</td>
+<td style="text-align: left;">2.39</td>
+<td style="text-align: left;">0.984</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">2048</td>
+<td style="text-align: left;">7</td>
+<td style="text-align: left;">0.049</td>
+<td style="text-align: left;">0.31</td>
+<td style="text-align: left;">2.30</td>
+<td style="text-align: left;">0.994</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">4096</td>
+<td style="text-align: left;">3</td>
+<td style="text-align: left;">0.024</td>
+<td style="text-align: left;">0.30</td>
+<td style="text-align: left;">2.07</td>
+<td style="text-align: left;">0.998</td>
+</tr>
+</tbody>
+</table>
+<p>按式 (17-20)，段数从 31 降到 15，方差应当上升 <span class="math inline">\sqrt{31/15}=1.44</span> 倍；实测幅值 RMS 反而从 0.74 dB 降到 0.26 dB，降了 2.8 倍。<strong>方差公式在这里失效了</strong>，失效的原因是它只考虑了平均次数，没考虑泄漏。</p>
+<p>Hanning 窗的主瓣宽度约为 4 个频点。512 点分段的频点间隔是 1.22 rad/s，主瓣宽约 4.9 rad/s；而 1–10 rad/s 这个频段总共只有约 7 个频点，主瓣覆盖了大半个频段。低频端 1–3 rad/s 的幅值被邻近的强谱线“抬”起来，误差因此集中在低频。段长增到 1024 点后，主瓣降到 2.5 rad/s，泄漏不再是主因，误差落到 0.3 dB 的地板。</p>
+<p>1024 点之后不再改善，说明此时的主导误差已经不是方差，而是窗泄漏与方法本身的偏差。这个地板的量级值得记住：<strong>在相干接近 1 的频段，ETFE 的幅值精度大约就是 0.3 dB（3.5%）</strong>，再多的数据也换不来更好的结果，除非换更长的窗或改用参数拟合。</p>
+<p>图 17-4 用上下两个子图展示同一件事。上图是幅值：真值是一条平滑下降的曲线，单段 512 点的估计（红虚线带圆点）在低频段明显偏高、中频段上下跳动；平均 7 段（2048 点）的估计（灰点划线）紧贴真值。下图是相位：单段估计的相位在 1–3 rad/s 散了约 10°，平均之后收敛到 2° 以内。</p>
+<p>要注意图里的 512 点曲线是<strong>单段、没做平均</strong>的，用来展示方差有多大；表 17-8 里 512 点那一行是 31 段平均后的结果，所以它的 0.74 dB 已经比图里那条曲线好看得多。把两者对照着看，能直观感受到“平均”这件事在频域上的作用：它不改变曲线的走向，只把抖动压下去。</p>
+<p>相干函数一列最能说明“可信度”这件事。512 点时平均相干 0.920，看着不低，但在 1–3 rad/s 的几个频点上会掉到 0.8 以下；2048 点时升到 0.994，几乎全频段可信。<strong>相干函数是 ETFE 的自检报告，先看它，再看曲线。</strong></p>
+<p>三个数字可以指导现场选择：要在 1 rad/s 附近看清细节，段长至少覆盖两个周期（<span class="math inline">2\times2\pi\approx12.6</span> s，即 1260 点），否则主瓣会把细节抹平；只看 10 rad/s 以上的趋势，512 点就够；要做频域拟合，取相干大于 0.9 的频点，通常对应 1024 点以上的分段。</p>
+<h3 id="实验-5测试时长决定增益偏低多少">17.6.7 实验 5：测试时长决定增益偏低多少</h3>
+<p>实验 5 固定幅值 0.4 V，只改记录长度，看读数增益怎么随截止时刻变化。这一组没有噪声、没有死区，所以测到的完全是截断效应。</p>
+<p><strong>表 17-9 实验 5：记录长度对增益读数的影响（幅值 0.4 V，无噪声）</strong></p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">持续时间 / s</th>
+<th style="text-align: left;">读数增益 / (mm/V)</th>
+<th style="text-align: left;">相对误差 / %</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">0.5</td>
+<td style="text-align: left;">0.8123</td>
+<td style="text-align: left;">−54.87</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">1.0</td>
+<td style="text-align: left;">1.4309</td>
+<td style="text-align: left;">−20.51</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">2.0</td>
+<td style="text-align: left;">1.7500</td>
+<td style="text-align: left;">−2.78</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">3.0</td>
+<td style="text-align: left;">1.7932</td>
+<td style="text-align: left;">−0.38</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">5.0</td>
+<td style="text-align: left;">1.7999</td>
+<td style="text-align: left;">−0.01</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">8.0</td>
+<td style="text-align: left;">1.8000</td>
+<td style="text-align: left;">−0.00</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">12.0</td>
+<td style="text-align: left;">1.8000</td>
+<td style="text-align: left;">−0.00</td>
+</tr>
+</tbody>
+</table>
+<p>数据的形状值得细看。0.5 s（一个主导时间常数）只读到 45%，而不是一阶对象的 63%，因为三阶对象的起步更慢——三个极点串联，前期几乎不动，等到主导极点接管时已经过去了不少时间。1 s 时读到 79%，2 s 时 97.2%，5 s 时 99.99%。</p>
+<p>用指数拟合早期的点，等效时间常数约为 0.63 s，接近三个时间常数之和 0.65 s。这个对应关系不是巧合：多阶对象在早期可以用“时间常数之和”作等效一阶，因为各极点的贡献按 <span class="math inline">T_i/\sum T</span> 加权。到 2 s 之后，主导极点接管，衰减速度回到 0.5 s 的时间常数。</p>
+<p>与式 (17-21) 的一阶预测对照：2 s 对应 <span class="math inline">e^{-4}=1.83\%</span>，实测 2.78%，差 0.95 个百分点；3 s 对应 <span class="math inline">e^{-6}=0.25\%</span>，实测 0.38%，差 0.13 个百分点；5 s 对应 <span class="math inline">e^{-10}=0.005\%</span>，实测 0.01%。<strong>差值随 <span class="math inline">t</span> 迅速缩小，说明一阶公式在高阶对象上永远偏乐观，但在 5 倍时间常数之后已经足够准。</strong></p>
+<p>现场怎么用这张表？若要求增益误差小于 1%，记录长度取 4 倍主导时间常数就够（2 s 实测 2.78%，3 s 是 0.38%，插值到 1% 约在 2.5 s）；若要求 0.1%，取 5 倍。不要取 10 倍——从 5 s 到 12 s，精度没有提升，时间却翻了倍，对慢对象这意味着多等一个班次。</p>
+<p>这张表对“从阶跃曲线拟合一阶模型”还有一条直接启示。用 0–2 s 的数据拟合一阶，会得到约 0.63 s 的时间常数，与三个时间常数之和 0.65 s 接近；用 0–12 s 的数据拟合，主导极点占优，时间常数回到 0.5 s，但拟合出的延迟会被拉长到 0.1 s 附近——与 2% 读数的 0.116 s 同量级。<strong>同一段数据、不同的拟合窗口，给出不同的 <span class="math inline">(T,L)</span> 组合，而它们在 1–2 rad/s 上的频响几乎重合。</strong> 这就是参数辨识里 <span class="math inline">T</span> 与 <span class="math inline">L</span> 强相关的根源：低频数据分不开“慢”和“晚”。</p>
+<p>要打破这种强相关，只能引入高频信息——脉冲响应的起始段、或者中高频的相位。这也解释了为什么第 18 章要用多台阶、多幅值的数据做联合拟合：单条阶跃曲线提供的信息，不足以同时定住 <span class="math inline">T</span> 和 <span class="math inline">L</span>。</p>
+<h3 id="六个实验合起来说明什么">17.6.8 六个实验合起来说明什么</h3>
+<p>把六组数据放在一起，可以读出四条结论，每条都有明确的适用条件。</p>
+<p><strong>第一，阶跃读数的三个特征量精度完全不同。</strong> 增益最好（0.4 V 时误差 0.20%），上升时间次之（受噪声影响约 30 ms），表观延迟最差（系统性偏大 0.152 倍主导时间常数，而且无法通过平均消除）。所以报告里写“延迟 0.116 s”时，必须同时写“其中纯延迟约 0.04 s”。</p>
+<p><strong>第二，脉冲法的最优脉宽由上升时间决定，不由噪声决定。</strong> 最优区间是 <span class="math inline">t_r</span> 的 1/20 到 1/10，本章对应 0.05–0.10 s。噪声大时向长端取，噪声小时向短端取；但无论噪声多小，脉宽都不能短于 3 个采样点。</p>
+<p><strong>第三，相关分析的瓶颈在分辨率，不在噪声。</strong> 随机误差算出来只有 0.0026，实测 RMSE 是 0.303，差两个数量级——误差几乎全部是偏差。加大数据量对偏差无效，只有缩短钟周期才有用，而缩短钟周期又会抬高噪声底。</p>
+<p><strong>第四，ETFE 的精度有一个 0.3 dB 的地板。</strong> 平均能把方差压到地板以下就不再改善，此时剩余误差来自窗泄漏与方法偏差。要突破地板，只能换更长的窗、换多正弦激励，或者改用参数拟合。</p>
+<p>四条结论汇总成一句话：<strong>非参数估计的误差以偏差为主，方差只在你把记录做得很短时才是问题。</strong> 这句话解释了为什么本章反复强调“先算偏差、再谈平均”——第 16 章里样本量不足是主要矛盾，本章的主要矛盾是系统性的读数定义与分辨率。</p>
+<h3 id="把-rmse-拆成偏差与方差">17.6.9 把 RMSE 拆成偏差与方差</h3>
+<p>“误差以偏差为主”这句话可以算实。任何估计的均方根误差满足</p>
+<p><span class="math display">\mathrm{RMSE}^{2}=\underbrace{\left(\bar{\hat g}-g\right)^{2}}_{\text{偏差}^{2}}+\underbrace{\sigma_{\hat g}^{2}}_{\text{方差}}</span></p>
+<p>只要知道随机误差 <span class="math inline">\sigma</span> 与实测 RMSE，就能反推偏差占多少。表 17-12 用本章的实测数做了这个拆解。</p>
+<p><strong>表 17-12 四个实验的误差拆解</strong>（实验 2、3 的 RMSE 为实测；实验 1 的 RMSE 由实测偏差 0.888 mm 与实测标准差 0.409 mm 合成）</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">实验</th>
+<th style="text-align: left;">随机误差 <span class="math inline">\sigma</span></th>
+<th style="text-align: left;">RMSE</th>
+<th style="text-align: left;">偏差占比</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">实验 1（幅值 0.02 V）</td>
+<td style="text-align: left;">0.409 mm</td>
+<td style="text-align: left;">0.977 mm</td>
+<td style="text-align: left;">91%</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">实验 2（阶梯差分，<span class="math inline">m=10</span>）</td>
+<td style="text-align: left;">0.177 s<span class="math inline">^{-1}</span></td>
+<td style="text-align: left;">0.444 s<span class="math inline">^{-1}</span></td>
+<td style="text-align: left;">92%</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">实验 3（相关分析，面积归一）</td>
+<td style="text-align: left;">0.0026 s<span class="math inline">^{-1}</span></td>
+<td style="text-align: left;">0.303 s<span class="math inline">^{-1}</span></td>
+<td style="text-align: left;">接近 100%</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">实验 5（记录 2 s）</td>
+<td style="text-align: left;">0（无噪声）</td>
+<td style="text-align: left;">—</td>
+<td style="text-align: left;">100%</td>
+</tr>
+</tbody>
+</table>
+<p>实验 1 那一行是本节的另一个收获：小幅值下随机误差与偏差几乎一样大（0.409 对 0.888），所以小幅值测试<strong>既不准也不稳</strong>，两个问题同时存在，必须分别处理——偏差靠加大幅值，方差靠重复平均。</p>
+<p>实验 2 与实验 3 的对比最能说明问题。同样是估脉冲响应，阶梯差分的 <span class="math inline">\sigma</span> 是 0.177，相关分析是 0.0026，差 68 倍；但两者的 RMSE 只差 1.5 倍（0.444 对 0.303）。原因是相关分析的偏差大得多——钟周期 0.05 s 决定了它的时间分辨率，而分辨率不足带来的误差是系统性的，不随记录变长而减小。<strong>这就是“用方差换分辨率”的代价，写在两个数字的对比里。</strong></p>
+<p>工程上怎么用这张表？做一次估计后，先用重复实验算出 <span class="math inline">\sigma</span>，再与 RMSE 或与“折算后的残差”比较。若 <span class="math inline">\sigma/\mathrm{RMSE}&lt;0.3</span>，说明随机误差只占一成，<strong>再加数据毫无意义</strong>，该去改激励、改定义、改分辨率；若 <span class="math inline">\sigma/\mathrm{RMSE}&gt;0.7</span>，才轮到平均与加长记录。这个判据比“再多测几次看看”省时间得多。</p>
+<h3 id="与第-18-章的接口">17.6.10 与第 18 章的接口</h3>
+<p>本章的产物要在第 18 章被接着用，接口有四条。</p>
+<p><strong>第一条，阶数。</strong> 阶跃响应起步段的形状、脉冲响应的过零次数、Hankel 矩阵的奇异值，三者都能给出阶数。第 18 章扫阶数时，应当在这三个判断给出的范围内扫，而不是从 1 扫到 20。</p>
+<p><strong>第二条，延迟。</strong> 本章给出的纯延迟估计（40 ms）与表观延迟（116 ms）是两个不同的量，第 18 章建 ARX 时要用前者。若把 116 ms 填进 <span class="math inline">n_k</span>，ARX 会多算 8 拍延迟，模型在低频段仍然拟合得很好，但相位在中频段会少 43°——这正是 §17.3.2 算过的数。</p>
+<p><strong>第三条，初值。</strong> 用本章的 <span class="math inline">g_k</span> 反解出的 <span class="math inline">a_i</span>、<span class="math inline">b_j</span> 可以作为最小二乘的初值，缩短迭代、避开局部极小。第 18 章的 Prony 法就是这条路。</p>
+<p><strong>第四条，验收集。</strong> 参数模型拟合完之后，把它仿真出的阶跃响应、脉冲响应、Bode 图与本章的三条非参数曲线叠在一起比。判据可以量化：0.1–10 rad/s 内幅值差不超过 3 dB、相位差不超过 10°，时域上升时间差不超过 10%。<strong>若某个频段超差 5 dB 以上，先怀疑延迟或阶数，不要急着加阶数</strong>——第 16 章 §16.6.5 的数据已经说明，加阶数改善的是训练误差，不是这条曲线。</p>
+<p>四条接口里，第四条最常用。它把一个抽象的问题——“模型准不准”——变成了一张可以直接看图的对照，不需要任何统计量，也不需要信任任何指标。<strong>非参数曲线的最大价值，是给参数模型提供一面不会说谎的镜子。</strong></p>
+<h3 id="复现本章的每一个数">17.6.11 复现本章的每一个数</h3>
+<p>本章所有表格里的数字都来自两个脚本，没有一个是手填的。复现只需两条命令，输出直接对得上表号。</p>
+<p><code>code/ch017_sim.py</code> 依次打印六组实验的结果：实验 0 的五个读数对应表 17-6 那一行；实验 1 的六行对应表 17-7；实验 2 给出四种脉宽与四个 <span class="math inline">m</span> 的峰值误差、噪声底与 RMSE；实验 3 给出六组归一方式下的峰值、相对误差与 RMSE；实验 4 的四个分段对应表 17-8；实验 5 的七个时长对应表 17-9。</p>
+<p><code>code/ch017_figs.py</code> 生成六张图。其中图 17-3、17-5 与 <code>sim</code> 脚本共用同一组随机种子，因此图上的点与表里的均值严格一致；这是刻意的安排——若两者用了不同的种子，读者会发现图上某点偏离表格 1%，然后开始怀疑整章的数字。</p>
+<p>复现时有两件事值得注意。第一，随机种子固定，所以每次运行结果完全一致；若你改了 <code>NOISE</code> 或 <code>TS</code>，表里的所有数字都会变，但结论的方向不会变。第二，实验 1 的 100 次重复需要几秒钟，六个实验合计不到半分钟，任何一台笔记本都跑得动。<strong>一个能被复算的仿真，比一个漂亮的仿真更有说服力</strong>——这也是本章坚持把“表号与打印顺序”一一对应的原因。</p>
+<h2 id="小结与常见错误">17.7 小结与常见错误</h2>
+<h3 id="五条结论之间的依赖关系">17.7.1 五条结论之间的依赖关系</h3>
+<p>本章的结论不是并列的五条，而是一条因果链。</p>
+<p>链条的起点是<strong>卷积</strong>：<span class="math inline">y=g*u</span>。这一个式子同时生出了时域的三条路线（阶跃、脉冲、阶跃差分）与频域的路线（ETFE）。所以四路线不是四个独立方法，而是同一个卷积在四种激励下的四种读数。</p>
+<p>由此推出第一条结论：<strong>读数定义决定偏差。</strong> 阶跃只能读到“表观”延迟 <span class="math inline">d_2</span>，它比纯延迟多出 <span class="math inline">0.152T_1</span>，本章是 76 ms，在 10 rad/s 上是 43.5°。这个偏差不随平均次数下降，因为它不是噪声，而是读数定义本身的系统误差。同理，死区让增益读数偏低 <span class="math inline">d/\Delta u</span>，0.1 V 幅值时偏低 0.88%，也无法靠多打几次消除。</p>
+<p>偏差的存在又决定了激励的选择，这是第二条结论：<strong>幅值要落在可用窗口内。</strong> 窗口下限由死区给出（<span class="math inline">\Delta u&gt;50d</span>），上限由饱和与非线性给出，本章只有 <span class="math inline">(0.5,\,0.6)</span> V 的余量。窗口窄时，先想反向，再想重复平均，最后才用死区标定值修正——顺序不能颠倒，因为后两个都在拿时间或可信度换精度。</p>
+<p>第三条结论关于频域：<strong>分辨率先于噪声。</strong> 实验 3 的随机误差只有 0.0026，RMSE 是 0.303，两个数量级之差说明误差几乎全是偏差；同一实验里选错归一方式，峰值直接被放大 436% 与 1720%，那是公式用错，不是数据不够；实验 4 里段长从 512 增到 1024，误差降 2.8 倍，而按方差公式只该降 1.44 倍，多出来的部分正是泄漏这个偏差。三条线索指向同一个判断：<strong>在非参数辨识里，先把偏差算清楚，再考虑加数据。</strong></p>
+<p>第四条结论是精度地板：<strong>ETFE 在相干接近 1 的频段，幅值精度约 0.3 dB。</strong> 这是窗泄漏与方法偏差留下的底，加数据无效，只能换更长的窗、换多正弦激励或改参数拟合。</p>
+<p>第五条结论关于时间：<strong>记录长度取 5 倍主导时间常数，截断误差即到 0.01%。</strong> 再多没有收益，少则按 <span class="math inline">-e^{-t_c/T}</span> 快速恶化，2 s 时已经偏低 2.78%。</p>
+<p>五条连起来读：卷积定路线，读数定义定偏差，偏差定激励窗口，分辨率定频域精度，时间常数定记录长度。<strong>只要其中一环判断错，后面的平均、平滑、拟合都只是在给一个错误的起点做美化。</strong></p>
+<h3 id="一页选法">17.7.2 一页选法</h3>
+<p>现场拿到一个对象，先问三个问题，就能把方法定下来（图 17-6）。</p>
+<figure>
+<img src="figs/ch017/fig_017_06_choice.svg" alt="图 17-6　非参数方法的选择" /><figcaption aria-hidden="true">图 17-6　非参数方法的选择</figcaption>
+</figure>
+<p>第一个问题：<strong>能不能自由激励？</strong> 不能，就只有历史数据一条路——用正常运行中的设定值变化或负荷扰动做相关分析或谱分析，并且必须接受数据质量不可控这个前提（§17.5.3）。能，进入第二个问题。</p>
+<p>第二个问题：<strong>关心的是完整动态，还是只要低频？</strong> 只要增益、延迟这类低频特征，一次阶跃最省事，6 s 拿到全部特征量（实验 0）。要完整动态、要看到中高频的相位，就得用 PRBS 或多正弦，因为阶跃的能量集中在低频，高频段信噪比不够。</p>
+<p>第三个问题：<strong>对象允许开环吗？</strong> 允许，就走 PRBS 加相关分析（实验 3），注意归一因子必须用自相关面积；不允许，就在闭环下叠加小信号，并且只在 <span class="math inline">0.5&lt;|1+GC|&lt;5</span> 的窗口内采信反解结果（§17.5.3）。</p>
+<p>三条路可以叠加，而且实际工程里常常叠加：先用 PRBS 把动态摸清楚，再用一次大幅值阶跃核准增益——前者分辨率好，后者直流准。<strong>不要指望一种激励同时把两件事做到最好，这是 §17.2.7 说过的守恒律。</strong></p>
+<h3 id="常见的八条错误">17.7.3 常见的八条错误</h3>
+<p>表 17-10 把全章散落的错误收在一处，每条都给出本章的量化后果。这些后果都可以用 <code>code/ch017_sim.py</code> 复现，不是估计值。</p>
+<p><strong>表 17-10 非参数辨识的常见错误与量化后果</strong></p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">错误做法</th>
+<th style="text-align: left;">后果（本章实测）</th>
+<th style="text-align: left;">正确做法</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">把 <span class="math inline">d_2</span> 当纯延迟</td>
+<td style="text-align: left;">多算 76 ms，10 rad/s 处差 43.5°</td>
+<td style="text-align: left;">一阶对象用 <span class="math inline">d_2-0.0202T</span> 扣除，高阶查表</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">小幅值阶跃测增益</td>
+<td style="text-align: left;">0.02 V 时偏低 8.62%，标准差 8.62%</td>
+<td style="text-align: left;"><span class="math inline">\Delta u&gt;50d</span>，或重复 19 次平均</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">用死区前的指令幅值算增益</td>
+<td style="text-align: left;">0.1 V 时偏低 0.88%</td>
+<td style="text-align: left;">用式 (17-12) 折算，或用执行器实际位移</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">脉冲取得过窄</td>
+<td style="text-align: left;">峰高偏高 8.21%（噪声挑高点）</td>
+<td style="text-align: left;">脉宽取 <span class="math inline">t_r</span> 的 1/20–1/10</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">脉冲取得过宽</td>
+<td style="text-align: left;">峰高偏低 5.18%（平滑压峰）</td>
+<td style="text-align: left;">同上，噪声大时向长端取</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">PRBS 用峰值归一</td>
+<td style="text-align: left;">增益偏高 436.62%（0.05 s）至 1720.64%（0.20 s）</td>
+<td style="text-align: left;">用自相关面积归一</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">相关分析漏除 <span class="math inline">T_s</span></td>
+<td style="text-align: left;">结果差 100 倍（量纲错）</td>
+<td style="text-align: left;">离散系数换算连续脉冲响应必须除 <span class="math inline">T_s</span></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">记录只取 2 倍时间常数</td>
+<td style="text-align: left;">增益偏低 2.78%</td>
+<td style="text-align: left;">取 5 倍，误差 0.01%</td>
+</tr>
+</tbody>
+</table>
+<p>八条里有五条是“定义或量纲”问题，两条是“参数取值”问题，只有一条（记录长度）是“数据量”问题。这个分布本身就是本章的主旨：<strong>非参数辨识的失败，绝大多数不是算得不够多，而是算的东西定义错了。</strong></p>
+<h3 id="三条经验">17.7.4 三条经验</h3>
+<p>第一条，<strong>先画图，再算数。</strong> 拿到一段阶跃数据，先把它画出来看：有没有明显死区平台、有没有饱和削顶、末段是否真的平了。这三件事在图上三秒能看出来，在数字里要算半天。本章所有失败的实验，失败原因在原始曲线上都是可见的。实验 1 的 0.02 V 那一组就是标本：如果只看算出来的 0.9123，会以为对象增益就只有这么大；把曲线画出来，末段停在 0.91 mm 附近，只有 0.4 V 组 1.76 mm 的一半略多，而两组的指令幅值相差 20 倍——这个“末段高度与指令幅值不成比例”的事实，在图上比在任何数字里都显眼。同样，实验 4 里 PRBS 用峰值归一时增益偏高 436%，画一画 <span class="math inline">r_{uu}(0)</span> 随钟周期的变化就能发现它不是一个常数，而式 (17-19) 用的面积归一因子在不同钟周期下才是同一个量。</p>
+<p>第二条，<strong>相干函数和重复次数要一起看。</strong> 相干 0.99 但只测了一次，可能是巧合；相干 0.9 但测了十次并且标准差很小，反而更可信。两者结合才能判断“这个频点能不能用”。实验 4 给了这条经验一个定量版本：512 点一段时 1–10 rad/s 的平均相干是 0.920，把段长加到 4096 点，平均相干升到 0.998，相位 RMS 从 4.76° 降到 2.07°。同一段数据、同一台设备，差别只在参与平均的独立数据段数。所以报告里写“相干 0.92”是不够的，还得写清它是几段平均出来的、以及重复测量之间这个数稳不稳。</p>
+<p>第三条，<strong>先做非参数，再做参数。</strong> 不是因为非参数更准，而是因为它不假设结构，能暴露参数模型看不见的问题：延迟跳变、双模态、饱和、量化台阶。第 18 章的最小二乘会把这些问题平均掉，平均掉之后就再也找不回来了。具体到操作上，就是 §17.6.10 说的那条接口：先把 <span class="math inline">g_k</span> 画出来，从过零次数读出阶数下界、从峰值时刻读出延迟量级，再拿这两个数去定 ARX 的 <span class="math inline">n_a</span>、<span class="math inline">n_b</span> 和 <span class="math inline">n_k</span>。反过来做的代价本章已经量过——实验 5 里记录只取 2 倍时间常数，增益偏低 2.78%；如果一开始就拟合参数模型，这 2.78% 会被悄悄吸收进 <span class="math inline">K</span> 的估计值里，残差仍然很小，你不会有任何理由怀疑它。</p>
+<h3 id="一句话收束">17.7.5 一句话收束</h3>
+<p>本章从卷积出发，把阶跃、脉冲、相关分析、谱分析四条路线拆成同一个式子的四种读数，逐一算清了它们的偏差来自哪里、噪声放大多少、什么条件下失效。结论可以压成一句：<strong>非参数辨识给你一条不会骗人的曲线，代价是它只在你激励过的范围内、只在你算对了定义的前提下，才是真的。</strong></p>
+<p>下一章开始，我们给这条曲线套上结构——用最小二乘把 <span class="math inline">g_k</span> 换成 <span class="math inline">a_i</span>、<span class="math inline">b_j</span>，用尽可能少的参数换尽可能宽的有效范围。那时会反复回到本章的两件工具：一条非参数曲线做对照，一个纯延迟做初值。</p>
+
+<nav class="footnav"><a href="ch016.html">← 上一章</a><a href="index.html">返回目录</a><a href="ch018.html">下一章 →</a></nav>
+</body>
+</html>

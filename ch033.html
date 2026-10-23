@@ -1,0 +1,1601 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="zh-CN" xml:lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>第 33 章　深度强化学习与离线强化学习 · 控制大综合</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    span.underline{text-decoration: underline;}
+    div.column{display: inline-block; vertical-align: top; width: 50%;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    ul.task-list{list-style: none;}
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+  <link rel="stylesheet" href="assets/book.css" />
+  <script src="assets/katex/katex.min.js"></script>
+  <script>document.addEventListener("DOMContentLoaded", function () {
+   var mathElements = document.getElementsByClassName("math");
+   var macros = [];
+   for (var i = 0; i < mathElements.length; i++) {
+    var texText = mathElements[i].firstChild;
+    if (mathElements[i].tagName == "SPAN") {
+     katex.render(texText.data, mathElements[i], {
+      displayMode: mathElements[i].classList.contains('display'),
+      throwOnError: false,
+      macros: macros,
+      fleqn: false
+     });
+  }}});
+  </script>
+  <link rel="stylesheet" href="assets/katex/katex.min.css" />
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+  <link rel="stylesheet" href="assets/site.css" />
+</head>
+<body>
+<nav class="topnav"><a class="home" href="index.html">目录</a><span class="pos">033 / 115</span><span class="pager"><a href="ch032.html">上一章</a><a href="ch034.html">下一章</a></span></nav>
+
+<nav id="TOC" role="doc-toc">
+<ul>
+<li><a href="#第33章-深度强化学习与离线强化学习">第33章 深度强化学习与离线强化学习</a>
+<ul>
+<li><a href="#动机与要解决的问题">33.1 动机与要解决的问题</a></li>
+<li><a href="#定义与数学基础">33.2 定义与数学基础</a></li>
+<li><a href="#推导与性质">33.3 推导与性质</a></li>
+<li><a href="#离散对应与数值实现">33.4 离散对应与数值实现</a></li>
+<li><a href="#工程含义与适用边界">33.5 工程含义与适用边界</a></li>
+<li><a href="#仿真与验证">33.6 仿真与验证</a></li>
+<li><a href="#小结与展望">33.7 小结与展望</a></li>
+</ul></li>
+</ul>
+</nav>
+<h1 id="第33章-深度强化学习与离线强化学习">第33章 深度强化学习与离线强化学习</h1>
+<h2 id="动机与要解决的问题">33.1 动机与要解决的问题</h2>
+<h3 id="第32章欠下的三笔账">33.1.1 第32章欠下的三笔账</h3>
+<p>第 32 章的所有结论都建立在一个前提上：状态与动作可以列成一张表。这个前提在教科书例子里成立，在工程对象上几乎立刻破产。三笔账要一起算。</p>
+<p><strong>第一笔是状态数。</strong> 一个六自由度机械臂，每个关节位置粗分 <span class="math inline">10</span> 档，状态就是 <span class="math inline">10^{6}</span> 个；每个状态配 <span class="math inline">7</span> 种动作，<span class="math inline">Q</span> 表就有 <span class="math inline">7\times10^{6}</span> 个格子。按 §32.2.6 的预算式，每对要访问上百次才能把估计压到可用精度，总共需要 <span class="math inline">7\times10^{8}</span> 步。以 <span class="math inline">1</span> kHz 采样、连续不停机计算，是 <span class="math inline">7\times10^{5}</span> s，约 <strong>8 天</strong>——这还只是一个六轴臂、每轴只分 10 档的玩具精度。若再考虑速度维、力矩维、负载维，指数立刻翻到 <span class="math inline">10^{10}</span> 以上，那时不是“训练慢”，而是“永远训不完”。</p>
+<p><strong>第二笔是动作的连续性。</strong> 阀门开度、电机转矩、舵面偏角都是连续量。表格型算法每一步要做 <span class="math inline">\arg\max_a Q(s,a)</span>，连续动作下这是一个<strong>内层优化问题</strong>：外层学策略、内层求极值，代价随动作维数指数增长。第 32 章那些“三个档位”的对象是刻意简化的，真实执行器没有档位。</p>
+<p><strong>第三笔是样本的来源。</strong> 第 32 章的智能体可以自己在环境里试，试坏了重启。真机上不能重启：一次超温可能报废一炉料，一次碰撞可能损坏末端执行器。<strong>当“试”本身有成本时，样本就从“免费资源”变成了“预算约束”</strong>，而这恰恰是工业场景的常态。</p>
+<p>三笔账对应本章的三块内容：<strong>函数逼近</strong>（用参数化模型替代表格，把 <span class="math inline">10^{6}</span> 个格子压成几百个参数）、<strong>策略梯度与演员—评论家</strong>（绕开 <span class="math inline">\arg\max</span>，直接对策略参数求导）、<strong>离线强化学习</strong>（只用历史数据，不再在线试错）。再加上工程上绕不开的 <strong>sim-to-real 迁移</strong>，构成四块。本章按这个顺序展开，§33.2 给定义，§33.3 给推导，§33.4 给实现，§33.5 给边界，§33.6 给七组实跑。</p>
+<p>先把一件事说清楚：<strong>“把表格换成神经网络”不等于“深度强化学习”</strong>。真正的分界线不是模型容量，而是三条性质中同时出现了几条。下一小节专门讲这件事，因为它是本章所有不稳定现象的根源。</p>
+<h3 id="致命三要素为什么加了神经网络就会发散">33.1.2 致命三要素：为什么加了神经网络就会发散</h3>
+<p>把表格换成一个参数化函数</p>
+<p><span class="math display">
+V_\theta(s)\approx V^{\pi}(s),\qquad \theta\in\mathbb{R}^{d},\ d\ll\lvert S\rvert \tag{33-1}
+</span></p>
+<p>看起来只是“用更少的参数存同样的东西”。但表格有一个神经网络没有的性质：<strong>改一个格子的值，不影响别的格子</strong>。函数逼近一旦共享参数，改 <span class="math inline">V(s_1)</span> 就必然改动 <span class="math inline">V(s_2)</span>——这正是它省参数的原因，也是它失稳的原因。</p>
+<p>更准确地说，表格型 TD 的收敛性来自 Bellman 算子的 <span class="math inline">\gamma</span>-压缩性（§32.3.2）。加了函数逼近之后，我们实际做的是“投影后的算子” <span class="math inline">\Pi T</span>，其中 <span class="math inline">\Pi</span> 把任意函数投影到参数化函数族上。在<strong>同策略</strong>分布 <span class="math inline">\mu=d_\pi</span> 下，<span class="math inline">\Pi T</span> 仍是压缩的，压缩因子不超过 <span class="math inline">\gamma</span>；一旦换成<strong>异策略</strong>分布 <span class="math inline">\mu\ne d_\pi</span>，压缩性就要乘一个密度比因子</p>
+<p><span class="math display">
+\|\Pi T V_1-\Pi T V_2\|_{\mu}\ \le\ \gamma\,\kappa\,\|V_1-V_2\|_{\mu},
+\qquad
+\kappa=\Big\|\tfrac{d_\pi}{\mu}\Big\|_{\mu}^{1/2} \tag{33-2}
+</span></p>
+<p><span class="math inline">\kappa</span> 是“目标策略的访问分布”与“实际采样分布”的失配度。数据越集中在少数状态，<span class="math inline">\kappa</span> 越大；<span class="math inline">\gamma\kappa&gt;1</span> 时压缩性消失，迭代变成扩张，值估计<strong>指数发散</strong>。Baird 的七状态反例就是构造了一组特征与一个异策略分布，使 <span class="math inline">\gamma\kappa</span> 明确大于 <span class="math inline">1</span>，值在几千步内跑到任意大——而所有实现都是“照公式写的”，没有 bug。</p>
+<p>这就是 Sutton 与 Barto 说的<strong>致命三要素</strong>（deadly triad）：<strong>函数逼近、自举、异策略，三者同时出现时不保证收敛。</strong> 本章的算法几乎全部三者齐备，所以没有一个是“有收敛定理”的，全部靠工程手段换稳定。理解这一点，比记住 DQN 的网络结构重要得多。</p>
+<p>顺带说明两条常见误解。<strong>其一，“用神经网络所以不稳定”是错的</strong>：线性函数逼近同样会发散（式 33-2 与网络容量无关），病根在 <span class="math inline">\kappa</span>，不在非线性。<strong>其二，“加大数据量就能救”也是错的</strong>：发散是算子性质，数据再多只是让每一步的梯度更准，扩张的方向不变。真正的解法只有两条——<strong>改分布</strong>（让 <span class="math inline">\mu</span> 靠近 <span class="math inline">d_\pi</span>，即经验回放与行为策略的选择）或<strong>改算子</strong>（把自举目标冻结，即目标网络）。DQN 的两个“技巧”正好各对应一条，§33.3 会把它们还原成这两个动作。</p>
+<h3 id="连续动作为什么必须换参数化">33.1.3 连续动作为什么必须换参数化</h3>
+<p>表格型的决策规则是“取最大的那个”。连续动作下这个动作没有定义，必须换一种写法。两条路：</p>
+<p><strong>第一条是继续对 <span class="math inline">Q</span> 求极值，但用优化器。</strong> 每一步解一个 <span class="math inline">\max_a Q_\theta(s,a)</span>，用梯度上升迭代十几次。问题是控制周期只有毫秒级：<span class="math inline">1</span> kHz 下每毫秒要解一个非凸优化，实时性直接崩掉。这条路在慢过程（分钟级配方优化）里可用，在快回路里不可用。</p>
+<p><strong>第二条是把策略本身参数化</strong>，令 <span class="math inline">a=\mu_\phi(s)</span>，然后对 <span class="math inline">\phi</span> 求导。链式法则给出</p>
+<p><span class="math display">
+\nabla_\phi J=\mathrm{E}_{s\sim\mu}\Big[\nabla_\phi\mu_\phi(s)^{\top}\,\nabla_a Q_\theta(s,a)\big|_{a=\mu_\phi(s)}\Big] \tag{33-3}
+</span></p>
+<p>这就是确定性策略梯度（DPG）。它把“每步求极值”换成了“训练时算一次梯度”，在线只需前向一次网络——<strong>这是实时性的关键交换</strong>：把计算从部署期挪到训练期。</p>
+<p>代价有两个。<strong>其一，需要 <span class="math inline">\nabla_a Q</span></strong>，即评论家必须对动作可微。这排除了查表型评论家和树模型，也是几乎所有连续控制算法都用神经网络的原因。<strong>其二，梯度要穿过一个还在变的近似器</strong>：<span class="math inline">Q_\theta</span> 自己每步都在更新，式 (33-3) 里的“梯度方向”因此也在动。这相当于用一个每步都换目标的优化器去优化策略——它是 DDPG 系列不稳定的直接来源，也是后面要引入目标网络与延迟更新的原因。</p>
+<p>还有一处工程细节值得提前说：<strong>确定性策略没有探索</strong>。<span class="math inline">\mu_\phi(s)</span> 是一个点，不是分布，它永远不会主动试别的动作。所以 DDPG 必须在动作上加噪声（高斯或 OU 过程），而噪声的大小直接决定探索强度。<strong>这把第 32 章那个独立的“探索”问题，变成了一个必须手调的噪声参数</strong>——这是从表格型到连续控制最容易低估的一处退化。</p>
+<h3 id="离线当试本身不被允许">33.1.4 离线：当“试”本身不被允许</h3>
+<p>第三笔账（样本来源）在工业场景里最硬。这里的信息结构再退一步：不是“能在线试但很贵”，而是<strong>只能拿到一份固定的历史数据集</strong></p>
+<p><span class="math display">
+\mathcal{D}=\{(s_k,a_k,r_k,s&#39;_k)\}_{k=1}^{N},\qquad \text{产生它的策略 }\pi_\beta\ \text{未知且不再运行} \tag{33-4}
+</span></p>
+<p>离线 RL 要在这份数据上直接学一个比 <span class="math inline">\pi_\beta</span> 更好的策略，全程不与环境交互。听起来只是“把经验回放池换成一个只读文件”，实际难度完全不同。</p>
+<p>根源是<strong>分布外动作的值没有约束</strong>。<span class="math inline">Q_\theta(s,a)</span> 只在“数据里出现过的 <span class="math inline">(s,a)</span>”附近被训练过；对于数据里没有的动作，网络输出完全由参数化外推决定，而 <span class="math inline">\arg\max</span> 会<strong>主动去找那些被外推得最高的动作</strong>。这是个系统性的乐观偏差：越是没有数据的动作，越容易被高估；越被高估，越会被选；越被选，越没有数据可以纠正它。学术上叫外推误差（extrapolation error），工程上就是“策略跑到数据覆盖不到的地方，然后崩掉”。</p>
+<p>这个现象在控制里有一个精确的对应物：<strong>用一段工况数据辨识出的模型，不能拿去做大幅机动</strong>。线性化模型在工作点附近可信，出了范围就只是外推；离线 RL 的评论家也一样。两者的处理方式也同构——限制新策略与数据分布的距离，等价于“只在工作点附近线性化”。</p>
+<p>所以离线 RL 的全部技术难点可以压成一句话：<strong>如何在“只用固定数据”的约束下，仍然让 <span class="math inline">\arg\max</span> 不去碰那些没有数据支撑的动作。</strong> 主流做法有三类：给 <span class="math inline">Q</span> 加保守惩罚（压低分布外动作的值）、给策略加约束（限制与 <span class="math inline">\pi_\beta</span> 的 KL 或支撑集距离）、用模型做保守外推（不确定性惩罚）。§33.3 会展开第一类，因为它最像控制里的“鲁棒惩罚”。</p>
+<p>还有一个常被忽略的硬事实：<strong>固定数据集能给的上界，由覆盖度决定，不由算法决定。</strong> 若 <span class="math inline">\pi_\beta</span> 从未在某类状态上动作过，任何“在这些状态上更好”的策略都无法被数据验证，也无法被学习，只能靠外推。<strong>数据量再大，若都集中在同一工况，覆盖度仍然是零——覆盖度问的是“有没有”，不是“多不多”。</strong> E5 正好给了这个事实一个侧面证据：把 <span class="math inline">a^{2}</span> 补进特征，外推误差从 0.607 降到 0.028，而数据一条没加。所以工程上的第一件事不是选算法，而是回答三个问题：这批数据是谁在什么工况下采的？覆盖了哪些边界？缺失的部分能不能补采？补不了，就必须在报告里写明“本策略仅在某某工况内有效”——<strong>这句话比任何指标都重要。</strong></p>
+<h3 id="与控制工程的三处对应">33.1.5 与控制工程的三处对应</h3>
+<p>本章的概念对控制背景的读者并不陌生，只是换了名字。表 33-1 把三处对应摆出来。</p>
+<p>表 33-1　从第32章到第33章：假设变了什么</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">维度</th>
+<th style="text-align: left;">第 32 章（表格型）</th>
+<th style="text-align: left;">第 33 章（深度 / 离线）</th>
+<th style="text-align: left;">控制里的对应物</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">值函数表示</td>
+<td style="text-align: left;">每状态一个数</td>
+<td style="text-align: left;"><span class="math inline">\theta^{\top}\phi(s)</span> 或神经网络</td>
+<td style="text-align: left;">基函数展开、神经网络辨识（第 22 章）</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">收敛保证</td>
+<td style="text-align: left;">压缩映射，有定理</td>
+<td style="text-align: left;">只有经验稳定，无定理</td>
+<td style="text-align: left;">标称模型下的稳定性证明 vs 实际鲁棒性</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">探索</td>
+<td style="text-align: left;">环境内试错</td>
+<td style="text-align: left;">连续动作靠加噪；离线靠数据集覆盖</td>
+<td style="text-align: left;">激励信号设计（第 16 章）</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">样本成本</td>
+<td style="text-align: left;">免费、可重启</td>
+<td style="text-align: left;">真机贵、离线只有一份</td>
+<td style="text-align: left;">实验成本、批次间波动</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">失配来源</td>
+<td style="text-align: left;">无（表格精确）</td>
+<td style="text-align: left;">泛化误差、外推误差</td>
+<td style="text-align: left;">模型误差、未建模动态</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">主要风险</td>
+<td style="text-align: left;">探索不足</td>
+<td style="text-align: left;">发散、过估计、分布偏移</td>
+<td style="text-align: left;">失稳、约束越界</td>
+</tr>
+</tbody>
+</table>
+<p>三处对应里最值得记住的是第二行。<strong>第 32 章可以说“算法收敛”，第 33 章只能说“在哪些条件下没有观察到发散”。</strong> 这不是本章写得保守，而是这一层的数学现状：致命三要素齐备时，收敛性问题是开放的，所有“稳定”都是工程经验，不是定理。控制工程里早就有同样的处境——一个在标称模型上证明稳定的控制器，装到真机上仍可能因为未建模的高频动态而振铃；区别只是控制里有 <span class="math inline">\mathcal{H}_\infty</span>、<span class="math inline">\mu</span> 分析这类工具去量化鲁棒裕度，而 RL 目前还没有对应的、被广泛接受的量。</p>
+<h3 id="五个定量问题">33.1.6 五个定量问题</h3>
+<p>本章要回答的不是“哪个算法最好”，而是五个可以量化的问题。每个问题都会在 §33.6 有对应的实跑数字。</p>
+<p><strong>问题一：泛化误差随什么变化？</strong> 用 <span class="math inline">d</span> 个参数拟合 <span class="math inline">V^\pi</span>，误差可以拆成“近似误差”（<span class="math inline">d</span> 太小，函数族装不下真值）与“估计误差”（样本有限，参数估不准）。后者大致按 <span class="math inline">\sigma^2 d/m</span> 下降（<span class="math inline">m</span> 为样本数）。<strong>所以要回答的是：给定精度要求，<span class="math inline">d</span> 与 <span class="math inline">m</span> 该怎么配？</strong> 只加参数不加样本，误差先降后升，这条 U 形曲线是调参时最该盯住的。</p>
+<p><strong>问题二：目标网络该多慢？</strong> 目标网络的更新周期（硬更新每 <span class="math inline">C</span> 步，或软更新系数 <span class="math inline">\tau</span>）控制“自举目标漂移多快”。它必须与折扣视野 <span class="math inline">1/(1-\gamma)</span> 匹配：视野越长，目标越该稳。<strong>要回答的是：<span class="math inline">\tau</span> 与 <span class="math inline">\gamma</span>、与回合长度之间有没有可用的经验关系？</strong></p>
+<p><strong>问题三：PPO 的裁剪半径对应多大的策略变化？</strong> 裁剪把概率比限制在 <span class="math inline">[1-\epsilon,1+\epsilon]</span>，但真正的策略变化量是 KL 散度。<strong>要回答的是：<span class="math inline">\epsilon=0.2</span> 在上千维动作空间里到底对应多大的 KL？</strong> 这个换算决定了它是“温和更新”还是“几乎不更新”。</p>
+<p><strong>问题四：SAC 的温度系数在自动调节什么？</strong> 熵目标 <span class="math inline">\bar{\mathcal{H}}</span> 决定探索强度，自动调节让 <span class="math inline">\alpha</span> 随任务难度自适应。<strong>要回答的是：<span class="math inline">\alpha</span> 收敛到的量级与奖励尺度、动作维数是什么关系？</strong> 说不清这个关系，换一个任务就得重调。</p>
+<p><strong>问题五：离线算法的保守程度怎么定？</strong> 惩罚系数越大越安全，也越容易退化成“什么都不做”。<strong>要回答的是：有没有一个可计算的量，能在离线阶段就预估部署性能的下界？</strong> 这是离线 RL 能否进工业现场的关键，目前只有部分答案。</p>
+<h3 id="本章导览">33.1.7 本章导览</h3>
+<p>后面六节按“定义—推导—实现—边界—验证—收束”走：</p>
+<p><strong>§33.2</strong> 给出函数逼近下的值函数、策略参数化、以及三个目标函数（TD 误差、策略梯度、熵正则）的统一写法。<strong>§33.3</strong> 推导 DQN 的两个稳定化手段为什么恰好对应“改分布”与“改算子”，DDPG 的梯度偏差，PPO 的裁剪与信赖域的关系，SAC 的温度对偶，以及离线算法（CQL 型）的惩罚项如何把分布外值压下去。<strong>§33.4</strong> 给实现细节：网络规模、回放池、目标网络更新、归一化、批量大小、梯度裁剪、评估协议。<strong>§33.5</strong> 讲边界：训练成本、仿真到现实的鸿沟、部署风险、以及本章不该用的场合。<strong>§33.6</strong> 七组实跑：线性逼近的误差分解、目标网络周期扫描、PPO 裁剪与 KL 的实测关系、SAC 温度的收敛、离线算法的外推误差、sim-to-real 的延迟鲁棒性、以及一次“训练看起来成功但部署失败”的复现。<strong>§33.7</strong> 收束成一张选型表与十条错误。</p>
+<p>与相邻章的分工要划清：第 32 章给了表格型与全部基础定义，本章不再重复 Bellman 方程与 TD 的推导，只讲“加了函数逼近之后多了什么”；第 34、35 章讲多智能体，那时非平稳性会成为新的主要矛盾；第 36 章讲功能安全，本章末尾提到的“部署风险”在那里会有正式的分析方法。<strong>本章的定位是：把第 32 章的方法搬到参数化表示上，并诚实交代搬过去之后丢了哪些保证。</strong></p>
+<h2 id="定义与数学基础">33.2 定义与数学基础</h2>
+<h3 id="表格只是线性逼近的一个特例">33.2.1 表格只是线性逼近的一个特例</h3>
+<p>先把“函数逼近”这件事的数学形式固定下来。最一般的一层写法是线性组合</p>
+<p><span class="math display">
+V_\theta(s)=\theta^{\top}\phi(s)=\sum_{i=1}^{d}\theta_i\,\phi_i(s),\qquad
+Q_\theta(s,a)=\theta^{\top}\phi(s,a) \tag{33-5}
+</span></p>
+<p><span class="math inline">\phi:\mathcal{S}\to\mathbb{R}^{d}</span> 叫特征映射，<span class="math inline">\theta</span> 是可学参数。这个形式之所以值得单独讲，是因为<strong>表格是它的一个特例</strong>：取 <span class="math inline">d=\lvert\mathcal{S}\rvert</span>、<span class="math inline">\phi(s)</span> 为 <span class="math inline">s</span> 的 one-hot 向量，式 (33-5) 就退化成“每个状态存一个数”，<span class="math inline">\theta</span> 的第 <span class="math inline">i</span> 个分量就是第 <span class="math inline">i</span> 个格子的值。</p>
+<p>这个观察改变了对“深度”的理解。<strong>函数逼近不是新东西，它是把 one-hot 换成共享特征。</strong> 表格的 one-hot 特征之间完全正交，所以改一个不影响另一个；换成共享特征后，不同的 <span class="math inline">s</span> 会激活同一批 <span class="math inline">\phi_i</span>，于是改一个必然影响另一个。§33.1.2 说的失稳，根源就在这个“正交性丢失”，与参数是不是神经网络无关。</p>
+<p>神经网络可以塞进同一个框架。把网络写成“特征提取器 + 线性读出”</p>
+<p><span class="math display">
+f_\theta(s)=\underbrace{w^{\top}}_{1\times d}\underbrace{h_{\psi}(s)}_{\text{最后一层激活}} \tag{33-6}
+</span></p>
+<p>其中 <span class="math inline">\psi</span> 是前面所有层的权重。<strong>任何前馈网络在最后一层都是线性的</strong>，所以式 (33-5) 的结构在深层网络里依然成立，只是 <span class="math inline">\phi=h_\psi</span> 自己也在被训练。这个“线性读出”的视角在后面很有用：它解释了为什么网络的最后一层初始化尺度、以及最后一层的梯度量级，往往比中间层更敏感。</p>
+<h3 id="投影算子td-不动点与那个-11-gamma">33.2.2 投影算子、TD 不动点与那个 <span class="math inline">1/(1-\gamma)</span></h3>
+<p>现在把 Bellman 算子搬到参数化函数族上。设采样分布为 <span class="math inline">\mu</span>（一个状态上的概率分布），<span class="math inline">D_\mu</span> 是以 <span class="math inline">\mu</span> 为对角的权重矩阵，<span class="math inline">\Phi</span> 是把所有状态的 <span class="math inline">\phi(s)</span> 堆成的 <span class="math inline">\lvert\mathcal{S}\rvert\times d</span> 矩阵。<strong>加权最小二乘投影</strong>定义为</p>
+<p><span class="math display">
+\Pi_\mu=\Phi\big(\Phi^{\top}D_\mu\Phi\big)^{-1}\Phi^{\top}D_\mu \tag{33-7}
+</span></p>
+<p>它把任意一个值向量投到“<span class="math inline">\Phi</span> 的列空间”里，且投的是 <span class="math inline">\mu</span>-加权欧氏距离下最近的那个点。</p>
+<p>参数化 TD 的不动点满足 <span class="math inline">\Pi_\mu T V_\theta=V_\theta</span>，等价于残差与特征空间正交：</p>
+<p><span class="math display">
+\Phi^{\top}D_\mu\big(r_\pi+\gamma P_\pi\Phi\theta-\Phi\theta\big)=0 \tag{33-8}
+</span></p>
+<p>这是关于 <span class="math inline">\theta</span> 的<strong>线性方程</strong>，可以直接解出来</p>
+<p><span class="math display">
+\theta^\star=\big(\Phi^{\top}D_\mu(\Phi-\gamma P_\pi\Phi)\big)^{-1}\Phi^{\top}D_\mu\,r_\pi \tag{33-9}
+</span></p>
+<p>式 (33-9) 就是最小二乘时序差分（LSTD）。注意它与第 32 章策略评估的线性方程 <span class="math inline">\mathbf{v}=(I-\gamma P_\pi)^{-1}r_\pi</span> 是同一个东西：把 <span class="math inline">I</span> 换成 <span class="math inline">\Phi</span> 的伪逆结构，维数从 <span class="math inline">\lvert\mathcal{S}\rvert</span> 降到 <span class="math inline">d</span>。<strong>状态多到解不动的时候，就把“精确解”换成“在 <span class="math inline">d</span> 维子空间里最近解”</strong>，这是函数逼近的全部内容。</p>
+<p>代价是解不再精确。把 <span class="math inline">V_\theta=\Pi_\mu T V_\theta</span> 与 <span class="math inline">V_\pi=T V_\pi</span> 相减：</p>
+<p><span class="math display">
+V_\theta-V_\pi=\Pi_\mu(TV_\theta-TV_\pi)+(\Pi_\mu V_\pi-V_\pi) \tag{33-10}
+</span></p>
+<p>取 <span class="math inline">\mu</span>-范数，用 <span class="math inline">\|\Pi_\mu\|_\mu=1</span> 与 <span class="math inline">T</span> 的 <span class="math inline">\gamma</span>-压缩性，得</p>
+<p><span class="math display">
+\|V_\theta-V_\pi\|_\mu\ \le\ \frac{1}{1-\gamma}\,\|\Pi_\mu V_\pi-V_\pi\|_\mu \tag{33-11}
+</span></p>
+<p>这个式子值得逐项读。右边第一因子是 <span class="math inline">1/(1-\gamma)</span>，<strong>与第 32 章值迭代的放大因子一模一样</strong>（§32.3.2）；右边第二项是“真值离特征空间有多远”，叫投影残差，只取决于 <span class="math inline">\phi</span> 选得好不好，与样本量无关。所以</p>
+<p><span class="math display">
+\text{总误差}\ \approx\ \underbrace{\frac{1}{1-\gamma}}_{\text{折扣放大}}\times\underbrace{\text{投影残差}}_{\text{表示能力}}+\underbrace{\text{估计误差}}_{\text{样本量}} \tag{33-12}
+</span></p>
+<p>三项各有各的解法：第一项只能靠减小 <span class="math inline">\gamma</span>（缩短视野）；第二项靠加特征、加宽度；第三项靠加数据。<strong>调参时把这三项分开看，比笼统地说“模型不够好”有用得多。</strong></p>
+<p>还有一处必须点明：式 (33-11) 是在 <span class="math inline">\mu</span>-范数下成立的，而我们真正关心的是策略自己的访问分布 <span class="math inline">d_\pi</span>。两个范数之间的换算系数就是式 (33-2) 的 <span class="math inline">\kappa</span>。<strong>所以异策略的问题不是“投影错了”，而是“在错误的尺子上量误差”</strong>——这也解释了为什么经验回放（让 <span class="math inline">\mu</span> 更接近历史策略的混合分布）能缓解问题，但消不掉它。</p>
+<figure>
+<img src="figs/ch033/fig_033_01_triad.svg" alt="图 33-1　致命三要素与本章各算法的处置方式" /><figcaption aria-hidden="true">图 33-1　致命三要素与本章各算法的处置方式</figcaption>
+</figure>
+<p>图 33-1 把三要素画成一个三角形，并标出四个算法各自站在哪里。<strong>PPO 之所以相对稳，不是因为它更先进，而是因为它主动放弃了异策略</strong>：同策略采样使 <span class="math inline">\kappa=1</span>，三要素只中两条，压缩性保住了。DQN、SAC、CQL 都保留异策略（为了样本复用），所以必须额外付代价——DQN 用目标网络冻结自举目标，SAC 用双评论家与延迟更新压低过估计，CQL 直接给分布外动作加惩罚。<strong>这张图是全章的索引：后面每讲一个算法，都先问它把三角形的哪条边拆掉了。</strong></p>
+<h3 id="三个目标函数一个模板">33.2.3 三个目标函数，一个模板</h3>
+<p>本章所有算法优化的目标可以归成三类，形式不同但都是“对样本求期望再最小化”。</p>
+<p><strong>第一类：值误差。</strong> 最自然的是最小化 Bellman 残差的平方</p>
+<p><span class="math display">
+J_V(\theta)=\tfrac12\,\mathrm{E}_{s\sim\mu}\Big[\big(r+\gamma V_\theta(s&#39;)-V_\theta(s)\big)^2\Big] \tag{33-13}
+</span></p>
+<p>但式 (33-13) 有一个陷阱：目标里含 <span class="math inline">V_\theta(s&#39;)</span>，对它求全梯度会得到“<span class="math inline">\theta</span> 出现在两边”的方程，而且需要知道 <span class="math inline">(s,a,s&#39;)</span> 的联合分布才能无偏估计。工程上用的都是<strong>半梯度</strong>：只对 <span class="math inline">V_\theta(s)</span> 求导，把 <span class="math inline">r+\gamma V_\theta(s&#39;)</span> 当常数。半梯度不是 <span class="math inline">J_V</span> 的真梯度，但它是第 32 章 TD(0) 的严格推广，且计算只需一步样本。<strong>“用半梯度”这件事本身就是一次有偏的取舍</strong>，§33.3.1 会量化偏差有多大。</p>
+<p><strong>第二类：策略性能。</strong> 直接对回报求导</p>
+<p><span class="math display">
+J_\pi(\phi)=\mathrm{E}_{\pi_\phi}\Big[\sum_{k\ge0}\gamma^{k}r_k\Big],\qquad
+\nabla_\phi J_\pi=\mathrm{E}_{\pi_\phi}\Big[\sum_{k\ge0}\gamma^{k}G_k\,\nabla_\phi\ln\pi_\phi(a_k\mid s_k)\Big] \tag{33-14}
+</span></p>
+<p>这是第 32 章式 (32-35) 的原样搬运，本章不再推导。它不需要值函数，但方差极大（§32.6.6 已量化：奖励 100 量级时乘子差 90 倍），所以实际用的是“减基线”或“用评论家替代 <span class="math inline">G_k</span>”的版本。</p>
+<p><strong>第三类：熵正则。</strong> 在回报里加一项策略熵</p>
+<p><span class="math display">
+J_{\mathrm{ent}}(\pi)=\mathrm{E}_{\pi}\Big[\sum_{k\ge0}\gamma^{k}\big(r_k+\alpha\,\mathcal{H}(\pi(\cdot\mid s_k))\big)\Big],
+\qquad \mathcal{H}=-\mathrm{E}_{a\sim\pi}\ln\pi(a\mid s) \tag{33-15}
+</span></p>
+<p><span class="math inline">\alpha</span> 是温度。这一项的作用是<strong>在目标里显式给“多试几个动作”付钱</strong>：熵越大，策略越分散，探索越充分。<span class="math inline">\alpha\to0</span> 时退化成普通回报；<span class="math inline">\alpha\to\infty</span> 时策略趋于均匀随机。第 32 章的 <span class="math inline">\varepsilon</span>-贪心是“外加的探索”，式 (33-15) 是“内生进目标的探索”——<strong>前者需要手调衰减表，后者可以自动调节</strong>（§33.3.4 会给出对偶推导）。这也是 SAC 比 DDPG 少调一个关键超参的原因。</p>
+<p>三类目标的关系可以一句话概括：<strong>第一类学“这个状态值多少”，第二类学“这个动作概率该多大”，第三类在第二类上加了一个“别太确定”的罚项。</strong> 本章的 DQN 属第一类，PPO 属第二类，SAC 与 CQL 属第三类（CQL 在第三类上再加保守项）。</p>
+<h3 id="策略的参数化连续动作必须处理有界性">33.2.4 策略的参数化：连续动作必须处理有界性</h3>
+<p>离散动作的策略参数化很直接：<span class="math inline">\pi_\theta(a\mid s)=\mathrm{softmax}(z_\theta(s))_a</span>。连续动作有四种常见写法，差别全在“如何处理动作边界”。</p>
+<p>表 33-2　连续/离散策略参数化的四种写法</p>
+<table>
+<colgroup>
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">写法</th>
+<th style="text-align: left;">形式</th>
+<th style="text-align: left;"><span class="math inline">\ln\pi</span> 是否有闭式</th>
+<th style="text-align: left;">探索</th>
+<th style="text-align: left;">典型算法</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">离散 softmax</td>
+<td style="text-align: left;"><span class="math inline">\exp z_a/\sum_b\exp z_b</span></td>
+<td style="text-align: left;">有</td>
+<td style="text-align: left;">内在</td>
+<td style="text-align: left;">DQN（策略由 <span class="math inline">\arg\max</span> 导出）</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">对角高斯</td>
+<td style="text-align: left;"><span class="math inline">\mathcal{N}(\mu_\phi(s),\sigma_\phi^2(s))</span></td>
+<td style="text-align: left;">有</td>
+<td style="text-align: left;">内在，<span class="math inline">\sigma</span> 可学</td>
+<td style="text-align: left;">PPO</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">压缩高斯</td>
+<td style="text-align: left;"><span class="math inline">a=\tanh u,\ u\sim\mathcal{N}(\mu,\sigma^2)</span></td>
+<td style="text-align: left;">有，需雅可比修正</td>
+<td style="text-align: left;">内在，且自动有界</td>
+<td style="text-align: left;">SAC、PPO（连续）</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">确定性</td>
+<td style="text-align: left;"><span class="math inline">a=\mu_\phi(s)</span></td>
+<td style="text-align: left;">不需要</td>
+<td style="text-align: left;">无，靠外加噪声</td>
+<td style="text-align: left;">DDPG、TD3</td>
+</tr>
+</tbody>
+</table>
+<p>第三种是工程上最常用的，值得写出完整式子。令 <span class="math inline">u\sim\mathcal{N}(\mu,\sigma^2)</span>、<span class="math inline">a=\tanh u</span>，则</p>
+<p><span class="math display">
+\ln\pi(a\mid s)=\ln\mathcal{N}\big(u;\mu,\sigma^2\big)-\sum_{i=1}^{m}\ln\big(1-\tanh^2 u_i\big) \tag{33-16}
+</span></p>
+<p>第二项是变量变换的雅可比行列式，<strong>不能漏</strong>。漏掉它的后果很具体：在 <span class="math inline">a</span> 接近 <span class="math inline">\pm1</span> 时 <span class="math inline">\tanh</span> 的导数趋于零，密度会被算成一个有限值而不是趋于无穷，策略梯度会把概率质量推向边界而自己不知道——表现是“训练后动作长期贴着限幅跑”。</p>
+<p>为什么不直接用截断（把超界的动作夹到 <span class="math inline">[-1,1]</span>）？因为截断会让多个不同的 <span class="math inline">u</span> 映射到同一个 <span class="math inline">a</span>，概率密度在边界处堆积成一个原子，<span class="math inline">\ln\pi</span> 无定义，梯度失效。<strong><span class="math inline">\tanh</span> 压缩是“可逆且有界”的最小代价方案</strong>，这也是它几乎成了连续控制标配的原因。</p>
+<h3 id="离线数据的三个量支撑集覆盖度外推距离">33.2.5 离线数据的三个量：支撑集、覆盖度、外推距离</h3>
+<p>离线场景要额外定义三个量，否则“数据不够”这句话无法量化。</p>
+<p><strong>支撑集</strong>：给定数据集 <span class="math inline">\mathcal{D}</span>，定义行为分布 <span class="math inline">\mu_\beta</span> 为 <span class="math inline">\mathcal{D}</span> 上的经验分布。状态 <span class="math inline">s</span> 处动作的条件支撑集是“离某个数据动作足够近”的动作集合：</p>
+<p><span class="math display">
+\mathrm{supp}\,\mu_\beta(\cdot\mid s)=\bigcup_{(s&#39;,a&#39;)\in\mathcal{D},\ \|s&#39;-s\|&lt;\delta_s}\big\{a:\ \|a-a&#39;\|&lt;\delta_a\big\} \tag{33-17}
+</span></p>
+<p>通俗说就是“这个状态下，数据里见过的动作及其邻域”。<strong>离线 RL 的一切问题都发生在支撑集之外。</strong></p>
+<p><strong>覆盖度</strong>：对每个 <span class="math inline">(s,a)</span> 统计有效样本数 <span class="math inline">n(s,a)</span>。<span class="math inline">n</span> 小的地方，<span class="math inline">Q</span> 的估计方差大；<span class="math inline">n=0</span> 的地方，<span class="math inline">Q</span> 完全由外推决定。§32.6.5 那张覆盖率的账（扣掉物理上不可达的格子）在这里要重做一遍，因为现在的“格子”是连续空间里的一个邻域。</p>
+<p><strong>外推距离</strong>：<span class="math inline">d_{\mathrm{out}}(a)=\min_{a&#39;\in\mathrm{supp}\,\mu_\beta(\cdot\mid s)}\|a-a&#39;\|</span>。它是“这个动作离已知数据多远”的度量，也是惩罚项该加多少的依据。</p>
+<p>这三个量合起来给出过估计的放大账。假设每步 <span class="math inline">Q</span> 被高估 <span class="math inline">\delta</span>，沿 <span class="math inline">H</span> 步累积，回报的高估量是</p>
+<p><span class="math display">
+\delta\sum_{k=0}^{H-1}\gamma^{k}=\delta\,\frac{1-\gamma^{H}}{1-\gamma}\ \xrightarrow{H\to\infty}\ \frac{\delta}{1-\gamma} \tag{33-18}
+</span></p>
+<p><span class="math inline">\gamma=0.99</span> 时放大 <span class="math inline">100</span> 倍。<strong>这意味着每步 <span class="math inline">0.01</span> 的微小高估，在 <span class="math inline">\gamma=0.99</span> 的策略里会变成 <span class="math inline">1.0</span> 的回报虚高</strong>，足以把最优动作换掉。式 (33-18) 是离线 RL 里所有保守惩罚的定价依据：惩罚不是“正则化技巧”，它是在抵消这个 <span class="math inline">1/(1-\gamma)</span> 的放大。</p>
+<h3 id="sim-to-real三种迁移的数学区别">33.2.6 sim-to-real：三种“迁移”的数学区别</h3>
+<p>仿真到现实的差距，可以形式化成“环境参数不确定”。设环境由一个参数 <span class="math inline">\xi</span> 决定（质量、摩擦系数、执行器延迟、传感器噪声），<span class="math inline">\xi\in\Xi</span>，真实环境对应某个未知的 <span class="math inline">\xi_{\mathrm{real}}</span>。三种常见做法对应的优化问题不同：</p>
+<p><span class="math display">
+\text{名义：}\ \max_\pi J(\pi;\xi_0),\qquad
+\text{域随机化：}\ \max_\pi \mathrm{E}_{\xi\sim p}\big[J(\pi;\xi)\big],\qquad
+\text{鲁棒：}\ \max_\pi \min_{\xi\in\Xi}J(\pi;\xi) \tag{33-19}
+</span></p>
+<p><strong>这三者不是一回事，混用会出事故。</strong> 名义优化只保证在 <span class="math inline">\xi_0</span> 上最好，<span class="math inline">\xi_{\mathrm{real}}\ne\xi_0</span> 时毫无保证；域随机化优化的是<strong>平均</strong>性能，它允许“在少数参数下很差”，只要平均拉得回来；鲁棒优化保证最坏情况，但代价是保守——在 <span class="math inline">\xi</span> 的整个集合上取最坏，往往会把标称性能压低很多。</p>
+<p>工程上还有一个更隐蔽的区别：<strong>域随机化不覆盖“结构差异”，只覆盖“参数差异”。</strong> 仿真里没有的效应（齿轮间隙、皮带迟滞、网络丢包）不会因为把摩擦系数随机化就出现。所以“随机化范围设得很宽”并不等于“迁移得好”，这一点在 §33.5.2 会用一个延迟的例子量化。</p>
+<p>延迟是最典型的例子，也是最容易被忽略的。设回路带宽 <span class="math inline">100</span> Hz（<span class="math inline">\omega=2\pi\times100</span>），纯延迟 <span class="math inline">1</span> ms，相位滞后是</p>
+<p><span class="math display">
+\varphi=-\omega T_d=-0.628\ \text{rad}=-36^{\circ} \tag{33-20}
+</span></p>
+<p><strong><span class="math inline">36^{\circ}</span> 已经吃掉了相位裕度的一大半。</strong> 仿真里如果没建模这 <span class="math inline">1</span> ms，策略在仿真里稳、上机就振——这不是“随机化没调好”，而是模型结构里少了一项。</p>
+<h3 id="与核方法高斯过程的对照">33.2.7 与核方法、高斯过程的对照</h3>
+<p>线性逼近 <span class="math inline">V_\theta=\theta^{\top}\phi(s)</span> 里有两处人为选择：特征 <span class="math inline">\phi</span> 长什么样、维数 <span class="math inline">d</span> 取多大。核方法与高斯过程恰好把这两处各换掉一个，对照一下能看清“深度”到底买到了什么。</p>
+<p><strong>核方法换掉的是“特征谁定”。</strong> 如果算法只通过内积用到特征（LSTD、岭回归都属于这一类），就可以把 <span class="math inline">\phi(s)^{\top}\phi(s&#39;)</span> 整体替换成核函数 <span class="math inline">k(s,s&#39;)</span>，从不显式构造 <span class="math inline">\phi</span>。表示定理保证最优解落在样本张成的子空间里</p>
+<p><span class="math display">
+V(s)=\sum_{i=1}^{m}\alpha_i\,k(s_i,s)
+</span></p>
+<p>于是<strong>特征维数可以是无穷，有效维数却只有样本数 <span class="math inline">m</span></strong>。这句话与 §33.2.1 的“表格是 one-hot 特例”是同一件事的两端：表格的核是 <span class="math inline">\delta</span> 核（只有同一个格子内积为 1），核方法把 <span class="math inline">\delta</span> 换成光滑核，深度网络则把核本身也变成可学的。</p>
+<p><strong>高斯过程再换掉“<span class="math inline">d</span> 取多大”。</strong> 把 <span class="math inline">\theta</span> 看成高斯先验、观测看成带噪线性读出，后验均值就是上面那个形式，而后验方差</p>
+<p><span class="math display">
+u^{2}(s)=k(s,s)-k(s)^{\top}\big(K+\sigma^{2}I\big)^{-1}k(s)
+</span></p>
+<p>直接给出“这个状态没见过的程度”。这正是 §33.3.6 里保守惩罚想定价、却只能用一个常数 <span class="math inline">D</span> 粗略替代的量。<strong>如果 GP 的 <span class="math inline">u(s,a)</span> 可算，离线 RL 的惩罚系数就不必猜，直接取 <span class="math inline">\beta\,u(s,a)</span> 即可</strong>——这是“乐观/保守”两类算法在理论上的原型。</p>
+<p>代价也很清楚：训练要解 <span class="math inline">m\times m</span> 的线性系统，复杂度 <span class="math inline">O(m^{3})</span>，内存 <span class="math inline">O(m^{2})</span>，推理要遍历全部样本，<span class="math inline">O(m)</span>。<span class="math inline">m=10^{4}</span> 时一次求解已是 <span class="math inline">10^{12}</span> 量级，<span class="math inline">m=10^{6}</span> 完全不可行。深度网络把这笔账换成了“<span class="math inline">O(d)</span> 推理 + 一次性训练”，代价是丢掉了 <span class="math inline">u</span> 这个不确定性量。</p>
+<p>三条实用判据：</p>
+<ol type="1">
+<li><strong>样本少、维数低、要不确定性</strong>——先用 GP 或核 LSTD 做基线。样本在 <span class="math inline">10^{2}</span>–<span class="math inline">10^{3}</span>、输入维数不超过 10 时，它们往往比网络更准、更可复现，且没有种子方差。</li>
+<li><strong>样本多、观测高维、要实时推理</strong>——只能用网络。此时核方法的两项代价（<span class="math inline">m^{3}</span> 训练、<span class="math inline">m</span> 推理）都无法接受。</li>
+<li><strong>先问瓶颈在数据还是在表示。</strong> E1 里 <span class="math inline">m=10^{4}</span>、<span class="math inline">d=4</span> 的误差是 0.0258，再加特征也只到 0.0239——<strong>这时换成网络是净浪费</strong>；反过来 E5 里补一个 <span class="math inline">a^{2}</span> 就把外推误差从 0.607 压到 0.028，说明瓶颈在表示，此时“换核”（补特征）比“加宽”有效得多。</li>
+</ol>
+<p>一句话总结这三层的关系：<strong>表格是 <span class="math inline">\delta</span> 核，核方法是固定核，深度网络是学出来的核；三层共用式（33-5）的线性读出，差别只在 <span class="math inline">\phi</span> 的自由度与样本效率。</strong></p>
+<h3 id="规模账d-与-m-该怎么配">33.2.8 规模账：<span class="math inline">d</span> 与 <span class="math inline">m</span> 该怎么配</h3>
+<p>最后给一个可以拿笔算的规模关系，它决定了“网络该多大、数据该多少”。</p>
+<p>参数化的估计误差大致按 <span class="math inline">\sigma^{2}d/m</span> 下降（<span class="math inline">d</span> 个参数、<span class="math inline">m</span> 个样本、单样本噪声方差 <span class="math inline">\sigma^2</span>），而近似误差随 <span class="math inline">d</span> 增大而下降。两者相加是一个 U 形，最优点在两条曲线斜率相反的地方。<strong>实用上只需要一个量级判断</strong>：若要求均方误差不超过 <span class="math inline">\epsilon^2</span>，则</p>
+<p><span class="math display">
+m\ \gtrsim\ \frac{\sigma^{2}d}{\epsilon^{2}} \tag{33-21}
+</span></p>
+<p>代入一组具体数字。取 <span class="math inline">\sigma=1</span>（奖励归一化后）、<span class="math inline">\epsilon=0.05</span>、<span class="math inline">d=10^{4}</span>（一个小型网络），得 <span class="math inline">m\gtrsim4\times10^{6}</span> 步。以 <span class="math inline">1</span> kHz 采样连续跑，是 <span class="math inline">4000</span> s，约 <strong>67 分钟</strong>——这就是“一个一万参数的网络、要到 5% 精度、需要一小时不间断数据”的量级估计（只保留量级，未计常数因子，工程上还要再乘几倍）。</p>
+<p>对照第 32 章的表格：<span class="math inline">d=\lvert\mathcal{S}\rvert=10^{6}</span> 时同样精度需要 <span class="math inline">m\gtrsim4\times10^{8}</span> 步，是前者的 <span class="math inline">100</span> 倍。<strong>函数逼近省下的正是这 <span class="math inline">100</span> 倍样本</strong>，代价是式 (33-12) 里的投影残差与式 (33-2) 里的 <span class="math inline">\kappa</span>。一笔换一笔，没有免费的午餐。</p>
+<p>表 33-3 把本节新增的符号收在一起，后面各节直接引用。</p>
+<p>表 33-3　本章符号与含义</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">符号</th>
+<th style="text-align: left;">含义</th>
+<th style="text-align: left;">与第 32 章的对应</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><span class="math inline">\phi(s)</span></td>
+<td style="text-align: left;">特征映射，<span class="math inline">d</span> 维</td>
+<td style="text-align: left;">表格的 one-hot（<span class="math inline">d=\lvert\mathcal{S}\rvert</span>）</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><span class="math inline">\Pi_\mu</span></td>
+<td style="text-align: left;"><span class="math inline">\mu</span>-加权最小二乘投影</td>
+<td style="text-align: left;">无（表格下投影是恒等）</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><span class="math inline">\kappa</span></td>
+<td style="text-align: left;">分布失配度 <span class="math inline">\lVert d_\pi/\mu\rVert_\mu^{1/2}</span></td>
+<td style="text-align: left;">无（表格下 <span class="math inline">\kappa=1</span>）</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><span class="math inline">\mu_\beta</span></td>
+<td style="text-align: left;">行为策略/数据经验分布</td>
+<td style="text-align: left;">第 32 章的 <span class="math inline">\varepsilon</span>-贪心策略</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><span class="math inline">d_{\mathrm{out}}</span></td>
+<td style="text-align: left;">动作到数据支撑集的距离</td>
+<td style="text-align: left;">无</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><span class="math inline">\alpha</span></td>
+<td style="text-align: left;">熵温度</td>
+<td style="text-align: left;">第 32 章 <span class="math inline">\varepsilon</span> 的连续版替代</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><span class="math inline">\xi</span></td>
+<td style="text-align: left;">环境参数</td>
+<td style="text-align: left;">第 32 章固定的 <span class="math inline">P</span>、<span class="math inline">r</span></td>
+</tr>
+</tbody>
+</table>
+<h3 id="闭式解与随机梯度同一个不动点两种算账">33.2.9 闭式解与随机梯度：同一个不动点，两种算账</h3>
+<p>式（33-9）给出的是闭式解，而工程实现几乎都用随机梯度。两者收敛到<strong>同一个投影 Bellman 不动点</strong>，差别只在“用多少计算换多少样本”。</p>
+<p>闭式解（LSTD）把 <span class="math inline">m</span> 条样本一次性压成一个 <span class="math inline">d\times d</span> 矩阵求逆，复杂度 <span class="math inline">O(md^{2}+d^{3})</span>，得到的估计方差约为 <span class="math inline">\sigma^{2}d/m</span>。随机梯度（半梯度 TD）每步只花 <span class="math inline">O(d)</span>，但要对同一批数据扫描多遍，且步长带来一个“收敛不完”的残差地板。<strong>换句话说：闭式解把误差全部押在样本量上，随机梯度把误差分一部分给步长。</strong></p>
+<p>数值上有一个必须知道的量：矩阵 <span class="math inline">\Phi^{\top}D_\mu(\Phi-\gamma P_\pi\Phi)</span> 的条件数大约随 <span class="math inline">1/(1-\gamma\kappa)</span> 增长。<span class="math inline">\gamma\kappa\to1</span> 时它趋于奇异，解对样本噪声极度敏感——<strong>这就是“接近发散边界时 LSTD 也不可信”的原因</strong>，与式（33-2）是同一件事的两个面。E1 里加的 <span class="math inline">10^{-6}</span> 岭项只起数值稳定作用，它会把解往原点拉一点，属于偏差，不属于精度。</p>
+<p>闭式解还有一个在线版本：用 Sherman–Morrison 公式递推求逆，每步 <span class="math inline">O(d^{2})</span>，不需要存全部样本。它在 <span class="math inline">\mu</span> 固定、特征固定时很好用；一旦特征也在学（网络），矩阵每步都变，递推就失去意义。</p>
+<p>四条判断：</p>
+<ol type="1">
+<li><strong><span class="math inline">d\le10^{3}</span> 且特征固定</strong>——先用 LSTD 或核 LSTD 做基线。它没有步长、没有种子方差，能把“表示误差”与“优化误差”分开，E1 的误差分解正是靠这一点。</li>
+<li><strong><span class="math inline">d</span> 大到 <span class="math inline">10^{4}</span> 以上</strong>——<span class="math inline">d^{3}</span> 已是 <span class="math inline">10^{12}</span> 量级，闭式解不可行，只能随机梯度。</li>
+<li><strong>目标在动</strong>（自举目标依赖 <span class="math inline">\theta</span>）——闭式解每步都要重解，成本无法接受；半梯度虽然只近似，但每步便宜。</li>
+<li><strong>要分解误差</strong>——用闭式解；<strong>要追非平稳目标</strong>——用随机梯度。两者的取舍不是“谁更先进”，而是“你想把误差记在哪一栏”。</li>
+</ol>
+<h2 id="推导与性质">33.3 推导与性质</h2>
+<h3 id="目标网络与经验回放各拆一条边">33.3.1 目标网络与经验回放各拆一条边</h3>
+<p>DQN 的损失函数是</p>
+<p><span class="math display">
+L(\theta)=\mathrm{E}_{(s,a,r,s&#39;)\sim\mathcal{D}}\Big[\big(r+\gamma\max_{a&#39;}Q_{\theta^-}(s&#39;,a&#39;)-Q_\theta(s,a)\big)^2\Big] \tag{33-22}
+</span></p>
+<p>注意目标里用的是 <span class="math inline">\theta^-</span> 而不是 <span class="math inline">\theta</span>。这个下标是全部稳定性的来源，值得单独解释。</p>
+<p><strong>如果不加 <span class="math inline">\theta^-</span></strong>，目标 <span class="math inline">y=r+\gamma\max_{a&#39;}Q_\theta(s&#39;,a&#39;)</span> 与待优化参数是同一套。此时梯度下降在追一个<strong>自己也在动</strong>的目标：<span class="math inline">\theta</span> 一更新，<span class="math inline">y</span> 立刻跟着变，损失可能不降反升。更糟的是，这与式 (33-2) 的扩张条件叠加——自举让误差按 <span class="math inline">\gamma</span> 放大，函数逼近让放大在特征空间里串扰，异策略让尺子错位，三者相乘。</p>
+<p><strong>加上 <span class="math inline">\theta^-</span> 之后</strong>，在一段固定周期内目标是常数，问题退化成“用回归拟合一批固定标签”，这是一个凸的（线性情形）或至少是良定的监督学习问题，有唯一最优、误差单调下降。每隔 <span class="math inline">C</span> 步把 <span class="math inline">\theta</span> 拷给 <span class="math inline">\theta^-</span>，再重新开始。<strong>换句话说，目标网络把“追移动目标”改成了“分段追静止目标”</strong>，每段的误差不发散，段间靠拷贝推进。软更新是同一思想的光滑版本</p>
+<p><span class="math display">
+\theta^-\leftarrow\tau\theta+(1-\tau)\theta^-,\qquad \tau\ll1 \tag{33-23}
+</span></p>
+<p>它对应一阶低通，等效时间常数约 <span class="math inline">1/\tau</span> 步。<span class="math inline">\tau=0.005</span> 相当于 <span class="math inline">200</span> 步的滑动平均。</p>
+<p><strong>经验回放做的事不一样，它改的是分布。</strong> 不用回放时，样本按时间顺序产生，相邻样本高度相关（<span class="math inline">\mu</span> 集中在当前轨迹附近），且用完即弃。回放池做三件事：</p>
+<ol type="1">
+<li><strong>打破相关性。</strong> 随机抽一批，样本近似独立，梯度方差下降。这一条是统计效率，与收敛性无关。</li>
+<li><strong>提高复用率。</strong> 一条样本被抽中多次，样本效率成倍提升。这一条是成本。</li>
+<li><strong>拓宽 <span class="math inline">\mu</span>。</strong> 池子里存的是过去许多个策略产生的数据，其混合分布比“当前策略的访问分布”宽得多。<strong>这直接减小式 (33-2) 的 <span class="math inline">\kappa</span>。</strong> 这一条才是稳定性。</li>
+</ol>
+<p>但要说清界限：回放让 <span class="math inline">\mu</span> 变宽，却<strong>不能让 <span class="math inline">\mu=d_\pi</span></strong>。池子里永远混着旧策略的数据，<span class="math inline">\kappa</span> 只是从“很大”降到“接近 1”，不等于 1。所以 DQN 仍然站在致命三要素的三角形里（图 33-1），只是把最尖的那个角磨钝了。<strong>这就是为什么 DQN 在各种任务上“通常能跑”，但没有收敛定理。</strong></p>
+<h3 id="最大化偏差n-个动作会被高估多少">33.3.2 最大化偏差：<span class="math inline">n</span> 个动作会被高估多少</h3>
+<p>第 32 章给过两动作时的数：<span class="math inline">\mathrm{E}[\max]\approx0.564\sigma</span>。一般地，若 <span class="math inline">n</span> 个动作的 <span class="math inline">Q</span> 估计各带独立同分布、标准差 <span class="math inline">\sigma</span> 的零均值误差，则最大值的期望偏差是</p>
+<p><span class="math display">
+\mathrm{E}\Big[\max_{1\le i\le n}\hat{Q}_i-\max_{1\le i\le n}Q_i\Big]\approx\sigma\cdot m_n,
+\qquad m_2=0.564,\ m_3=0.846,\ m_4=1.029,\ m_{10}=1.539 \tag{33-24}
+</span></p>
+<p>动作越多，偏差越大。这不是小量：<strong>四动作时每步高估 <span class="math inline">1.03\sigma</span>，十动作时 <span class="math inline">1.54\sigma</span></strong>。再套式 (33-18) 的 <span class="math inline">1/(1-\gamma)</span> 放大，<span class="math inline">\gamma=0.99</span> 时分别放大成 <span class="math inline">103\sigma</span> 与 <span class="math inline">154\sigma</span>。若 <span class="math inline">\sigma=0.1</span>（一个训练得还不错的评论家），回报虚高就是 <span class="math inline">10</span> 到 <span class="math inline">15</span>——足以让策略系统性地偏好“估计噪声大”的动作。</p>
+<p>双重 Q 学习（Double DQN）把“选动作”和“评动作”拆开：</p>
+<p><span class="math display">
+y=r+\gamma\,Q_{\theta^-}\Big(s&#39;,\ \arg\max_{a&#39;}Q_\theta(s&#39;,a&#39;)\Big) \tag{33-25}
+</span></p>
+<p>选动作用在线网络，评价值用目标网络。两个网络的误差若不相关，<span class="math inline">\max</span> 带来的正偏差就被大幅抵消。<strong>代价是引入了一点负偏差</strong>（因为选出的动作在目标网络眼里未必最好），但负偏差比正偏差安全：宁可低估一个好动作，也不要高估一个坏动作。</p>
+<h3 id="ddpg-的梯度偏差与-td3-的三处修正">33.3.3 DDPG 的梯度偏差与 TD3 的三处修正</h3>
+<p>回到式 (33-3)。它的推导只用了链式法则，看起来无懈可击，但有一个隐含前提：<span class="math inline">Q_\theta\approx Q^{\mu_\phi}</span>。实际训练中评论家总有误差 <span class="math inline">\varepsilon(s,a)</span>，于是</p>
+<p><span class="math display">
+\nabla_\phi J=\mathrm{E}\big[\nabla_\phi\mu_\phi^{\top}\nabla_a(Q^{\mu_\phi}+\varepsilon)\big]
+=\underbrace{\mathrm{E}\big[\nabla_\phi\mu_\phi^{\top}\nabla_a Q^{\mu_\phi}\big]}_{\text{想要的}}
++\underbrace{\mathrm{E}\big[\nabla_\phi\mu_\phi^{\top}\nabla_a\varepsilon\big]}_{\text{偏差}} \tag{33-26}
+</span></p>
+<p>关键在于第二项不是零：<strong>只要 <span class="math inline">\varepsilon</span> 随动作变化，它就会被策略“利用”</strong>。更具体地说，函数逼近在数据稀疏处误差大，而 <span class="math inline">\arg\max</span> 恰好把策略推向那些地方——偏差项因此系统性为正，策略会主动钻进“评论家最不确定的角落”。这与 §33.2.5 的离线外推误差是同一个机制，只是发生在连续动作的邻域里。</p>
+<p>TD3 用三处修改压这个偏差，每一处都对应式 (33-26) 里的一项：</p>
+<p><strong>其一，双评论家取最小。</strong> 训练两个独立的 <span class="math inline">Q</span>，目标取 <span class="math inline">\min(Q_1,Q_2)</span>。这与 Double DQN 同一动机，但更彻底：直接取小，把正偏差压成负偏差。</p>
+<p><strong>其二，目标策略平滑。</strong> 在目标动作上加截断噪声</p>
+<p><span class="math display">
+a&#39;=\mathrm{clip}\Big(\mu_{\phi^-}(s&#39;)+\mathrm{clip}(\epsilon,-c,c),\ a_{\mathrm{lo}},a_{\mathrm{hi}}\Big),\qquad \epsilon\sim\mathcal{N}(0,\sigma^2) \tag{33-27}
+</span></p>
+<p>它防止评论家在“某个动作上恰好有个窄峰”处过拟合——策略无法靠精准命中那个峰来刷分，因为目标被抹平了一个 <span class="math inline">c</span> 宽的邻域。<strong>这是对“<span class="math inline">\nabla_a\varepsilon</span> 在窄峰处最大”的直接反制。</strong></p>
+<p><strong>其三，延迟更新。</strong> 评论家更新若干次，演员才更新一次。理由是式 (33-26)：偏差项正比于评论家的误差，评论家没学好之前，演员怎么更新都是在追噪声。<strong>先让尺子稳，再量东西。</strong></p>
+<p>三处修改合起来，把 DDPG 从“经常崩”变成“通常能跑”，但仍然没有定理。<strong>这就是本章的常态：所有“改进”都是在削偏差/削方差，不是在补证明。</strong></p>
+<h3 id="ppo裁剪与-kl-的真实换算">33.3.4 PPO：裁剪与 KL 的真实换算</h3>
+<p>PPO 的出发点是一个约束优化：希望每步策略变化不要太大，形式上写成 <span class="math inline">\mathrm{E}[\mathrm{KL}(\pi_{\mathrm{old}}\|\pi_\theta)]\le\delta</span>。直接解这个约束需要算 Fisher 矩阵的逆（自然梯度），代价高；PPO 用一个更便宜的手段近似它——<strong>裁剪重要性采样比</strong>。</p>
+<p>令</p>
+<p><span class="math display">
+r_t(\theta)=\frac{\pi_\theta(a_t\mid s_t)}{\pi_{\theta_{\mathrm{old}}}(a_t\mid s_t)} \tag{33-28}
+</span></p>
+<p>则裁剪目标为</p>
+<p><span class="math display">
+L^{\mathrm{CLIP}}(\theta)=\mathrm{E}_t\Big[\min\big(r_t(\theta)A_t,\ \mathrm{clip}(r_t(\theta),1-\epsilon,1+\epsilon)A_t\big)\Big] \tag{33-29}
+</span></p>
+<p>它的作用可以一句话说清：<strong>当优势为正时，把 <span class="math inline">r</span> 的上行梯度截断在 <span class="math inline">1+\epsilon</span>；当优势为负时，截断在 <span class="math inline">1-\epsilon</span>。</strong> 超过这个范围，再怎么提高概率也不给额外奖励，于是策略不会一步跨太远。</p>
+<p>那么 <span class="math inline">\epsilon=0.2</span> 到底对应多大的策略变化？对单个动作、<span class="math inline">r</span> 在 <span class="math inline">1\pm\epsilon</span> 内，KL 的二阶近似是</p>
+<p><span class="math display">
+\mathrm{KL}\big(\pi_{\mathrm{old}}\,\|\,\pi_\theta\big)\approx\tfrac12\mathrm{E}_{a\sim\pi_{\mathrm{old}}}\big[(r-1)^2\big]\le\tfrac{\epsilon^2}{2} \tag{33-30}
+</span></p>
+<p><span class="math inline">\epsilon=0.2</span> 给每维 <span class="math inline">0.02</span> nats。这个数看着很小，但对 <span class="math inline">m</span> 维独立动作，KL 是各维之和，上界变成 <span class="math inline">0.02m</span>：<span class="math inline">m=6</span> 时约 <span class="math inline">0.12</span> nats，<span class="math inline">m=20</span> 时约 <span class="math inline">0.4</span> nats。<strong>所以“<span class="math inline">\epsilon=0.2</span>”在低维任务里是温和更新，在高维任务里可能是很激进的更新</strong>——这也是为什么高维任务常把 <span class="math inline">\epsilon</span> 调到 <span class="math inline">0.1</span> 以下，或者干脆改回自适应 KL。</p>
+<p>优势函数 <span class="math inline">A_t</span> 的估计用 GAE（广义优势估计）：</p>
+<p><span class="math display">
+\hat{A}_t=\sum_{l\ge0}(\gamma\lambda)^{l}\,\delta_{t+l},\qquad
+\delta_t=r_t+\gamma V(s_{t+1})-V(s_t) \tag{33-31}
+</span></p>
+<p><span class="math inline">\lambda</span> 是一个偏差—方差旋钮：<span class="math inline">\lambda=0</span> 退化成一步 TD 误差（偏差大、方差小），<span class="math inline">\lambda=1</span> 退化成蒙特卡洛回报减基线（无偏、方差大）。工程上常用 <span class="math inline">0.95</span>，含义是“有效视野约 <span class="math inline">1/(1-\gamma\lambda)</span>”，<span class="math inline">\gamma=0.99</span>、<span class="math inline">\lambda=0.95</span> 时约 <span class="math inline">20</span> 步。<strong>这个数与 <span class="math inline">\gamma</span> 单独给出的 <span class="math inline">100</span> 步不是一回事，报参时必须写清是哪一个。</strong></p>
+<h3 id="sac温度对偶与双评论家">33.3.5 SAC：温度对偶与双评论家</h3>
+<p>最大熵目标 (33-15) 的最优策略有闭式。对固定 <span class="math inline">s</span>，把 <span class="math inline">\sum_a\pi(a\mid s)(Q(s,a)-\alpha\ln\pi(a\mid s))</span> 对 <span class="math inline">\pi</span> 求导并加单纯形约束，得</p>
+<p><span class="math display">
+\pi^\star(a\mid s)=\frac{\exp\big(Q(s,a)/\alpha\big)}{\sum_{a&#39;}\exp\big(Q(s,a&#39;)/\alpha\big)} \tag{33-32}
+</span></p>
+<p>即“软最大”。<span class="math inline">\alpha</span> 越小越接近 <span class="math inline">\arg\max</span>，越大越接近均匀。<strong>注意这不是启发式，是目标函数 (33-15) 的精确解</strong>——熵项把硬的 <span class="math inline">\max</span> 换成了软的 log-sum-exp，这也是 SAC 名字里“soft”的来历。</p>
+<p>温度 <span class="math inline">\alpha</span> 可以自动定。约束写成“平均熵不低于目标 <span class="math inline">\bar{\mathcal{H}}</span>”，即 <span class="math inline">\mathrm{E}[-\ln\pi(a\mid s)]\ge\bar{\mathcal{H}}</span>，其对偶变量就是 <span class="math inline">\alpha</span>。对偶上升给出</p>
+<p><span class="math display">
+\alpha\leftarrow\alpha\cdot\exp\Big(-\beta\big[\ln\pi(a\mid s)+\bar{\mathcal{H}}\big]\Big) \tag{33-33}
+</span></p>
+<p>含义要按对偶的正负号读：熵低于目标时 <span class="math inline">\ln\pi+\bar{\mathcal{H}}&gt;0</span>，对 <span class="math inline">\alpha</span> 的梯度为负，<span class="math inline">\alpha</span> 增大，逼策略分散；熵高于目标时反过来，<span class="math inline">\alpha</span> 减小。目标熵常取 <span class="math inline">\bar{\mathcal{H}}=-m</span>（<span class="math inline">m</span> 为动作维数），即“每维留 <span class="math inline">1</span> nat 的不确定性”——这个取值与奖励尺度无关，所以能跨任务复用。</p>
+<p>评论家一侧用两个 <span class="math inline">Q</span> 取最小，理由与 TD3 相同（式 33-24 的正偏差）。<strong>SAC 的三件套——熵正则、双评论家、软更新——分别解决探索、过估计、目标漂移，三件事彼此独立，可以单独替换。</strong> 这是它比 DDPG 稳的工程原因，也是它超参更多的原因：<span class="math inline">\alpha</span> 的初值、目标熵、双评论家的初始化，每一项都要管。</p>
+<h3 id="离线保守惩罚的定价">33.3.6 离线：保守惩罚的定价</h3>
+<p>离线算法的核心是把“分布外动作的 <span class="math inline">Q</span>”压下去。CQL 型目标写成</p>
+<p><span class="math display">
+J_{\mathrm{CQL}}(\theta)=\underbrace{\alpha\Big(\mathrm{E}_{s\sim\mathcal{D}}\big[\log\textstyle\sum_a\exp Q_\theta(s,a)\big]-\mathrm{E}_{(s,a)\sim\mathcal{D}}\big[Q_\theta(s,a)\big]\Big)}_{\text{保守项}}
++\underbrace{\tfrac12\mathrm{E}_{\mathcal{D}}\big[(Q_\theta(s,a)-y)^2\big]}_{\text{常规 TD 损失}} \tag{33-34}
+</span></p>
+<p>保守项是两个期望之差。第一项是“所有动作的 <span class="math inline">Q</span> 的软最大”，第二项是“数据动作的 <span class="math inline">Q</span>”。最小化它们的差，等价于<strong>同时做两件事：把数据动作的 <span class="math inline">Q</span> 抬高，把其余动作的 <span class="math inline">Q</span> 压低。</strong> 两者之差越大，惩罚越强；<span class="math inline">\alpha\to0</span> 时退化成普通离线 TD；<span class="math inline">\alpha\to\infty</span> 时分布外动作的 <span class="math inline">Q</span> 趋于 <span class="math inline">-\infty</span>，<span class="math inline">\arg\max</span> 只能落在支撑集内。</p>
+<p>现在可以给这个 <span class="math inline">\alpha</span> 定价了。由式 (33-18)，每步 <span class="math inline">Q</span> 的高估 <span class="math inline">\delta</span> 会被放大 <span class="math inline">1/(1-\gamma)</span>。若保守项能把分布外动作的 <span class="math inline">Q</span> 压低 <span class="math inline">D</span>，那么只要</p>
+<p><span class="math display">
+D\ \gtrsim\ \frac{\delta}{1-\gamma} \tag{33-35}
+</span></p>
+<p>就能保证 <span class="math inline">\arg\max</span> 不会翻到支撑集外。<strong>这就是 <span class="math inline">\alpha</span> 该怎么选的定量依据</strong>：它不是无量纲的“正则化强度”，而是要与“评论家误差 <span class="math inline">\delta</span>”和“折扣放大 <span class="math inline">1/(1-\gamma)</span>”一起算的物理量。<span class="math inline">\gamma=0.99</span>、<span class="math inline">\delta=0.1</span> 时，需要压低 <span class="math inline">10</span> 个单位——这解释了为什么离线算法在长视野任务上总要配很大的 <span class="math inline">\alpha</span>。</p>
+<p>三处代价必须一并说清。<strong>其一，过度保守。</strong> <span class="math inline">\alpha</span> 太大时，所有动作的 <span class="math inline">Q</span> 都被压低，策略退化成“什么都不做”或“复制行为策略”。<strong>其二，惩罚的估计有偏。</strong> 式 (33-34) 的第一项需要对全部动作求软最大，连续动作下只能用采样近似，采样不足时惩罚方向会歪。<strong>其三，它保的是值、不是行为。</strong> <span class="math inline">Q</span> 被压对不等于策略在真机上就好，中间还隔着“策略能否被准确表示”这一层。</p>
+<h3 id="稳定化账每个算法拆了哪条边">33.3.7 稳定化账：每个算法拆了哪条边</h3>
+<p>把本节内容收进表 33-4。这张表的用法是：看到一个不稳定的训练曲线，先在表里找到对应行，再问“它拆的那条边，我的实现里真的拆掉了吗”。</p>
+<p>表 33-4　四个算法的稳定化手段与失效模式</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">算法</th>
+<th style="text-align: left;">拆哪条边</th>
+<th style="text-align: left;">具体手段</th>
+<th style="text-align: left;">新增关键超参</th>
+<th style="text-align: left;">典型失效</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">DQN</td>
+<td style="text-align: left;">自举 + 分布</td>
+<td style="text-align: left;">目标网络、经验回放、Double Q</td>
+<td style="text-align: left;"><span class="math inline">C</span> 或 <span class="math inline">\tau</span>、池容量</td>
+<td style="text-align: left;">过估计、回放池过旧</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">DDPG</td>
+<td style="text-align: left;">自举</td>
+<td style="text-align: left;">目标网络（软更新）</td>
+<td style="text-align: left;"><span class="math inline">\tau</span>、探索噪声 <span class="math inline">\sigma</span></td>
+<td style="text-align: left;">评论家过拟合窄峰、策略钻误差</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">TD3</td>
+<td style="text-align: left;">自举</td>
+<td style="text-align: left;">双评论家取小、目标平滑、延迟更新</td>
+<td style="text-align: left;"><span class="math inline">\tau</span>、<span class="math inline">\sigma</span>、<span class="math inline">c</span>、更新比</td>
+<td style="text-align: left;">过度平滑导致学不快</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">PPO</td>
+<td style="text-align: left;">异策略（直接放弃）</td>
+<td style="text-align: left;">同策略采样、裁剪、GAE</td>
+<td style="text-align: left;"><span class="math inline">\epsilon</span>、<span class="math inline">\lambda</span>、每批回合数</td>
+<td style="text-align: left;">样本效率低、裁剪过紧</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">SAC</td>
+<td style="text-align: left;">自举</td>
+<td style="text-align: left;">双评论家、软更新、熵正则</td>
+<td style="text-align: left;"><span class="math inline">\alpha</span> 初值、<span class="math inline">\bar{\mathcal{H}}</span></td>
+<td style="text-align: left;">温度失控、<span class="math inline">Q</span> 塌缩</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">CQL</td>
+<td style="text-align: left;">分布外</td>
+<td style="text-align: left;">保守惩罚</td>
+<td style="text-align: left;"><span class="math inline">\alpha</span></td>
+<td style="text-align: left;">过度保守、惩罚估计有偏</td>
+</tr>
+</tbody>
+</table>
+<p>表里最值得对照的是第三列与第五列。<strong>每个算法新增的超参，恰好就是它拆边时引入的那个“补偿量”</strong>——DQN 的 <span class="math inline">C</span> 是“目标多久换一次”，TD3 的 <span class="math inline">c</span> 是“峰抹多平”，PPO 的 <span class="math inline">\epsilon</span> 是“一步走多远”，CQL 的 <span class="math inline">\alpha</span> 是“外推压多低”。这些量没有一个是“调大了更好”或“调小了更好”，全部存在最优区间，而且最优值随任务变。<strong>这是深度 RL 调参困难的数学根源：它不是参数多，而是每个参数都在补偿一个没有定理支撑的近似。</strong></p>
+<h3 id="n-步回报与资格迹偏差与方差之间的旋钮">33.3.8 <span class="math inline">n</span> 步回报与资格迹：偏差与方差之间的旋钮</h3>
+<p>§33.2.3 的三个目标函数决定了“优化什么”，还有一个量决定“回报怎么估”，它不改算子，只改估计的偏差与方差之比，而且这个旋钮是连续的。</p>
+<p><span class="math inline">n</span> 步回报把自举往后推 <span class="math inline">n</span> 步：</p>
+<p><span class="math display">
+G_t^{(n)}=\sum_{k=0}^{n-1}\gamma^{k}r_{t+k}+\gamma^{n}V_\theta(s_{t+n})
+</span></p>
+<p><span class="math inline">n=1</span> 就是 TD(0)，<span class="math inline">n</span> 等于回合长度就是蒙特卡洛。<strong>偏差随 <span class="math inline">n</span> 降（自举次数少），方差随 <span class="math inline">n</span> 升（累加的随机奖励多）</strong>，第 32 章 E3 那张“MC 的标准差是 TD 的 2.77 倍、但 RMSE 反而低”的表，就是这条曲线两端的两个点。</p>
+<p>连续版本是资格迹。TD(<span class="math inline">\lambda</span>) 用一条迹向量</p>
+<p><span class="math display">
+z_t=\gamma\lambda\,z_{t-1}+\nabla_\theta V_\theta(s_t)
+</span></p>
+<p>把“往后看 <span class="math inline">n</span> 步”压成“每步 <span class="math inline">O(d)</span> 的递推”，<span class="math inline">\lambda=0</span> 退化为 TD(0)，<span class="math inline">\lambda=1</span> 逼近 MC。PPO 里的 GAE(<span class="math inline">\lambda</span>) 是同一思想在优势函数上的版本：<span class="math inline">\lambda</span> 越小越偏、方差越低，越大越无偏、方差越高。<strong>它与控制里的遗忘因子是同一个东西</strong>——递推最小二乘里 <span class="math inline">\lambda&lt;1</span> 让旧数据权重指数衰减，这里 <span class="math inline">\lambda&lt;1</span> 让远期的自举误差指数衰减。</p>
+<p>三条工程注意：</p>
+<ol type="1">
+<li><strong><span class="math inline">n</span> 与折扣视野要匹配。</strong> 经验上取 <span class="math inline">n\approx(1/5\sim1/3)\cdot\frac{1}{1-\gamma}</span>：<span class="math inline">\gamma=0.99</span> 时是 20–33 步，<span class="math inline">\gamma=0.9</span> 时是 2–3 步。取太小等于没离开 TD，取太大等于回到 MC，方差会把小批量梯度淹没。</li>
+<li><strong><span class="math inline">n</span> 步与回放池有结构性冲突。</strong> <span class="math inline">n</span> 步目标要求连续片段，而标准回放池只存单步转移。要么存长度为 <span class="math inline">n</span> 的片段，要么在采样时按时间索引拼接；<strong>跨回合的片段必须截断</strong>，否则会把上一条命的奖励算进这一条。</li>
+<li><strong><span class="math inline">\lambda</span> 与学习率不能同时调。</strong> 两者都在改“有效步长”：<span class="math inline">\lambda</span> 大 → 目标方差大 → 需要更小的 <span class="math inline">\text{lr}</span>。表 33-10 那个“先定 <span class="math inline">\text{lr}</span>”的顺序，在 <span class="math inline">\lambda</span> 上也适用。</li>
+</ol>
+<h2 id="离散对应与数值实现">33.4 离散对应与数值实现</h2>
+<h3 id="输入归一化与最后一层的初始化">33.4.1 输入归一化与最后一层的初始化</h3>
+<p>深度 RL 的第一次失败，八成出在输入尺度上。状态里混着角度（<span class="math inline">10^{-1}</span> rad）、角速度（<span class="math inline">10^{0}</span> rad/s）、位置（<span class="math inline">10^{0}</span> m）、力（<span class="math inline">10^{2}</span> N），直接喂进网络会让第一层的梯度被大量纲分量主导——<strong>这不是“训练慢”，是“只学了那几个大量纲通道”</strong>。</p>
+<p>做法是运行均值—标准差归一化：维护每个状态分量的滑动均值 <span class="math inline">\bar{s}_i</span> 与标准差 <span class="math inline">\sigma_i</span>，输入前做 <span class="math inline">(s_i-\bar{s}_i)/\max(\sigma_i,10^{-3})</span>。<strong>注意必须在训练中滚动更新，而不是用离线统计量</strong>，因为策略变化会让状态分布漂移。部署时冻结最后一组统计量，并把它一起打包进模型文件——漏了这一步，线上与训练就用了两套尺度。</p>
+<p>最后一层的初始化另有一条经验：<strong>输出初始值应接近“回报的量级”而不是 0</strong>。若 <span class="math inline">Q</span> 初值全为 0，而真实回报是 <span class="math inline">10^{2}</span> 量级，网络要花很多步才能把输出抬上去；更糟的是，在抬升过程中所有动作的 <span class="math inline">Q</span> 都挤在 0 附近，<span class="math inline">\arg\max</span> 由数值噪声决定，策略相当于随机。常见做法是把最后一层权重初始化成小值（如 <span class="math inline">\pm3\times10^{-3}</span>），偏置设为 0，或者用“回报的均值”做偏置初值。<strong>这一条与第 32 章式 (32-41) 的乐观初始化是同一个道理，只是换到了网络参数上。</strong></p>
+<h3 id="回放池存什么抽什么">33.4.2 回放池：存什么、抽什么</h3>
+<p>回放池存五元组 <span class="math inline">(s,a,r,s&#39;,d)</span>，其中 <span class="math inline">d</span> 是终止标志。<strong><span class="math inline">d</span> 必须存，不能靠“<span class="math inline">s&#39;</span> 是终止状态”反推</strong>：有些环境的终止状态与“到达目标”不是一回事（超时截断、越界终止），把截断当成终止会让自举目标少算后续回报，值估计系统性偏低。这类错误不会报错，只会让曲线“看起来还行但差一点”。</p>
+<p>容量与采样方式有两条经验：</p>
+<p><strong>容量取 <span class="math inline">10^{5}</span>–<span class="math inline">10^{6}</span> 步。</strong> 太小则样本相关性去不掉（退化成在线学习），太大则池子里混着大量旧策略的数据，<span class="math inline">\kappa</span> 反而变大（式 33-2）。<strong>容量不是越大越好，它对应“记忆多长”这个时间尺度。</strong></p>
+<p><strong>优先采样（prioritized replay）按 <span class="math inline">p_i\propto\lvert\delta_i\rvert^{\alpha_p}</span> 抽，<span class="math inline">\alpha_p=0.6</span> 常用。</strong> 它让“预测错得多的样本”被多抽几次，收敛更快。代价是分布被改变了，必须用重要性权重 <span class="math inline">w_i=(1/(Np_i))^{\beta}</span> 修正，<span class="math inline">\beta</span> 从 <span class="math inline">0.4</span> 线性退火到 <span class="math inline">1</span>。<strong>不做修正的优先采样是有偏的</strong>，这一点在实现里最容易被省掉。</p>
+<h3 id="目标网络的更新周期">33.4.3 目标网络的更新周期</h3>
+<p>硬更新每 <span class="math inline">C</span> 步拷一次，软更新每步按式 (33-23) 混合。两者的换算很直接：软更新的等效周期约 <span class="math inline">C_{\mathrm{eff}}\approx1/\tau</span>。<strong><span class="math inline">\tau=0.005</span> 相当于硬更新 <span class="math inline">C\approx200</span>；<span class="math inline">\tau=0.001</span> 相当于 <span class="math inline">C\approx1000</span>。</strong></p>
+<p>周期的选择要与两个时间尺度匹配。<strong>其一是折扣视野 <span class="math inline">1/(1-\gamma)</span></strong>：视野越长，目标里包含的未来步越多，目标漂移的影响越大，周期应越长。<strong>其二是策略改进的速度</strong>：周期太长，目标落后于策略，学得慢；周期太短，退化成无目标网络。工程经验是 <span class="math inline">C</span> 取 <span class="math inline">10^{3}</span>–<span class="math inline">10^{4}</span> 步、<span class="math inline">\tau</span> 取 <span class="math inline">0.001</span>–<span class="math inline">0.01</span>，再按回合长度微调。<strong><span class="math inline">C</span> 大致取“一个回合的 <span class="math inline">1/10</span> 到 <span class="math inline">1</span> 倍”是个可用的起点</strong>——回合内不换目标，回合之间换几次。§33.6.2 会在同一任务上扫 <span class="math inline">C</span>，给出“太长与太短各自怎么坏”的实测曲线。</p>
+<h3 id="批量学习率与梯度裁剪">33.4.4 批量、学习率与梯度裁剪</h3>
+<p>一个可用的默认组合是：批量 <span class="math inline">256</span>、学习率 <span class="math inline">3\times10^{-4}</span>（Adam）、梯度范数裁剪 <span class="math inline">10</span>、目标网络软更新 <span class="math inline">\tau=0.005</span>。四个数各有各的作用，不要一起调。</p>
+<p><strong>批量</strong>决定梯度噪声：太小（<span class="math inline">32</span>）时每步更新方向抖动大，值估计不稳；太大（<span class="math inline">4096</span>）时更新次数变少，同样样本量下学得更慢。<strong>有效批量应与学习率一起调</strong>：批量翻倍、学习率按 <span class="math inline">\sqrt{2}</span> 提高是常见的配套。</p>
+<p><strong>学习率</strong>在演员与评论家之间应当分开。评论家可以大一些（<span class="math inline">10^{-3}</span>），演员要小（<span class="math inline">10^{-4}</span>），理由是式 (33-26)：演员的梯度依赖评论家的准确性，评论家没学好之前，演员大步走只会放大偏差。<strong>这与第 32 章 Actor-Critic 的双时间尺度 <span class="math inline">\alpha_w\gg\alpha_\theta</span> 是同一条原则。</strong></p>
+<p><strong>梯度裁剪</strong>是防爆的最后一道。它不改变正常步的方向，只在上限处截断；发现“裁剪频繁触发”说明前面的学习率或归一化有问题，此时调裁剪阈值是治标。</p>
+<h3 id="奖励缩放一个必须与温度联动的量">33.4.5 奖励缩放：一个必须与温度联动的量</h3>
+<p>奖励除以一个常数 <span class="math inline">c</span> 看起来无害，它确实不改变最优策略（正线性变换保序）。但对熵正则算法，<strong>它会改变温度的最优值</strong>。看式 (33-32)：<span class="math inline">\pi^\star\propto\exp(Q/\alpha)</span>。若把奖励缩小 <span class="math inline">c</span> 倍，<span class="math inline">Q&#39;=Q/c</span>，要让同一个 <span class="math inline">\pi^\star</span> 仍是解，必须有</p>
+<p><span class="math display">
+\alpha&#39;=\alpha/c \tag{33-36}
+</span></p>
+<p><strong>所以奖励缩 10 倍，温度也必须缩 10 倍，否则策略会突然变得“更确定”或“更随机”。</strong> 自动调温（式 33-33）能自己应对这个变化——这正是它比固定 <span class="math inline">\alpha</span> 好用的地方：<span class="math inline">\alpha</span> 会随 <span class="math inline">Q</span> 的量级自动重标定。但如果用的是固定 <span class="math inline">\alpha</span> 的实现，改奖励尺度却不改 <span class="math inline">\alpha</span>，训练结果会莫名其妙地变差，而且很难查。</p>
+<p>奖励缩放的另一个作用是限制 <span class="math inline">Q</span> 的量级。<span class="math inline">Q</span> 的典型大小约为 <span class="math inline">r_{\max}/(1-\gamma)</span>：<span class="math inline">\gamma=0.99</span>、每步奖励 <span class="math inline">1</span> 时是 <span class="math inline">100</span>，若每步奖励 <span class="math inline">1000</span> 就是 <span class="math inline">10^{5}</span>——此时 float32 的绝对分辨率约 <span class="math inline">10^{-2}</span>（相对精度 <span class="math inline">10^{-7}</span> 乘上量级），已经与单步奖励同阶，<strong>梯度更新会被舍入吃掉，表现为“损失在降、策略不动”</strong>。把每步奖励归一到 <span class="math inline">O(1)</span>，<span class="math inline">Q</span> 就落在 <span class="math inline">10^{2}</span> 量级，留出四个数量级的余量。</p>
+<h3 id="一个可运行的训练骨架">33.4.6 一个可运行的训练骨架</h3>
+<p>下面这段是 DQN 的核心循环，四十几行，省掉了环境与网络定义。<strong>它的价值不在“能跑”，而在标出了四个必须存在的步骤：归一化、存 <span class="math inline">d</span>、目标网络、双 Q。</strong></p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> torch, torch.nn.functional <span class="im">as</span> F</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> train_step(batch, q, q_targ, opt, gamma<span class="op">=</span><span class="fl">0.99</span>):</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    s, a, r, s2, d <span class="op">=</span> batch                      <span class="co"># d 为终止标志</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">with</span> torch.no_grad():</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>        a2 <span class="op">=</span> q(s2).argmax(<span class="dv">1</span>, keepdim<span class="op">=</span><span class="va">True</span>)      <span class="co"># 在线网络选动作</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>        y <span class="op">=</span> r <span class="op">+</span> gamma <span class="op">*</span> (<span class="fl">1.0</span> <span class="op">-</span> d) <span class="op">*</span> q_targ(s2).gather(<span class="dv">1</span>, a2).squeeze(<span class="dv">1</span>)</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>    loss <span class="op">=</span> F.smooth_l1_loss(q(s).gather(<span class="dv">1</span>, a.view(<span class="op">-</span><span class="dv">1</span>, <span class="dv">1</span>)).squeeze(<span class="dv">1</span>), y)</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>    opt.zero_grad()</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>    loss.backward()</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>    torch.nn.utils.clip_grad_norm_(q.parameters(), <span class="fl">10.0</span>)</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>    opt.step()</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="bu">float</span>(loss)</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> soft_update(q, q_targ, tau<span class="op">=</span><span class="fl">0.005</span>):</span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>    <span class="cf">with</span> torch.no_grad():</span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> p, pt <span class="kw">in</span> <span class="bu">zip</span>(q.parameters(), q_targ.parameters()):</span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>            pt.mul_(<span class="fl">1.0</span> <span class="op">-</span> tau).add_(tau <span class="op">*</span> p)</span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> run(env, q, q_targ, opt, buf, steps<span class="op">=</span><span class="dv">100_000</span>, warmup<span class="op">=</span><span class="dv">1_000</span>):</span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>    s <span class="op">=</span> env.reset()</span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> t <span class="kw">in</span> <span class="bu">range</span>(steps):</span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a>        eps <span class="op">=</span> <span class="bu">max</span>(<span class="fl">0.01</span>, <span class="fl">0.3</span> <span class="op">*</span> (<span class="fl">1.0</span> <span class="op">-</span> t <span class="op">/</span> (<span class="fl">0.6</span> <span class="op">*</span> steps)))</span>
+<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a>        a <span class="op">=</span> env.sample_action(q, s, eps)        <span class="co"># 归一化后的状态</span></span>
+<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a>        s2, r, done, _ <span class="op">=</span> env.step(a)</span>
+<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a>        buf.push(s, a, r <span class="op">/</span> env.r_scale, s2, <span class="bu">float</span>(done))</span>
+<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> buf.size <span class="op">&gt;=</span> warmup:</span>
+<span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a>            train_step(buf.sample(<span class="dv">256</span>), q, q_targ, opt)</span>
+<span id="cb1-31"><a href="#cb1-31" aria-hidden="true" tabindex="-1"></a>            soft_update(q, q_targ)</span>
+<span id="cb1-32"><a href="#cb1-32" aria-hidden="true" tabindex="-1"></a>        s <span class="op">=</span> env.reset() <span class="cf">if</span> done <span class="cf">else</span> s2</span></code></pre></div>
+<p>三处细节与正文对应：<code>r / env.r_scale</code> 是 §33.4.5 的奖励缩放；<code>1.0 - d</code> 保证终止处不自举，对应 §33.4.2 存的 <span class="math inline">d</span>；<code>q_targ</code> 全程只读，对应 §33.4.3 的目标网络。<strong>双 Q 在这里体现为“选动作用 <code>q</code>、评价值用 <code>q_targ</code>”</strong>（式 33-25），不是两套网络参数。</p>
+<h3 id="评估协议三种最常见的假成功">33.4.7 评估协议：三种最常见的“假成功”</h3>
+<p>训练曲线好看不等于策略好用。下面三种做法都会造出“假成功”，必须避开。</p>
+<p><strong>其一，用带探索的策略评估。</strong> 若评估时仍按 <span class="math inline">\varepsilon=0.05</span> 随机动作，指标里混着“乱走”的收益，与部署行为不一致。<strong>评估必须用确定性动作</strong>：离散取 <span class="math inline">\arg\max</span>，连续取分布均值（不是采样）。这一条在第 32 章 E7 上已经被验证过：训练末段成功率 <span class="math inline">30\%</span>、纯贪心 <span class="math inline">0\%</span>。</p>
+<p><strong>其二，报“最好的一次评估”。</strong> 训练中评估 <span class="math inline">50</span> 次取最大值，等于在评估集上做了选择，数字必然虚高。<strong>应报最后若干次评估的均值，并附四分位区间。</strong> 若曲线本身在震荡，那就是结论——说明它不稳，而不是“没挑到好点”。</p>
+<p><strong>其三，单种子。</strong> 深度 RL 的种子间方差极大，同一份代码换种子，性能差一倍是常事。<strong>至少 <span class="math inline">5</span> 个种子、最好 <span class="math inline">10</span> 个以上，报中位数与 <span class="math inline">25/75</span> 分位。</strong> §33.6 的所有曲线都是 <span class="math inline">10</span> 个种子的中位，阴影是四分位区间——这不是为了好看，是因为单条曲线的形状没有统计意义。</p>
+<p>还有一条容易被忽略：<strong>评估环境与训练环境要分开实例化</strong>。若共用同一个随机数发生器，评估时的初始状态会受训练消耗的影响，不同种子之间的比较就失去了可比性。</p>
+<h3 id="数值诊断三个症状与三条对策">33.4.8 数值诊断：三个症状与三条对策</h3>
+<p>训练发散时，先看三个量，再动手改。</p>
+<p><strong>症状一：<span class="math inline">Q</span> 的绝对值指数上涨（<span class="math inline">10^{6}</span> 以上）。</strong> 多半是正反馈：<span class="math inline">Q</span> 大 → 目标大 → 更新把 <span class="math inline">Q</span> 推得更大。查三处：目标网络是否真的没被梯度更新（<code>requires_grad=False</code> 或放在 <code>no_grad</code> 里）、终止标志是否正确乘进目标、奖励是否未缩放。§33.6.2 会给一个“去掉目标网络后 <span class="math inline">Q</span> 一路发散”的对照。</p>
+<p><strong>症状二：损失变成 NaN。</strong> 通常是学习率过大或出现 <span class="math inline">\ln 0</span>。查两处：<span class="math inline">\ln\pi</span> 里是否对 <span class="math inline">\sigma</span> 加了下界（<span class="math inline">10^{-6}</span> 量级）、softmax 是否用了 log-sum-exp 的稳定写法。</p>
+<p><strong>症状三：策略输出长期贴着限幅。</strong> 查 <span class="math inline">\tanh</span> 的雅可比项（式 33-16）是否漏了。<strong>漏掉它的典型表现是“动作饱和但不报错”</strong>，因为损失在数值上仍然下降。</p>
+<p>三条对策按优先级排：<strong>先归一化，再降学习率，最后才动网络结构。</strong> 绝大多数“深度 RL 不收敛”的问题在前两步就解决了，把网络加深往往只是让问题更难查。</p>
+<p>表 33-5 把本节的关键量收在一起，作为实现时的默认值起点。</p>
+<p>表 33-5　实现默认值与可调范围</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">量</th>
+<th style="text-align: left;">默认</th>
+<th style="text-align: left;">可调范围</th>
+<th style="text-align: left;">主要影响</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">隐藏层</td>
+<td style="text-align: left;"><span class="math inline">2\times256</span>，ReLU</td>
+<td style="text-align: left;"><span class="math inline">2\times64</span> – <span class="math inline">3\times512</span></td>
+<td style="text-align: left;">表示能力与过拟合</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">批量</td>
+<td style="text-align: left;"><span class="math inline">256</span></td>
+<td style="text-align: left;"><span class="math inline">64</span> – <span class="math inline">1024</span></td>
+<td style="text-align: left;">梯度噪声</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">学习率（评论家）</td>
+<td style="text-align: left;"><span class="math inline">3\times10^{-4}</span></td>
+<td style="text-align: left;"><span class="math inline">10^{-4}</span> – <span class="math inline">10^{-3}</span></td>
+<td style="text-align: left;">收敛速度与稳定性</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">学习率（演员）</td>
+<td style="text-align: left;"><span class="math inline">10^{-4}</span></td>
+<td style="text-align: left;"><span class="math inline">3\times10^{-5}</span> – <span class="math inline">3\times10^{-4}</span></td>
+<td style="text-align: left;">策略改进步长</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">目标网络 <span class="math inline">\tau</span></td>
+<td style="text-align: left;"><span class="math inline">0.005</span></td>
+<td style="text-align: left;"><span class="math inline">0.001</span> – <span class="math inline">0.01</span></td>
+<td style="text-align: left;">目标漂移速度</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">回放池容量</td>
+<td style="text-align: left;"><span class="math inline">10^{6}</span></td>
+<td style="text-align: left;"><span class="math inline">10^{5}</span> – <span class="math inline">10^{6}</span></td>
+<td style="text-align: left;">样本相关性与 <span class="math inline">\kappa</span></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">奖励缩放</td>
+<td style="text-align: left;">归一到 <span class="math inline">O(1)</span></td>
+<td style="text-align: left;">—</td>
+<td style="text-align: left;"><span class="math inline">Q</span> 的量级、温度标定</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">梯度裁剪</td>
+<td style="text-align: left;"><span class="math inline">10</span></td>
+<td style="text-align: left;"><span class="math inline">1</span> – <span class="math inline">40</span></td>
+<td style="text-align: left;">防爆</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">评估种子数</td>
+<td style="text-align: left;"><span class="math inline">10</span></td>
+<td style="text-align: left;"><span class="math inline">\ge5</span></td>
+<td style="text-align: left;">结论可信度</td>
+</tr>
+</tbody>
+</table>
+<h3 id="并行采样与分布式训练">33.4.9 并行采样与分布式训练</h3>
+<p><strong>先分清并行省的是哪一笔。</strong> §33.5.1 会把训练成本拆成三个乘数：样本量、单样本墙钟、试验次数。并行只压第二个——<strong>加 8 路仿真，墙钟除以 8，样本总量一步都不少</strong>。式（33-21）里的 <span class="math inline">m</span> 由精度要求决定，与并行路数无关。所以“训练快了”不等于“样本省了”，这是汇报时最常被混淆的一句话。</p>
+<p>表 33-6　四种并行形态的取舍</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">形态</th>
+<th style="text-align: left;">并行的是什么</th>
+<th style="text-align: left;">策略一致性</th>
+<th style="text-align: left;">主要代价</th>
+<th style="text-align: left;">典型用法</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">同步数据并行</td>
+<td style="text-align: left;">环境采样 + 梯度归约</td>
+<td style="text-align: left;">完全一致</td>
+<td style="text-align: left;">等最慢的 worker</td>
+<td style="text-align: left;">PPO</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">异步经验并行</td>
+<td style="text-align: left;">采样与更新同时进行</td>
+<td style="text-align: left;">差 <span class="math inline">k</span> 步</td>
+<td style="text-align: left;">策略陈旧，需重要性修正</td>
+<td style="text-align: left;">A3C、IMPALA</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">单 learner 多 actor</td>
+<td style="text-align: left;">只并行采样</td>
+<td style="text-align: left;">learner 侧单一策略</td>
+<td style="text-align: left;">回放池内分布混合</td>
+<td style="text-align: left;">DQN、SAC</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">多 learner 分片</td>
+<td style="text-align: left;">参数服务器分片更新</td>
+<td style="text-align: left;">近似一致</td>
+<td style="text-align: left;">通信开销与一致性</td>
+<td style="text-align: left;">大规模离线训练</td>
+</tr>
+</tbody>
+</table>
+<p><strong>代价一：策略陈旧。</strong> 异步时 actor 手里的参数比 learner 落后 <span class="math inline">k</span> 步，<span class="math inline">\mu</span> 与 <span class="math inline">d_\pi</span> 错位，<span class="math inline">\kappa</span> 随之变大。判据可以直接借用 E3：<strong>策略在 <span class="math inline">k</span> 步内的累计 KL 不应超过裁剪半径对应的量级</strong>。E3 里单批 30 个 epoch 就把 KL 推到 0.03（<span class="math inline">\epsilon=0.2</span>），照此估算，<span class="math inline">k</span> 只能取“几个 batch”的量级，再大就必须上重要性修正（V-trace 一类）。</p>
+<p><strong>代价二：回放池变成混合分布。</strong> 多个 actor 写同一个池，<span class="math inline">\mu</span> 是若干行为策略的混合。若各 actor 的探索强度不同，<span class="math inline">\mu</span> 会呈双峰，<span class="math inline">\kappa=\lVert d_\pi/\mu\rVert_\mu^{1/2}</span> 在 <span class="math inline">\mu</span> 小的那一段被放大——<strong>这正是 E2 里“<span class="math inline">\text{lr}</span> 不大、<span class="math inline">C</span> 不大，却仍然学不动”的一类隐性原因</strong>。工程做法两条：统一各 actor 的探索参数，或按 actor 分池存放、按比例抽样。</p>
+<p><strong>代价三：批量放大与学习率联动。</strong> 批量随并行路数放大后，梯度方差按 <span class="math inline">\sqrt{N}</span> 下降，看起来可以把学习率同步上调。但 RL 的梯度是非平稳的，“线性缩放规则”只在监督学习里有较好依据；稳妥做法是平方根缩放加短 warmup。还有一处副作用：<strong>批量越大，梯度里的探索噪声越小，等价于隐式降温</strong>，SAC 这类靠熵驱动的算法会因此少探索，需要把 <span class="math inline">\bar{\mathcal H}</span> 或动作噪声相应调大。</p>
+<p>最后一个反直觉的结论：<strong>并行度提高，单次试验的墙钟下降，但试验次数不变。</strong> 若 8 路把单次从 10 小时压到 1.5 小时，90 次试验仍要 135 小时。真正省时间的是减少试验次数——固定种子集、先粗后细、用 §33.4.7 的评估协议砍掉无效比较。<strong>算力买得到墙钟，买不到统计显著性。</strong></p>
+<h3 id="动作保持平滑与半-mdp">33.4.10 动作保持、平滑与“半 MDP”</h3>
+<p>控制对象与游戏环境最大的一处差别，是<strong>动作不能每拍乱跳</strong>。策略网络输出里天然带高频分量：观测噪声、随机策略的采样、以及网络在相邻状态间的插值抖动。这些分量在 Atari 里无所谓，在电机上就是磨损、噪声与能耗。</p>
+<p>工程上有三种处理，各有代价。</p>
+<p><strong>其一，动作保持（frame skip）。</strong> 每 <span class="math inline">k</span> 拍执行同一个动作，等效采样周期变成 <span class="math inline">k T_s</span>。这时两件事必须同步改：折扣因子按 <span class="math inline">\gamma&#39;=\gamma^{k}</span> 重标（否则“看多远”的物理时间变成 <span class="math inline">k</span> 倍）；奖励若定义成“率”（每秒多少），要乘 <span class="math inline">k</span>，若定义成“总量”，则不变。<strong>这两条漏一条，训练出来的策略就会偏保守或偏激进</strong>，而且从曲线上看不出来。</p>
+<p><strong>其二，变化率惩罚。</strong> 把 <span class="math inline">\lVert a_t-a_{t-1}\rVert</span> 乘一个权重加进奖励。它确实能压住抖动，但<strong>改变了最优策略</strong>——原任务的解不再是最优解，报结果时必须说明这一点，并把权重与性能损失一起报。这是 §33.2.3 说的“目标函数即规格”的直接后果。</p>
+<p><strong>其三，输出低通滤波。</strong> 一阶滤波 <span class="math inline">a_t\leftarrow(1-\beta)a_t+\beta a_{t-1}</span> 实现简单，但它引入相位滞后。定量地看：截止频率 <span class="math inline">f_c</span> 处相移 <span class="math inline">\arctan(f_{\text{bw}}/f_c)</span>；若取 <span class="math inline">f_c=f_{\text{bw}}</span>，相移 <span class="math inline">45^{\circ}</span>，等效延迟约 <span class="math inline">1/(8f_{\text{bw}})=0.125/f_{\text{bw}}</span>——<strong>已经超过式（33-37）给的 <span class="math inline">0.1/f_{\text{bw}}</span> 裕度</strong>。所以滤波截止频率必须显著高于闭环带宽，经验上取 <span class="math inline">3</span>–<span class="math inline">5</span> 倍，让它只在执行器关心的频段起作用。</p>
+<p>还有一处结构性变化常被忽略：动作保持把 MDP 变成了“半 MDP”（每 <span class="math inline">k</span> 拍决策一次，中间 <span class="math inline">k-1</span> 拍是开环）。半 MDP 的 Bellman 方程形式不变，但转移矩阵变成 <span class="math inline">P^{k}</span>，奖励变成 <span class="math inline">k</span> 步折扣和；<strong>这也解释了为什么“改 frame skip 后一切都要重调”</strong>——不是实现问题，是问题本身换了。</p>
+<h2 id="工程含义与适用边界">33.5 工程含义与适用边界</h2>
+<h3 id="训练成本三个乘数叠起来">33.5.1 训练成本：三个乘数叠起来</h3>
+<p>深度 RL 的成本结构很容易被低估，因为它有三级乘数：<strong>单次训练的样本量 × 单样本的墙钟代价 × 试验次数</strong>。</p>
+<p>先看样本量。按式 (33-21) 的量级估计，<span class="math inline">d=10^{4}</span>、<span class="math inline">\epsilon=0.05</span> 要 <span class="math inline">4\times10^{6}</span> 步；实际调参时常跑到 <span class="math inline">10^{6}</span>–<span class="math inline">10^{7}</span> 步。以 <span class="math inline">10^{6}</span> 步、<span class="math inline">1</span> kHz 采样计，对应 <strong>1000 s 的物理时间，约 16.7 分钟</strong>——这是“对象必须连续运行多久”的下界。</p>
+<p>再看墙钟代价。仿真若比实时快 <span class="math inline">5</span> 倍，<span class="math inline">10^{6}</span> 步只需 <span class="math inline">3.3</span> 分钟；若仿真因为求解器太细而比实时慢 <span class="math inline">10</span> 倍，则要 <strong>2.8 小时</strong>。<strong>同一份代码，两种仿真的墙钟差 50 倍</strong>，而这一点在论文里几乎从不披露。</p>
+<p>最后看试验次数。<span class="math inline">10</span> 个种子 × <span class="math inline">9</span> 组超参 = <span class="math inline">90</span> 次，按每次 <span class="math inline">2.8</span> 小时算，是 <strong>252 小时，约 10.5 天</strong>。这就是为什么“调一个深度 RL 的基线”往往要一周以上——<strong>不是算法慢，是统计要求把单次成本乘了 90 倍</strong>。</p>
+<p>表 33-7 给出三档平台的成本账，用第 32 章 §32.5.5 的单步成本口径（仿真 <span class="math inline">10^{-6}</span> 元、真机 <span class="math inline">0.1</span> 元），中间补一档试验台。</p>
+<p>表 33-7　三档平台的成本账</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">平台</th>
+<th style="text-align: right;">单步成本</th>
+<th style="text-align: right;"><span class="math inline">10^{6}</span> 步成本</th>
+<th style="text-align: left;">能否并行</th>
+<th style="text-align: left;">主要限制</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">仿真</td>
+<td style="text-align: right;"><span class="math inline">10^{-6}</span> 元</td>
+<td style="text-align: right;"><span class="math inline">1</span> 元</td>
+<td style="text-align: left;">可，几十路</td>
+<td style="text-align: left;">与真实的差距</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">试验台</td>
+<td style="text-align: right;"><span class="math inline">10^{-3}</span> 元</td>
+<td style="text-align: right;"><span class="math inline">10^{3}</span> 元</td>
+<td style="text-align: left;">少量</td>
+<td style="text-align: left;">磨损、占用</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">真机</td>
+<td style="text-align: right;"><span class="math inline">0.1</span> 元</td>
+<td style="text-align: right;"><span class="math inline">10^{5}</span> 元</td>
+<td style="text-align: left;">否</td>
+<td style="text-align: left;">安全、停机损失</td>
+</tr>
+</tbody>
+</table>
+<p>表里最值得注意的是最后一列。仿真便宜且可并行，所以深度 RL 的绝大多数训练都在仿真里完成；试验台用来验证“迁移是否成立”，通常只跑几十个回合；真机只做最终的在线微调，且必须带安全兜底。<strong>这个三段式与第 32 章 §32.5.5 的三段式是同一条路线，只是每一段的样本量都大了两个数量级。</strong></p>
+<h3 id="sim-to-real四类差距四种对策">33.5.2 sim-to-real：四类差距，四种对策</h3>
+<p>§33.2.6 把差距形式化成环境参数 <span class="math inline">\xi</span> 的不确定，但工程上要分清是哪一类，因为对策完全不同。</p>
+<p><strong>第一类，参数差距</strong>（质量、摩擦、惯量、增益）。对策是域随机化。要点是<strong>随机化范围要与辨识出的置信区间挂钩</strong>：若摩擦系数的辨识结果是 <span class="math inline">0.30\pm0.03</span>，随机化到 <span class="math inline">[0.1,0.6]</span> 就是在浪费样本，而随机化到 <span class="math inline">[0.29,0.31]</span> 又覆盖不了。用第 18 章的置信区间定范围，是这里唯一可靠的办法。</p>
+<p><strong>第二类，结构差距</strong>（间隙、迟滞、死区、未建模的高频模态）。随机化<strong>解决不了</strong>这一类，因为仿真里根本没有这个环节。对策有两个：一是把这些环节显式建进仿真（哪怕只是查表或分段线性），二是用残差学习——让 RL 只学“模型没描述的那部分”。</p>
+<p><strong>第三类，观测差距</strong>（噪声、量化、滤波延迟、采样抖动）。对策是在训练时注入同分布的噪声。这里有一条容易忽略的：<strong>噪声要在归一化之前注入</strong>，否则归一化的统计量会把噪声“吃掉”，训练时看到的信噪比与真机不同。</p>
+<p><strong>第四类，延迟差距</strong>。这一类最危险，因为它不像噪声那样显眼，却直接吃相位裕度。把 §33.2.6 的换算写成一条可用的规则：纯延迟 <span class="math inline">T_d</span> 在带宽 <span class="math inline">f_{\mathrm{bw}}</span> 处的相位滞后为 <span class="math inline">2\pi f_{\mathrm{bw}}T_d</span>，若要求滞后不超过 <span class="math inline">36^{\circ}</span>（<span class="math inline">0.628</span> rad），则</p>
+<p><span class="math display">
+T_d\ \le\ \frac{0.1}{f_{\mathrm{bw}}} \tag{33-37}
+</span></p>
+<p><span class="math inline">f_{\mathrm{bw}}=10</span> Hz 时允许 <span class="math inline">10</span> ms，<span class="math inline">f_{\mathrm{bw}}=100</span> Hz 时只允许 <span class="math inline">1</span> ms。<strong>这条规则在部署时最容易被违反</strong>：为了省算力，把策略降频到 <span class="math inline">50</span> Hz 执行（周期 <span class="math inline">20</span> ms），在 <span class="math inline">10</span> Hz 带宽上就已经超了一倍——加上零阶保持，相位滞后会到 <span class="math inline">72^{\circ}</span>，闭环必然振铃。<strong>降频执行不是一个“省算力”的中性选择，它等价于往回路里插一段延迟。</strong></p>
+<h3 id="部署形态推理限幅与监督">33.5.3 部署形态：推理、限幅与监督</h3>
+<p>真机部署要回答四个问题，顺序不能颠倒。</p>
+<p><strong>其一，策略跑多快？</strong> 由式 (33-37) 反推上限，再由算力定下限。一个 <span class="math inline">2\times256</span> 的 MLP，输入 <span class="math inline">20</span> 维、输出 <span class="math inline">4</span> 维，前向约 <span class="math inline">1.5\times10^{5}</span> 次乘加，在普通 CPU 上是<strong>几十微秒到 <span class="math inline">0.2</span> 毫秒</strong>量级。<span class="math inline">1</span> kHz 周期（<span class="math inline">1</span> ms）下占 <span class="math inline">10\%</span>–<span class="math inline">20\%</span>，可以接受；但若还要做观测滤波、归一化、安全检查，预算要翻倍。</p>
+<p><strong>其二，动作怎么限？</strong> 三道：<strong>幅值限幅</strong>（<span class="math inline">\pm</span> 物理行程）、<strong>速率限幅</strong>（每周期最大变化量，防阶跃冲击）、<strong>屏蔽</strong>（当前状态下禁止的动作，如“不许同时开两个阀”）。这三道都不依赖策略，必须独立于 RL 实现——<strong>理由很简单：策略可能输出任何值，而执行器只有一种物理极限。</strong></p>
+<p><strong>其三，出问题谁兜底？</strong> 一个独立的监督器，监测三类量：状态是否进入不可恢复区、动作是否连续多个周期被限幅、值估计是否异常（<span class="math inline">Q</span> 突然大幅跳变往往预示分布外状态）。触发后切回规则控制器（PID 或 MPC），并记录现场。<strong>这条路径必须在不加载神经网络的情况下也能运行</strong>，否则“兜底”本身就成了新的单点故障。</p>
+<p><strong>其四，怎么证明它没坏？</strong> 上线前在仿真与试验台上各跑一组固定的回归场景（正常工况、边界工况、故障注入），记录每次的指标并与基线比。<strong>上线后每周重跑一次</strong>，因为对象会老化——这是模型维护，不是一次性的验收。</p>
+<h3 id="五条否决这些场合不该用深度-rl">33.5.4 五条否决：这些场合不该用深度 RL</h3>
+<p>深度 RL 的适用范围比它的热度窄得多。下面五条只要中一条，就该换方法。</p>
+<p><strong>一、模型可得且够准。</strong> 有可靠的 <span class="math inline">A</span>、<span class="math inline">B</span>，LQR/MPC 能用几行代码给出带稳定性证明的控制器，样本需求为零。<strong>这不是“保守”，是没必要用一百万步去逼近一个能解析求解的问题。</strong></p>
+<p><strong>二、数据量不足 <span class="math inline">10^{4}</span> 步。</strong> 深度 RL 的样本需求按式 (33-21) 走，几千步的数据连一次像样的拟合都不够。此时第 31 章的贝叶斯优化或直接搜索更合适。</p>
+<p><strong>三、安全关键且不可逆。</strong> 医疗、载人、高压场景，一旦出错无法回滚。这类场合可以用 RL 做<strong>离线建议</strong>（给出候选设定值，由人确认），但不能让它闭环。</p>
+<p><strong>四、需要可解释的决策依据。</strong> 策略是一个黑箱映射，出了事故无法回答“为什么这么动”。若监管或工艺要求逐条追溯，规则控制器或 MPC 更合适。</p>
+<p><strong>五、对象与任务频繁变化。</strong> 深度 RL 的训练成本高，换一个工况就要重训。若产线每周换型，维护成本会超过收益。<strong>这类场合适合“小模型 + 在线自适应”（第 23 章），而不是大网络重训。</strong></p>
+<p>反过来，最适合深度 RL 的画像是：<strong>模型难建、目标只能靠回报表达、仿真便宜可并行、允许在仿真里出事故、且有回归测试兜底。</strong> 这五条同时成立时才值得投入。</p>
+<p>五条否决还可以换算成钱。按 §33.5.1 的口径，真机单步成本 <span class="math inline">0.1</span> 元，<span class="math inline">10^{6}</span> 步就是 <span class="math inline">10^{5}</span> 元，还不含停机与安全风险；再乘上 <span class="math inline">90</span> 次试验的调参系数，预算直接到 <span class="math inline">10^{7}</span> 元量级。<strong>任何一条否决成立，都意味着这笔钱没有依据。</strong> 反过来，五条全不成立时，同样的预算买到的是一条别人拿不到的曲线——这才是深度 RL 真正的位置。</p>
+<p>还要说清一点：<strong>否决不等于全盘否定。</strong> 第三条否决闭环，但允许“离线建议、人工确认”；第四条否决黑箱闭环，但允许“RL 出候选、MPC 执行”；第五条否决频繁重训，但允许“小模型 + 在线自适应”。<strong>把否决理解成“换一种用法”，而不是“换一个方法”，往往能在同一条产线上把 RL 与经典控制拼起来。</strong> 评审时逐条问这五句，比争论“RL 到底行不行”有效得多。</p>
+<h3 id="与-mpc-的分工三种耦合方式">33.5.5 与 MPC 的分工：三种耦合方式</h3>
+<p>第 30 章讲过 MPC 的优势（约束、预测、可解释），本章讲了 RL 的优势（无需模型、目标灵活）。两者不是替代关系，工程上有三种成熟的耦合方式。</p>
+<p><strong>方式一：分层。</strong> RL 在慢回路给设定值或调度，MPC 在快回路跟踪。判据是时间尺度：RL 的样本需求与 <span class="math inline">1/(1-\gamma)</span> 成正比，只有慢回路（分钟级）承受得起；快回路要求逐点约束与毫秒响应，是 MPC 的强项。</p>
+<p><strong>方式二：残差。</strong> MPC 给基准动作，RL 学一个修正量</p>
+<p><span class="math display">
+a=a_{\mathrm{MPC}}(s)+\Delta a_\theta(s) \tag{33-38}
+</span></p>
+<p>好处是：<span class="math inline">\Delta a</span> 从零开始学，<strong>初始策略就是 MPC，性能不会比基线差</strong>；坏处是约束不再自动满足，因为 <span class="math inline">a</span> 已经偏离了 MPC 的可行解，必须再加一层投影或限幅。</p>
+<p><strong>方式三：学习型 MPC。</strong> 用神经网络学动力学模型，MPC 仍用数值优化求解。这条路保留了约束处理能力，只是把模型换成了学出来的。<strong>它的风险不在优化，而在模型外推</strong>——与 §33.2.5 的离线外推是同一个问题，只不过发生在状态空间而非动作空间。</p>
+<p>表 33-8　RL 与 MPC 的分工</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">维度</th>
+<th style="text-align: left;">MPC</th>
+<th style="text-align: left;">深度 RL</th>
+<th style="text-align: left;">耦合建议</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">模型需求</td>
+<td style="text-align: left;">需要，且要准</td>
+<td style="text-align: left;">不需要</td>
+<td style="text-align: left;">有模型时优先 MPC</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">约束处理</td>
+<td style="text-align: left;">逐点硬约束</td>
+<td style="text-align: left;">期望约束</td>
+<td style="text-align: left;">快回路留给 MPC</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">样本需求</td>
+<td style="text-align: left;">零</td>
+<td style="text-align: left;"><span class="math inline">10^{6}</span> 量级</td>
+<td style="text-align: left;">RL 放慢回路</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">可解释性</td>
+<td style="text-align: left;">每步有优化问题</td>
+<td style="text-align: left;">黑箱</td>
+<td style="text-align: left;">安全关键处保留 MPC</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">实时性</td>
+<td style="text-align: left;">毫秒级求解</td>
+<td style="text-align: left;">前向几十微秒</td>
+<td style="text-align: left;">高频用 RL 前向，精度用 MPC</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">目标灵活性</td>
+<td style="text-align: left;">需写成代价</td>
+<td style="text-align: left;">任意标量回报</td>
+<td style="text-align: left;">目标难写时用 RL</td>
+</tr>
+</tbody>
+</table>
+<h3 id="评测规范必须报的六项">33.5.6 评测规范：必须报的六项</h3>
+<p>本章的结论全部依赖评测，而评测最容易做假。一份可复现的报告至少要写清六项：</p>
+<ol type="1">
+<li><strong>种子数</strong>与统计口径（中位/均值、四分位），以及种子的产生方式。</li>
+<li><strong>评估策略</strong>：确定性还是带探索；是均值动作还是采样动作。</li>
+<li><strong>评估时点</strong>：最后 <span class="math inline">N</span> 次评估的均值，而不是历史最好值。</li>
+<li><strong>样本量</strong>：训练用了多少步环境交互，以及这些步来自仿真还是真机。</li>
+<li><strong>失败率</strong>：不是平均回报，而是“低于阈值”的比例。<strong>一个平均回报很高但 <span class="math inline">20\%</span> 回合崩溃的策略，不能上线。</strong></li>
+<li><strong>训练成本</strong>：墙钟时间、并行路数、总算力。<strong>没有成本信息的“效果更好”无法比较。</strong></li>
+</ol>
+<p>这六项与第 32 章 §32.7.4 的八项自检是互补的：那边查的是“设定对不对”，这边查的是“结论能不能被复现”。</p>
+<h3 id="从仿真到产线三条放行线">33.5.7 从仿真到产线：三条放行线</h3>
+<p>§33.5.6 的六项是“报告怎么写”，这里三条是“什么时候可以放行”。三条按顺序走，前一条不过就不进下一条。</p>
+<p><strong>第一条：离线回归集。</strong> 从历史数据里冻结一批工况（覆盖正常工况与两类边界），用当前策略与上一版策略各跑一遍，逐条比对动作差与关键指标。判据：正常工况动作差的中位数小于执行器分辨率的若干倍；边界工况不允许出现方向相反的决策。<strong>回归集必须在训练之前冻结</strong>，否则会被结果反向定制。</p>
+<p><strong>第二条：影子模式。</strong> 策略在线运行但不接执行器，只记录它“想做什么”，与在役控制器逐拍比较。看两个量：分歧率（动作差超过阈值的拍子占比）与分歧处的事后表现（用下一拍的实测变化判断谁对）。工程上常用的放行门槛是分歧率低于 5%，且分歧处策略不处于系统性劣势；影子运行至少要覆盖一个完整工况周期——一个班次、一个批次，或者一次完整的启停。</p>
+<p><strong>第三条：灰度与回滚。</strong> 第一次上线只给有限的动作权限（位置限幅、速度限幅），从 ±10% 起步，逐级放开；同时挂三个回滚条件：连续 <span class="math inline">N</span> 拍越界、关键指标在滑动窗口内恶化超过阈值、看门狗超时。<strong>回滚必须是一键的，并且演练过</strong>——没演练过的回滚等于没有回滚。</p>
+<p>三条线的共同点：<strong>都在回答“错了会怎样”，而不是“对了有多好”。</strong> 这与 §33.5.6 的评测口径互补——那边防的是“自欺”，这边防的是“自负”。</p>
+<h3 id="在全书中的位置">33.5.8 在全书中的位置</h3>
+<p>本章是“学习与控制”这一编里承上启下的一章。往上，它接第 32 章的表格型方法，把“能枚举”推广到“能泛化”；往下，第 34、35 章讲多智能体，那时<strong>非平稳性</strong>会成为主要矛盾——每个智能体的环境里都包含其他正在学习的智能体，Markov 假设以另一种方式被破坏。</p>
+<p>再往后，第 36 章讲功能安全，会给本章 §33.5.3 的“监督器”一个正式的分析框架（安全包络、失效模式、冗余设计）。<strong>本章只说了“要有兜底”，第 36 章会说“兜底怎么证明有效”。</strong></p>
+<p>最后一句边界声明，与第 32 章结尾同调：<strong>本章所有算法都没有收敛定理。</strong> 表格型的那些保证（压缩映射、唯一不动点、策略改进）在函数逼近下全部失效，剩下的只有经验判据：多条种子、多个工况、回归测试、以及“训练好不等于部署稳”的反复验证。承认这一点，比记住十个算法的超参更重要。</p>
+<h2 id="仿真与验证">33.6 仿真与验证</h2>
+<p>七组实验全部由 <code>code/ch033_sim.py</code> 单次运行产生，纯 numpy，种子 20261103，总耗时约 45 s。七组与 §33.1.6 的五个定量问题一一对应：E1 回答“泛化误差随什么变化”，E2 回答“目标网络该多慢”，E3 回答“裁剪半径对应多大的策略变化”，E4 回答“温度在自动调节什么”，E5 回答“离线外推错在哪”，E6、E7 补上 §33.5 的两条工程边界——延迟与评估。正文数字不做事后取整。</p>
+<h3 id="e1加参数不加样本误差先降后升">33.6.1 E1：加参数不加样本，误差先降后升</h3>
+<p>对象是一维 21 状态链：两端反射，中间每步等概率左右走，奖励随位置从 <span class="math inline">-0.5</span> 线性升到 <span class="math inline">+0.5</span>。这个设定下 <span class="math inline">V^\pi</span> 可以用式（32-9）精确解出，<strong>“真值”不是估出来的</strong>，误差才可分解。特征取余弦基 <span class="math inline">\phi_k(s)=\cos(\pi ks)</span>，<span class="math inline">s\in[0,1]</span>，<span class="math inline">k=0,\dots,d-1</span>；<span class="math inline">d</span> 从 2 扫到 18。样本由随机游走采 <span class="math inline">m</span> 条转移 <span class="math inline">(s,r,s&#39;)</span>，用 LSTD 的闭式解（式 33-9）拟合，30 次重复取中位数。误差是 <span class="math inline">\mu</span>-加权相对范数 <span class="math inline">\lVert V_\theta-V\rVert_\mu/\lVert V\rVert_\mu</span>，<span class="math inline">\mu</span> 取均匀分布。</p>
+<p>表 33-9　余弦基上的误差分解（相对误差，30 次重复的中位）</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: right;"><span class="math inline">d</span></th>
+<th style="text-align: right;">投影残差</th>
+<th style="text-align: right;"><span class="math inline">m=100</span></th>
+<th style="text-align: right;"><span class="math inline">m=1000</span></th>
+<th style="text-align: right;"><span class="math inline">m=10^4</span></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">0.0658</td>
+<td style="text-align: right;">0.1635</td>
+<td style="text-align: right;">0.0826</td>
+<td style="text-align: right;">0.0682</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">0.0143</td>
+<td style="text-align: right;">0.1794</td>
+<td style="text-align: right;">0.0542</td>
+<td style="text-align: right;">0.0258</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">6</td>
+<td style="text-align: right;">0.0052</td>
+<td style="text-align: right;">0.2300</td>
+<td style="text-align: right;">0.0601</td>
+<td style="text-align: right;">0.0254</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">8</td>
+<td style="text-align: right;">0.0025</td>
+<td style="text-align: right;">0.2133</td>
+<td style="text-align: right;">0.0622</td>
+<td style="text-align: right;">0.0229</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">10</td>
+<td style="text-align: right;">0.0015</td>
+<td style="text-align: right;">0.1913</td>
+<td style="text-align: right;">0.0606</td>
+<td style="text-align: right;">0.0231</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">14</td>
+<td style="text-align: right;">0.0007</td>
+<td style="text-align: right;">0.1816</td>
+<td style="text-align: right;">0.0592</td>
+<td style="text-align: right;">0.0230</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">18</td>
+<td style="text-align: right;">0.0004</td>
+<td style="text-align: right;">0.2226</td>
+<td style="text-align: right;">0.0645</td>
+<td style="text-align: right;">0.0239</td>
+</tr>
+</tbody>
+</table>
+<p>第二列是式（33-11）的第一项：把真值投影到特征子空间后剩下的分量。它与样本量无关，只由 <span class="math inline">d</span> 决定。</p>
+<p><strong>第一，投影残差按预期单调下降。</strong> <span class="math inline">d</span> 从 2 到 18，从 0.0658 降到 0.0004，降了 164 倍。这条曲线说明“特征越多、函数族越大”不是空话，也说明这一列的测量本身是可信的。</p>
+<p><strong>第二，总误差不跟着降。</strong> 看 <span class="math inline">m=100</span> 那一列：<span class="math inline">d=2</span> 时 0.1635，加到 <span class="math inline">d=6</span> 反而涨到 0.2300。参数多了四倍，误差大了四成。原因在式（33-11）的第二项：估计误差随 <span class="math inline">d</span> 上升、随 <span class="math inline">m</span> 下降，<span class="math inline">m/d</span> 从 50 掉到 17 时，方差项吃掉了偏差项的全部收益。这一列的形状就是 U 形——最小值在 <span class="math inline">d=2</span> 附近，之后一路走高再在高频端抖动。<strong>“参数多一定更好”在这张表里被直接否掉。</strong></p>
+<p><strong>第三，样本够多时收益迅速饱和。</strong> 看 <span class="math inline">m=10^4</span> 那一列：<span class="math inline">d=4</span> 是 0.0258，<span class="math inline">d=18</span> 是 0.0239，只好了 7%；而同一段里投影残差降了 36 倍（0.0143 到 0.0004）。<strong>这正是式（33-21）的规模账在起作用</strong>：要把偏差再压一个数量级，样本量得按 <span class="math inline">d/\epsilon^2</span> 同步涨，否则省下的偏差被涨上来的方差原样抵消。</p>
+<p>三个地板要分清。偏差地板由特征决定，<span class="math inline">d=18</span> 时是 0.0004；方差地板由样本决定，<span class="math inline">d=18</span>、<span class="math inline">m=10^4</span> 时是 0.0239，比偏差地板高 60 倍。<strong>实际能拿到的精度是两块地板中高的那一块</strong>，而多数调参只盯着低的那块。</p>
+<figure>
+<img src="figs/ch033/fig_033_02_error_decomp.svg" alt="图 33-2　余弦基上的误差分解：三条实线是总误差，虚线是投影残差" /><figcaption aria-hidden="true">图 33-2　余弦基上的误差分解：三条实线是总误差，虚线是投影残差</figcaption>
+</figure>
+<p>图 33-2 把三列画在一起。三条实线在 <span class="math inline">d=4</span> 之后基本水平，只有 <span class="math inline">m=100</span> 那条还在抖；虚线一路向下，从不与实线相交。<strong>交点不存在，这件事本身就是结论</strong>：在这个任务上，<span class="math inline">d\ge4</span> 之后再加参数，收益全部被方差吃掉。</p>
+<p>工程判据只有一条：<strong>每个参数至少摊到几百个样本</strong>。表里 <span class="math inline">m/d\ge555</span> 的两行误差都在 0.024 附近；<span class="math inline">m/d=17</span> 的那一行是 0.2226，差一个数量级。中间地带（<span class="math inline">m/d</span> 在 50 到 100 之间）是“加参数可能还有用”的区间，必须实测确认。这条判据比“层数乘宽度”之类的经验公式可靠，因为它直接对应式（33-21）里的两个量。</p>
+<h3 id="e2稳定性是一条斜带不是目标网络越稳越好">33.6.2 E2：稳定性是一条斜带，不是“目标网络越稳越好”</h3>
+<p>对象是 21 状态链，两个动作左右移动，右端 <span class="math inline">+10</span>、左端 <span class="math inline">-10</span>、每步 <span class="math inline">-0.1</span>，最多 60 步。Q 用三次多项式特征线性逼近（<span class="math inline">d=4</span>），回放池 5000，批量 32，<span class="math inline">\gamma=0.95</span>，训练 6000 步，2 个种子平均。目标网络用硬更新，周期 <span class="math inline">C</span>；<span class="math inline">C=1</span> 等价于“不用目标网络”。每格报两个数：训练结束时的 <span class="math inline">\max|Q|</span>（数值健康度）与 30 回合贪心回报（策略质量）。</p>
+<p>表 33-10　学习率与目标周期的二维扫描（每格为 <span class="math inline">\max|Q|</span> / 贪心回报）</p>
+<table style="width:100%;">
+<colgroup>
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">学习率</th>
+<th style="text-align: right;"><span class="math inline">C=1</span></th>
+<th style="text-align: right;"><span class="math inline">C=20</span></th>
+<th style="text-align: right;"><span class="math inline">C=100</span></th>
+<th style="text-align: right;"><span class="math inline">C=500</span></th>
+<th style="text-align: right;"><span class="math inline">C=2000</span></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">0.01</td>
+<td style="text-align: right;"><span class="math inline">1.06\times10^{1}</span> / 9.14</td>
+<td style="text-align: right;"><span class="math inline">1.06\times10^{1}</span> / 9.14</td>
+<td style="text-align: right;"><span class="math inline">1.06\times10^{1}</span> / 9.14</td>
+<td style="text-align: right;"><span class="math inline">1.15\times10^{1}</span> / 9.14</td>
+<td style="text-align: right;"><span class="math inline">1.10\times10^{1}</span> / 1.55</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">0.03</td>
+<td style="text-align: right;"><span class="math inline">1.06\times10^{1}</span> / 9.14</td>
+<td style="text-align: right;"><span class="math inline">1.06\times10^{1}</span> / 9.14</td>
+<td style="text-align: right;"><span class="math inline">1.06\times10^{1}</span> / 9.14</td>
+<td style="text-align: right;"><span class="math inline">1.11\times10^{1}</span> / 1.58</td>
+<td style="text-align: right;"><span class="math inline">1.16\times10^{1}</span> / 1.05</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">0.05</td>
+<td style="text-align: right;"><span class="math inline">1.06\times10^{1}</span> / 9.14</td>
+<td style="text-align: right;"><span class="math inline">1.06\times10^{1}</span> / 9.14</td>
+<td style="text-align: right;"><span class="math inline">1.06\times10^{1}</span> / 9.14</td>
+<td style="text-align: right;"><span class="math inline">1.06\times10^{1}</span> / 9.14</td>
+<td style="text-align: right;"><span class="math inline">8.05\times10^{0}</span> / 0.79</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">0.10</td>
+<td style="text-align: right;"><span class="math inline">1.66\times10^{272}</span> / <span class="math inline">-6.00</span></td>
+<td style="text-align: right;"><span class="math inline">1.19\times10^{19}</span> / <span class="math inline">-3.20</span></td>
+<td style="text-align: right;"><span class="math inline">4.91\times10^{20}</span> / <span class="math inline">-6.00</span></td>
+<td style="text-align: right;"><span class="math inline">3.32\times10^{21}</span> / <span class="math inline">-8.48</span></td>
+<td style="text-align: right;"><span class="math inline">9.02\times10^{19}</span> / 2.02</td>
+</tr>
+</tbody>
+</table>
+<p><strong>第一，学习率决定“能不能收敛”。</strong> <span class="math inline">\text{lr}=0.10</span> 一行，五个 <span class="math inline">C</span> 全部发散，量级从 <span class="math inline">1.2\times10^{19}</span> 到 <span class="math inline">1.7\times10^{272}</span>；把目标周期从 1 拉到 2000 也救不回来。<strong>目标网络不是稳定器</strong>，它只是把自举目标冻结一段时间，半梯度的病根（式 33-5 那个投影不保证压缩）还在。这与 §33.3.1 的定性一致，现在有了量级：步长越界一个因子 2（0.05 到 0.10），结果从“完全正常”变成“三十个数量级”。</p>
+<p><strong>第二，目标周期决定“追不追得上”。</strong> <span class="math inline">\text{lr}=0.01</span> 与 <span class="math inline">0.03</span> 两行，<span class="math inline">C\le100</span> 时回报都是 9.14；<span class="math inline">C</span> 拉到 500，0.03 那行掉到 1.58；<span class="math inline">C=2000</span>，两行都掉到 1.5 以下。数值没有发散（<span class="math inline">\max|Q|</span> 仍是 11 左右），策略却什么都不会做——<strong>目标太旧，值函数在追几十步之前的目标，追不上就停在半路</strong>。这与式（33-19）的 <span class="math inline">C_{\text{eff}}\approx1/\tau</span> 对得上：<span class="math inline">\tau</span> 太小等价于 <span class="math inline">C</span> 太大。</p>
+<p><strong>第三，稳定域是一条斜带。</strong> <span class="math inline">\text{lr}=0.05</span>、<span class="math inline">C=500</span> 还能拿到 9.14，说明“步长大一点、目标更新勤一点”也能走通；而同一行的 <span class="math inline">C=2000</span> 掉到 0.79。所以 <span class="math inline">C</span> 不能单独调：它的有效值取决于 <span class="math inline">\text{lr}</span>、<span class="math inline">\gamma</span> 与回合长度，三者一起变。</p>
+<p>这张表里还有一个容易骗人的格子：<span class="math inline">\text{lr}=0.01</span>、<span class="math inline">C=2000</span> 时 <span class="math inline">\max|Q|=11.0</span>，与正常收敛的 10.6 只差 4%，但回报只有 1.55。<strong>值函数的数值范围完全正常，策略却不会做事</strong>。§33.6.7 会从另一头给出同样的提醒：<span class="math inline">\max|Q|</span> 与回报之间没有单调关系，必须各看各的。</p>
+<figure>
+<img src="figs/ch033/fig_033_03_stability_map.svg" alt="图 33-3　学习率与目标周期的稳定性分区：纵轴为 \max|Q| 的对数" /><figcaption aria-hidden="true">图 33-3　学习率与目标周期的稳定性分区：纵轴为 <span class="math inline">\max|Q|</span> 的对数</figcaption>
+</figure>
+<p>图 33-3 把四行画在对数纵轴上：三条平线（10.6 附近）与一条从 <span class="math inline">10^{19}</span> 起跳的直线，中间没有过渡带。<strong>稳定与发散之间没有“半稳”</strong>，调参能做的只是确认自己在平的那一侧。</p>
+<p>工程做法是两步：先用小 <span class="math inline">C</span>（20–100）确认能学起来，再把 <span class="math inline">C</span> 逐步放大到“回报开始下降”的位置，取它的一半。表里这个下降很陡（9.14 到 1.58），所以宁可在小 <span class="math inline">C</span> 一侧多留余量。至于 <span class="math inline">\text{lr}</span>，先用 <span class="math inline">10^{-3}</span> 量级配合小网络试，看到 <span class="math inline">\max|Q|</span> 在前 1000 步内单调上升就停手——<strong>这是最便宜的发散早期预警</strong>。</p>
+<h3 id="e3裁剪半径换算成多大的-kl">33.6.3 E3：裁剪半径换算成多大的 KL</h3>
+<p>实验设计成“同一批数据反复用”的极端情形：5 臂老虎机，第 3 臂均值 1.0、其余为 0，观测噪声 0.3；起点是均匀策略；采 512 个样本，在这批数据上做 30 个 epoch，步长 1.0。半径 <span class="math inline">\epsilon</span> 从 0.02 扫到 0.5，另加一组“不裁剪”作对照，每个 <span class="math inline">\epsilon</span> 跑 5 个种子。量三个数：30 个 epoch 累计的 KL、过程中的最大概率比、最终策略落在最优臂上的概率。</p>
+<p>表 33-11　裁剪半径与实测策略变化</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: right;"><span class="math inline">\epsilon</span></th>
+<th style="text-align: right;">累计 KL</th>
+<th style="text-align: right;">等效半径 <span class="math inline">\sqrt{2\,\mathrm{KL}}</span></th>
+<th style="text-align: right;">最大 ratio</th>
+<th style="text-align: right;"><span class="math inline">P(\text{最优})</span></th>
+<th style="text-align: right;">策略熵</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">0.02</td>
+<td style="text-align: right;">0.0020</td>
+<td style="text-align: right;">0.063</td>
+<td style="text-align: right;">1.25</td>
+<td style="text-align: right;">0.219</td>
+<td style="text-align: right;">1.607</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">0.05</td>
+<td style="text-align: right;">0.0040</td>
+<td style="text-align: right;">0.089</td>
+<td style="text-align: right;">1.25</td>
+<td style="text-align: right;">0.224</td>
+<td style="text-align: right;">1.605</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">0.10</td>
+<td style="text-align: right;">0.0094</td>
+<td style="text-align: right;">0.137</td>
+<td style="text-align: right;">1.29</td>
+<td style="text-align: right;">0.240</td>
+<td style="text-align: right;">1.600</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">0.20</td>
+<td style="text-align: right;">0.0300</td>
+<td style="text-align: right;">0.245</td>
+<td style="text-align: right;">1.44</td>
+<td style="text-align: right;">0.267</td>
+<td style="text-align: right;">1.580</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">0.50</td>
+<td style="text-align: right;">0.1476</td>
+<td style="text-align: right;">0.543</td>
+<td style="text-align: right;">1.82</td>
+<td style="text-align: right;">0.335</td>
+<td style="text-align: right;">1.473</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">无裁剪</td>
+<td style="text-align: right;">2.4529</td>
+<td style="text-align: right;">2.215</td>
+<td style="text-align: right;">4.86</td>
+<td style="text-align: right;">0.973</td>
+<td style="text-align: right;">0.159</td>
+</tr>
+</tbody>
+</table>
+<p><strong>第一，KL 随 <span class="math inline">\epsilon</span> 单调上升，但远不是 <span class="math inline">\epsilon^2/2</span>。</strong> 把等效半径除以 <span class="math inline">\epsilon</span>，得到 3.15、1.78、1.37、1.22、1.09。半径越小，每单位 <span class="math inline">\epsilon</span> 换来的 KL 越多。原因不难找：裁剪只截断越界的那部分样本，没越界的样本仍按原始梯度推；<span class="math inline">\epsilon</span> 小时越界的样本少，方向更“纯”，所以单位半径更有效。<strong>“<span class="math inline">\epsilon</span> 小所以更新小”只对了一半，另一半是“<span class="math inline">\epsilon</span> 小所以更新的方向更集中”。</strong></p>
+<p><strong>第二，最大 ratio 与 <span class="math inline">\epsilon</span> 不是一一对应。</strong> <span class="math inline">\epsilon=0.02</span> 时最大 ratio 已经到 1.25，远超 <span class="math inline">1+\epsilon=1.02</span>。因为 ratio 是在 30 个 epoch 里逐次累积的：前几个 epoch 没越界，裁剪不生效；一旦越界，单步的 ratio 仍是“上一 epoch 的 1.2 再乘一次步长”。“裁剪把 ratio 限制在 <span class="math inline">[1-\epsilon,1+\epsilon]</span>”这句话只在单步、且上一步 ratio 恰为 1 时成立。</p>
+<p><strong>第三，裁剪的代价是慢。</strong> 30 个 epoch 里，<span class="math inline">\epsilon=0.5</span> 也只把最优臂的概率推到 0.335，不裁剪是 0.973。这就是裁剪的意义：宁可慢，不要一步跨出信任域。反过来说，<strong>想学得快应该加 epoch 数或加批量，而不是放大 <span class="math inline">\epsilon</span></strong>；放大 <span class="math inline">\epsilon</span> 换来的是同样的步数走得更远，代价是可能一步跨过最优点。</p>
+<p>回到 §33.3.4 的换算。<span class="math inline">\epsilon=0.2</span> 时累计 KL 是 0.0300，约等于 1.5 个 <span class="math inline">\epsilon^2/2</span>；<span class="math inline">\epsilon=0.5</span> 时 0.1476，约 1.18 个。<strong>量级对得上，常数因子在 1 到 1.5 之间</strong>。这比“<span class="math inline">\epsilon=0.2</span> 就是 KL <span class="math inline">=0.02</span>”可靠——后者把单步单坐标的界当成了整体的界。</p>
+<figure>
+<img src="figs/ch033/fig_033_04_ppo_kl.svg" alt="图 33-4　裁剪半径与实测 KL：虚线为 \epsilon^2/2 参考" /><figcaption aria-hidden="true">图 33-4　裁剪半径与实测 KL：虚线为 <span class="math inline">\epsilon^2/2</span> 参考</figcaption>
+</figure>
+<p>图 33-4 的横纵坐标都取对数，实测点连成的线斜率约 1.5（不是 2），与上面“单位半径效率随 <span class="math inline">\epsilon</span> 递减”是同一件事的另一种说法。<strong>要报“这次更新动了多少”，应当直接报 KL，而不是报 <span class="math inline">\epsilon</span></strong>：同一个 0.2 在不同任务上对应 0.03 到 0.3 不等。</p>
+<h3 id="e4奖励乘-100温度也乘-100">33.6.4 E4：奖励乘 100，温度也乘 100</h3>
+<p>3 臂老虎机，均值 <span class="math inline">[1,2,3]\times c</span>，<span class="math inline">c</span> 取 1、10、100。熵目标 <span class="math inline">\bar{\mathcal H}=0.5</span> nat，对偶用精确熵驱动（实际实现用单样本估计，收敛更慢但不动点相同），策略步长 <span class="math inline">0.05/c</span>，8000 步，策略加 2% 均匀混合以避免 softmax 饱和后梯度消失。</p>
+<p>表 33-12　温度随奖励尺度的缩放</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: right;"><span class="math inline">c</span></th>
+<th style="text-align: right;"><span class="math inline">\alpha</span></th>
+<th style="text-align: right;"><span class="math inline">\alpha/c</span></th>
+<th style="text-align: right;">策略熵</th>
+<th style="text-align: left;">策略分布</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">0.5481</td>
+<td style="text-align: right;">0.5481</td>
+<td style="text-align: right;">0.500</td>
+<td style="text-align: left;"><span class="math inline">(0.022,\ 0.136,\ 0.842)</span></td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">10</td>
+<td style="text-align: right;">5.4802</td>
+<td style="text-align: right;">0.5480</td>
+<td style="text-align: right;">0.500</td>
+<td style="text-align: left;"><span class="math inline">(0.022,\ 0.136,\ 0.842)</span></td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">100</td>
+<td style="text-align: right;">54.7953</td>
+<td style="text-align: right;">0.5480</td>
+<td style="text-align: right;">0.500</td>
+<td style="text-align: left;"><span class="math inline">(0.022,\ 0.136,\ 0.842)</span></td>
+</tr>
+</tbody>
+</table>
+<p>三行只有一个量在变：<span class="math inline">\alpha</span> 本身，严格按 <span class="math inline">c</span> 放大 100 倍。比值 <span class="math inline">\alpha/c</span> 三位一致（0.5481、0.5480、0.5480），熵精确停在目标值 0.500，策略分布逐位相同。<strong>奖励放大 100 倍，温度自动放大 100 倍，策略一个比特都没变。</strong></p>
+<p>这就是式（33-36）的定量版。工程含义有三条。</p>
+<ol type="1">
+<li><strong>改奖励尺度后不要手工重调 <span class="math inline">\alpha</span></strong>，让对偶自己走。固定 <span class="math inline">\alpha</span> 的人换任务必翻车：本实验里若把对偶关掉、<span class="math inline">\alpha</span> 固定为 1，<span class="math inline">c=100</span> 时奖励项是熵项的 100 倍，策略会退化成近确定性（同样的数值实验里熵掉到 0.17），探索消失、离线数据覆盖度崩掉。</li>
+<li><strong>报超参时必须报 <span class="math inline">\alpha</span> 与奖励尺度的比值</strong>，只报 <span class="math inline">\alpha</span> 没有意义。别人复现不了“<span class="math inline">\alpha=0.2</span>”，但能复现“<span class="math inline">\alpha/c=0.55</span>”。</li>
+<li><strong>熵目标与奖励尺度无关</strong>，它只由动作维数与期望的探索强度决定。§33.3.5 提过 <span class="math inline">\bar{\mathcal H}=-m</span> 是常用默认值；本实验用 0.5 是为了在 3 臂上看得清。</li>
+</ol>
+<p>还有一处容易被忽略：这里策略步长取 <span class="math inline">0.05/c</span>，与温度的缩放一致。若步长不随 <span class="math inline">c</span> 缩放，<span class="math inline">c=100</span> 时策略会在温度追上之前就饱和，对偶被拖进“越饱和越升温、越升温越不动”的死循环——<strong>这正是把这条实验做坏的前几次尝试里发生的事</strong>。实现上要么缩放步长，要么给策略加混合下限，二者选一。</p>
+<figure>
+<img src="figs/ch033/fig_033_05_sac_alpha.svg" alt="图 33-5　温度随奖励尺度线性缩放：三条曲线在对数坐标下平行" /><figcaption aria-hidden="true">图 33-5　温度随奖励尺度线性缩放：三条曲线在对数坐标下平行</figcaption>
+</figure>
+<p>图 33-5 的三条 <span class="math inline">\alpha(t)</span> 曲线在对数坐标下互相平行，间距正好是 <span class="math inline">\log 10</span>。<strong>看到平行线就该想到“乘性缩放”</strong>，这是判断一个自适应机制是否抓住了不变量最快的方法。</p>
+<h3 id="e5外推误差错在特征不在数据">33.6.5 E5：外推误差错在特征，不在数据</h3>
+<p>400 条离线数据，<span class="math inline">s\in\{0,1\}</span>，动作只在 <span class="math inline">|a|\le0.4</span> 内取（正负各半），真值 <span class="math inline">Q^\star(s,a)=-(a-0.4\,\mathrm{sign}(s))^2</span>，观测噪声 0.02。支撑集外取 <span class="math inline">a\in[0.5,1.0]</span>，真值是 <span class="math inline">-0.36</span>（在 <span class="math inline">a=1.0</span> 处）。比较四种组合：线性基 <span class="math inline">[1,s,a,sa]</span> 与二次基 <span class="math inline">[1,s,a,sa,a^2]</span>，各自做普通最小二乘与“把支撑外压到边界值减 1”的保守拟合（迭代 5 轮）。</p>
+<p>表 33-13　离线外推：四种组合的 <span class="math inline">Q</span> 估计（真值 <span class="math inline">Q(0.4)=0</span>、<span class="math inline">Q(1.0)=-0.36</span>）</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">特征</th>
+<th style="text-align: left;">拟合方式</th>
+<th style="text-align: right;"><span class="math inline">Q(0.4)</span></th>
+<th style="text-align: right;"><span class="math inline">Q(1.0)</span></th>
+<th style="text-align: right;">外推误差</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">线性基</td>
+<td style="text-align: left;">最小二乘</td>
+<td style="text-align: right;"><span class="math inline">+0.021</span></td>
+<td style="text-align: right;"><span class="math inline">+0.247</span></td>
+<td style="text-align: right;"><span class="math inline">+0.607</span></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">线性基</td>
+<td style="text-align: left;">加保守项</td>
+<td style="text-align: right;"><span class="math inline">-0.399</span></td>
+<td style="text-align: right;"><span class="math inline">-1.289</span></td>
+<td style="text-align: right;"><span class="math inline">-0.929</span></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">二次基</td>
+<td style="text-align: left;">最小二乘</td>
+<td style="text-align: right;"><span class="math inline">-0.004</span></td>
+<td style="text-align: right;"><span class="math inline">-0.388</span></td>
+<td style="text-align: right;"><span class="math inline">-0.028</span></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">二次基</td>
+<td style="text-align: left;">加保守项</td>
+<td style="text-align: right;"><span class="math inline">-0.171</span></td>
+<td style="text-align: right;"><span class="math inline">-1.747</span></td>
+<td style="text-align: right;"><span class="math inline">-1.387</span></td>
+</tr>
+</tbody>
+</table>
+<p><strong>第一，线性基的最小二乘把支撑外估高了 0.607。</strong> 更糟的是 <span class="math inline">Q(1.0)=+0.247</span> 比支撑内的 <span class="math inline">Q(0.4)=+0.021</span> 还高——<strong>贪心策略会去选 <span class="math inline">a=1.0</span>，一个数据里从未出现过的动作</strong>。而且这个错误没有任何“数据不足”的信号：拟合残差在支撑内只有噪声量级，模型自己觉得很好。</p>
+<p><strong>第二，保守项把方向掰对了，但泄漏进支撑内。</strong> 加惩罚后 <span class="math inline">Q(1.0)</span> 从 <span class="math inline">+0.247</span> 压到 <span class="math inline">-1.289</span>，排序正确（现在它低于支撑内），代价是 <span class="math inline">Q(0.4)</span> 从 <span class="math inline">+0.021</span> 掉到 <span class="math inline">-0.399</span>。原因是特征 <span class="math inline">a</span> 与 <span class="math inline">sa</span> 在支撑内外都起作用，<strong>线性模型没有“只在支撑外生效”的自由度</strong>，惩罚只能沿着特征方向整体平移。这就是式（33-34）那个 <span class="math inline">\max</span> 项在有限特征下的真实行为：它不是一把手术刀，是一块压板。</p>
+<p><strong>第三，把 <span class="math inline">a^2</span> 补进特征，外推误差从 0.607 降到 0.028。</strong> 没有增加任何数据，也没有调任何超参。因为真值本身就是二次的，补上 <span class="math inline">a^2</span> 之后特征族能精确表示它，外推自然正确。<strong>这条结果把“外推误差”的责任从数据量挪到了特征上</strong>：它不是“见得少所以猜不准”，而是“用直线去延长抛物线”。</p>
+<p><strong>第四，基对了还硬加惩罚，反而把支撑内压坏 0.171。</strong> 保守项是一个保险，不是精度工具。它的价格就是 §33.3.6 里的 <span class="math inline">D</span>：你要求支撑外低多少，支撑内就跟着低一点。</p>
+<p>工程判据可以写成一句话：<strong>先问“支撑外的 <span class="math inline">Q</span> 由哪个特征主导”，再决定要不要惩罚。</strong> 如果主导项在支撑外是发散型（如线性基的 <span class="math inline">a</span>），必须惩罚或换特征；如果特征族本身能表达真值的形状，惩罚只会添乱。离线数据永远无法告诉你“支撑外对不对”，它只能告诉你“支撑内拟合得好不好”——这两件事在表 33-13 的第三、四行之间差了一个数量级。</p>
+<h3 id="e6延迟裕度由带宽定且是硬边界">33.6.6 E6：延迟裕度由带宽定，且是硬边界</h3>
+<p>对象是二阶系统，自然频率 5 Hz、阻尼比 0.3，采样 1 ms。控制器是离散 LQR，<span class="math inline">Q=\mathrm{diag}(100,1)</span> 固定，只把控制权重 <span class="math inline">R</span> 取 1、10、100 三档，得到三组增益 <span class="math inline">K=[5.278,\ 0.615]</span>、<span class="math inline">[1.855,\ 0.261]</span>、<span class="math inline">[0.355,\ 0.083]</span>。初始位移 1、目标 0，纯延迟从 0 扫到 40 ms。稳定性用增广状态矩阵的谱半径判定（把延迟链写进状态），时域响应另跑一遍核对。</p>
+<p>表 33-14　三档增益在不同纯延迟下的闭环谱半径</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: right;">延迟 / ms</th>
+<th style="text-align: right;">激进（<span class="math inline">R=1</span>）</th>
+<th style="text-align: right;">中等（<span class="math inline">R=10</span>）</th>
+<th style="text-align: right;">保守（<span class="math inline">R=100</span>）</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.990</td>
+<td style="text-align: right;">0.989</td>
+<td style="text-align: right;">0.984</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">0.993</td>
+<td style="text-align: right;">0.990</td>
+<td style="text-align: right;">0.985</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">3</td>
+<td style="text-align: right;"><strong>1.064</strong></td>
+<td style="text-align: right;">0.990</td>
+<td style="text-align: right;">0.985</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">5</td>
+<td style="text-align: right;">1.103</td>
+<td style="text-align: right;">0.990</td>
+<td style="text-align: right;">0.985</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">8</td>
+<td style="text-align: right;">1.105</td>
+<td style="text-align: right;"><strong>1.027</strong></td>
+<td style="text-align: right;">0.986</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">20</td>
+<td style="text-align: right;">1.076</td>
+<td style="text-align: right;">1.042</td>
+<td style="text-align: right;"><strong>1.002</strong></td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">30</td>
+<td style="text-align: right;">1.060</td>
+<td style="text-align: right;">1.037</td>
+<td style="text-align: right;">1.010</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">延迟裕度</td>
+<td style="text-align: right;"><strong>3 ms</strong></td>
+<td style="text-align: right;"><strong>6 ms</strong></td>
+<td style="text-align: right;"><strong>19 ms</strong></td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">调节时间（无延迟）</td>
+<td style="text-align: right;">389 ms</td>
+<td style="text-align: right;">372 ms</td>
+<td style="text-align: right;">261 ms</td>
+</tr>
+</tbody>
+</table>
+<p><strong>第一，裕度与增益反向。</strong> 位置增益从 5.278 降到 0.355（14.9 倍），裕度从 3 ms 涨到 19 ms（6.3 倍）。不是严格反比，因为速度增益也在变，但方向明确：<strong>想要更快的响应，就得接受更小的延迟裕度</strong>。</p>
+<p><strong>第二，越过边界是硬跳变。</strong> 激进档从 2 ms 的 0.993 跳到 3 ms 的 1.064，时域上从“零超调、389 ms 收敛”变成“超调 9222%、十步内发散”，中间没有过渡。线性系统的稳定与否是“是/否”，不是“好坏”；<strong>这意味着延迟裕度只能靠留余量，不能靠调参把它“调得温和一点”</strong>。</p>
+<p><strong>第三，激进整定没有换来速度。</strong> 三档的无延迟调节时间是 389、372、261 ms——保守档反而最快。因为激进档的主极点 0.990 更靠近单位圆，时间常数约 100 步，振荡衰减慢；保守档是 0.984，时间常数 62 步。<strong>“高增益 = 快”在这个对象上不成立</strong>，高增益换来的只是一个更靠边界的闭环。</p>
+<p>对照式（33-37）的 <span class="math inline">T_d\le0.1/f_{\text{bw}}</span>：取 <span class="math inline">f_{\text{bw}}\approx5</span> Hz，上界是 20 ms。三档实测裕度 3、6、19 ms 全部落在上界内，但激进档只有上界的 1/7。<strong>经验式给的是上界，不是可实现值</strong>；实际能用到多少，取决于整定有多激进、传感器与执行器还有多少未建模动态。</p>
+<figure>
+<img src="figs/ch033/fig_033_06_delay_margin.svg" alt="图 33-6　闭环谱半径随纯延迟的变化：三条曲线在 1 处硬穿越" /><figcaption aria-hidden="true">图 33-6　闭环谱半径随纯延迟的变化：三条曲线在 1 处硬穿越</figcaption>
+</figure>
+<p>图 33-6 把三条曲线画在一起，横轴是延迟、纵轴是谱半径，水平虚线是 1。三条线的交点位置差 6 倍，但形状一样陡。<strong>这张图是 sim-to-real 的第一张检查表</strong>：在仿真里把延迟加到“谱半径刚过 1”的位置，再看训练出来的策略还能不能活——活不下来，说明策略依赖了仿真里不存在的时序精度。</p>
+<p>对本章的 RL 而言，这张表的含义更直接：策略网络的动作延迟（观测采集、推理、通信、执行器刷新）实测常在 5–20 ms，而本章的算例里 5 Hz 的闭环只能容忍 3–19 ms。<strong>所以做 RL 控制时，闭环带宽不宜超过 5–10 Hz</strong>；想要更快的环路，得先用第 47 章的补偿手段把延迟从环路里挪出去，再谈学习。</p>
+<h3 id="e7三种假成功的量化">33.6.7 E7：三种“假成功”的量化</h3>
+<p>任务仍是 21 状态链，10 个种子，每个训练 12000 步（<span class="math inline">\text{lr}=0.03</span>、<span class="math inline">C=200</span>）。训练中每 400 步用 5 个回合评估一次，共 30 个检查点；训练结束后再用 300 个回合重评同一个策略。这样就同时有了“挑选口径”与“真值口径”。</p>
+<p>表 33-15　三种评估口径的对比（10 个种子平均）</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">口径</th>
+<th style="text-align: right;">数值</th>
+<th style="text-align: right;">与真值之差</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">30 个检查点里挑最好</td>
+<td style="text-align: right;"><span class="math inline">+9.74</span></td>
+<td style="text-align: right;"><span class="math inline">+0.64</span></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">最后一个检查点</td>
+<td style="text-align: right;"><span class="math inline">+9.10</span></td>
+<td style="text-align: right;"><span class="math inline">0.00</span></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">300 回合重评（真值）</td>
+<td style="text-align: right;"><span class="math inline">+9.10</span></td>
+<td style="text-align: right;">—</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">带探索（<span class="math inline">\varepsilon=0.15</span>）评估</td>
+<td style="text-align: right;"><span class="math inline">+8.86</span></td>
+<td style="text-align: right;"><span class="math inline">-0.24</span></td>
+</tr>
+</tbody>
+</table>
+<p><strong>第一，偏差全部来自“挑”，不来自“测”。</strong> 5 回合评估与 300 回合真值的平均绝对偏差只有 0.02，但 30 个检查点取最大就抬高了 0.64，是单次偏差的 30 倍。原因是选择偏差：30 次独立评估的最大值约等于“均值加两个标准差”，而标准差正是 5 回合评估的噪声。<strong>报告“历史最好”等于主动把这 0.64 加进结果里。</strong></p>
+<p><strong>第二，带探索评估会低估。</strong> 把训练时的 <span class="math inline">\varepsilon=0.15</span> 带到评估里，回报从 9.10 掉到 8.86。这个方向与第一条相反：一个抬高、一个压低，<strong>如果两件事同时做（挑最好 + 带探索），两个偏差会部分抵消，看上去“很准”，其实两个都错了</strong>。这类巧合是评估表里最难查的。</p>
+<p><strong>第三，这个任务的种子差异很小。</strong> 10 个种子的真值范围是 <span class="math inline">[9.07,9.16]</span>，跨度 0.09。原因是任务太容易：任何向右走的策略都能在 60 步内到 <span class="math inline">+10</span>。<strong>换到难任务上，种子差异会成为主要方差源</strong>，那时“挑最好”的偏差会比 0.64 大得多——因为噪声与种子差异叠在一起。</p>
+<p>三条对策，与 §33.4.7 呼应但更具体：</p>
+<ol type="1">
+<li><strong>固定评估回合数，且不少于 100。</strong> 本实验里 5 回合的单次偏差虽小（0.02），但那是任务简单所致；一般任务上 5 回合的标准差在 0.3–1.0 之间，挑 30 次的偏差就是 0.6–2.0。</li>
+<li><strong>报“最后 <span class="math inline">N</span> 次评估的中位数”，不报最大值。</strong> 中位数对选择偏差免疫，代价是需要多存几个检查点。</li>
+<li><strong>同时报失败率。</strong> 本实验的回报几乎不含方差，失败率是 0；真实系统里“平均回报高、失败率 20%”的组合必须先看失败率。</li>
+</ol>
+<h3 id="换一个任务哪些数会变">33.6.8 换一个任务，哪些数会变</h3>
+<p>七组实验都跑在同一个“小世界”里：21 状态链、5 臂老虎机、二阶对象。换成车间的对象、换成机械臂，表里的数字一定变。<strong>分清“结构”与“常数”，才知道哪些结论能搬走。</strong></p>
+<p><strong>E1 的投影残差是任务常数，U 形的存在是结构。</strong> 0.0658 到 0.0004 这一列取决于 <span class="math inline">\mu</span>、特征基与真值的形状；若真值更“弯”（比如奖励二次），<span class="math inline">d=18</span> 也不够，整条曲线会抬起来。但“总误差由偏差地板与方差地板中高的那块决定”与任务无关——<strong>换任务只会换地板高度，不会换地板原理</strong>。</p>
+<p><strong>E2 的临界学习率是任务常数，“先 <span class="math inline">\text{lr}</span> 后 <span class="math inline">C</span>”的顺序是结构。</strong> 有效步长大致正比于 <span class="math inline">\text{lr}\cdot\lVert\phi\rVert^{2}</span>，特征尺度一变（比如把输入从 <span class="math inline">[-1,1]</span> 改到 <span class="math inline">[0,100]</span>），临界值就整体平移；换 Adam 又要重新标定。但“<span class="math inline">\text{lr}</span> 越界是硬发散、<span class="math inline">C</span> 越界是软退化”这两条，在 E2 的四行里都能看到，换成别的任务只会换数值，不会换形态。</p>
+<p><strong>E3 的常数因子 1–1.5 依赖步长与 epoch 数，“<span class="math inline">\epsilon</span> 不是 KL 上界”是结构。</strong> 本实验用 5 臂，KL 是 5 个分量之和；换成 6 维连续动作，同样的 epoch 数会把 KL 累加到十几倍，等效半径相应放大。<strong>动作维数越高，<span class="math inline">\epsilon</span> 与 KL 的差距越大</strong>——这条对高维控制尤其重要。</p>
+<p><strong>E4 的 0.548 依赖目标熵 0.5 与 2% 混合下限，<span class="math inline">\alpha\propto c</span> 是结构。</strong> 换熵目标，<span class="math inline">\alpha</span> 会按比例重定，但“奖励放大 <span class="math inline">k</span> 倍、温度也放大 <span class="math inline">k</span> 倍、策略不变”这个不变性来自对偶本身，与任务无关。</p>
+<p><strong>E5 的 0.607 与 0.028 依赖真值恰好是二次的。“误差由支撑外的主导特征决定”是结构。</strong> 若真值是四次，补 <span class="math inline">a^{2}</span> 只能修好一半，得继续补 <span class="math inline">a^{3}</span>、<span class="math inline">a^{4}</span>；若真值在支撑外饱和（比如有硬限位），线性基反而不会错得那么离谱。<strong>先看真值在支撑外的形状，再决定补什么。</strong></p>
+<p><strong>E6 的 3、6、19 ms 依赖 5 Hz 与 1 ms 采样，硬边界是结构。</strong> 按 <span class="math inline">T_d\le0.1/f_{\text{bw}}</span> 换算：带宽减半，裕度大约加倍；采样周期从 1 ms 变 10 ms，可分辨的延迟台阶就变粗。但“谱半径在 1 处硬穿越、没有过渡带”是线性系统的性质，与对象无关。</p>
+<p><strong>E7 的 0.64 依赖检查点数量与单次评估的噪声，选择偏差是结构。</strong> 极值统计给一个可算的近似：若单次评估的标准差为 <span class="math inline">\sigma_e</span>、共挑 <span class="math inline">n</span> 个检查点，虚高的期望约为 <span class="math inline">\sigma_e\sqrt{2\ln n}</span>。反过来用 0.64 与 <span class="math inline">n=30</span> 解出 <span class="math inline">\sigma_e\approx0.25</span>，与 5 回合评估的实际波动同量级——<strong>这说明 E7 的虚高不是异常，而是极值统计的必然结果</strong>。换成 100 个检查点，虚高会涨到 0.75 左右；换成 300 回合评估，<span class="math inline">\sigma_e</span> 减半，虚高也随之减半。</p>
+<p>由此可以给出一条报告纪律，叫“三报”：<strong>报结构（哪条结论与任务无关）、报常数（这条曲线属于什么任务）、报条件（种子数、回合数、延迟、带宽）</strong>。只报结构，读者无法复现；只报常数，读者无法迁移；只报条件，等于什么都没说。</p>
+<h3 id="七组实验合起来说明了什么">33.6.9 七组实验合起来说明了什么</h3>
+<p>七组实验各自回答了一个问题，合起来是一句话：<strong>函数逼近把“收敛”换成了“平衡”，而这个平衡由四对量共同决定。</strong></p>
+<ul>
+<li><strong>偏差与方差</strong>（E1）：<span class="math inline">d</span> 压偏差、<span class="math inline">m</span> 压方差，二者不可兼得；实际精度由高的那块地板决定，<span class="math inline">m/d</span> 低于百量级时加参数是净损失。</li>
+<li><strong>步长与目标周期</strong>（E2）：步长给出稳定上界，目标周期决定学习速度；越界是硬跳变，滞后是软退化，后者更常见也更难发现。</li>
+<li><strong>裁剪半径与信任域</strong>（E3）：<span class="math inline">\epsilon</span> 不是 KL 的上界，而是它的形状参数；单位半径的效率随 <span class="math inline">\epsilon</span> 递减，想快应该加数据而不是放宽裁剪。</li>
+<li><strong>奖励尺度与温度</strong>（E4）：<span class="math inline">\alpha/c</span> 是不变量，<span class="math inline">\alpha</span> 本身不是；不缩放步长或不加混合下限，大尺度下会把对偶拖死。</li>
+<li><strong>特征与外推</strong>（E5）：支撑外的误差由特征在支撑外的行为决定；保守项能改排序，但会沿特征方向泄漏进支撑内。</li>
+<li><strong>带宽与延迟</strong>（E6）：裕度随增益下降，且是硬边界；5 Hz 的环路只容忍 3–19 ms，而策略网络的动作延迟常在 5–20 ms。</li>
+<li><strong>挑选与测量</strong>（E7）：评估偏差主要来自挑选检查点，不来自单次测量；“历史最好”必须禁止。</li>
+</ul>
+<p>这七条里没有一条是“算法选择”问题，全部是“账怎么记”的问题。第 32 章 §32.7.1 说过，八种表格型算法的差别只是记账方式不同；到了函数逼近，这句话变成：<strong>十种深度算法的差别，也只是把上面七笔账记在哪一栏。</strong> DQN 记在“目标周期”与“回放分布”两栏，TD3 记在“最大化偏差”一栏，PPO 记在“信任域”一栏，SAC 记在“温度”一栏，CQL 记在“外推”一栏。选算法之前，先确认自己卡在哪一栏。</p>
+<p>七组实验的复现只需一条命令：<code>python code/ch033_sim.py</code>。所有种子、步数、超参都写在函数签名里，正文没有隐藏参数。<strong>这也是本章对“可复现”的最低承诺：数字能被重跑出来，而不是被叙述出来。</strong></p>
+<h2 id="小结与展望">33.7 小结与展望</h2>
+<h3 id="三句话把本章收住">33.7.1 三句话把本章收住</h3>
+<p><strong>第一句：本章换掉的不是算法，是“保证”。</strong> 第 32 章的八种方法共享同一个压缩映射，收敛性只由 <span class="math inline">\gamma</span> 决定；本章把表格换成特征之后，压缩性要乘上投影的模 <span class="math inline">\gamma\kappa</span>，而 <span class="math inline">\kappa=\lVert d_\pi/\mu\rVert_\mu^{1/2}</span> 由数据分布与目标策略的失配决定（式 33-2）。同一句“收敛”于是变成“在 <span class="math inline">\gamma\kappa&lt;1</span> 时收敛”——<strong>而 <span class="math inline">\gamma\kappa</span> 在工程上既测不到也控不住</strong>：<span class="math inline">\mu</span> 是回放池里的经验分布，<span class="math inline">d_\pi</span> 是当前策略会走到的分布，两者都在训练中变。本章这些算法所做的全部事情，都是把 <span class="math inline">\gamma\kappa</span> 按回 1 以下的工程手段：目标网络冻结自举目标，回放池抹平 <span class="math inline">\mu</span> 与 <span class="math inline">d_\pi</span> 的差，双评论家压住 <span class="math inline">\max</span>，裁剪限制 <span class="math inline">d_\pi</span> 的移动速度，保守项把 <span class="math inline">\mu</span> 的支撑外压下去。<strong>没有一个是定理。</strong></p>
+<p><strong>第二句：误差从一笔变成五笔。</strong> 表格型的误差只有“采样不够”一笔；加了函数逼近之后，部署时看到的差距可以写成五项之和：</p>
+<p><span class="math display">
+\underbrace{\mathcal{E}_{\text{部署}}}_{\lVert V_\theta-V^\pi\rVert}\;\approx\;
+\underbrace{\mathcal{E}_{\text{近似}}}_{\text{特征族 }d}\;+\;
+\underbrace{\mathcal{E}_{\text{估计}}}_{\text{样本 }m}\;+\;
+\underbrace{\mathcal{E}_{\text{自举}}}_{\text{目标周期 }C}\;+\;
+\underbrace{\mathcal{E}_{\text{外推}}}_{\text{数据覆盖}}\;+\;
+\underbrace{\mathcal{E}_{\text{口径}}}_{\text{评估方式}} \tag{33-39}
+</span></p>
+<p>这五项在本章都有对应的实跑数字：第一项在表 33-9 的第二列（<span class="math inline">d</span> 从 2 到 18，投影残差从 0.0658 降到 0.0004）；第二项在同一张表的 <span class="math inline">m=100</span> 列（<span class="math inline">d=2</span> 是 0.1635，加到 <span class="math inline">d=6</span> 反升到 0.2300）；第三项在表 33-10（<span class="math inline">C</span> 从 100 拉到 2000，回报 9.14 掉到 1.05，而 <span class="math inline">\max|Q|</span> 仍是 11 左右）；第四项在表 33-13（线性基外推高估 0.607，补一个 <span class="math inline">a^2</span> 降到 0.028）；第五项在表 33-15（挑最好虚高 0.64，是单次评估偏差 0.02 的 30 倍）。</p>
+<p><strong>第三句：五笔账里只有第一笔能靠加参数压下去。</strong> 这是本章最不“深度”的结论，也是最该记住的。加宽网络只作用于 <span class="math inline">\mathcal{E}_{\text{近似}}</span>；<span class="math inline">\mathcal{E}_{\text{估计}}</span> 要样本，<span class="math inline">\mathcal{E}_{\text{自举}}</span> 要调 <span class="math inline">C</span>，<span class="math inline">\mathcal{E}_{\text{外推}}</span> 要数据覆盖或换特征，<span class="math inline">\mathcal{E}_{\text{口径}}</span> 要改报告习惯。<strong>五个里面四个不是模型问题。</strong> 表 33-16 把八个代表性算法按“动了哪一笔账”排开，选型就是认领自己那一栏。</p>
+<p>这三句话也可以直接当评审提纲用。第一句问“你的稳定化手段拆的是哪条边”，第二句问“你报的误差里混了几笔”，第三句问“你加的算力作用在哪一笔”。<strong>三问都答得出来，方案才算讲清；有一问答不出，后面的曲线再漂亮也只是经验。</strong> 尤其是第三句：多数团队把预算全押在第一笔上，而 E1 已经说明 <span class="math inline">m/d</span> 不够时，这笔投入是负收益。</p>
+<p>表 33-16　八个代表性算法各自动了哪一笔账</p>
+<table style="width:100%;">
+<colgroup>
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">算法</th>
+<th style="text-align: left;">策略形态</th>
+<th style="text-align: left;">主要动作</th>
+<th style="text-align: left;">引入或放大的偏差</th>
+<th style="text-align: left;">最敏感的超参</th>
+<th style="text-align: left;">典型失效</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">DQN</td>
+<td style="text-align: left;">离散，<span class="math inline">\arg\max</span></td>
+<td style="text-align: left;">回放改分布 + 目标网络冻结自举</td>
+<td style="text-align: left;">最大化偏差</td>
+<td style="text-align: left;">目标周期 <span class="math inline">C</span>、回放容量</td>
+<td style="text-align: left;"><span class="math inline">C</span> 过大，值追不上（E2）</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Double DQN</td>
+<td style="text-align: left;">离散，选与评分离</td>
+<td style="text-align: left;">动作由在线网选、由目标网评</td>
+<td style="text-align: left;">轻微低估</td>
+<td style="text-align: left;">—</td>
+<td style="text-align: left;">探索不足时低估累积</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">DDPG</td>
+<td style="text-align: left;">确定性 actor</td>
+<td style="text-align: left;">只冻结自举（软更新）</td>
+<td style="text-align: left;"><span class="math inline">Q</span> 的偏差原样进梯度（式 33-26）</td>
+<td style="text-align: left;">软更新 <span class="math inline">\tau</span>、动作噪声</td>
+<td style="text-align: left;">对超参极敏感，<span class="math inline">Q</span> 缓慢漂移</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">TD3</td>
+<td style="text-align: left;">确定性 + 双评论家</td>
+<td style="text-align: left;">再取两个 <span class="math inline">Q</span> 的较小值</td>
+<td style="text-align: left;">偏低</td>
+<td style="text-align: left;">目标平滑尺度、延迟更新步数</td>
+<td style="text-align: left;">动作维高时探索慢</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">SAC</td>
+<td style="text-align: left;">随机策略</td>
+<td style="text-align: left;">自举 + 双 <span class="math inline">Q</span> + 熵正则</td>
+<td style="text-align: left;">熵项带来的温度偏差</td>
+<td style="text-align: left;"><span class="math inline">\alpha/c</span>、目标熵 <span class="math inline">\bar{\mathcal H}</span></td>
+<td style="text-align: left;">换奖励尺度不重调 <span class="math inline">\alpha</span>（E4）</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">PPO</td>
+<td style="text-align: left;">随机策略，同策略</td>
+<td style="text-align: left;">用裁剪限制单步移动</td>
+<td style="text-align: left;">裁掉的样本不计，梯度有偏</td>
+<td style="text-align: left;"><span class="math inline">\epsilon</span>、epoch 数、GAE <span class="math inline">\lambda</span></td>
+<td style="text-align: left;">把 <span class="math inline">\epsilon</span> 当 KL 上界（E3）</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">A2C</td>
+<td style="text-align: left;">随机策略，多线程</td>
+<td style="text-align: left;">并行采样去相关</td>
+<td style="text-align: left;">各线程策略不同步</td>
+<td style="text-align: left;">线程数、步长</td>
+<td style="text-align: left;">线程间梯度互相抵消</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">CQL</td>
+<td style="text-align: left;">任意 + 保守惩罚</td>
+<td style="text-align: left;">把分布外动作的值压下去</td>
+<td style="text-align: left;">保守偏差沿特征泄漏</td>
+<td style="text-align: left;">惩罚系数、目标间距 <span class="math inline">D</span></td>
+<td style="text-align: left;">支撑内被压坏（E5）</td>
+</tr>
+</tbody>
+</table>
+<p>八行里 DQN 与 Double DQN 只差一步（谁选动作），TD3 与 DDPG 只差两处（双 <span class="math inline">Q</span>、延迟更新），SAC 与 TD3 只差一个熵项。<strong>深度 RL 所谓的新算法，大多是旧算法在一笔账上的一处修改</strong>；记住账，比记住名字有用。</p>
+<h3 id="一页纸选型">33.7.2 一页纸选型</h3>
+<p>四个问题按顺序问，顺序不能打乱：</p>
+<ol type="1">
+<li><strong>模型可靠吗？</strong> 可靠就用 LQR / MPC（第 30、58 章），不要再往下问。</li>
+<li><strong>能离线反复评价吗？</strong> 能就用第 31 章的贝叶斯优化或直接搜索，样本效率高一个量级。</li>
+<li><strong>状态能枚举、动作离散吗？</strong> 能就用第 32 章的表格型：要无偏选 MC，要在线更新选 TD，要复用旧数据选 Q-learning。</li>
+<li><strong>都不是？</strong> 才进本章，并且先回答三个“数据从哪来”的问题，再谈算法。</li>
+</ol>
+<p>这三个问题是：</p>
+<ul>
+<li><strong>数据能不能反复用？</strong> 能（有回放池）就走 off-policy，代价记在 <span class="math inline">\kappa</span> 上；不能（同策略、大批量并行）就走 PPO 型，代价是样本效率。</li>
+<li><strong>探索是不是瓶颈？</strong> 是就上熵正则，并同时定好 <span class="math inline">\bar{\mathcal H}</span> 与 <span class="math inline">\alpha/c</span>；不是（奖励稠密、动作维低）就不必付温度的账。</li>
+<li><strong>有没有“不许试”的约束？</strong> 有就进离线，先算覆盖度，再决定要不要保守项，并且<strong>只报支撑内的性能</strong>。</li>
+</ul>
+<p>典型场景可以压成四句话：<strong>仿真便宜、并行路数多、要求稳</strong>——PPO；<strong>真机采样贵、要复用历史数据</strong>——SAC 或 TD3；<strong>只有一段历史数据、上线前不许试</strong>——CQL 型，并准备接受保守偏差；<strong>离散动作、单步决策</strong>——DQN 或 Double DQN。四句话都不涉及“哪个算法更先进”，只涉及“数据长什么样”。</p>
+<p>本章最常见的浪费与第 32 章同源：<strong>在第 1 问就能用 MPC 解决的问题上直接上了深度 RL</strong>。区别只在于到了本章，试错成本更高——第 32 章浪费的是时间，本章可能浪费真机与安全裕度。</p>
+<p>最后一条比选型更重要：<strong>先把评估口径与放行标准定下来，再开始训练。</strong> 口径定晚了，训练出来的曲线会被“怎么报”反向塑造——这就是 E7 那 0.64 的虚高在生产环境里的版本。<strong>选型错了可以重选，口径错了会把错的东西报成对的。</strong></p>
+<h3 id="十条常见错误">33.7.3 十条常见错误</h3>
+<p><strong>一、加宽网络不加数据。</strong> 错在方差项按 <span class="math inline">d/m</span> 上升（式 33-21），与偏差项方向相反。E1 里 <span class="math inline">m=100</span>、<span class="math inline">d</span> 从 2 加到 6，误差从 0.1635 涨到 0.2300——参数多四倍，误差大四成。做法：每个参数至少摊到几百个样本，<span class="math inline">m/d&lt;50</span> 时先加数据。</p>
+<p><strong>二、把目标网络当稳定器。</strong> 错在它只冻结自举目标，不改半梯度的病根。E2 里 <span class="math inline">\text{lr}=0.10</span> 一行，<span class="math inline">C</span> 从 1 拉到 2000 全部发散，量级从 <span class="math inline">1.2\times10^{19}</span> 到 <span class="math inline">1.7\times10^{272}</span>。做法：先定学习率（看 <span class="math inline">\max|Q|</span> 在前 1000 步是否单调上升），再放大 <span class="math inline">C</span>。</p>
+<p><strong>三、以为目标网络越稳越好。</strong> 错在 <span class="math inline">C</span> 太大时值函数追不上目标。E2 里 <span class="math inline">\text{lr}=0.01</span>、<span class="math inline">C=2000</span> 时 <span class="math inline">\max|Q|=11.0</span>，与正常收敛的 10.6 只差 4%，回报却只有 1.55。做法：<span class="math inline">C</span> 从 20–100 起，放大到“回报开始下降”再取一半；同时看回报，不要只看 <span class="math inline">\max|Q|</span>。</p>
+<p><strong>四、把 <span class="math inline">\epsilon</span> 当 KL 的上界。</strong> 错在裁剪只截断越界样本，而 KL 是 30 个 epoch 累积的。E3 里 <span class="math inline">\epsilon=0.2</span> 的累计 KL 是 0.0300，约 1.5 个 <span class="math inline">\epsilon^2/2</span>；<span class="math inline">\epsilon=0.02</span> 时最大 ratio 已到 1.25，远超 <span class="math inline">1+\epsilon=1.02</span>。做法：直接报 KL，并注明是单步还是整批。</p>
+<p><strong>五、改奖励尺度不重调温度与步长。</strong> 错在 <span class="math inline">\alpha/c</span> 才是不变量（式 33-36）。E4 里 <span class="math inline">c</span> 从 1 到 100，<span class="math inline">\alpha</span> 从 0.5481 到 54.7953，<span class="math inline">\alpha/c</span> 三位一致，策略分布逐位相同；反过来固定 <span class="math inline">\alpha</span>，同样的实验里熵会从 0.50 掉到 0.17。做法：让对偶自己走，并同时缩放策略步长或给策略加混合下限。</p>
+<p><strong>六、指望保守项“修好”外推。</strong> 错在惩罚沿特征方向整体平移。E5 里线性基的 <span class="math inline">Q(1.0)</span> 从 <span class="math inline">+0.247</span> 压到 <span class="math inline">-1.289</span>（方向对了），支撑内 <span class="math inline">Q(0.4)</span> 却从 <span class="math inline">+0.021</span> 掉到 <span class="math inline">-0.399</span>；而补一个 <span class="math inline">a^2</span>、不加任何惩罚，外推误差就从 0.607 降到 0.028。做法：先查“支撑外由哪个特征主导”，能换特征就不加惩罚。</p>
+<p><strong>七、把仿真里的带宽直接搬到真机。</strong> 错在延迟裕度随增益下降，且是硬边界。E6 里三档整定的裕度是 3、6、19 ms，激进档从 2 ms 的谱半径 0.993 跳到 3 ms 的 1.064，中间没有过渡带，时域上从 389 ms 收敛变成十步内发散。做法：先在仿真里把延迟加到谱半径刚过 1，再测策略；闭环带宽不超过 5–10 Hz。</p>
+<p><strong>八、报“历史最好”。</strong> 错在最大值把评估噪声当成了性能。E7 里 5 回合评估的单次偏差只有 0.02，30 个检查点取最大却抬高 0.64，是单次偏差的 30 倍。做法：报最后 <span class="math inline">N</span> 次评估的中位数，<span class="math inline">N</span> 对应的回合数不少于 100。</p>
+<p><strong>九、带探索评估与挑最好同时用。</strong> 错在两个偏差方向相反、会互相抵消。E7 里带 <span class="math inline">\varepsilon=0.15</span> 评估把 9.10 压到 8.86（<span class="math inline">-0.24</span>），与 <span class="math inline">+0.64</span> 的挑高部分对冲，看上去“很准”。做法：评估一律纯贪心，探索只留在训练里。</p>
+<p><strong>十、用单种子、单工况的曲线说“算法有效”。</strong> 错在本章的算法没有收敛定理，方差来源又多（初始化、数据顺序、种子）。E7 里这个简单任务的种子跨度只有 0.09（<span class="math inline">[9.07,9.16]</span>），换到难任务会放大一个量级。做法：种子不少于 20 个、至少两个工况、保留回归测试集，并报失败率而不是只报均值。</p>
+<p>十条里有六条与度量口径有关（三、四、五、八、九、十），四条与机制有关（一、二、六、七）。<strong>比例与第 32 章一致：深度 RL 的工程难度主要在定义与度量，不在网络结构。</strong></p>
+<h3 id="交付前的八项自检">33.7.4 交付前的八项自检</h3>
+<ol type="1">
+<li><strong><span class="math inline">d</span> 与 <span class="math inline">m</span> 的配比</strong>：每个参数摊到多少样本？<span class="math inline">m/d</span> 是否在数百以上？报的是投影残差还是总误差？</li>
+<li><strong><span class="math inline">\gamma</span>、<span class="math inline">C</span>、回合长度三者是否自洽</strong>：<span class="math inline">C</span> 是否小于折扣视野 <span class="math inline">1/(1-\gamma)</span> 的若干分之一？软更新时 <span class="math inline">C_{\text{eff}}\approx1/\tau</span> 是多少？</li>
+<li><strong>两条稳定化边是否都拆了</strong>：目标网络与双评论家是否都开？只开一个的话，另一个的账记在哪？</li>
+<li><strong>温度与奖励尺度是否联动</strong>：报的是 <span class="math inline">\alpha</span> 还是 <span class="math inline">\alpha/c</span>？目标熵是否随动作维数定？</li>
+<li><strong>动作参数化是否处理了有界性</strong>：<span class="math inline">\tanh</span> 的雅可比修正（式 33-16）是否在？限幅是截断动作还是截断梯度？</li>
+<li><strong>离线覆盖度</strong>：数据集里支撑外的动作占比多少？部署策略选到支撑外的频率多少？保守系数与目标间距怎么定的？</li>
+<li><strong>评估口径</strong>：种子数、回合数、报最后 <span class="math inline">N</span> 次还是历史最好、纯贪心还是带探索、失败率报了没有？</li>
+<li><strong>部署链路</strong>：观测—推理—通信—执行器的总延迟测了多少？对应的谱半径或延迟裕度是多少？监督器与联锁是否在位？</li>
+</ol>
+<p>八项里任何一项答不上来，结论只能写“在仿真中观察到”，不能写“该方法有效”。这份清单还有第二个用途：<strong>把它当实验记录模板</strong>，每次训练存档一次，出问题先比对两次记录，而不是从头重训。</p>
+<h3 id="本章刻意没做的三件事">33.7.5 本章刻意没做的三件事</h3>
+<p><strong>其一，只讲单智能体。</strong> 本章所有推导都假设环境是平稳的，即 <span class="math inline">P(s&#39;\mid s,a)</span> 不随训练变化。多智能体里每个智能体的环境中都含其他正在学习的智能体，这个假设直接破掉：<span class="math inline">d_\pi</span> 与 <span class="math inline">\mu</span> 的失配会随时间漂移，<span class="math inline">\kappa</span> 不再是一个数而是一条轨迹。第 34、35 章会把非平稳性作为主要矛盾重新推导，本章的稳定化手段在那里只够当起点。</p>
+<p><strong>其二，不讲基于模型的方法。</strong> 本章把模型完全排除在外，只从样本学值函数或策略。先把模型学出来再规划（MBRL、world model 一类）能大幅提高样本效率，代价是模型误差会被规划放大——这与第 30 章 MPC“模型不准就不准”是同一个问题，只是模型从辨识来变成了学来。这条线留到第 58 章的综合案例里与 MPC 一起讨论。</p>
+<p><strong>其三，离线只讲惩罚型。</strong> §33.3.6 与 E5 只讨论了“把分布外值压下去”这一类。离线 RL 还有约束型（限制新策略与数据分布的散度）、重要性采样型（用比值修正分布），以及只做策略评估不做改进的一大类。<strong>本章不给离线性能的下界证明</strong>，因为目前也没有可用的通用下界；能给的只有 §33.5.6 那六项报告要求，以及“只报支撑内”这条纪律。</p>
+<h3 id="展望三个方向与一条融合路线">33.7.6 展望：三个方向与一条融合路线</h3>
+<p><strong>方向一：从调算法到调数据。</strong> 本章七组实验里，收益最大的两处改动都不是换算法：E1 里换特征基、E5 里补一个 <span class="math inline">a^2</span>。这提示下一步的重心是数据而不是优化器——覆盖度怎么量、支撑外怎么补、交互式采集怎么与安全约束共存。<strong>数据飞轮比算法迭代更可能带来数量级提升。</strong></p>
+<p><strong>方向二：从经验评估到可计算下界。</strong> E7 说明评估偏差可以量化，但量化的是“自己骗自己”的那部分，量化不了“部署会差多少”。离线策略评估想给的是后者：用固定数据集估一个新策略的回报，并给出置信区间。难点与 E5 同源——支撑外的值不可信，而新策略恰恰会走到支撑外。<strong>在这条路走通之前，离线 RL 的工业结论只能是“相对比较”，不能是“绝对承诺”。</strong></p>
+<p><strong>方向三：从期望性能到逐点安全。</strong> 本章所有指标都是期望：平均回报、平均 KL、平均误差。事故要的是逐点约束。第 36 章会给正式的分析框架；工程上现在能做的两件事已在 §33.5.3 写过——动作屏蔽与安全滤波。<strong>前者保可行不保平滑，后者保安全不保最优，通常两个都上。</strong></p>
+<p><strong>一条融合路线：让 RL 管慢回路，让 MPC 管快回路。</strong> 理由是硬的：RL 的样本需求随 <span class="math inline">1/(1-\gamma)</span> 与状态维数增长，只有分钟级的慢回路承受得起；快回路要求逐点约束与毫秒级响应，正是 MPC 的强项（E6 已经说明 5 Hz 的环路只剩 3–19 ms 的延迟裕度）。两者衔接有三种方式，§33.5.5 列过：RL 给 MPC 送设定值、MPC 给 RL 当底层执行器、或按式（33-38）做残差叠加。<strong>第三种最容易落地</strong>：MPC 保证标称性能与约束，RL 只学“MPC 没建模的那一部分”，学坏了也只是性能退化，不会失稳。</p>
+<p>最后回到本章的定位。第 30 章回答了“模型已知时怎么最优”，第 31 章回答了“模型未知但可离线评价时怎么调参”，第 32 章回答了“只能在线试、但状态能枚举时怎么学”，本章回答了“状态枚举不了、动作连续时怎么学”。四者共用同一个目标，差别只在信息集 <span class="math inline">\mathcal{I}</span> 与函数族 <span class="math inline">\Pi_\Theta</span>：</p>
+<p><span class="math display">
+\pi^\star=\arg\min_{\pi\in\Pi_\Theta}\ \mathrm{E}_{\pi}\Big[\sum_{k=0}^{\infty}\gamma^{k}c(s_k,a_k)\Big] \tag{33-40}
+</span></p>
+<p>第 32 章的 <span class="math inline">\Pi_\Theta</span> 大到能装下任意从状态到动作的映射，本章的 <span class="math inline">\Pi_\Theta</span> 被压成一个参数化子集。<strong>压小函数族的代价，就是式（33-39）右边那五笔账；收益是把 <span class="math inline">10^6</span> 个状态换成 <span class="math inline">10^4</span> 个参数。</strong> 这笔交易值不值，取决于状态空间有多大、样本有多贵——不取决于哪个算法更新。</p>
+<p>所以本章最后想留下的不是某一行代码，而是一张账：<strong>你花出去的每一份算力、每一小时数据、每一次试验，最后落在五笔误差的哪一笔上。</strong> 账记得清，方法就是工具；账记不清，方法就成了信仰。</p>
+
+<nav class="footnav"><a href="ch032.html">← 上一章</a><a href="index.html">返回目录</a><a href="ch034.html">下一章 →</a></nav>
+</body>
+</html>

@@ -1,0 +1,1518 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="zh-CN" xml:lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>第 72 章　智能控制的混合架构 · 控制大综合</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    span.underline{text-decoration: underline;}
+    div.column{display: inline-block; vertical-align: top; width: 50%;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    ul.task-list{list-style: none;}
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+  <link rel="stylesheet" href="assets/book.css" />
+  <script src="assets/katex/katex.min.js"></script>
+  <script>document.addEventListener("DOMContentLoaded", function () {
+   var mathElements = document.getElementsByClassName("math");
+   var macros = [];
+   for (var i = 0; i < mathElements.length; i++) {
+    var texText = mathElements[i].firstChild;
+    if (mathElements[i].tagName == "SPAN") {
+     katex.render(texText.data, mathElements[i], {
+      displayMode: mathElements[i].classList.contains('display'),
+      throwOnError: false,
+      macros: macros,
+      fleqn: false
+     });
+  }}});
+  </script>
+  <link rel="stylesheet" href="assets/katex/katex.min.css" />
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+  <link rel="stylesheet" href="assets/site.css" />
+</head>
+<body>
+<nav class="topnav"><a class="home" href="index.html">目录</a><span class="pos">072 / 115</span><span class="pager"><a href="ch071.html">上一章</a><a href="ch073.html">下一章</a></span></nav>
+
+<nav id="TOC" role="doc-toc">
+<ul>
+<li><a href="#第72章-智能控制的混合架构">第72章 智能控制的混合架构</a>
+<ul>
+<li><a href="#动机与直观理解">72.1 动机与直观理解</a></li>
+<li><a href="#数学原理">72.2 数学原理</a></li>
+<li><a href="#设计步骤">72.3 设计步骤</a></li>
+<li><a href="#连续情形">72.4 连续情形</a></li>
+<li><a href="#离散情形">72.5 离散情形</a></li>
+<li><a href="#稳定性与性能">72.6 稳定性与性能</a></li>
+<li><a href="#参数意义与作用">72.7 参数意义与作用</a></li>
+<li><a href="#调参方法与经验">72.8 调参方法与经验</a></li>
+<li><a href="#优化与改进">72.9 优化与改进</a></li>
+<li><a href="#工程落地">72.10 工程落地</a></li>
+<li><a href="#优缺点与适用边界">72.11 优缺点与适用边界</a></li>
+<li><a href="#python-仿真代码">72.12 Python 仿真代码</a></li>
+</ul></li>
+</ul>
+</nav>
+<h1 id="第72章-智能控制的混合架构">第72章 智能控制的混合架构</h1>
+<h2 id="动机与直观理解">72.1 动机与直观理解</h2>
+<p>前面六章各讲了一种“新”控制器：模糊规则、神经网络、遗传整定、强化学习、迭代学习。每一章都尽量把机制讲透，也因此都面临同一个追问：既然第 44 章的 PID 只有三个参数、跑得又快又稳，为什么还要引入这些结构？第 66–71 章的回答是“单机制在某些工况下确实更好”，但那些更好往往是局部的：模糊规则改善了超调，神经网络拟合了非线性，强化学习学会了前馈形状，可它们各自的短板也同样明显——模糊规则靠人写、神经网络不保证稳定、强化学习要大量回合、迭代学习离不开重复轨迹。本章不再新增机制，只回答一个工程上更常见的问题：<strong>把这些机制装进同一个回路时，谁负责哪一段、彼此怎么交接、收益到底从哪来。</strong></p>
+<h3 id="先把算例钉死">先把算例钉死</h3>
+<p>为了让“混合”与“不混合”能直接比较，本章继续用第 66–70 章那个算例：二阶非线性对象</p>
+<p><span class="math display">
+y&#39;&#39; = -2y&#39; + K(y)\,u,\qquad K(y) = 4 + 6y \tag{72-1}
+</span></p>
+<p>工作区间 <span class="math inline">y\in[1.5,\,2.1]</span> 内静态增益从 13 变到 20，接近 1.5 倍；采样周期 <span class="math inline">T_s=10</span> ms；执行到测量的纯延迟 5 拍；控制量限幅 <span class="math inline">\pm 1.2</span>；参考轨迹是 4 s 一个来回的往复运动</p>
+<p><span class="math display">
+r(t) = R_0 + A_1\bigl(1-\cos\omega t\bigr) + A_3\bigl(1-\cos 3\omega t\bigr) \tag{72-2}
+</span></p>
+<p>其中 <span class="math inline">R_0=1.50</span>、<span class="math inline">A_1=0.55</span>、<span class="math inline">A_3=0.06</span>、<span class="math inline">\omega=2\pi/4</span>。每回合 400 拍，回合结束复位。基线固定增益 PID 取 <span class="math inline">(K_p,K_i,K_d)=(2.00,\,0.05,\,0.20)</span>，与前面几章一字不差。这样做的代价是本章不能挑一个“对自己有利”的对象，好处是任何一句“比 PID 好多少”都能被读者拿前几章的数字复核。</p>
+<h3 id="结论先摆在这里">结论先摆在这里</h3>
+<p>在同一轨迹、同一限幅、同一延迟下，五种结构的跟踪误差 RMS 分别是：</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">结构</th>
+<th style="text-align: left;">控制器</th>
+<th style="text-align: right;">RMS</th>
+<th style="text-align: right;">最大误差</th>
+<th style="text-align: right;">控制量总变差</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">无混合</td>
+<td style="text-align: left;">固定 PID</td>
+<td style="text-align: right;">0.1161</td>
+<td style="text-align: right;">0.1974</td>
+<td style="text-align: right;">1.708</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">串联</td>
+<td style="text-align: left;">模糊调度 PID</td>
+<td style="text-align: right;">0.1133</td>
+<td style="text-align: right;">0.2017</td>
+<td style="text-align: right;">1.741</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">并联</td>
+<td style="text-align: left;">PID + 前馈查表</td>
+<td style="text-align: right;">0.1057</td>
+<td style="text-align: right;">0.1559</td>
+<td style="text-align: right;">1.695</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">切换</td>
+<td style="text-align: left;">双模 PD/PID</td>
+<td style="text-align: right;">0.0814</td>
+<td style="text-align: right;">0.1482</td>
+<td style="text-align: right;">2.281</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">分层</td>
+<td style="text-align: left;">MPC 上层 + PID 底层</td>
+<td style="text-align: right;">0.0310</td>
+<td style="text-align: right;">0.0639</td>
+<td style="text-align: right;">2.462</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">单一机制</td>
+<td style="text-align: left;">长时域 MPC</td>
+<td style="text-align: right;">0.0048</td>
+<td style="text-align: right;">0.0127</td>
+<td style="text-align: right;">1.569</td>
+</tr>
+</tbody>
+</table>
+<p>这张表最容易被误读成“越复杂越好”。真实情况没有这么顺：串联的模糊调度只把误差从 0.1161 压到 0.1133，改善 2.4%，还不如把 PID 三个参数在网格上重搜一遍得到的 0.0854；而分层结构拿到 0.0310，靠的并不是“更聪明的智能算法”，而是把预测权限交给了一个会算未来的模块。换句话说，<strong>混合架构的收益主要来自“把某一段工作交给有能力做它的模块”，而不是来自“模块本身有多智能”</strong>。</p>
+<h3 id="四种接法四种分工">四种接法，四种分工</h3>
+<p>按模块之间的连接关系，混合结构可以分成四类，图 72-1 把它们画在同一张图里。四个面板的外环完全一样（求和点、对象、反馈），只有虚线框内的部分不同，这样比较的才是结构而不是画法。</p>
+<figure>
+<img src="figs/ch072/fig_072_01_taxonomy.svg" alt="图 72-1 四种混合拓扑" /><figcaption aria-hidden="true">图 72-1 四种混合拓扑</figcaption>
+</figure>
+<p>串联是把一个模块的输出接到另一个模块的输入端。最常见的是“调度器 + PID”：模糊系统不直接产生控制量，只根据误差与误差导数调整 PID 的三个增益，控制律仍然是 PID。这种做法保留了 PID 的积分作用与稳定性直觉，风险最小，收益也最小。</p>
+<p>并联是两路同时工作、输出相加。一路通常是 PID，负责低频与稳态；另一路是补偿器，负责前馈、非线性补偿或相位超前。并联的关键不在两路各自多强，而在“补偿量是否可学”——本章会看到，把误差、误差导数塞进补偿网络，闭环反而比不加更差，因为网络把拟合误差变成了额外的反馈增益。</p>
+<p>切换是按工况分段，同一时刻只有一个控制器在起作用。大误差段用高增益 PD 抢快速性，小误差段切回 PID 消静差，中间用滞环与最短驻留防抖。切换的难点从来不是“选哪个”，而是“切换瞬间输出跳多少”。</p>
+<p>分层是上下两级：上层看得远、算得慢，负责给出目标或前馈；下层看得近、算得快，负责跟踪与抗扰。本章用 MPC 做上层、PID 做下层，两者通过一个限幅的“权限”接口相连。</p>
+<h3 id="一条必须先说的负面结果">一条必须先说的负面结果</h3>
+<p>如果混合只是“把 PID 换成一个神经网络”，结果会很糟。用 2 输入（误差、误差导数）、9 条规则的零阶 TSK 直接替代 PID，开环拟合的测试 RMSE 只有 0.0893，看起来不错；可一旦接进闭环，RMS 冲到 2.8701，控制量 30.2% 的拍数贴着限幅，最大误差 3.9078——系统已经失稳。原因不神秘：这个映射里没有积分状态，误差长期偏一点它就长期偏一点；而训练数据只覆盖了 PID 轨迹附近很窄的一条带，闭环一旦偏离，网络就在自己没见过的区域外推。</p>
+<p>同一批数据，换成 3 输入（多一个参考位置）后闭环误差降到 0.1302；再把补偿量限制成“只依赖参考位置”的一维查表，闭环误差 0.1057，终于低于 PID。三组数字说明的是同一件事：<strong>混合架构的性能瓶颈通常在接口，而不在模块。</strong>输入选错了，参数再多也没用；接口选对了，9 个参数也能干活。这句话会贯穿本章后面的每一节。</p>
+<h3 id="三个必须先拆掉的误解">三个必须先拆掉的误解</h3>
+<p>在往下走之前，有三个说法需要先拆掉，因为它们几乎出现在每一次关于混合架构的讨论里，而且都会把设计带偏。</p>
+<p>第一个误解是“混合等于更智能”。混合只改变分工，不改变每个模块的智力水平。本章的模糊-PID 用了 9 条规则、9 个参数，看起来比三个数的 PID“聪明”，可它只把误差从 0.1161 压到 0.1133。原因很简单：它做的事仍然是“用误差算控制量”，只是把常数换成了有界函数，信息的来源没有变。判断一个混合结构是否真的“更智能”，唯一的标准是“它有没有拿到别的模块拿不到的信息”，而不是“它用了什么算法”。</p>
+<p>第二个误解是“模块越多越强”。本章有一组现成的反例：同样是 9 个参数，接 2 个输入（误差、误差导数）闭环失稳到 2.8701，只接 1 个输入（参考位置）却做到 0.1057。参数一样多，接法不同，结果差 27 倍。模块数量与性能之间没有单调关系，甚至常常相反——每多一个模块，就多一条可能出错的通道、多一个需要定契约的接口。</p>
+<p>第三个误解是“有了智能模块就能自适应”。自适应需要两件事同时成立：模块的输入能反映工况变化，且它的有效区域真的被访问到。本章的调度表两条都只满足一半：输入里有误差与误差导数，能反映工况；但闭环实际只走到曲面的中心一小块（<span class="math inline">K_p</span> 只在 0.955–1.164 之间活动），表上那些为“大误差”准备的格子从未被踩到。设计者以为自己在做增益调度，实际做的是一条几乎不变的增益曲线。</p>
+<p>拆掉这三个误解之后，本章讨论的范围也就清楚了：这里的“混合”专指<strong>两个及以上各自具备独立控制律的模块装进同一个回路</strong>。传感器滤波、抗积分饱和、指令限速这些常规环节不算混合，它们是任何控制器都有的外围；而“PID 加一个前馈项”算不算，取决于前馈项是否有自己的参数与设计目标——本章把它算作最简单的并联混合。</p>
+<h3 id="本章的走法">本章的走法</h3>
+<p>72.2 把四种结构写成统一的数学形式，重点是“调度”“切换”“相加”“分层”这四个动作各自的表达式与约束；72.3 给出可照做的设计步骤，包括接口契约怎么写；72.4 与 72.5 分别在连续与离散两种视角下讨论延迟、采样与预测矩阵；72.6 讨论稳定性与性能，会给出“权限越大越不稳”的定量证据；72.7 逐个参数说明它动的是哪一段；72.8 给协同调参的顺序与经验；72.9 讨论终端值学习这类“给短时域打补丁”的做法为什么只在中等时域有效；72.10 讲工程落地，包括复杂度预算与模块间接口；72.11 给适用边界；72.12 是完整代码。</p>
+<p>若只想记一句话：<strong>混合不是把多个控制器堆在一起，而是把不同性质的工作分给不同性质的模块，并为它们规定一个不会互相打架的接口。</strong></p>
+<h2 id="数学原理">72.2 数学原理</h2>
+<h3 id="所有混合结构共用一个骨架">所有混合结构共用一个骨架</h3>
+<p>把一个混合控制器拆开，本质上只有三样东西：一条反馈通道 <span class="math inline">u_{fb}</span>、一条前馈通道 <span class="math inline">u_{ff}</span>、一组可调或可学的参数 <span class="math inline">\theta</span>。写成统一形式</p>
+<p><span class="math display">
+u(k) = \Psi\bigl(u_{fb}(k),\, u_{ff}(k),\, \theta(x(k))\bigr) \tag{72-3}
+</span></p>
+<p>差别全在 <span class="math inline">\Psi</span> 上。而 <span class="math inline">\Psi</span> 能做的事只有四种：让 <span class="math inline">\theta</span> 随状态变（调度）、让两路相加（并联）、按条件选一路（切换）、把一路嵌进另一路（分层）。四种拓扑对应四种算子，这不是分类学的巧合，而是“两个模块的输出如何组合”这个问题只有这几种不破坏因果性的答案。下面逐个写出表达式，并指出每种组合在数学上新增了什么约束。</p>
+<h3 id="四种算子覆盖了所有接法">四种算子覆盖了所有接法</h3>
+<p>把两个模块记为 <span class="math inline">A</span> 与 <span class="math inline">B</span>，各自把状态映射成控制量。要让它们同时存在于一个因果回路里，输出只能这样合成：</p>
+<p><span class="math display">
+u = B\bigl(A(x)\bigr),\qquad
+u = A(x)+B(x),\qquad
+u = \sigma(x)\,A(x)+\bigl[1-\sigma(x)\bigr]B(x),\qquad
+u = B\bigl(x;\ A(x)\bigr)
+</span></p>
+<p>四式分别是复合、相加、条件选择、把一方的输出当作另一方的目标或约束。之所以没有第五种，是因为“两个函数的合成”在因果系统里只有代入、相加、选择、约束四种基本形式；任何更复杂的写法都可以展开成这四者的树。</p>
+<p>这个视角有两个用处。第一，它给出了“复杂度”的一个可计算定义：<strong>树的深度</strong>。串联、并联、切换都是深度 1，只有一个接口；分层是深度 2——上层算目标、经由权限接口交给下层，两个接口串联。每多一层，就多一处需要单独验证的契约，也多一处可能出错的地方。本章后续所有关于“复杂度预算”的讨论，本质上都是在说“树的深度不要超过 2”。</p>
+<p>第二，它解释了为什么“模糊混合”介于串联与并联之间。把上面第三式里的 <span class="math inline">\sigma</span> 从 <span class="math inline">\{0,1\}</span> 放松到 <span class="math inline">[0,1]</span>，切换就变成了加权混合；若 <span class="math inline">\sigma</span> 由模糊规则给出，它就是“模糊混合”，既有并联的连续性，又有切换的分段意图。本章没有采用这种结构，因为它把两种控制律的缺点也一起继承了：既需要两套控制器都在线，又需要额外设计 <span class="math inline">\sigma</span> 的形状。</p>
+<h3 id="串联调度器只动参数不动结构">串联：调度器只动参数，不动结构</h3>
+<p>模糊-PID 的写法是</p>
+<p><span class="math display">
+u = s_{Kp}(e,\dot e)\,K_p\,e \;+\; s_{Ki}(e,\dot e)\,K_i\!\int\! e\,dt \;+\; s_{Kd}(e,\dot e)\,K_d\,\dot e \tag{72-4}
+</span></p>
+<p>三个调度系数各自是一张 3×3 规则表的输出。每条输入先归一化到 <span class="math inline">[-1,1]</span> 的三个语言值（负、零、正），隶属度用三角函数</p>
+<p><span class="math display">
+\boldsymbol\mu(x) = \Bigl[\max(-x,0),\;\; 1-|x|,\;\; \max(x,0)\Bigr],\qquad x\in[-1,1] \tag{72-5}
+</span></p>
+<p>规则用乘积推理，去模糊用加权平均，于是调度系数是一个连续曲面</p>
+<p><span class="math display">
+s(e,\dot e) = \frac{\sum_{i=1}^{9}\mu_i(e)\,\mu_j(\dot e)\,c_{ij}}{\sum_{i=1}^{9}\mu_i(e)\,\mu_j(\dot e)} \tag{72-6}
+</span></p>
+<p>其中 <span class="math inline">c_{ij}</span> 是第 <span class="math inline">(i,j)</span> 条规则的结论。式 (72-6) 有两个性质值得记住：分母恒为正，所以曲面不会除零发散；结论是常数的加权平均，所以输出一定落在 <span class="math inline">\min c_{ij}</span> 与 <span class="math inline">\max c_{ij}</span> 之间，不可能超出人写的范围。这就是串联结构“风险最小”的数学原因——它没有新增任何动态，只是把三个常数换成了三个有界函数。本章的 <span class="math inline">K_p</span> 表取</p>
+<p><span class="math display">
+C_{Kp} = \begin{bmatrix} 1.30 &amp; 1.15 &amp; 1.00 \\ 1.15 &amp; 1.00 &amp; 0.95 \\ 1.00 &amp; 0.95 &amp; 0.85 \end{bmatrix} \tag{72-7}
+</span></p>
+<p>（行对应 <span class="math inline">e</span> 的负/零/正，列对应 <span class="math inline">\dot e</span> 的负/零/正）。读法是“误差大且误差在扩大时把 <span class="math inline">K_p</span> 放大到 1.3 倍，误差大但误差在收敛时收回到 0.85 倍”。<span class="math inline">K_i</span> 表方向相反，误差大时压低积分防饱和；<span class="math inline">K_d</span> 表在误差大且同向时略降，避免微分放大噪声。</p>
+<h3 id="切换它是状态机不是函数">切换：它是状态机，不是函数</h3>
+<p>双模控制不能写成一个静态映射，因为同一组 <span class="math inline">(e,\dot e)</span> 在不同时刻可能对应不同模式。正确的写法是带记忆的状态转移：</p>
+<p><span class="math display">
+\sigma(k) =
+\begin{cases}
+\text{PD}, &amp; |e| &gt; \theta_{th} + h \ \text{且驻留期满} \\
+\text{PID}, &amp; |e| &lt; \theta_{th} - h \ \text{且驻留期满} \\
+\sigma(k-1), &amp; \text{其他}
+\end{cases} \tag{72-8}
+</span></p>
+<p><span class="math inline">h</span> 是滞环半宽，驻留期是最短保持拍数。式 (72-8) 里两个机制各自解决一个问题：滞环消除阈值附近的反复穿越，驻留消除模式抖动带来的控制量抖动。切换瞬间的输出不连续量定义为</p>
+<p><span class="math display">
+\Delta u = \bigl|u_B(k) - u_A(k)\bigr| \tag{72-9}
+</span></p>
+<p>无扰切换的做法是在切换时刻记下偏置 <span class="math inline">b = u_A - u_B</span>，此后输出 <span class="math inline">u_B + b</span>。注意这<strong>只保证输出连续，不保证状态一致</strong>：<span class="math inline">B</span> 的积分器仍然是它自己的历史，偏置会一直挂在输出上，直到被积分作用慢慢吸收。72.8 节会给出实测——本章算例里直接切换的跳变是 0.1171，偏置补偿把跳变压到 0，但切换后 0.3 s 内的最大误差反而从 0.1674 升到 0.1875。所以“无扰”是一个局部性质，不等于“更好”。</p>
+<h3 id="并联相加之前先限幅">并联：相加之前先限幅</h3>
+<p>并联结构的表达式最简单</p>
+<p><span class="math display">
+u = u_{PID} + \operatorname{sat}\bigl(u_{net},\,\pm R\bigr) \tag{72-10}
+</span></p>
+<p><span class="math inline">\operatorname{sat}</span> 是逐拍的硬限幅。这一项看起来只是安全措施，实际上是并联结构能否成立的前提：补偿网络在训练分布之外可能给出任意大的输出，若不加限幅，一次外推就能把执行器推到饱和，而饱和又会让误差变大、把网络推得更远。限幅把“网络犯错”的后果从“系统失稳”降级为“这一拍少补一点”。</p>
+<h3 id="零阶-tsk规则表就是径向基网络">零阶 TSK：规则表就是径向基网络</h3>
+<p>把式 (72-6) 的结论从常数换成“每条规则一个常数、规则数等于输入组合数”，就是零阶 TSK：</p>
+<p><span class="math display">
+u = \sum_{i=1}^{M}\psi_i(x)\,\theta_i,\qquad
+\psi_i = \frac{\exp\!\bigl(-\|x-c_i\|^2/2\sigma^2\bigr)}{\sum_{j}\exp\!\bigl(-\|x-c_j\|^2/2\sigma^2\bigr)} \tag{72-11}
+</span></p>
+<p><span class="math inline">n</span> 个输入、每维 3 个中心时 <span class="math inline">M=3^n</span>：2 输入 9 条规则 9 个参数，3 输入 27 条规则 27 个参数。前提参数（中心 <span class="math inline">c_i</span>、宽度 <span class="math inline">\sigma</span>）固定，结论参数 <span class="math inline">\theta</span> 由最小二乘一次解出，所以“训练”没有随机性、没有学习率、没有回合数——它退化成一次线性回归。这一点很重要：本章所有神经-模糊的结果都可以被读者用同一份数据复算，不存在“调了种子才好看”的空间。</p>
+<p>代价也在这里。式 (72-11) 是一个<strong>静态映射</strong>，输入里没有积分状态，所以它天生没有消静差的能力；输入里没有参考相位，它就学不到前馈。72.1 节那条 2.8701 的失稳曲线，就是这两件事同时发生的后果。</p>
+<h3 id="分层预测给目标反馈保跟踪">分层：预测给目标，反馈保跟踪</h3>
+<p>分层结构里，上层解一个有限时域优化</p>
+<p><span class="math display">
+\min_{U}\ J = \sum_{i=1}^{N_p}\bigl(\hat y_{k+i}-r_{k+i}\bigr)^2
++ \lambda_u\sum_{j} u_j^2 + \lambda_d\sum_{j}\bigl(\Delta u_j\bigr)^2 \tag{72-12}
+</span></p>
+<p>预测用“自由响应 + 脉冲矩阵”写成线性形式</p>
+<p><span class="math display">
+\hat{\mathbf y} = \mathbf y_{free} + G\,\mathbf U \tag{72-13}
+</span></p>
+<p><span class="math inline">G</span> 的第 <span class="math inline">(i,j)</span> 元是第 <span class="math inline">j</span> 个控制块对第 <span class="math inline">i</span> 拍输出的贡献，块内指令在第 <span class="math inline">i-(d-1)</span> 拍生效（<span class="math inline">d</span> 为延迟拍数）。下层不做优化，只按权限相加：</p>
+<p><span class="math display">
+u = u_{PID} + \operatorname{sat}\bigl(u_{MPC},\,\pm R\bigr) \tag{72-14}
+</span></p>
+<p><span class="math inline">R</span> 是本章最值得盯住的一个量。<span class="math inline">R=0</span> 时式 (72-14) 退化成纯 PID；<span class="math inline">R</span> 等于满量程时退化成纯 MPC。中间每一个取值都是一种“分工方案”，而 72.7 节会看到，<span class="math inline">R</span> 从 0 加到 0.20 时误差从 0.1161 掉到 0.0310，从 0.20 再加到 0.40 时误差几乎不变（0.0295），总变差却从 2.462 涨到 11.556。权限不是越大越好，它有一个明显的拐点。</p>
+<h3 id="为什么用算子写而不用框图">为什么用算子写，而不用框图</h3>
+<p>四种接法可以画成四张框图，但框图不是一种能计算的东西。本章选择先写成一个统一的算子形式，再让四种接法成为它的特例，原因有三个。</p>
+<p>第一，框图看不出“谁是主人”。两张框图连线一样，可能一张是串级、一张是前馈，差别只在“内环的设定值从哪来”。写成算子之后，这个差别变成 <span class="math inline">\Psi</span> 的一个分量取 <span class="math inline">u_1</span> 还是取 <span class="math inline">r</span>，是一行可以核对的东西。</p>
+<p>第二，框图不能直接算复杂度。本章把复杂度定义成“算子树的深度”，是因为深度决定了串行环节的数量，而串行环节的数量直接对应单拍耗时；并联的两个分支可以并发，深度不增加。这个定义粗糙，但它可算，而且与实测的耗时排序一致：PID 0.014 ms、模糊调度 0.061 ms、分层 0.345 ms，正好对应深度一到三。</p>
+<p>第三，框图无法承接“接口契约”。接口是数学对象——输入的物理量、量纲、有效区间、失效时的取值；把这些写进 <span class="math inline">\Psi</span> 的每个分量，才能谈“两个模块能不能接”。本章 72.3 节那张五行的接口表，本质上是在给算子树的每条边标注定义域。</p>
+<p>一句话：<strong>框图用来讲给人听，算子用来讲给机器和测试听</strong>。本章两种都画，但凡是需要推理的地方，都回到算子形式。</p>
+<h3 id="参数个数不等于自由度">参数个数不等于自由度</h3>
+<p>把上面五组式子放在一起，能看出混合结构绕不开的三条约束。第一，<strong>任何组合都不能引入新的不稳定极点</strong>：串联靠有界调度系数保证，并联靠限幅保证，切换靠滞环与驻留保证，分层靠权限 <span class="math inline">R</span> 保证。第二，<strong>组合后的闭环带宽由最慢的一段决定</strong>：上层 20 拍预测配下层 1 拍 PID，整体响应不会比 20 拍更快，这也是为什么分层结构的误差曲线比纯 MPC 粗糙。第三，<strong>组合不创造信息</strong>：如果某个模块的输入里没有相位，它就不可能输出正确的前馈，无论参数有多少。第三条是本章后面反复出现的判据。</p>
+<p>在进入设计步骤之前，还要把“参数个数”与“自由度”分开。参数个数是控制器里可调的数的总数，自由度是“真正能改变闭环行为的独立方向数”。两者在单控制器里几乎相等——PID 三个参数对应三个方向；在混合结构里却差得很远，因为接口会引入强相关：调度系数乘在增益上，改动中心与改动范围对闭环的影响是同向的；TSK 的 27 个结论里，边缘格子的权重接近零，改它们几乎不影响输出。</p>
+<p>本章大致是这样：对外可见约 40 个参数，其中真正被反复激励的，是调度表中心附近的几个格子、TSK 里被样本覆盖的十来个结论、以及 6 个接口参数。其余参数只在极端工况下才起作用——它们不增加稳态性能，只增加验证负担。这也是 72.10 节那条“每增加十个参数就多一个验证工况”的由来：<strong>参数个数的代价主要不在计算，而在验证</strong>。计算上 40 个参数与 3 个参数都是几次乘加，差别可以忽略；验证上，40 个参数需要覆盖的组合数比 3 个参数多几个数量级。</p>
+<h2 id="设计步骤">72.3 设计步骤</h2>
+<h3 id="第零步先判断该不该混合">第零步：先判断该不该混合</h3>
+<p>在写任何代码之前，先做一次“症状归因”。同一个误差表现，可能只需要调一个参数，也可能必须换结构；如果归因错了，后面五步全是白做。下面这张表是本章建议的对照。</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">症状</th>
+<th style="text-align: left;">最可能的原因</th>
+<th style="text-align: left;">先试什么</th>
+<th style="text-align: left;">需要混合吗</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">稳态有恒定偏差</td>
+<td style="text-align: left;">积分增益不足或积分饱和</td>
+<td style="text-align: left;">调 <span class="math inline">K_i</span>、加抗饱和</td>
+<td style="text-align: left;">不需要</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">换向时明显滞后</td>
+<td style="text-align: left;">延迟造成的相位损失</td>
+<td style="text-align: left;">前馈或预测</td>
+<td style="text-align: left;">需要</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">大幅超调、小幅很好</td>
+<td style="text-align: left;">增益随工况变化</td>
+<td style="text-align: left;">增益调度</td>
+<td style="text-align: left;">需要</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">不同工况表现差别大</td>
+<td style="text-align: left;">单一增益无法兼顾</td>
+<td style="text-align: left;">调度或切换</td>
+<td style="text-align: left;">需要</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">误差与轨迹重复性强相关</td>
+<td style="text-align: left;">存在可学习的前馈形状</td>
+<td style="text-align: left;">迭代学习</td>
+<td style="text-align: left;">需要</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">误差主要由随机扰动决定</td>
+<td style="text-align: left;">反馈带宽不足</td>
+<td style="text-align: left;">提高增益、加观测器</td>
+<td style="text-align: left;">不需要</td>
+</tr>
+</tbody>
+</table>
+<p>表里“不需要”的两行最容易被忽略。稳态偏差与随机扰动都是反馈本身能处理的事，加一个智能模块只会让问题从“参数没调好”变成“两个模块都没调好”。本章算例的基线 PID 在标称工况下饱和率为 0、误差 0.1161，属于“能用但不够好”，这时才轮到混合结构出场。</p>
+<p>归因之后还要问三个问题：现有控制器离物理极限有多远（本章是 0.1161 对 0.0293，差四倍，有空间）；误差里有没有可预测的分量（有，参考完全已知）；团队能不能维护多出来的参数（这决定了参数预算）。三个问题里任何一个答“不能”，都应该停在第零步。</p>
+<h3 id="第一步先决定谁不做">第一步：先决定“谁不做”</h3>
+<p>混合架构最常见的失败不是模块不好，而是两个模块抢同一件事。让模糊调度和神经网络都去补前馈，结果是一条通道被补两遍；让 PD 和 PID 都带积分，切换时两个积分器各自累积，一切换就打架。所以设计的第一步不是写代码，而是列一张“任务—模块”对照表，把每项工作<strong>唯一</strong>地指派给一个模块。</p>
+<p>本章算例的任务可以切成四段：稳态消差、快速段抢时间、相位超前（前馈）、约束下的多步预测。切完之后指派关系就清楚了：稳态消差只能给带积分的模块（PID 或模糊-PID），抢时间给高增益 PD，前馈给能看到参考相位的模块，多步预测给 MPC。任何一个模块如果被指派了两件事，就要检查它有没有能力同时做好；如果没有，宁可拆开。</p>
+<h3 id="第二步把接口写成契约">第二步：把接口写成契约</h3>
+<p>接口不是“函数签名”，而是四条必须写下来的约定：输入是什么、输出的量纲与限幅、更新周期、失效时的降级值。本章四个模块的接口如下。</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">模块</th>
+<th style="text-align: left;">输入</th>
+<th style="text-align: left;">输出</th>
+<th style="text-align: left;">周期</th>
+<th style="text-align: left;">失效降级</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">模糊调度</td>
+<td style="text-align: left;">归一化 <span class="math inline">e</span>、<span class="math inline">\dot e</span></td>
+<td style="text-align: left;">三个系数，<span class="math inline">[0.6,1.3]</span></td>
+<td style="text-align: left;">1 拍</td>
+<td style="text-align: left;">全部置 1.0</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">双模逻辑</td>
+<td style="text-align: left;">归一化 <span class="math inline">\lvert e\rvert</span></td>
+<td style="text-align: left;">模式标志</td>
+<td style="text-align: left;">1 拍</td>
+<td style="text-align: left;">保持 PID</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">前馈查表</td>
+<td style="text-align: left;">归一化参考位置</td>
+<td style="text-align: left;">补偿量，<span class="math inline">\pm0.40</span></td>
+<td style="text-align: left;">1 拍</td>
+<td style="text-align: left;">输出 0</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">MPC 上层</td>
+<td style="text-align: left;">状态、参考序列</td>
+<td style="text-align: left;">预测增量，<span class="math inline">\pm R</span></td>
+<td style="text-align: left;">1 拍</td>
+<td style="text-align: left;">输出 0</td>
+</tr>
+</tbody>
+</table>
+<p>“失效降级”这一列最容易被忽略，却决定了系统在异常时是“性能下降”还是“直接失控”。本章所有降级值都取“退化成纯 PID”——因为纯 PID 在本算例里饱和率为 0、误差 0.1161，是一个已知安全的兜底。工程上这条经验可以推广：<strong>任何一个智能模块的失效默认值，都应当让系统退化成一个你愿意单独交付的控制器。</strong></p>
+<h3 id="第三步选组合算子">第三步：选组合算子</h3>
+<p>四种算子里选哪一个，有两个判据。第一个是“要不要记忆”：调度与并联是无记忆的代数运算，切换与分层带状态。第二个是“输出要不要连续”：切换在原理上不连续，必须额外加滞环或偏置；其余三种天然连续。</p>
+<p>具体到本章：如果只是想让 PID 在大小误差段表现不同，但又不希望出现模式跳变，用调度而不是切换——代价是调度只能连续地改变增益，做不出“大误差段完全冻结积分”这种硬逻辑。反之，如果确实需要“某段完全不用积分”，就只能用切换，并且必须接受滞环与驻留带来的参数。本章的双模结果说明这个代价是值得的：0.0814 对 0.1133，改善 28%。</p>
+<h3 id="第四步权限从小往大加">第四步：权限从小往大加</h3>
+<p>凡是“两路相加”的结构，都有一路是主角、一路是配角，配角能拿多少权限必须由小到大试出来，而不是一次给满。本章把权限 <span class="math inline">R</span> 从 0 扫到 1.20（满量程），六组结果如下。</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: right;">权限 <span class="math inline">R</span></th>
+<th style="text-align: right;">RMS</th>
+<th style="text-align: right;">最大误差</th>
+<th style="text-align: right;">总变差</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">0.00</td>
+<td style="text-align: right;">0.1161</td>
+<td style="text-align: right;">0.1974</td>
+<td style="text-align: right;">1.708</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">0.05</td>
+<td style="text-align: right;">0.0920</td>
+<td style="text-align: right;">0.1632</td>
+<td style="text-align: right;">1.658</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">0.10</td>
+<td style="text-align: right;">0.0701</td>
+<td style="text-align: right;">0.1292</td>
+<td style="text-align: right;">2.074</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">0.20</td>
+<td style="text-align: right;">0.0310</td>
+<td style="text-align: right;">0.0639</td>
+<td style="text-align: right;">2.462</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">0.40</td>
+<td style="text-align: right;">0.0295</td>
+<td style="text-align: right;">0.0655</td>
+<td style="text-align: right;">11.556</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">1.20</td>
+<td style="text-align: right;">0.0321</td>
+<td style="text-align: right;">0.0787</td>
+<td style="text-align: right;">17.462</td>
+</tr>
+</tbody>
+</table>
+<p>从 0 到 0.20，误差降了 73%，总变差只涨了 44%，这一段是“净赚”；从 0.20 到 0.40，误差只降 4.8%，总变差却涨了 4.7 倍；再往上，误差反而回升。所以本章的经验规则是：<strong>当权限再放大一倍、RMS 改善不足 5%、而总变差翻倍时，就停在上一档。</strong>这条规则不需要知道对象模型，只需要两次实验，工程上很好执行。</p>
+<h3 id="第五步参数从能用的旧值出发">第五步：参数从“能用的旧值”出发</h3>
+<p>混合结构里的新参数应当围绕一个已验证的旧值展开，而不是从零重搜。本章的做法是：</p>
+<ul>
+<li>模糊调度的三个系数表以 1.0 为中心，上下界取 <span class="math inline">[0.85,\,1.30]</span>，保证最坏情况下闭环仍然接近原 PID；</li>
+<li>双模的切换阈值取 0.05，约为纯 PID 最大误差 0.1974 的四分之一，含义是“进入最后四分之一误差带就切回 PID”；</li>
+<li>分层结构的预测时域从 8 起步（延迟 5 拍加 3 拍动态），控制时域取 2 块；</li>
+<li>前馈查表的补偿量限幅取 <span class="math inline">\pm0.40</span>，约为执行器满量程的三分之一。</li>
+</ul>
+<p>这四组数字都不是最优值，但都是“不会出事”的值。调参的顺序应当是先让系统在这组值上稳定运行，再逐个优化，而不是一上来就做多维搜索——本章 72.8 节会给出为什么。</p>
+<h3 id="第六步三项验收">第六步：三项验收</h3>
+<p>结构搭好之后，至少验三件事：切换或限幅处有没有跳变、饱和率是不是 0、单拍计算占周期多少。本章的数字分别是：直接切换跳变 0.1171（加偏置后为 0）、所有结构饱和率均为 0%、MPC 单拍 0.352 ms 占 10 ms 周期的 3.5%。三项里任何一项不达标，都说明结构还没到可以上机的地步——不是参数没调好，而是分工没分对。</p>
+<h3 id="设计检查表">设计检查表</h3>
+<p>把上面六步压成一张表，就是本章建议的检查顺序。它不保证得到最好的控制器，但能保证不出现“两个模块抢一件事”“权限给满导致抖动”“失效后无处可退”这三类最常见的事故。</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">步骤</th>
+<th style="text-align: left;">要回答的问题</th>
+<th style="text-align: left;">本章取值</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">分工</td>
+<td style="text-align: left;">每项工作是否只有一个模块负责</td>
+<td style="text-align: left;">四段任务四个模块</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">契约</td>
+<td style="text-align: left;">输入、量纲、周期、降级是否写清</td>
+<td style="text-align: left;">见 72.3 节接口表</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">算子</td>
+<td style="text-align: left;">是否需要记忆、输出是否连续</td>
+<td style="text-align: left;">调度/并联/切换/分层</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">权限</td>
+<td style="text-align: left;">配角最大能拿多少</td>
+<td style="text-align: left;">0.20（拐点）</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">初值</td>
+<td style="text-align: left;">是否围绕已验证的旧值</td>
+<td style="text-align: left;">系数 1.0、阈值 0.05</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">验收</td>
+<td style="text-align: left;">跳变、饱和、耗时</td>
+<td style="text-align: left;">0 / 0% / 3.5%</td>
+</tr>
+</tbody>
+</table>
+<h2 id="连续情形">72.4 连续情形</h2>
+<h3 id="连续域里先看频段">连续域里先看频段</h3>
+<p>把回路画成频域，混合结构要回答的问题就变得很直观：低频段谁负责、中频段谁负责、高频段谁负责。本章算例的三个频段很清楚。参考轨迹主频 0.25 Hz（周期 4 s），三次谐波 0.75 Hz；对象是一个带宽约 2 rad/s 的二阶惯性；执行到测量的纯延迟 50 ms。</p>
+<p>延迟在频域里是纯相位滞后 <span class="math inline">-\omega T_d</span>。把三个频点代进去：主频 <span class="math inline">\omega=1.571</span> rad/s 对应滞后 0.0785 rad，即 4.5°；三次谐波 <span class="math inline">\omega=4.712</span> 对应 0.2356 rad，即 13.5°。这两个数字说明，本章的延迟<strong>不是靠牺牲带宽换来的相位裕度去硬扛</strong>，而是靠“提前知道参考要去哪”去补。这一点决定了四种结构的天然分工：反馈管不了 13.5° 的滞后，前馈与预测可以。</p>
+<h3 id="串联增益调度是一个慢变线性系统">串联：增益调度是一个慢变线性系统</h3>
+<p>模糊调度把三个常数换成三个有界函数，闭环就成了线性变参数系统。它能不能用线性工具分析，取决于一个准静态假设：<strong>调度参数的变化速度远慢于闭环自身的动态</strong>。本章的调度输入是误差与误差导数，误差导数经过 30 ms 低通，闭环主时间常数约 0.2 s，两者相差近一个数量级，假设基本成立；如果调度直接吃测量噪声，这个假设立刻失效，闭环会出现“参数随噪声跳”的怪现象。</p>
+<p>图 72-2 是三个调度系数在归一化 <span class="math inline">(e,\dot e)</span> 平面上的取值。三张图的形状不一样，正好说明三张规则表各自在管一件事：<span class="math inline">K_p</span> 曲面在“误差大且同向”的角上最高（1.30），在“误差大但反向”的角上最低（0.850）；<span class="math inline">K_i</span> 曲面方向相反，误差大时压到 0.600；<span class="math inline">K_d</span> 曲面最平，只在同向大误差时降到 0.700。</p>
+<figure>
+<img src="figs/ch072/fig_072_02_surface.svg" alt="图 72-2 三个调度系数的曲面" /><figcaption aria-hidden="true">图 72-2 三个调度系数的曲面</figcaption>
+</figure>
+<p>四个代表点的数值可以拿来核对曲面是否被正确实现：</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">工作点</th>
+<th style="text-align: right;"><span class="math inline">s_{Kp}</span></th>
+<th style="text-align: right;"><span class="math inline">s_{Ki}</span></th>
+<th style="text-align: right;"><span class="math inline">s_{Kd}</span></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><span class="math inline">e</span> 大、<span class="math inline">\dot e</span> 同向</td>
+<td style="text-align: right;">0.850</td>
+<td style="text-align: right;">1.100</td>
+<td style="text-align: right;">0.900</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><span class="math inline">e</span> 大、<span class="math inline">\dot e</span> 反向</td>
+<td style="text-align: right;">1.000</td>
+<td style="text-align: right;">1.000</td>
+<td style="text-align: right;">1.000</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><span class="math inline">e</span> 小、<span class="math inline">\dot e</span> 小</td>
+<td style="text-align: right;">0.990</td>
+<td style="text-align: right;">1.001</td>
+<td style="text-align: right;">0.999</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><span class="math inline">e</span> 大、<span class="math inline">\dot e</span> 为零</td>
+<td style="text-align: right;">0.950</td>
+<td style="text-align: right;">1.000</td>
+<td style="text-align: right;">1.000</td>
+</tr>
+</tbody>
+</table>
+<p>第一行值得多想一秒：误差大且还在扩大，直觉上应该加大 <span class="math inline">K_p</span> 猛拉，这张表却把 <span class="math inline">K_p</span> 压到 0.850、把 <span class="math inline">K_i</span> 抬到 1.100。原因是本算例的执行器限幅只有 <span class="math inline">\pm1.2</span>，误差大时真正稀缺的不是增益而是“别把执行器顶死”；抬积分是为了在顶死期间仍然积累恢复力。这张表是人按经验写的，它体现的是限幅约束下的取舍，而不是“误差大就加大增益”的教科书口号。换一个不限幅的对象，这张表的方向就要改。</p>
+<p>连续域里还能读出一件事：调度范围只有 <span class="math inline">[0.85,\,1.30]</span>，最坏情况下闭环增益变化不到 1.5 倍，与对象自身 <span class="math inline">K(y)</span> 从 13 变到 20 的 1.5 倍同量级。换句话说，模糊调度并没有“抵消”非线性，它只是把增益变化的方向调得对了一点。这也解释了 72.1 节那个 2.4% 的改善幅度——<strong>调度能做的只是“让固定增益在全程都不太差”，它不可能让固定增益变成自适应增益</strong>。</p>
+<h3 id="切换连续域里的抖振从哪来">切换：连续域里的抖振从哪来</h3>
+<p>理想的双模切换在连续域里是一个继电器：<span class="math inline">|e|</span> 穿过阈值就换控制律，切换频率理论上可以无穷高。实际系统里限制它的是两件事——执行器的带宽与采样周期。本章加了两个装置：滞环半宽 <span class="math inline">h</span> 与最短驻留。滞环把“穿越一次就切”改成“必须穿过 <span class="math inline">2h</span> 才切”，于是最小切换间隔约为 <span class="math inline">2h/|\dot e|</span>；取 <span class="math inline">h=0.005</span>、<span class="math inline">|\dot e|\approx0.5</span>，得到 20 ms，也就是 2 拍。驻留期则直接规定“切换后至少保持 <span class="math inline">n_d</span> 拍”。</p>
+<p>实测结果支持这个估算：4 s 内切换次数从无滞环时的 7 次降到加 20 拍驻留后的 5 次，RMS 从 0.0819 微降到 0.0814，总变差从 2.315 降到 2.281。滞环从 0 加到 0.010 时误差反而略升（0.0819→0.0827），因为滞环让“该切的时候晚切了一点”。这条曲线很平，说明在本算例里切换本身并不频繁，抖振不是主要矛盾；真正决定精度的是高增益 PD 段的 <span class="math inline">K_p</span> 取多大，72.8 节会给出网格。</p>
+<h3 id="并联前馈是唯一不靠反馈的通道">并联：前馈是唯一“不靠反馈”的通道</h3>
+<p>连续域里，理想前馈可以直接写出来。对式 (72-1) 求导两次并代入参考轨迹，得</p>
+<p><span class="math display">
+u^{*}(t) = \frac{r&#39;&#39;(t) + 2r&#39;(t)}{K\bigl(r(t)\bigr)} \tag{72-15}
+</span></p>
+<p>量级估一下：<span class="math inline">r&#39;</span> 的幅值是 <span class="math inline">A_1\omega=0.864</span>，<span class="math inline">r&#39;&#39;</span> 的幅值是 <span class="math inline">A_1\omega^2=1.357</span>，两者相加除以 <span class="math inline">K\approx16</span>，得到 <span class="math inline">u^*</span> 的幅值约 0.13，只占执行器满量程的 11%。这就是前馈的尴尬之处：它能消掉的误差有限，但它消的是“反馈永远追不上”的那部分——相位滞后。本章把 <span class="math inline">u^*</span> 单独加在开环对象上，跟踪 RMS 是 0.0293；而纯反馈 PID 是 0.1161。前馈一个人干的活，比 PID 好四倍。</p>
+<p>但也别急着下结论。0.0293 是在“模型完全已知、没有任何扰动”的前提下拿到的；一旦 <span class="math inline">K(y)</span> 估错 20%，前馈就会把误差按比例放大，而反馈不会。所以并联结构的正确用法不是“用前馈替代反馈”，而是“用前馈消掉可预测的部分，把反馈留给不可预测的部分”。本章的并联结果 0.1057 之所以只比 PID 好 9%，就是因为学出来的前馈只复现了 <span class="math inline">u^*</span> 的 79%，剩下 21% 的拟合误差又通过反馈绕了回来。</p>
+<h3 id="前馈增益为什么不能取满">前馈增益为什么不能取满</h3>
+<p>式 (72-15) 给的是精确前馈，理论上应该 100% 加进去，实际工程里几乎没人这么做，通常只加 70%–90%。原因不在保守，而在误差的传播方式。</p>
+<p>设实际模型增益是 <span class="math inline">\hat K</span>，真实增益是 <span class="math inline">K</span>，前馈按 <span class="math inline">\hat K</span> 算，则执行器上多出的一项正比于 <span class="math inline">(K/\hat K-1)</span>。这一项不进反馈回路，没有任何机制能消掉它，它直接叠加在输出上。若前馈取满、模型又高估了 20%，这一项的幅值约等于 <span class="math inline">0.2\times0.13=0.026</span>，看起来不大；但它与参考同频，会在每一拍的同一相位重复出现，等价于一个持续的周期性扰动，积分器只能把它平均掉一部分。</p>
+<p>取 80% 的好处是把这一项压到 0.021，同时只损失 20% 的相位补偿。更重要的好处是<strong>留出了一条可观测的残差</strong>：前馈没补完的部分会体现在误差里，反馈据此还能判断模型偏了多少；如果前馈取满，误差被压到接近零，反馈就失去了“看见模型错误”的能力，这在工程上叫“把诊断信号调没了”。</p>
+<p>本章的并联结构在这一点上有个直接的证据：前馈只覆盖了 79% 的 <span class="math inline">u^*</span>，于是闭环从纯 PID 的 0.1161 降到 0.1057；而开环单独加满前馈是 0.0293。两者的差距说明，闭环里的前馈并没有按开环那样工作——它被反馈“抵消”了一部分，因为反馈看到误差变小就少出力，一增一减之间，前馈的有效贡献被摊薄。这不是设计缺陷，而是所有并联结构的共性：<strong>并联两条通道的贡献不能简单相加，它们通过误差互相耦合</strong>。</p>
+<p>这条耦合还解释了为什么并联结构的参数最难调。串联与切换的模块是“接力”关系，一个模块的输出直接成为另一个的输入，因果关系是单向的；并联是“合力”关系，两条通道同时看误差，任一条变动都会改变另一条的工作点。调并联结构的正确顺序是先把反馈那条定死，再单调前馈，最后联合微调——反过来做，每次改前馈都会让已经调好的反馈失准。</p>
+<h3 id="两个积分器会打架">两个积分器会打架</h3>
+<p>“谁不做”这条原则里最重要的一条，是<strong>积分只能有一个主人</strong>。积分的作用是记住历史误差，两个模块各记一份，等于把积分增益乘了二；更糟的是切换时两份积分各自累积，切过去的一瞬间两份叠加，输出会突然多出一块。</p>
+<p>本章的双模结构刻意让 PD 半边完全没有积分：高增益段只负责抢时间，消静差仍然交给切回来的 PID。这样全回路只有一个积分器，切换时不需要迁移任何状态，只需要决定“这一拍用哪一路”。代价是高增益段在稳态附近不能单独工作，所以阈值必须让它在误差还大时就退出——这也是阈值取 0.05 而不是 0.01 的原因之一。</p>
+<p>分层结构里这件事更隐蔽。PID 有显式积分，而 MPC 的增量惩罚 <span class="math inline">\lambda_d\sum(\Delta u)^2</span> 实际上提供了一种“软积分”：它惩罚控制量的变化，等价于让控制量缓慢逼近某个稳态值。两种积分叠加，等效积分增益会随权限 <span class="math inline">R</span> 增大而上升。72.6 节看到 <span class="math inline">R</span> 超过 0.20 后总变差暴涨、误差不降，除了高频锯齿之外，这条叠加也是一个可能的原因。工程上的处理办法有两条：要么把下层的积分在 <span class="math inline">R</span> 大时减弱，要么把上层的 <span class="math inline">\lambda_d</span> 调大以削弱它的积分特性。两条都指向同一个结论——<strong>权限 <span class="math inline">R</span> 不只是“分多少活”，它还改变了闭环的积分结构</strong>。</p>
+<p>并联结构反而最容易处理：补偿网络如果只依赖参考位置（本章的 0.1057 那一档），它天然没有积分记忆，与 PID 的积分不冲突；一旦把误差也喂进去，网络就带上了“隐式记忆”，冲突立刻出现——这也是那一档总变差 5.208 的另一半解释。</p>
+<h3 id="分层连续域里它是带终端代价的最优控制">分层：连续域里它是“带终端代价的最优控制”</h3>
+<p>把式 (72-12) 的时域拉长到无穷，它就退化成 LQR；时域有限时，它比 LQR 多了一个“看得见未来参考”的能力。连续域的直觉是：MPC 用一个内部模型把未来 <span class="math inline">N_p</span> 拍的响应算出来，再把“哪一段该出力”分配给当前这一拍。它比 PID 强的地方不在反馈增益，而在<strong>它知道 5 拍之后指令才生效</strong>——这正是纯反馈做不到的。</p>
+<h3 id="一张频段分工表">一张频段分工表</h3>
+<p>把上面的分析整理成表，就是本章对“谁负责哪一段”的完整回答。</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">频段</th>
+<th style="text-align: left;">频率</th>
+<th style="text-align: left;">主要成分</th>
+<th style="text-align: left;">谁负责</th>
+<th style="text-align: left;">本章证据</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">极低频</td>
+<td style="text-align: left;"><span class="math inline">&lt;0.1</span> Hz</td>
+<td style="text-align: left;">稳态偏置</td>
+<td style="text-align: left;">积分</td>
+<td style="text-align: left;">PID 已能做到零静差</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">基频</td>
+<td style="text-align: left;">0.25 Hz</td>
+<td style="text-align: left;">主往复运动</td>
+<td style="text-align: left;">前馈或预测</td>
+<td style="text-align: left;">纯前馈开环 0.0293</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">三次谐波</td>
+<td style="text-align: left;">0.75 Hz</td>
+<td style="text-align: left;">换向细节</td>
+<td style="text-align: left;">只能靠前馈</td>
+<td style="text-align: left;">反馈在此处增益不足</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">高频</td>
+<td style="text-align: left;"><span class="math inline">&gt;5</span> Hz</td>
+<td style="text-align: left;">测量噪声</td>
+<td style="text-align: left;">滤波，不再出力</td>
+<td style="text-align: left;">1 mV 噪声下 0.1162</td>
+</tr>
+</tbody>
+</table>
+<p>第二、三行的差别值得展开。对象带宽约 2 rad/s，也就是 0.32 Hz；三次谐波在 4.71 rad/s，按二阶惯性估算，幅值衰减约 <span class="math inline">(0.32/0.75)^2\approx0.18</span>，即 <span class="math inline">-15</span> dB。反馈要在这个频率上产生足够的修正，就得把环路增益提高 5.5 倍；而提高增益的同时，延迟带来的 13.5° 与对象自身的相位滞后会一起吃掉落相位裕度。所以反馈在三次谐波上不是“不想管”，是“管不动”。</p>
+<p>前馈则不受这个限制。它把 <span class="math inline">u^{*}</span> 直接加到执行器，不经过反馈回路，也就不受相位裕度约束；它的精度只取决于模型对不对。这就是 72.1 节那张表里“并联前馈”的最大误差（0.1559）比纯 PID（0.1974）低、而 RMS 只低 9% 的原因：它在高次谐波上确实起了作用（最大误差降了 21%），但主频段的误差本来就由积分与增益决定，前馈帮不上太多，两者一平均就只有 9%。</p>
+<p>这张表还有一个前提必须说清：它假设参考是<strong>已知且可预测</strong>的。若参考变成随机信号，“基频/谐波”的划分就失去意义，前馈也无从计算，此时频段表塌缩成“低频靠积分、高频靠滤波”两行，混合结构的收益也随之消失。这也是 72.11 节那条“先给误差归因”的由来——频段表本身就是一种归因。</p>
+<h3 id="连续域给出的三条判据">连续域给出的三条判据</h3>
+<p>第一，延迟造成的相位滞后随频率线性增长，主频 4.5°、三次谐波 13.5°，所以补偿要针对谐波而不是基频。第二，任何调度或切换的快慢都必须与闭环时间常数拉开差距，否则准静态假设失效。第三，前馈通道的量级通常只占满量程的百分之十几，它的价值在相位而不在幅值，因此不能用“前馈加了多少”来衡量它的贡献，要看“误差的哪一部分消失了”。</p>
+<h2 id="离散情形">72.5 离散情形</h2>
+<h3 id="离散化改的不是精度是结构">离散化改的不是精度，是结构</h3>
+<p>连续域的三条判据到了离散域都要重算一遍，而且不是“加个 <span class="math inline">T_s</span> 修正”那种重算。采样做的是三件结构性的事：把连续时间切成 10 ms 一格，于是所有“提前量”只能是整数拍；把 50 ms 延迟折成 5 拍，于是相位滞后在闭环里以整拍形式出现；把控制时域切成块，于是“未来能改几次数”变成一个显式的整数。这三件事都不能靠更细的采样消除——采样再细，延迟对应的拍数只会变大，不会消失。</p>
+<p>本章取 <span class="math inline">T_s=10</span> ms，与第 66–70 章一致。对象最快的动态是式 (72-1) 里那个 <span class="math inline">-2y&#39;</span>，时间常数 0.5 s，10 ms 采样相当于每 50 个点描一条 0.5 s 的曲线，够用；而 5 拍延迟给出一个粗略的带宽上限：闭环带宽大约不超过 <span class="math inline">1/(10\,d\,T_s)</span>，即 2 Hz，恰好覆盖参考的三次谐波 0.75 Hz。这条经验式不严格，但它能在选采样周期时快速判断“这套结构有没有可能跟上参考”。</p>
+<h3 id="状态方程与延迟的整拍化">状态方程与延迟的整拍化</h3>
+<p>取 <span class="math inline">x=[y,\ y&#39;]^{\mathsf T}</span>，对式 (72-1) 做前向欧拉离散，并把延迟显式写成 <span class="math inline">d</span> 拍：</p>
+<p><span class="math display">
+x_{k+1} = \Phi x_k + \Gamma(y_k)\,u_{k-d},\qquad
+\Phi=\begin{bmatrix}1&amp;T_s\\0&amp;1-2T_s\end{bmatrix},\quad
+\Gamma(y)=\begin{bmatrix}0\\T_s K(y)\end{bmatrix} \tag{72-16}
+</span></p>
+<p><span class="math inline">T_s=0.01</span> 时 <span class="math inline">\Phi</span> 的非对角元只有 0.01，<span class="math inline">1-2T_s=0.98</span>，离散是良态的；欧拉解与精确解的相对差约 <span class="math inline">(2T_s)^2/2\approx2\times10^{-4}</span>，远在本章关心的误差量级（<span class="math inline">10^{-2}</span>）之下。换一个刚性对象（例如电流环，时间常数 0.1 ms）就不能这么做，必须用零阶保持的精确离散。这里特意点出来，是因为混合架构里最常见的实现错误之一，就是上层优化器的模型周期与下层实际采样周期写成两个值，结果预测永远差半拍，而波形上看不出毛病，只觉得“上层好像没起作用”。</p>
+<p>还要注意 <span class="math inline">\Gamma</span> 依赖 <span class="math inline">y_k</span>：对象是非线性的，方程却是“每一步线性”的。这正是混合架构存在的前提——对象若本来线性，一个 PID 就够了；正因为它每步线性、整体非线性，才有“用模型算下一步、用反馈兜住长期偏差”这种分工。</p>
+<h3 id="脉冲矩阵把未来写成一次矩阵乘">脉冲矩阵：把“未来”写成一次矩阵乘</h3>
+<p>上层要算未来 <span class="math inline">N_p</span> 拍的输出，最直接的做法是把式 (72-16) 迭代 <span class="math inline">N_p</span> 次。工程上更常用的是写成一次矩阵乘法，即式 (72-13) 里的 <span class="math inline">G</span>：</p>
+<p><span class="math display">
+G_{ij}=\sum_{m=n_j}^{\min(n_{j+1}-1,\ i-d)} C\Phi^{\,i-d-m}\Gamma,\qquad C=[1\ \ 0] \tag{72-17}
+</span></p>
+<p><span class="math inline">n_j</span> 是第 <span class="math inline">j</span> 个控制块的起始拍，块内各拍取同一个指令。求和上限里的 <span class="math inline">i-d</span> 含义很直白：第 <span class="math inline">i</span> 拍的输出，最早只能被第 <span class="math inline">i-d</span> 拍及之前的控制量影响。<span class="math inline">i-d&lt;m</span> 的项根本不存在，于是 <span class="math inline">G</span> 的左下角是一个由延迟撑起来的零三角，宽度就是延迟拍数，形状一眼能看出来。</p>
+<p><span class="math inline">G</span> 必须自检。做法只有三行：随便给一组 <span class="math inline">\mathbf U</span>，一边算 <span class="math inline">G\mathbf U</span>，一边用式 (72-16) 逐步迭代，两者相减。本章的自检偏差是 <span class="math inline">2.22\times10^{-16}</span>，即双精度浮点的舍入极限。这个检查看起来多余，但 <span class="math inline">G</span> 写错时程序不会报错，只会让控制器“看不见自己的动作”，症状是控制量缓慢漂移、误差长期偏大，很难从波形反推到矩阵。三行代码换掉一类难查的故障，是划算的。</p>
+<h3 id="预测时域必须越过延迟">预测时域必须越过延迟</h3>
+<p><span class="math inline">N_p</span> 是混合架构里第一个必须显式选定的整数。图 72-6 是同一控制器（<span class="math inline">N_u=2</span>、<span class="math inline">\lambda_u=\lambda_d=0.02</span>）在五档预测时域下的闭环结果，纵轴取对数。</p>
+<figure>
+<img src="figs/ch072/fig_072_06_horizon.svg" alt="图 72-6 预测时域与跟踪误差" /><figcaption aria-hidden="true">图 72-6 预测时域与跟踪误差</figcaption>
+</figure>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;"><span class="math inline">N_p</span></th>
+<th style="text-align: right;">4</th>
+<th style="text-align: right;">6</th>
+<th style="text-align: right;">8</th>
+<th style="text-align: right;">12</th>
+<th style="text-align: right;">20</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">RMS</td>
+<td style="text-align: right;">0.7247</td>
+<td style="text-align: right;">0.5188</td>
+<td style="text-align: right;">0.1577</td>
+<td style="text-align: right;">0.0269</td>
+<td style="text-align: right;">0.0048</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">最大误差</td>
+<td style="text-align: right;">1.2200</td>
+<td style="text-align: right;">0.8102</td>
+<td style="text-align: right;">0.3040</td>
+<td style="text-align: right;">0.0771</td>
+<td style="text-align: right;">0.0127</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">总变差</td>
+<td style="text-align: right;">0.000</td>
+<td style="text-align: right;">0.309</td>
+<td style="text-align: right;">1.009</td>
+<td style="text-align: right;">2.034</td>
+<td style="text-align: right;">1.569</td>
+</tr>
+</tbody>
+</table>
+<p>第三行最后那个 0.000 是本章最干净的一条证据：<span class="math inline">N_p=4</span> 小于延迟 5 拍，<span class="math inline">G</span> 的每一列都落在零三角里，优化器无论怎么改 <span class="math inline">\mathbf U</span> 都算不出预测输出的变化，梯度恒为零，控制量一动不动，输出停在初值上——最大误差 1.2200 恰好顶到限幅 <span class="math inline">\pm1.2</span>，RMS 0.7247 就是“什么都不做”的误差。这不是参数没调好，是信息在结构上根本不存在。</p>
+<p><span class="math inline">N_p=6</span> 只比延迟多一拍，<span class="math inline">G</span> 每列只有一个非零元，于是能动，但只能动一次，总变差 0.309；<span class="math inline">N_p=8</span> 越过延迟 3 拍，误差掉到 0.1577；到 <span class="math inline">N_p=12</span> 是 0.0269，比纯 PID 好四倍多。曲线在 <span class="math inline">N_p\approx d+4</span> 之后明显变平，这与“预测至少要覆盖一个建立过程”的经验吻合：5 拍延迟加 3 拍建立起落，正好是 8。</p>
+<p>单拍耗时随 <span class="math inline">N_p</span> 增长很慢，五档都在 0.30–0.38 ms 之间。原因是求解器用投影梯度，每步只做一次 <span class="math inline">G^{\mathsf T}</span> 乘，计算量随时域线性增长；10 ms 周期里 0.38 ms 只占 3.8%，乘一个安全系数也放得下。这一条决定了本章后面敢把 <span class="math inline">N_p</span> 取到 20。</p>
+<h3 id="延迟拍数估错了会怎样">延迟拍数估错了会怎样</h3>
+<p><span class="math inline">d</span> 是唯一一个“必须量、不能调”的结构参数。本章它等于 5，与真实值一致；若模型写 5 而实际是 8，72.6 节那张鲁棒性表给出了代价：MPC(<span class="math inline">N_p=20</span>) 从 0.0048 退化到 0.0538，十一倍；MPC(12) 加学习更糟，从 0.0644 退化到 0.1711。</p>
+<p>把 11 倍摊到 3 拍误差上，每错一拍大约让误差乘 2.2。这个倍数不是普适常数，但它说明了一件事：<strong>延迟误差的影响是指数的，不是线性的</strong>。原因在于脉冲矩阵的零三角宽度直接由 <span class="math inline">d</span> 决定，<span class="math inline">d</span> 错了，整个 <span class="math inline">G</span> 的形状就错了，而不只是“晚一点”。</p>
+<p>错的方向也有讲究。模型延迟偏小，控制器以为指令会更早生效，于是补偿不足且永远慢半拍；偏大则相反，控制器以为要等更久，于是提前加力，表现为超调。两种错法都坏，但第一种更常见——因为工程上量延迟时容易漏掉执行器自身的响应时间。稳妥的做法是取“偏大”的一侧：宁可多等一拍，也不要少等一拍。这一条与增益整定的直觉相反，值得单独记住。</p>
+<h3 id="分块用自由度换抗噪">分块：用自由度换抗噪</h3>
+<p>控制时域 <span class="math inline">N_u</span> 是第二个整数。块边界按</p>
+<p><span class="math display">
+n_j = \left\lfloor \frac{(j-1)N_p}{N_u}\right\rfloor,\qquad j=1,\dots,N_u+1 \tag{72-18}
+</span></p>
+<p>均匀划分，块内指令保持不变。<span class="math inline">N_u=N_p</span> 时每拍都能改，自由度最大；<span class="math inline">N_u=1</span> 时整个时域只有一个数，退化成“算一个常数前馈”。本章取 <span class="math inline">N_u=2</span>，理由是：延迟 5 拍意味着前 5 拍的指令无论如何追不上，把它们拆开没有意义；真正需要区分的是“延迟段过去之后立刻该出多大力”与“稳态该出多大力”两件事，两块正好对应。</p>
+<p>分块还有个副作用值得说：它相当于隐式正则化。自由度少了，代价函数里 <span class="math inline">\lambda_d</span> 的作用被削弱，参数之间不容易打架。反过来，若坚持 <span class="math inline">N_u=N_p</span>，就必须把 <span class="math inline">\lambda_d</span> 调大，否则逐拍的解会在相邻拍之间来回跳，总变差飙升。本章 <span class="math inline">N_p=20</span>、<span class="math inline">N_u=2</span> 时总变差 1.569，反而比 <span class="math inline">N_p=12</span> 的 2.034 低，说明分块确实压住了抖动。</p>
+<h3 id="微分与调度的离散实现">微分与调度的离散实现</h3>
+<p>模糊调度每拍要算一次 <span class="math inline">\dot e</span>，离散域里只能用后向差分</p>
+<p><span class="math display">
+\dot e_k = \frac{e_k-e_{k-1}}{T_s} \tag{72-19}
+</span></p>
+<p><span class="math inline">T_s=0.01</span> 意味着 <span class="math inline">1/T_s=100</span>，测量噪声被放大一百倍。本章仿真里加了 1 mV 噪声，直接差分会得到 0.1 量级的 <span class="math inline">\dot e</span> 抖动，足以让调度系数每拍乱跳。所以 <span class="math inline">\dot e</span> 进规则表之前先过时间常数 <span class="math inline">\tau=30</span> ms 的一阶低通：</p>
+<p><span class="math display">
+\dot e^{f}_k = \dot e^{f}_{k-1} + \frac{T_s}{\tau+T_s}\bigl(\dot e_k-\dot e^{f}_{k-1}\bigr) \tag{72-20}
+</span></p>
+<p>30 ms 不是随手取的：它必须明显小于延迟 50 ms，否则滤波本身变成新的滞后环节，72.4 节的准静态假设就破了；又必须明显大于采样周期 10 ms，否则滤不掉噪声。<span class="math inline">\tau\in[2T_s,\ dT_s/2]</span> 是一个可以照抄的区间。</p>
+<p>计算量上，离散实现把连续域里“一张曲面”变成每拍九次乘加的查表：模糊调度 0.061 ms/拍、9 条规则的 TSK 0.037 ms/拍、27 条 0.050 ms/拍，都在 10 ms 周期的 1% 以内。这也是本章敢在嵌入式目标上同时开调度与前馈的原因——两个加起来还不到 0.1 ms，而同样周期下 MPC 要 0.35 ms 左右。</p>
+<h3 id="采样周期怎么定">采样周期怎么定</h3>
+<p><span class="math inline">T_s</span> 在混合结构里是第一个要定的数，因为延迟拍数、预测时域、微分滤波全都由它派生。定它有三个约束，两边夹出一个区间。</p>
+<p>下界来自计算。本章最重的模块是 MPC，单拍 0.345 ms；留三倍余量，周期不能短于 1 ms。这条下界在纯 PID 系统里几乎不存在（0.014 ms），但一旦引入预测层，它就变成硬约束——超时的后果不是变慢，是丢拍。</p>
+<p>上界来自两件事。第一，采样必须明显快于对象最快的动态：本章时间常数 0.5 s，按每时间常数至少十个采样点，<span class="math inline">T_s\le50</span> ms。第二，采样必须明显快于延迟：延迟 50 ms，若 <span class="math inline">T_s=10</span> ms 则延迟 5 拍，量化误差半拍即 10%；若 <span class="math inline">T_s=50</span> ms，延迟只有 1 拍，量化误差 50%，预测层完全失效。两条合起来给出 <span class="math inline">T_s\le10</span> ms。</p>
+<p>本章取 10 ms，正好压在上界上。这不是巧合，而是权衡的结果：再往下取 5 ms，延迟变 10 拍、量化误差降到 5%，但 MPC 的计算占比从 3.45% 涨到 6.9%，而误差几乎不变——因为延迟本身是物理的，采样再细也不能让它变小，只能让“对它的估计”更准一点。本章的模型是精确的，不需要更准的估计，所以 10 ms 是最省算力的选择；若延迟未知或时变，把 <span class="math inline">T_s</span> 减半就是值得的。</p>
+<h3 id="三个数怎么分工时域块数惩罚权">三个数怎么分工：时域、块数、惩罚权</h3>
+<p>离散 MPC 的参数里，<span class="math inline">N_p</span>、<span class="math inline">N_u</span>、<span class="math inline">\lambda_u</span>、<span class="math inline">\lambda_d</span> 经常被混为一谈，其实它们各管一件事，混着调就会互相抵消。</p>
+<p><span class="math inline">N_p</span> 管“看得多远”，它决定控制器能不能预见延迟与换向。这是唯一一个“改一个整数换一个数量级”的参数：4 到 20，RMS 从 0.7247 到 0.0048。它的下界由延迟定（必须越过 <span class="math inline">d</span>），上界由模型可信度定——预测得越远，模型误差的累积越多，所以 <span class="math inline">N_p</span> 不是越大越好，而是“刚好覆盖到参考的下一个转折点”最好。</p>
+<p><span class="math inline">N_u</span> 管“能改几次”，它决定控制量的自由度。<span class="math inline">N_u</span> 小等于强迫控制量在一段时间内保持恒定，这带来抗噪（控制量不会追着噪声抖），但也带来钝感。本章取 <span class="math inline">N_u=2</span>，把 20 拍切成两大块，是为了配合“延迟 5 拍 + 参考半周期 200 拍”这个尺度：块太细等于没有约束，块太粗等于只做一次阶跃。</p>
+<p><span class="math inline">\lambda_u</span> 惩罚控制量的绝对值，<span class="math inline">\lambda_d</span> 惩罚它的变化量。前者相当于在目标里加了一个弹簧把 <span class="math inline">u</span> 拉向零，容易引入稳态偏差；后者相当于低通，抑制锯齿而基本不影响稳态。所以<strong>需要平滑时调 <span class="math inline">\lambda_d</span>，需要省能量时才调 <span class="math inline">\lambda_u</span></strong>，两者的作用方向经常被写反。本章 <span class="math inline">\lambda_u=0.02</span>、<span class="math inline">\lambda_d=0.05</span>，前者很小、后者稍大，正是“允许出力、不允许抖”的意思。</p>
+<p>四个参数的调试顺序因此是固定的：先按延迟定 <span class="math inline">N_p</span> 的下界，再按参考节奏定 <span class="math inline">N_u</span>，最后用 <span class="math inline">\lambda_d</span> 压锯齿、用 <span class="math inline">\lambda_u</span> 压幅值。反过来先调权重、再改时域，前面调好的权重会全部失效——因为权重的“合适值”与预测长度是耦合的：时域翻倍，误差项的累加也翻倍，同一个 <span class="math inline">\lambda_d</span> 就相对变弱了。</p>
+<h3 id="离散域的三条判据">离散域的三条判据</h3>
+<p>第一，<span class="math inline">N_p\ge d+3</span>。低于这个值，脉冲矩阵的零三角会吃掉大部分梯度，控制器“看不见”自己的动作，性能不是变差而是直接归零。第二，<span class="math inline">N_u\le N_p/4</span>。自由度超过这个比例，逐拍解开始互跳，总变差随自由度上涨，而误差几乎不动。第三，所有微分先滤波，滤波时间常数落在 <span class="math inline">[2T_s,\ dT_s/2]</span>。</p>
+<p>这三条都关于整数——采样周期、延迟拍数、预测时域、分块数——而不是关于增益。它们错了，参数怎么调都补不回来。下一节就来看这种“结构错了调不回来”在稳定性上是什么样子。</p>
+<h2 id="稳定性与性能">72.6 稳定性与性能</h2>
+<h3 id="没有结构自带的稳定">没有“结构自带”的稳定</h3>
+<p>五种拓扑摆在一起，最容易产生的错觉是“分层最复杂所以最稳、切换最粗暴所以最抖”。本算例的数字把这两个直觉都推翻了：分层拿到 0.0310，可它的控制量总变差 2.462 是五种结构里最高的；双模的总变差 2.281 也不低，但 RMS 0.0814 仅次于分层。也就是说，<strong>精度与平稳不是同一个指标，稳定更不是</strong>。一个结构可以在误差很小的同时把执行器磨得很厉害，也可以在误差很大时输出得非常平滑——<span class="math inline">N_p=4</span> 那个 0.000 就是最极端的例子。</p>
+<p>更该记住的是那个反例：2 输入、9 条规则的 TSK 直接替代 PID，闭环 RMS 2.8701、最大误差 3.9078、30.2% 的拍数贴着限幅，而总变差只有 2.492。这条曲线的形状是“顶在限幅上慢慢爬”，既不稳定也不抖——只看总变差，它甚至比双模还“平稳”。所以判断一个混合结构能不能用，至少要把四个数一起看：RMS、最大误差、总变差、饱和率。少看一个都会误判。</p>
+<h3 id="串联稳定性靠调度系数的界">串联：稳定性靠调度系数的界</h3>
+<p>模糊-PID 能保持稳定，靠的不是“模糊系统更聪明”，而是一个很朴素的事实：三个调度系数被限制在有限区间内，闭环在任意时刻都等价于一个增益有界的线性 PID。本章的界取 <span class="math inline">[0.85,1.30]</span>，最坏情况下闭环增益比标称高 30%，而 PID 在这个增益上仍然稳定，于是整条轨迹上都不会出现不稳定极点。这就是串联结构风险最低的原因——<strong>它把“时变”限制在“参数有界”这个最弱的条件下</strong>。</p>
+<p>但“有界”只保证不失稳，不保证有收益。图 72-3 上半幅是闭环里三个系数实际走过的轨迹，下半幅是模糊-PID 与纯 PID 的误差对比。</p>
+<figure>
+<img src="figs/ch072/fig_072_03_schedule.svg" alt="图 72-3 闭环中实际走过的调度系数" /><figcaption aria-hidden="true">图 72-3 闭环中实际走过的调度系数</figcaption>
+</figure>
+<p>上半幅暴露出一个设计时想不到的事实：规则表写出来的曲面范围是 <span class="math inline">K_p\in[0.85,1.30]</span>、<span class="math inline">K_i\in[0.60,1.10]</span>、<span class="math inline">K_d\in[0.70,1.00]</span>，而闭环真正走到的只有 <span class="math inline">K_p\in[0.955,1.164]</span>、<span class="math inline">K_i\in[0.781,1.000]</span>、<span class="math inline">K_d\in[0.836,1.000]</span>。九个格子有大半从未被踩到，<span class="math inline">K_p</span> 的上界 1.30 一次都没出现过。</p>
+<p>原因并不复杂：那张表是按“误差大”设计的，而闭环一旦稳定，误差大部分时间都在小范围里，正好落在表格中心附近，系数接近 1.0。设计者以为自己在调一条大幅摆动的增益曲线，实际调出来的是一条几乎不动的线。这解释了 72.1 节那个 2.4%：不是规则写错了，而是规则的有效区域没有被访问。要让调度真正起作用，规则表必须按“闭环实际会走到的区域”来写，而不是按“误差可能有多大”来写——这两件事在稳定系统里差得很远。</p>
+<p>下半幅的误差曲线也印证了这一点：两条曲线几乎重合，模糊-PID 只在换向的少数几拍略低一点。0.1133 对 0.1161，改善 2.4%，与“系数只在 1.0 附近摆动百分之十几”这个量级一致。<strong>调度的收益大致等于“系数偏离 1 的幅度”乘以“该区域停留的时间占比”</strong>，两个因子都小，乘积自然小。</p>
+<h3 id="并联限幅是唯一的稳定保证">并联：限幅是唯一的稳定保证</h3>
+<p>并联结构没有串联那样的“参数有界”论证可用，因为补偿通道的输出直接进执行器。本章的做法是给它加硬限幅 <span class="math inline">\pm0.40</span>，于是补偿量的最坏影响被钉死：即使补偿网络完全错，闭环也只是“PID 加一个有界扰动”。这个扰动的幅度是执行器满量程的三分之一，足以把误差从 0.1161 抬到 0.19 上下，但不至于失稳。</p>
+<p>实测正好落在这一带：并联残差、2 输入时 RMS 0.1913，比纯 PID 差 65%，总变差 5.208 是 PID 的三倍；换 3 输入降到 0.1259，总变差 3.619；换成只依赖参考位置的一维查表，0.1057、总变差 1.695。三个数对应三种“补偿网络错得有多离谱”：第一种把噪声当成信号学进去了，第二种学对了一半，第三种几乎全对。</p>
+<p>这里有一条与直觉相反的结论：<strong>并联结构的稳定性由限幅决定，而不是由学习算法决定</strong>。这也是工程上更愿意用“PID + 限幅前馈”这种看起来笨的组合的原因——限幅让稳定性变成可以手算的，学习算法只影响限幅之内那部分性能。</p>
+<h3 id="三种工具三个对手">三种工具，三个对手</h3>
+<p>混合结构的稳定性之所以难讲，是因为四个模块对应四种“不稳定的来源”，而分析工具也正好有三套。用错工具，结论会看起来很有道理却完全不适用。</p>
+<p>第一套是小增益定理，它的对手是<strong>参数摄动</strong>。把串联结构写成“标称闭环 + 摄动”：<span class="math inline">s_K=1+\delta</span>，本章 <span class="math inline">\delta</span> 的范围是 <span class="math inline">[-0.15,\,0.30]</span>（对应系数 <span class="math inline">[0.85,1.30]</span>），其余两个系数的摄动也都小于 0.4。若标称闭环在增益摄动 40% 时仍然稳定，那么无论调度怎么动，闭环都稳定。这条判据给出一条很实用的设计规则：<strong>调度范围的上界由标称闭环的稳定余量决定，而不是由“想调多宽”决定</strong>。本章上界取 1.30 而不是 2.0，正是因为再宽就没有余量可用了。</p>
+<p>第二套是描述函数，它的对手是<strong>切换非线性</strong>。把双模结构看成一个带死区与滞环的继电器，描述函数 <span class="math inline">N(A)</span> 的幅值随输入幅值 <span class="math inline">A</span> 变化；极限环存在的条件是 <span class="math inline">1+N(A)G(j\omega)=0</span> 有解。本章没有真去解这个方程，而是用两件事让条件不成立：滞环让 <span class="math inline">N(A)</span> 带一个负相位，驻留让等效的 <span class="math inline">G</span> 在切换频率附近增益下降。定性地说，<strong>滞环的作用是在描述函数里加相位滞后，相位越滞后越不容易起振</strong>——这也是为什么本章无滞环那一档切换了 7 次，而带滞环加驻留的只有 5 次。</p>
+<p>第三套是延迟裕度，它的对手是<strong>纯延迟</strong>。延迟在频域是 <span class="math inline">e^{-j\omega dT_s}</span>，它只吃相位不给幅值，所以判据很直接：设计带宽处的相位裕度必须大于 <span class="math inline">\omega dT_s</span>。本章 0.75 Hz 时这个数是 13.5°，0.25 Hz 时是 4.5°。想把带宽做到 1.5 Hz，就要先准备 27° 的余量——这基本等于把 PID 的增益砍一半，得不偿失。所以本章的选择不是“提带宽硬扛延迟”，而是“用前馈绕开延迟”。</p>
+<p>三套工具的分工不能混。用描述函数去分析调度是错的，因为调度是线性时变系统，没有“非线性环节”可描述；用小增益去分析切换也不对，因为切换的等效增益随幅值变化，不满足小增益定理“摄动有界且不依赖信号”的前提。至于分层结构，它两样都沾一点（权限是饱和非线性，模型是参数摄动），所以最稳妥的做法是两条都查一遍，取更保守的结论。</p>
+<h3 id="切换极限环与模式阶梯">切换：极限环与模式阶梯</h3>
+<p>72.4 节估过抖振周期 <span class="math inline">2h/|\dot e|\approx20</span> ms，那是“最短切换间隔”，不是“实际会不会振”。要判断会不会形成极限环，得看两个条件是否同时成立：切换面附近的等效增益是否足以维持振荡，以及驻留时间是否短于对象的一个建立过程。本章两条都做了处理——滞环半宽 0.005、驻留 20 拍（0.2 s）。后者比对象时间常数 0.5 s 短，但比抖振周期长十倍，足以把继电器式的快速振打散。</p>
+<p>图 72-4 把一个完整回合拆成三幅：误差与阈值、模式标志、控制量。</p>
+<figure>
+<img src="figs/ch072/fig_072_04_dual.svg" alt="图 72-4 双模切换的误差、模式与控制量" /><figcaption aria-hidden="true">图 72-4 双模切换的误差、模式与控制量</figcaption>
+</figure>
+<p>中间那幅阶梯是本结构最该被观察的信号。整个 4 s 里模式只翻了 5 次，每次都发生在误差穿过 <span class="math inline">\pm0.05</span> 带的时候，没有出现“在阈值附近来回抖”的情况。这说明滞环起作用了：误差要反向穿过 <span class="math inline">2h=0.01</span> 才会翻回去，而 0.01 对应的穿越时间远大于一拍。</p>
+<p>代价在第三幅：控制量在每次模式翻转处都有一个折角，总变差 2.281，比 PID 高 34%。这个折角不是缺陷，是“两种控制律本来就不连续”的必然结果。工程上要么接受它，要么加偏置做无扰切换——72.8 节会看到，加了偏置以后跳变确实归零（0.1171→0.0000），但切换后的最大误差反而变大（0.1674→0.1875），因为偏置把旧控制器的积分冻结成一个常数，等于人为取消了一段修正能力。</p>
+<p>还有一条隐含的稳定性条件容易被忽略：<strong>切换逻辑的输入必须比切换动作慢</strong>。本章用 <span class="math inline">\lvert e\rvert</span> 做判据，误差是连续量，没问题；若改用 <span class="math inline">\dot e</span> 或某个高频特征，切换频率就会跟着噪声走。这与“调度要慢”是同一条道理的两种表现：所有“离散决策”都必须由慢变量驱动。</p>
+<h3 id="分层权限就是稳定裕度">分层：权限就是稳定裕度</h3>
+<p>式 (72-14) 里的 <span class="math inline">R</span> 同时扮演两个角色：它限制上层的权限，也就决定了闭环的稳定裕度。<span class="math inline">R</span> 小时，上层只是给 PID 加一个小修正，闭环几乎等于纯 PID；<span class="math inline">R</span> 大时，上层实质上接管了控制量，闭环特性由 MPC 决定，下层退化成扰动观测器。</p>
+<p>从稳定性看，<span class="math inline">R</span> 的增大不是单调安全的。<span class="math inline">R=0.20</span> 时 RMS 0.0310、总变差 2.462；<span class="math inline">R=0.40</span> 时 RMS 0.0295（几乎不动），总变差跳到 11.556；<span class="math inline">R=1.20</span> 时 RMS 回升到 0.0321、总变差 17.462。总变差涨 4.7 倍而误差不降，说明闭环里出现了高频往复——不是发散，但已经进入“执行器被磨、精度没换来”的区域。频域上的解释是：MPC 的输出里含有模型误差带来的高频分量，<span class="math inline">R</span> 小时它被限幅削掉，<span class="math inline">R</span> 大时被完整送进执行器，与 PID 的低频输出叠成锯齿。</p>
+<p>所以 <span class="math inline">R</span> 的正确读法不是“权限越大上层越有用”，而是“权限越大，闭环越依赖上层模型的准确性”。本章模型是准的（同一方程、同一参数），<span class="math inline">R=0.20</span> 已经够用；模型若有 20% 误差，这个拐点会明显左移。</p>
+<h3 id="鲁棒性同一张表看五种结构">鲁棒性：同一张表看五种结构</h3>
+<p>把四种结构与纯 PID 放在同一组扰动下，结果如下。三列扰动分别是延迟从 5 拍加到 8 拍、对象增益整体乘 1.5、测量叠加 1 mV 噪声。</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">控制器</th>
+<th style="text-align: right;">标称</th>
+<th style="text-align: right;">延迟 8 拍</th>
+<th style="text-align: right;">增益 ×1.5</th>
+<th style="text-align: right;">1 mV 噪声</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">纯 PID</td>
+<td style="text-align: right;">0.1161</td>
+<td style="text-align: right;">0.1196</td>
+<td style="text-align: right;">0.0957</td>
+<td style="text-align: right;">0.1162</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">模糊-PID</td>
+<td style="text-align: right;">0.1133</td>
+<td style="text-align: right;">0.1174</td>
+<td style="text-align: right;">0.0932</td>
+<td style="text-align: right;">0.1134</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">双模</td>
+<td style="text-align: right;">0.0814</td>
+<td style="text-align: right;">0.0882</td>
+<td style="text-align: right;">0.0695</td>
+<td style="text-align: right;">0.0813</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">MPC(<span class="math inline">N_p=20</span>)</td>
+<td style="text-align: right;">0.0048</td>
+<td style="text-align: right;">0.0538</td>
+<td style="text-align: right;">0.0133</td>
+<td style="text-align: right;">0.0079</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">MPC(12)+残余学习</td>
+<td style="text-align: right;">0.0644</td>
+<td style="text-align: right;">0.1711</td>
+<td style="text-align: right;">0.1130</td>
+<td style="text-align: right;">0.0620</td>
+</tr>
+</tbody>
+</table>
+<p>这张表比任何一句“鲁棒性好”都更有信息量。第一，纯 PID 与模糊-PID 对三种扰动几乎都不敏感，误差变化在 3% 以内——反馈结构天生对慢变扰动不敏感，这是它的本钱。第二，MPC 在标称下好两个数量级（0.0048），延迟一变到 8 拍就退化到 0.0538，十倍；它仍然是五种里最好的，但“最好”的倍数从 24 倍缩到 2 倍。第三，也是最值得警惕的一条：MPC(12) 加残余学习在标称下 0.0644，延迟变化后 0.1711，比纯 PID 还差 43%。学习模块把模型误差“学进去了”，一旦真实延迟与训练时不同，学到的补偿就变成反向扰动。</p>
+<p>增益乘 1.5 时所有结构的误差都变小（PID 0.1161→0.0957），这不是偶然：对象增益变大等于执行器更有力，本章所有结构的增益都留了余量，于是同一个控制量能换来更小的误差。噪声一列则几乎全部不动，因为本章的控制器都带滤波或限幅，1 mV 噪声进不来。</p>
+<p>这条结果给混合架构划了一条清晰的界：<strong>凡是“用模型算未来”的模块，收益与模型精度同阶；凡是“用误差做修正”的模块，收益与扰动幅度同阶</strong>。两者混在一起时，模型类的模块负责标称性能，误差类的模块负责兜底，而兜底那一路的权限必须足够大，否则模型一错就没有退路。分层结构在延迟扰动下还能守住 0.0538，正是因为下层 PID 始终保有全部权限的基线。</p>
+<h3 id="三种扰动之外还有哪些没进表">三种扰动之外：还有哪些没进表</h3>
+<p>上面那张表只覆盖了三种扰动，因为它们是本章算例里最容易被量化、也最容易复现的三种。实际系统还会遇到另外几类，本章没有给数，但可以从结构上判断它们各自打在哪一层，这个判断比再补几行数字更有用。</p>
+<p>第一类是<strong>参考轨迹变化</strong>。本章的参考是 4 s 一个来回，幅值与频率都固定。若节拍从 4 s 缩到 2 s，轨迹的最高谐波从约 0.75 Hz 抬到 1.5 Hz，前馈与预测的优势会放大还是缩小？答案取决于执行器带宽：带宽够，预测拿到的相位优势不变；带宽不够，模型算得再准也执行不出来。所以对这类扰动，正确的做法是先测执行器的频率响应，再决定要不要上预测层，而不是先上预测层再看效果。</p>
+<p>第二类是<strong>负载阶跃</strong>。阶跃是宽带的，理论上会激励所有频段。串联调度与双模切换对阶跃都有帮助（大误差段加大增益），并联前馈帮不上忙（前馈只补已知量），分层 MPC 会遇到一个尴尬：阶跃不在预测模型里，它只能靠反馈在下一拍才发现。这也是 72.9 节那条“模型类模块负责标称、误差类模块负责兜底”的另一面。</p>
+<p>第三类是<strong>传感器量化与漂移</strong>。量化是高频的，主要打微分通道与前馈通道；漂移是极低频的，主要打积分通道。本章的 1 mV 噪声属于第一类，所以几乎所有结构都不敏感。若换成“每天漂 1%”，情况就完全不同：积分会把漂移吃掉，但吃掉的过程要几十秒，这段时间里前馈会一直算错。对这类扰动，正确的位置是给前馈加一个慢速偏置估计，而不是调 PID。</p>
+<p>把三类扰动与三种已有扰动放在一起，可以得到一个二维的排查思路：<strong>横轴是扰动的频段，纵轴是它进入系统的位置（参考、对象、测量、执行器）</strong>。每个模块在这张网格上都有自己负责的格子，重叠的格子才是需要协调的地方。本章的接口契约本质上就是在给这些重叠格子划边界。</p>
+<h3 id="性能该看哪几个数">性能该看哪几个数</h3>
+<p>写到这里可以把“性能”这个词拆开了。混合架构至少要用四个数分别描述：RMS 说平均精度，最大误差说最坏时刻，总变差说执行器负担，饱和率说还有没有余量。本章五种结构的这组数如下。</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">结构</th>
+<th style="text-align: right;">RMS</th>
+<th style="text-align: right;">最大误差</th>
+<th style="text-align: right;">总变差</th>
+<th style="text-align: right;">饱和率</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">纯 PID</td>
+<td style="text-align: right;">0.1161</td>
+<td style="text-align: right;">0.1974</td>
+<td style="text-align: right;">1.708</td>
+<td style="text-align: right;">0%</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">模糊-PID</td>
+<td style="text-align: right;">0.1133</td>
+<td style="text-align: right;">0.2017</td>
+<td style="text-align: right;">1.741</td>
+<td style="text-align: right;">0%</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">并联前馈</td>
+<td style="text-align: right;">0.1057</td>
+<td style="text-align: right;">0.1559</td>
+<td style="text-align: right;">1.695</td>
+<td style="text-align: right;">0%</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">双模</td>
+<td style="text-align: right;">0.0814</td>
+<td style="text-align: right;">0.1482</td>
+<td style="text-align: right;">2.281</td>
+<td style="text-align: right;">0%</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">分层</td>
+<td style="text-align: right;">0.0310</td>
+<td style="text-align: right;">0.0639</td>
+<td style="text-align: right;">2.462</td>
+<td style="text-align: right;">0%</td>
+</tr>
+</tbody>
+</table>
+<p>四个数一起看，五种结构的关系就清楚了：模糊-PID 在四项上几乎与 PID 相同，是“没有副作用也没有收益”的典型；并联前馈在 RMS、最大误差、总变差三项上同时优于 PID，是唯一“三项全赢”的结构；双模用 34% 的总变差换 30% 的误差改善，是一笔明确的交易；分层用 44% 的总变差换 73% 的误差改善，交易更划算，但它对模型精度的依赖也最强，上面那张鲁棒性表已经说明。</p>
+<p>如果只能记一句：<strong>混合结构的性能不是一个数，而是一组互相牵制的数；说“某个结构更好”之前，必须先说清好在哪个数上、代价付在哪个数上。</strong></p>
+<h2 id="参数意义与作用">72.7 参数意义与作用</h2>
+<h3 id="三类参数三种失效方式">三类参数，三种失效方式</h3>
+<p>混合架构的参数比单控制器多得多，如果混在一张表里看，很容易失去重点。按“动了它会改变什么”来分，本章的参数只有三类。</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">类别</th>
+<th style="text-align: left;">参数</th>
+<th style="text-align: left;">本章取值</th>
+<th style="text-align: left;">动它的后果</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">结构</td>
+<td style="text-align: left;"><span class="math inline">T_s</span>、<span class="math inline">d</span>、<span class="math inline">N_p</span>、<span class="math inline">N_u</span></td>
+<td style="text-align: left;">10 ms、5 拍、12–20、2</td>
+<td style="text-align: left;">改“能不能”，改错了调不回来</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">接口</td>
+<td style="text-align: left;"><span class="math inline">R</span>、<span class="math inline">k_{lip}</span>、<span class="math inline">e_{th}</span>、<span class="math inline">h</span>、<span class="math inline">n_d</span></td>
+<td style="text-align: left;">0.20、0.40、0.05、0.005、20</td>
+<td style="text-align: left;">改“谁出多少力”，有拐点</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">形状</td>
+<td style="text-align: left;">9 格调度表、27 个结论、<span class="math inline">\sigma</span></td>
+<td style="text-align: left;">见 72.4 与本节</td>
+<td style="text-align: left;">改“同样的力怎么分配”</td>
+</tr>
+</tbody>
+</table>
+<p>三类参数的失效方式完全不同。结构参数错了，症状是“控制器好像没在工作”（例如 <span class="math inline">N_p&lt;d</span> 时梯度恒为零）；接口参数错了，症状是“精度换来的是抖动”（例如 <span class="math inline">R=0.40</span> 时总变差 11.556）；形状参数错了，症状最隐蔽——<strong>系统一切正常，只是没变好</strong>，本章模糊-PID 的 2.4% 就属于这一类。调参时按这个顺序排查，比逐个试参数快得多：先确认结构能让控制器“看见”自己的动作，再确认接口在拐点以内，最后才去修形状。</p>
+<h3 id="形状参数范围管稳定形状管方向">形状参数：范围管稳定，形状管方向</h3>
+<p>调度表有两个属性容易被混为一谈：它覆盖多宽（范围），以及在哪个区域取什么值（形状）。范围决定最坏情况——<span class="math inline">K_p</span> 上界 1.30 意味着闭环增益最多比标称高 30%，这个数是稳定性的事，必须在设计阶段就定死；形状决定收益——在哪个工况多给一点、哪个工况少给一点，这个才是“调”出来的。</p>
+<p>本章三个系数的范围分别是 1.53 倍、1.83 倍、1.43 倍。三个数不一样并非随意：<span class="math inline">K_i</span> 的范围最宽，因为它要在大误差段压到 0.60 抑制积分饱和，这是本章唯一一处“必须靠调度才能做到”的事（固定增益做不到“误差大时反而减积分”）；<span class="math inline">K_d</span> 的范围最窄，因为微分层本来就压着噪声，动多了会把噪声放大。这条经验可以推广：<strong>范围最宽的那个系数，应当对应一个固定增益做不到的逻辑；如果三个系数的范围都差不多，说明调度其实没在表达什么，只是在整体缩放增益。</strong></p>
+<p>形状还有一个隐含参照点：所有系数都以 1.0 为中心，也就是“不改动时的 PID”。这个选择让模糊-PID 在中心区域严格退化成基线 PID，安全性最好。但它同时带来一个代价——如果基线 PID 本身不是最优的，那么整张表都在围绕一个次优中心摆动。本章正好是这种情况：网格重搜得到的最优固定增益是 <span class="math inline">(2.60,\,0.02,\,0.16)</span>，RMS 0.0854，而调度的中心是 <span class="math inline">(2.00,\,0.05,\,0.20)</span>、RMS 0.1161。也就是说模糊-PID 是在“中心偏了约 30%”的前提下取得 0.1133 的。这个事实在 72.8 节会变成一条调参顺序：先重搜固定增益，再围绕新中心做调度。</p>
+<h3 id="tsk-的-27-个结论三张切片">TSK 的 27 个结论：三张切片</h3>
+<p>零阶 TSK 的每个结论都是一个常数，27 条规则就是 27 个数。它们按“输入维”排成 <span class="math inline">3\times3\times3</span>，图 72-5 按第三个输入（参考位置）切成三张 <span class="math inline">3\times3</span> 的平面，横轴是误差、纵轴是误差导数，颜色是结论值。</p>
+<figure>
+<img src="figs/ch072/fig_072_05_rules.svg" alt="图 72-5 27 个结论参数按参考位置切片" /><figcaption aria-hidden="true">图 72-5 27 个结论参数按参考位置切片</figcaption>
+</figure>
+<p>三张图的差别就是“第三个输入有没有被用上”的证据。中间那张（参考位置在中点）所有格子都在 <span class="math inline">\pm5.8</span> 以内，中心格只有 0.054，几乎为零——轨迹走到中点时补偿量本来就该接近零。低位置那张在“误差负、误差导数负”的角上是 27.66，同一个格子在高位置那张是 <span class="math inline">-2.62</span>，两 slice 在同一格相差 30.9；高位置那张还出现了 <span class="math inline">-9.97</span>（误差负、导数零）与 <span class="math inline">+10.55</span>（误差正、导数正）这对反号的角。<strong>同一个误差状态，因为参考位置不同，结论可以差一个量级甚至反号</strong>——这正是前馈该有的样子：它补的是相位，而相位由参考走到哪儿决定。</p>
+<p>这里必须提醒一句：结论参数的绝对值不能直接读成“控制量大小”。27 个数里最大的 27.66 对应的是“三个输入都在边缘”的格子，此时高斯权重已经下溢到接近零，这个系数乘上去几乎不产生输出。真正被样本反复激活的只有中心附近的十来个格子，其余大多是“填格子填出来的数”，数值大而作用小。这也解释了为什么 27 个参数的测试 RMSE（0.0243）虽然远好于 9 个参数（0.0893），闭环却只从 2.8701 变到 0.1302——涨的是拟合能力，不是可用信息。</p>
+<p>宽度 <span class="math inline">\sigma</span> 是这一族参数里唯一不属于“结论”的。本章取 0.55，三个中心在 <span class="math inline">-1,0,+1</span>。<span class="math inline">\sigma</span> 太小（比如 0.2）时相邻规则的权重几乎不重叠，曲面出现台阶，输出随输入跳变；<span class="math inline">\sigma</span> 太大（比如 2.0）时所有规则权重接近相等，网络退化成“27 个数的平均值”，也就退化成常数。<span class="math inline">\sigma</span> 的合理区间大致是中心间距的 0.4–0.7 倍，与中心间距同量级但不相等——这个经验来自径向基网络的覆盖条件，在 TSK 上同样成立。</p>
+<h3 id="权限-r一个参数同时管三件事">权限 <span class="math inline">R</span>：一个参数同时管三件事</h3>
+<p><span class="math inline">R</span> 的量纲与执行器相同，本章满量程是 <span class="math inline">\pm1.2</span>，所以 <span class="math inline">R=0.20</span> 就是满量程的 16.7%。图 72-7 把横轴换算成百分比，左轴是闭环 RMS，右轴是控制量总变差。</p>
+<figure>
+<img src="figs/ch072/fig_072_07_authority.svg" alt="图 72-7 权限上限与精度、抖动的权衡" /><figcaption aria-hidden="true">图 72-7 权限上限与精度、抖动的权衡</figcaption>
+</figure>
+<p>左轴那条曲线的形状是“先陡后平”：从 0 到 8.3%（<span class="math inline">R=0.10</span>），RMS 从 0.1161 降到 0.0701，每 1% 权限换 0.0055 的误差；从 8.3% 到 16.7%（<span class="math inline">R=0.20</span>），又从 0.0701 降到 0.0310，这一段斜率更陡，每 1% 换 0.0047；过了 16.7%，RMS 变成 0.0295、0.0321，基本不动。右轴那条红虚线则相反：前两段只从 1.708 爬到 2.462，最后一段从 2.462 直接跳到 11.556、17.462。两条线在 16.7% 处分开，这就是图里标“折中点”的位置。</p>
+<p><span class="math inline">R</span> 管的第一件事是<strong>分工比例</strong>。<span class="math inline">R</span> 小的时候 MPC 只是个“修正器”，输出被限幅削得只剩轮廓，等于把上层的预测能力浪费掉；<span class="math inline">R</span> 大的时候 MPC 变成主控，PID 退化成扰动观测器。第二件事是<strong>鲁棒性上限</strong>：无论 MPC 算错多少，注入执行器的额外量不会超过 <span class="math inline">R</span>，所以 <span class="math inline">R</span> 同时也是“最坏情况下的扰动幅度”。第三件事是<strong>失效兜底</strong>：MPC 一旦超时或数值异常，最安全的降级是把输出置零，此时闭环严格等于纯 PID，性能损失恰好就是 <span class="math inline">R=0</span> 那一档的 0.1161。这三件事共用一个参数，是分层结构最省事也最危险的地方——省事在于只需要调一个数，危险在于这个数同时决定了精度、平稳和容错，改它必须三个指标一起看。</p>
+<h3 id="切换参数四个数分管四段时间">切换参数：四个数分管四段时间</h3>
+<p>双模结构有四个参数，各自负责一段时间尺度：阈值 <span class="math inline">e_{th}=0.05</span> 管“什么时候切进去”，高增益 <span class="math inline">K_{p,hi}=3.2</span> 管“切过去多猛”，滞环半宽 <span class="math inline">h=0.005</span> 管“多难切回来”，驻留 <span class="math inline">n_d=20</span> 拍管“至少待多久”。</p>
+<p>四个数不是独立的。有效切换带是 <span class="math inline">[e_{th}-h,\ e_{th}+h]</span>，本章是 <span class="math inline">[0.045,0.055]</span>，宽度只有阈值的 20%；如果把 <span class="math inline">h</span> 加到 0.05，滞环就覆盖了整个误差带，控制器会卡在某个模式里再也不切。驻留期 <span class="math inline">n_dT_s=0.2</span> s 与对象时间常数 0.5 s 的比值是 0.4，这个比值决定“驻留会不会拖慢响应”：大于 1 就会明显拖慢，小于 0.2 则起不到防抖作用。这三个数（<span class="math inline">e_{th}</span>、<span class="math inline">h</span>、<span class="math inline">n_d</span>）构成一个“切换带—滞环—驻留”的三角，改一个必须检查另外两个。</p>
+<p><span class="math inline">K_{p,hi}</span> 是唯一直接换性能的参数。72.8 节的网格会看到，它从 2.4 加到 4.0 时 RMS 单调下降 37%，而阈值在 0.02–0.04 之间几乎不影响结果。这个不对称说明：<strong>双模结构的收益主要来自“高增益段有多高”，而不是“什么时候进入高增益段”</strong>。阈值只负责别切得太晚，切得早晚对 4 s 的往复轨迹影响很小，因为误差总会穿过那个带。</p>
+<h3 id="三处参数耦合">三处参数耦合</h3>
+<p>第一处是阈值与高增益。72.8 节那个 <span class="math inline">4\times5</span> 网格里，<span class="math inline">e_{th}=0.02</span> 与 <span class="math inline">0.04</span> 两行的差别只有 0.0002（0.1062 对 0.1061），而 <span class="math inline">e_{th}=0.06</span>、<span class="math inline">0.08</span> 两行整体抬升 10%–20%。也就是说阈值存在一个“够用就好”的平台，落在 0.02–0.04，超出就开始拖后腿。这种“一个参数有平台、另一个参数单调”的组合，调参时可以先把平台参数钉在中间，再单独扫单调参数，两维搜索就退化成一维。</p>
+<p>第二处是 <span class="math inline">R</span> 与 <span class="math inline">N_p</span>。两者都由模型精度决定：模型准，<span class="math inline">N_p</span> 可以取大、<span class="math inline">R</span> 可以给足；模型不准，<span class="math inline">N_p</span> 取大只会把模型误差放大到更远的未来，<span class="math inline">R</span> 给足只会把误差直接送进执行器。本章模型是精确的，所以 <span class="math inline">N_p=20</span>、<span class="math inline">R=0.20</span> 同时成立；一旦延迟从 5 拍变成 8 拍，<span class="math inline">N_p=20</span> 的误差从 0.0048 退到 0.0538，此时若仍给 <span class="math inline">R=0.20</span>，上层的错误就会被完整注入。工程上的做法是让 <span class="math inline">R</span> 跟着模型置信度走，而不是跟着“想要多好的性能”走。</p>
+<p>第三处是调度中心与调度范围。上一小节说过，本章的调度中心定在基线上，而最优固定增益在 2.60。若把中心改到 2.60，范围就不能还是 <span class="math inline">[0.85,1.30]</span>——上界 <span class="math inline">2.60\times1.30=3.38</span> 已经接近本章的稳定边界，闭环会在换向段出现明显超调。正确的做法是中心与范围一起改：中心上移，范围相应收窄，让上界保持在 3.0 以内。这条约束在串联结构里永远存在，因为<strong>调度系数乘在增益上，范围是相对量，稳定性却由绝对增益决定</strong>。</p>
+<h3 id="哪几个参数最值钱">哪几个参数最值钱</h3>
+<p>把本章所有参数按“改一个能换来多少”排序，结论很清楚。<span class="math inline">N_p</span> 从 4 改到 20，RMS 从 0.7247 降到 0.0048，两个数量级；<span class="math inline">R</span> 从 0 改到 0.20，0.1161 降到 0.0310，3.7 倍；<span class="math inline">K_{p,hi}</span> 从 2.4 改到 4.0，0.1062 降到 0.0666，1.6 倍；调度表整张改完，0.1161 到 0.1133，1.02 倍；27 个结论参数改完，反而从 0.1057 退到 0.1302。</p>
+<p>这个排序与参数个数完全无关：27 个参数的收益是负的，1 个整数的收益是两个数量级。原因在 72.1 就说过——<strong>参数决定“在给定接口下能做多好”，接口决定“有没有可能做好”</strong>。所以调参的第一件事不是打开优化器，而是检查那几个整数和接口参数有没有落在合理区间；它们对了，形状参数随手调都不会太差；它们错了，形状参数再怎么优化也只是在错误的台阶上找局部最优。</p>
+<h3 id="敏感度把值钱变成一个数">敏感度：把“值钱”变成一个数</h3>
+<p>上面的排序靠的是“改到头能换来多少”，它混了两个因素：参数本身敏不敏感，以及它允许改多大。把两者分开，调参时才不会把精力花错地方。定义归一化敏感度</p>
+<p><span class="math display">
+S=\frac{\Delta y/y}{\Delta p/p} \tag{72-21}
+</span></p>
+<p><span class="math inline">y</span> 取 RMS，<span class="math inline">p</span> 取参数值。用本章已有的数据算一遍，得到下表。</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">参数</th>
+<th style="text-align: left;">改动</th>
+<th style="text-align: left;">RMS 变化</th>
+<th style="text-align: right;">敏感度 <span class="math inline">S</span></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><span class="math inline">N_p</span></td>
+<td style="text-align: left;">12→8（−33%）</td>
+<td style="text-align: left;">0.0269→0.1577（+486%）</td>
+<td style="text-align: right;">14.6</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><span class="math inline">R</span></td>
+<td style="text-align: left;">0.20→0.10（−50%）</td>
+<td style="text-align: left;">0.0310→0.0701（+126%）</td>
+<td style="text-align: right;">2.5</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><span class="math inline">K_{p,hi}</span></td>
+<td style="text-align: left;">3.2→2.4（−25%）</td>
+<td style="text-align: left;">0.0814→0.1061（+30%）</td>
+<td style="text-align: right;">1.2</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><span class="math inline">e_{th}</span></td>
+<td style="text-align: left;">0.04→0.06（+50%）</td>
+<td style="text-align: left;">0.0814→0.0870（+6.9%）</td>
+<td style="text-align: right;">0.14</td>
+</tr>
+</tbody>
+</table>
+<p>四行差了一百倍。<span class="math inline">N_p</span> 动三分之一，误差翻六倍；<span class="math inline">e_{th}</span> 动一半，误差只动 7%。这个差别决定了三件事：验证时 <span class="math inline">N_p</span> 与 <span class="math inline">R</span> 必须逐个确认，不能“大概取一个”；<span class="math inline">e_{th}</span> 可以取整、可以在平台上任意选；<span class="math inline">K_{p,hi}</span> 居中，需要认真扫但不必精细。</p>
+<p>敏感度还有一个用法：它给出“参数的精度要求”。<span class="math inline">S=14.6</span> 意味着参数错 1% 就带来 15% 的误差变化，工程上就必须知道 <span class="math inline">N_p</span> 的确切值；<span class="math inline">S=0.14</span> 意味着错 10% 也只带来 1.4% 的变化，取个整数完全够用。这条换算比“哪个参数重要”这种定性说法有用得多。</p>
+<p>最后要提醒一点：式 (72-21) 是局部量，只在工作点附近有效。<span class="math inline">N_p</span> 从 12 降到 8 是渐变，从 6 降到 4 却是断崖——4 的时候梯度直接归零，误差从 0.5188 跳到 0.7247 再无法下降。所以在最优点附近算出的敏感度，不能外推到整个取值范围。</p>
+<h2 id="调参方法与经验">72.8 调参方法与经验</h2>
+<h3 id="第一步把固定增益重搜一遍">第一步：把固定增益重搜一遍</h3>
+<p>这一步最不“智能”，却决定了后面所有结论是否可信。本章基线 PID 取 <span class="math inline">(2.00,\,0.05,\,0.20)</span>，是在前几章沿用下来的；在同一个网格上重搜，得到 <span class="math inline">(2.60,\,0.02,\,0.16)</span>，RMS 0.0854。也就是说，<strong>不需要任何混合结构，只要把三个数调对，误差就从 0.1161 降到 0.0854，改善 26%</strong>。</p>
+<p>这条对照必须摆在最前面，否则很容易把功劳记错。回头看本章的五个数字：模糊-PID 0.1133，打不过 0.0854；并联前馈 0.1057，也打不过；双模 0.0814，勉强超过 5%；分层 0.0310，大幅超过。如果只跟基线比，会得出“四种混合结构都比 PID 好”的结论；跟重搜后的固定增益比，结论就变成“<strong>两种混合结构有真实收益，另外两种的收益还不如重调三个数</strong>”。这两种说法差得很远，而它们的区别只在于选谁当参照。</p>
+<p>所以调参的顺序是：先把底层控制器调到它自己的最好，再在这个基础上加模块。若反过来，先加模块再调参，模块的作用与参数的作用会混在一起，永远分不清是哪一个起了作用。</p>
+<h3 id="第二步一次只加一个模块">第二步：一次只加一个模块</h3>
+<p>混合结构有四个模块，如果同时上线，出问题时无法定位。本章的做法是逐项单变量：从纯 PID 出发，每次只替换一处，其余保持基线。</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">改动</th>
+<th style="text-align: right;">RMS</th>
+<th style="text-align: right;">相对上一步</th>
+<th style="text-align: right;">总变差</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">纯 PID</td>
+<td style="text-align: right;">0.1161</td>
+<td style="text-align: right;">—</td>
+<td style="text-align: right;">1.708</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">加模糊调度</td>
+<td style="text-align: right;">0.1133</td>
+<td style="text-align: right;">−2.4%</td>
+<td style="text-align: right;">1.741</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">加前馈查表</td>
+<td style="text-align: right;">0.1057</td>
+<td style="text-align: right;">−6.7%</td>
+<td style="text-align: right;">1.695</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">换成双模</td>
+<td style="text-align: right;">0.0814</td>
+<td style="text-align: right;">−23%</td>
+<td style="text-align: right;">2.281</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">换成分层</td>
+<td style="text-align: right;">0.0310</td>
+<td style="text-align: right;">−62%</td>
+<td style="text-align: right;">2.462</td>
+</tr>
+</tbody>
+</table>
+<p>这张表的价值在于“相对上一步”那一列。每一层的边际收益差别很大：调度 2.4%、前馈 6.7%、切换 23%、分层 62%。边际收益小的两级，总变差几乎不涨甚至下降（1.741→1.695）；边际收益大的两级，总变差都明显上台阶（2.281、2.462）。<strong>收益与代价在同一张表里同步变化，这是混合架构最可靠的一条规律</strong>；如果某一级只涨收益不涨代价，先怀疑是不是测错了。</p>
+<h3 id="第三步无扰切换值不值得做">第三步：无扰切换值不值得做</h3>
+<p>双模结构最容易被问到的问题是“切换时输出跳一下要不要紧”。本章专门做了一组对照：在第 30 拍（0.3 s，误差仍然较大）由 PID 切到高增益 PD，一次直接切、一次加偏置补偿到无扰。</p>
+<figure>
+<img src="figs/ch072/fig_072_09_switch.svg" alt="图 72-9 切换瞬间的直接切换与偏置补偿" /><figcaption aria-hidden="true">图 72-9 切换瞬间的直接切换与偏置补偿</figcaption>
+</figure>
+<p>直接切换的输出跳变是 0.1171，接近满量程的十分之一；切换后 0.3 s 内的最大误差 0.1674，整回合 RMS 0.0828。加偏置后跳变严格为 0.0000，但切换后最大误差升到 0.1875，整回合 RMS 升到 0.0875。<strong>跳变消失了，误差变大了。</strong></p>
+<p>原因在偏置的构造方式。偏置取的是“切换瞬间两个控制器的输出差”，此后它是一个常数。对新控制器来说，这个常数相当于一个永远不衰减的补偿项：它把旧控制器的积分状态冻结在了切换那一刻，而 PD 本身没有积分，无法自己把这个偏置“消化”掉。于是切换之后，闭环里多了一个 0.1171 的常值偏置，只能靠 PD 的误差项去抵消，稳态误差因此变大。</p>
+<p>这条结果给出一条明确的判据：<strong>无扰切换只在“新控制器能自己吸收偏置”时才有意义</strong>。如果新控制器带积分，偏置会被积分慢慢吃掉，跳变消失且不留残差，这时无扰是净赚；如果新控制器是纯 PD，偏置会一直留着，无扰就变成“用稳态误差换一次跳变”。本章正属于后者，所以正确的选择反而是“接受跳变”，或者做真正的状态传递——把旧控制器的积分项搬到新控制器里，而不是加一个常数。本章没有做状态传递，因为 PD 没有积分状态可接；工程上如果两个控制器都带积分，这一步是必须做的。</p>
+<p>至于“跳变到底能不能接受”，要看执行器。液压阀、电机电流环这类有速率限制或机械冲击的场合，0.1171 的阶跃会直接变成冲击，那就必须做无扰或限速；本章的算例是理想执行器，跳变只体现为总变差，所以接受它更划算。</p>
+<h3 id="第四步网格只用来找方向">第四步：网格只用来找方向</h3>
+<p>双模的两个关键参数（阈值与高增益）构成二维，扫一遍 <span class="math inline">4\times5</span> 只需要 20 次仿真，成本可以忽略。结果如下，行是阈值 <span class="math inline">e_{th}</span>，列是高增益 <span class="math inline">K_{p,hi}</span>，滞环固定 0.005、驻留固定 20 拍。</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">阈值 <span class="math inline">e_{th}</span>（行）/ <span class="math inline">K_{p,hi}</span>（列）</th>
+<th style="text-align: right;">2.4</th>
+<th style="text-align: right;">2.8</th>
+<th style="text-align: right;">3.2</th>
+<th style="text-align: right;">3.6</th>
+<th style="text-align: right;">4.0</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">0.02</td>
+<td style="text-align: right;">0.1062</td>
+<td style="text-align: right;">0.0919</td>
+<td style="text-align: right;">0.0810</td>
+<td style="text-align: right;">0.0729</td>
+<td style="text-align: right;">0.0668</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">0.04</td>
+<td style="text-align: right;">0.1061</td>
+<td style="text-align: right;">0.0918</td>
+<td style="text-align: right;">0.0814</td>
+<td style="text-align: right;">0.0729</td>
+<td style="text-align: right;">0.0666</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">0.06</td>
+<td style="text-align: right;">0.1077</td>
+<td style="text-align: right;">0.0953</td>
+<td style="text-align: right;">0.0870</td>
+<td style="text-align: right;">0.0835</td>
+<td style="text-align: right;">0.0800</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">0.08</td>
+<td style="text-align: right;">0.1078</td>
+<td style="text-align: right;">0.0968</td>
+<td style="text-align: right;">0.0887</td>
+<td style="text-align: right;">0.0858</td>
+<td style="text-align: right;">0.0827</td>
+</tr>
+</tbody>
+</table>
+<p>先做一次一致性核对：表中 <span class="math inline">(e_{th}=0.04,\,K_{p,hi}=3.2)</span> 那一格是 0.0814，与 72.1 节那个“双模 0.0814”对得上，说明网格用的控制器与正文用的是同一个。这类核对看起来琐碎，却是防止“表格与正文不是同一组参数”的唯一办法。</p>
+<p>网格的读法比网格本身重要。沿列方向（<span class="math inline">K_{p,hi}</span> 从 2.4 到 4.0），四行全部单调下降，降幅 37%–39%，没有拐点；沿行方向（<span class="math inline">e_{th}</span> 从 0.02 到 0.08），前两行几乎重合（0.1062 对 0.1061，差 0.0001），后两行整体抬升 10%–20%。两条方向一个是“单调”，一个是“有平台”，于是二维搜索可以退化成一维：阈值钉在 0.02–0.04 任意一处，只扫 <span class="math inline">K_{p,hi}</span>。</p>
+<p>还有一处必须诚实说明：最优值 0.0666 落在网格的右边界 <span class="math inline">K_{p,hi}=4.0</span> 上。<strong>最优落在边界上，说明还没搜完</strong>，正确做法是往外扩一格再看。本章没有继续扩，因为再往上高增益段会把控制量推向限幅，而限幅一旦介入，“更高的 <span class="math inline">K_p</span>”就不再是“更快的响应”，而是“更长的饱和时间”，曲线会出现拐点。这个拐点在哪里，取决于执行器余量，不能从这张表读出来。工程上遇到边界最优，至少要做两件事：往外扩一格确认趋势，同时把饱和率加进表格，否则会得到“参数越大越好”的假象。</p>
+<h3 id="第五步从单工况走向多工况">第五步：从单工况走向多工况</h3>
+<p>上面所有数字都来自同一条 4 s 轨迹、同一个对象增益、同一种延迟。这样的调参结果只能叫“这条轨迹上的最优”。72.6 节的鲁棒性表已经展示了过拟合的代价：MPC(12) 加残余学习在标称下 0.0644，延迟变成 8 拍后 0.1711，比纯 PID 还差 43%。它不是在标称上不够好，而是把“那条轨迹 + 那个延迟”记下来了。</p>
+<p>避免这件事的办法不是“多加扰动训练”，而是<strong>把工况当成交付条件写进验收</strong>。本章建议的检查是三步：先在标称工况调到满意，再把速度改成 0.8 倍与 1.2 倍各跑一遍，最后把延迟与增益各改一档。三步的误差变化都在 20% 以内，才算这组参数可用。纯 PID 与模糊-PID 在这一步上几乎不付出代价（72.6 节的表里变化都在 3% 以内），而所有“用模型算未来”的结构都会付出代价，代价大小与模型误差同阶。</p>
+<h3 id="每次改动该记什么什么时候该停">每次改动该记什么，什么时候该停</h3>
+<p>调参最怕的不是没找到最优，而是找到一个“看起来最好但复现不了”的点。避免这件事的办法很朴素：每次改动都填同一张表。</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">日期</th>
+<th style="text-align: left;">改动</th>
+<th style="text-align: left;">工况</th>
+<th style="text-align: right;">RMS</th>
+<th style="text-align: right;">最大误差</th>
+<th style="text-align: right;">总变差</th>
+<th style="text-align: right;">饱和率</th>
+<th style="text-align: left;">结论</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">基线</td>
+<td style="text-align: left;">—</td>
+<td style="text-align: left;">标称</td>
+<td style="text-align: right;">0.1161</td>
+<td style="text-align: right;">0.1974</td>
+<td style="text-align: right;">1.708</td>
+<td style="text-align: right;">0%</td>
+<td style="text-align: left;">参照</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">加调度</td>
+<td style="text-align: left;">9 格表</td>
+<td style="text-align: left;">标称</td>
+<td style="text-align: right;">0.1133</td>
+<td style="text-align: right;">0.2017</td>
+<td style="text-align: right;">1.741</td>
+<td style="text-align: right;">0%</td>
+<td style="text-align: left;">保留</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">加前馈</td>
+<td style="text-align: left;">一维查表</td>
+<td style="text-align: left;">标称</td>
+<td style="text-align: right;">0.1057</td>
+<td style="text-align: right;">0.1559</td>
+<td style="text-align: right;">1.695</td>
+<td style="text-align: right;">0%</td>
+<td style="text-align: left;">保留</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">换双模</td>
+<td style="text-align: left;">0.05/3.2</td>
+<td style="text-align: left;">标称</td>
+<td style="text-align: right;">0.0814</td>
+<td style="text-align: right;">0.1482</td>
+<td style="text-align: right;">2.281</td>
+<td style="text-align: right;">0%</td>
+<td style="text-align: left;">保留</td>
+</tr>
+</tbody>
+</table>
+<p>八列里“饱和率”最容易被省掉，但它常常是唯一能解释“为什么再往上调就变坏”的量。<span class="math inline">K_{p,hi}</span> 一直加到 4.0 都在改善，正是因为本章执行器还有余量；一旦饱和率从 0 变成 1%，同一条曲线就会拐弯。所以调参到最后，饱和率应当与 RMS 一起看，而不是等出了问题再回头查。</p>
+<p>停止条件有三条，满足任意一条就该停。第一，边际收益小于 2%——再调下去，改善幅度已经小于不同随机种子之间的波动。第二，总变差超过上一档的两倍——此时换来的精度是用执行器寿命买的。第三，某个高敏感参数已经贴到物理边界（限幅、计算耗时、传感器量程）——再往外扩就不是调参，而是改硬件了。</p>
+<p>这三条里第二条最容易被忽略，因为总变差不会在误差曲线上留下痕迹。本章 <span class="math inline">R</span> 从 0.20 加到 0.40 时 RMS 只从 0.0310 变到 0.0295，看起来“没变坏”，可总变差从 2.462 跳到 11.556。若只盯 RMS，就会一路加到 1.20，最后拿到一个误差 0.0321、总变差 17.462 的控制器——数字上“差不多”，机器上完全不是一回事。</p>
+<h3 id="一次完整的调参记录">一次完整的调参记录</h3>
+<p>把本章所有实验按时间顺序排一遍，就是一次真实的调参过程。它没有教科书那样线性，中间有两次走错方向，值得原样记下来。</p>
+<p>第一步，先量基线。纯 PID 取第 66 章的 <span class="math inline">(2.00,\,0.05,\,0.20)</span>，RMS 0.1161、最大误差 0.1974、总变差 1.708。这个数不是“随便一组”，它是前几章一直用的同一组，所以后面所有对比都相对它算。</p>
+<p>第二步，先榨干固定增益。网格重搜得到 <span class="math inline">(2.60,\,0.02,\,0.16)</span>，RMS 0.0854，一步就改善 26%。这一步放在最前面是有意的：如果先加智能模块，得到的“改善”里会混着“基线本来就没调好”的成分，事后没法分离。很多论文里的混合结构收益，其实就是这一步没做。</p>
+<p>第三步，试串联调度。按第一步的新中心重新写规则表，得到 0.1133——比原始 PID 好 2.4%，但比第二步的 0.0854 差 30%。这是个重要的负面结果：<strong>在不做重搜的前提下，九个参数的调度表还不如三个参数的网格搜索</strong>。原因在 72.7 节已经说过，调度表围绕的是旧中心。这一步的教训是“先重搜、再调度”，顺序反了会得出错误结论。</p>
+<p>第四步，试双模切换。四个参数（阈值、高增益、滞环、驻留）调到 0.0814，终于低于第二步的 0.0854。它是本章第一个“加了模块确实有净收益”的结构，代价是总变差从 1.708 涨到 2.281。此时可以停下来问一句：这 4.7% 的改善值不值 34% 的执行器负担？答案取决于机械寿命要求，没有普适结论。</p>
+<p>第五步，试分层。<span class="math inline">N_p=20</span> 时 RMS 0.0048，比双模好十七倍，但单拍耗时 0.345 ms、对延迟敏感（8 拍时退化到 0.0538）。于是退一步，用权限 <span class="math inline">R</span> 把 MPC 的输出限在 <span class="math inline">\pm0.20</span>，得到 0.0310——精度仍有双模的 2.6 倍，而模型出错时下层 PID 还能兜住。</p>
+<p>第六步，试学习。用 MPC(20) 当教师训练终端值函数，想让 <span class="math inline">N_p=6</span> 也能用。结果 <span class="math inline">N_p=8</span> 与 12 有小幅改善（3.9%、5.4%），<span class="math inline">N_p=6</span> 变坏 7.0%、<span class="math inline">N_p=20</span> 变坏 36.5%。这一档没有进最终方案，但它的价值在于把“学习能补什么、不能补什么”量化了：它能补时域不足，不能补时域过长带来的模型误差。</p>
+<p>整条路径的顺序是：量基线 → 榨干固定参数 → 加最便宜的模块 → 加最贵的模块 → 用权限折中 → 试学习。这个顺序的共同点是每一步都在“当前最好的方案”上加一件事，而不是同时改两处。同时改两处，出了问题就不知道该退哪一处——这是调参里最常见的时间浪费。</p>
+<h3 id="五条经验">五条经验</h3>
+<p>把上面五步压成五句话，就是本章建议的调参流程。</p>
+<p>第一，<strong>先重搜固定增益</strong>。不做这一步，任何“混合结构改善了 x%”都可能只是“参数原来没调好”。第二，<strong>一次只加一个模块</strong>，用“相对上一步”的边际收益判断值不值，同时盯住总变差。第三，<strong>先钉平台参数，再扫单调参数</strong>。阈值这类有平台的参数取平台中点即可，没必要精调；高增益这类单调的参数才值得花仿真次数。第四，<strong>边界最优必须外扩</strong>，并且把饱和率一起看，否则“越大越好”只是限幅还没介入的假象。第五，<strong>用多工况验收，而不是用标称工况验收</strong>。前四条决定能不能调出一个好结果，第五条决定这个结果能不能交付。</p>
+<p>这五条里没有一条涉及“智能算法怎么训练”。这不是说训练不重要，而是说在本章的算例里，决定成败的是顺序与参照，而不是优化器的选择。第 68–71 章已经把各自的训练方法讲过，这里不再重复；本章要补的是它们之间的协作部分。</p>
+<h2 id="优化与改进">72.9 优化与改进</h2>
+<h3 id="想用短时域换长时域就得补一个值">想用短时域换长时域，就得补一个“值”</h3>
+<p>72.5 节那张表说明了一件事：<span class="math inline">N_p</span> 从 12 加到 20，误差从 0.0269 降到 0.0048，改善 5.6 倍，而单拍计算只从 0.34 ms 涨到 0.36 ms。既然如此，为什么还要讨论短时域？因为在真实系统里，限制 <span class="math inline">N_p</span> 的往往不是 CPU，而是模型的可用范围：模型在 20 拍之后还准不准、参考在 20 拍之后还知不知道，这两件事都不是算力能解决的。于是有一个很自然的想法——用 12 拍的模型，加上一个“12 拍之后还剩多少代价”的估计，去逼近 20 拍的效果。</p>
+<p>这个估计就是值函数 <span class="math inline">V(x)</span>，把它加进代价函数的末端：</p>
+<p><span class="math display">
+J = \sum_{i=1}^{N_p}\bigl(\hat y_i-r_i\bigr)^2
++ \lambda_u\sum_j u_j^2 + \lambda_d\sum_j\bigl(\Delta u_j\bigr)^2
++ \gamma\, V_\phi\bigl(x_{k+N_p}\bigr) \tag{72-22}
+</span></p>
+<p><span class="math inline">V_\phi</span> 用一组线性特征近似：</p>
+<p><span class="math display">
+V_\phi(x) = \phi(x)^{\mathsf T} w,\qquad
+w = \bigl(\Phi^{\mathsf T}\Phi+\epsilon I\bigr)^{-1}\Phi^{\mathsf T}\mathbf J^{*} \tag{72-23}
+</span></p>
+<p><span class="math inline">\Phi</span> 的每一行是一个状态点的 6 个特征，<span class="math inline">\mathbf J^{*}</span> 是教师（<span class="math inline">N_p=20</span> 的 MPC）在同一个状态上“之后 20 拍的平方误差和”。本章的 6 个特征是：常数项、终端误差、积分误差、参考相位、参考速度、以及“尚未生效的那条指令”。用教师跑一整回合，收集 400 个状态点做岭回归，得到</p>
+<p><span class="math display">
+w = \bigl[\,0.0062,\ -0.0009,\ -0.1674,\ 0.0013,\ 0.0038,\ -0.0066\,\bigr] \tag{72-24}
+</span></p>
+<p>拟合 <span class="math inline">R^2=0.9135</span>，目标的均值只有 0.00343。<span class="math inline">R^2</span> 看起来很高，但下面会看到，这个“高”是被小方差撑起来的，不等于“能用”。</p>
+<h3 id="六个权值里只有一个在说话">六个权值里只有一个在说话</h3>
+<p>式 (72-24) 的绝对值差了两个数量级：积分项 <span class="math inline">-0.1674</span>，其余五项全在 <span class="math inline">10^{-3}</span> 量级。也就是说，这个“值函数”实际退化成了“积分误差的函数”，另外五个特征——包括终端误差与参考相位——基本没被用上。</p>
+<p>原因不难找。教师是 <span class="math inline">N_p=20</span> 的 MPC，它在整条轨迹上几乎完美跟踪（0.0048），剩下的平方误差和主要由“积分还没消完”这一件事决定；而终端误差、参考相位在教师轨迹上都很小，方差小，回归自然给不出大权值。<strong>值函数学到的是教师轨迹上的残差结构，不是值函数本身。</strong></p>
+<h3 id="加与不加分四档">加与不加，分四档</h3>
+<p>把学到的 <span class="math inline">w</span> 装回式 (72-22)，在四档预测时域上各跑一遍，结果如图 72-8。</p>
+<figure>
+<img src="figs/ch072/fig_072_08_value.svg" alt="图 72-8 短时域加终端值的效果" /><figcaption aria-hidden="true">图 72-8 短时域加终端值的效果</figcaption>
+</figure>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: right;"><span class="math inline">N_p</span></th>
+<th style="text-align: right;">仅误差项</th>
+<th style="text-align: right;">加终端值</th>
+<th style="text-align: right;">变化</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">6</td>
+<td style="text-align: right;">0.5188</td>
+<td style="text-align: right;">0.5548</td>
+<td style="text-align: right;">+7.0%</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">8</td>
+<td style="text-align: right;">0.1577</td>
+<td style="text-align: right;">0.1516</td>
+<td style="text-align: right;">−3.9%</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">12</td>
+<td style="text-align: right;">0.0269</td>
+<td style="text-align: right;">0.0255</td>
+<td style="text-align: right;">−5.4%</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">20</td>
+<td style="text-align: right;">0.0048</td>
+<td style="text-align: right;">0.0066</td>
+<td style="text-align: right;">+36.5%</td>
+</tr>
+</tbody>
+</table>
+<p>四档里两档变好、两档变坏，变坏的两档分别落在最短与最长两端。这个形状不是噪声，它有一条清楚的解释。</p>
+<h3 id="为什么中间好两端坏">为什么中间好、两端坏</h3>
+<p><span class="math inline">N_p=6</span> 时，值函数要替 14 拍的信息负责。可它只是一个有效特征的线性函数（积分项），表达不了“未来 14 拍里参考还要走多远、误差会怎么演化”。于是它做的事实际变成了“用积分项代替预测”，与窗口内的误差项互相打架，误差反而升 7.0%。</p>
+<p><span class="math inline">N_p=20</span> 时，窗口本身已经覆盖了整条轨迹的主要动态（0.0048），值函数提供的任何信息都是多余的。而 <span class="math inline">R^2=0.9135</span> 意味着还有 8.65% 的方差没被解释，这部分未解释的残差被直接加进代价函数，等于往一个已经很准的目标里注入噪声，误差升 36.5%。</p>
+<p>只有 <span class="math inline">N_p=8</span> 与 <span class="math inline">12</span> 落在“主要矛盾已经进窗口、但窗口还不够长到自给自足”的区间，值函数补的那一小块正好派上用场，改善 3.9% 与 5.4%。</p>
+<p>这条规律可以写成一句话：<strong>补丁的收益等于“洞的深度”乘以“补丁与洞形状的匹配度”</strong>。洞太大补不住，洞没了补丁自己就变成洞。也正因为如此，本节最重要的数字不是那 5.4%，而是“把 <span class="math inline">N_p</span> 从 12 直接改到 20 能得到 5.6 倍改善”。<strong>只要能加算力，就不该用学习去替代算力；学习只在“算力或模型范围加不上去”时才有意义。</strong></p>
+<h3 id="另外三种给短时域打补丁的办法">另外三种给短时域打补丁的办法</h3>
+<p>值函数不是唯一的补丁。工程上常见的有四种，各有各的代价。</p>
+<p>第一种是<strong>终端等式约束</strong>：直接要求 <span class="math inline">y_{k+N_p}=r_{k+N_p}</span>，把“末端必须到位”写成硬约束。它不需要任何训练数据，实现也最简单；但它把优化问题从“无约束二次规划”变成“带等式约束”，而且当参考在 <span class="math inline">N_p</span> 拍内根本到不了目标时（本章限幅 <span class="math inline">\pm1.2</span>，换向段需要的控制量接近限幅），约束不可行，求解器只能报错或松弛。松弛之后又退化成软约束，与加一个大的终端权值没有本质区别。</p>
+<p>第二种是<strong>扩展时域</strong>，也就是把 <span class="math inline">N_p</span> 加大，但只优化前 <span class="math inline">N_u</span> 个块。这正是本章 <span class="math inline">N_p=20</span>、<span class="math inline">N_u=2</span> 的做法：它不需要学习、不需要额外信息，只需要算力；收益是 0.0048，比任何补丁都好。它的代价是计算量随 <span class="math inline">N_p</span> 线性增长，以及“模型在远处是否可信”这个前提。所以严格说它不是补丁，而是“把洞挖小”。</p>
+<p>第三种是<strong>鲁棒 MPC</strong>：在代价里加入对模型误差的惩罚，或者对不确定集求最坏情况。它的稳定性保证最强，但计算量随不确定集规模指数增长，且需要事先知道误差的界。本章的延迟扰动就是一个现成的不确定集（5 到 8 拍），真要做鲁棒 MPC，<span class="math inline">N_p</span> 至少要覆盖 8 拍且每个延迟假设都要算一遍，单拍耗时会从 0.345 ms 涨到几毫秒，超出预算。</p>
+<p>四种办法放在一起，选择逻辑很清楚：<strong>能加算力就扩时域，不能加就用值函数，需要硬保证才上鲁棒 MPC，终端等式只适合“末端必须精确到位”的特殊场合</strong>。本章选值函数，是因为它演示的是“算力受限”这条路径；如果只追求误差最小，<span class="math inline">N_p=20</span> 的 0.0048 已经足够，根本不需要 72.9 节这一整套。</p>
+<h3 id="改进的杠杆排序">改进的杠杆排序</h3>
+<p>既然学习的收益有限，改进就该按杠杆大小排序，而不是按“哪个方法更新”排序。本章的三档杠杆很清楚。</p>
+<p>第一档是接口。同一个 9 参数网络，2 输入闭环 2.8701、3 输入 0.1302、只吃参考位置 0.1057，三者相差 27 倍，而参数个数完全相同。这是全章最大的一处杠杆，也是最容易被忽略的一处——它不体现在任何一张参数表里，只体现在“输入选了谁”这一行代码上。</p>
+<p>第二档是结构整数。<span class="math inline">N_p</span> 从 4 到 8 是 4.6 倍，<span class="math inline">R</span> 从 0 到 0.20 是 3.7 倍，<span class="math inline">N_u</span> 从 2 到 1 会让控制量失去“延迟后立刻出力”的能力。这些改动都不增加参数，只改整数，收益却是数量级。</p>
+<p>第三档才是形状。整张调度表改完 1.02 倍，27 个结论改完甚至是负收益。它值得做，但必须在前两档做完之后做，否则只是在错误的台阶上找局部最优。</p>
+<h3 id="还可以做的四件事">还可以做的四件事</h3>
+<p>以下四条本章没有实验数据，只作为设计方向列出，读者若要采用需自行验证。</p>
+<p>第一，<strong>权限自适应</strong>。本章 <span class="math inline">R</span> 固定 0.20，而 72.6 节的表说明 <span class="math inline">R</span> 的最优值随工况变化：误差大时给大权限能抢时间，稳态时给小权限能压总变差。把 <span class="math inline">R</span> 写成 <span class="math inline">\lvert e\rvert</span> 的分段函数，理论上可以在不增加总变差的前提下拿到更低的 RMS。风险是 <span class="math inline">R</span> 的切换本身又引入了一次不连续，需要滞环。</p>
+<p>第二，<strong>块边界跟着延迟走</strong>。本章 <span class="math inline">N_u=2</span> 的块边界固定按 <span class="math inline">N_p</span> 均分，而真正该分界的位置是“延迟结束”那一拍。若延迟在运行中变化（例如网络化控制），块边界应当跟着 <span class="math inline">d</span> 移动，否则第一块会横跨延迟段，等于浪费一半自由度。</p>
+<p>第三，<strong>事件触发</strong>。本章 MPC 单拍 0.345 ms，占 10 ms 周期的 3.45%，还很宽裕；但若采样周期缩到 1 ms，这个比例就变成 34.5%，必须改成“只在误差超过阈值时求解，其余拍保持上次解”。代价是控制量变成阶梯，总变差上升。</p>
+<p>第四，<strong>带状态传递的切换</strong>。72.8 节已经说明，常数偏置只能补偿瞬间、无法随时间衰减。若两个控制器都带积分，正确做法是把积分状态搬过去，而不是加偏置。这一条实现成本很低，收益却很直接。</p>
+<h3 id="该不该加学习模块三个问题">该不该加学习模块：三个问题</h3>
+<p>在动手之前，用三个问题筛一遍，比事后调参省事得多。</p>
+<p>第一问：不加学习，现有结构离物理极限还有多远？本章的物理极限是“模型完全已知时的纯前馈”，开环 RMS 0.0293；纯 PID 是 0.1161，差 4 倍。差距大，说明还有空间，值得加模块。</p>
+<p>第二问：学习模块的输入里有没有“别人没有的信息”？参考相位是别的模块拿不到的（PID 只看见误差），所以值得学；误差与误差导数是每个反馈控制器都有的，拿它们当输入只是在重复劳动——这正是 2 输入网络闭环失稳的根源。</p>
+<p>第三问：加进去以后总变差涨多少？本章并联残差 2 输入的总变差是 5.208，是 PID 的三倍，而误差还更差。TV 一涨而误差不降，就说明这个模块在做无用功。</p>
+<p>三问全过才值得做；任何一问不过，先把接口和整数改对，再回来看。</p>
+<h2 id="工程落地">72.10 工程落地</h2>
+<h3 id="复杂度预算先算四个数">复杂度预算：先算四个数</h3>
+<p>混合架构在论文里是“结构图”，在工程里是“预算表”。上线之前至少要算清四个数：代码行数、参数个数、单拍 CPU 占比、验证工况数。本章的账是这样：控制器源码约 300 行（含四个模块）；对外可见的参数约 40 个（PID 3 个、调度 9 个、双模 4 个、前馈 9 个、MPC 的 <span class="math inline">N_p/N_u/\lambda_u/\lambda_d</span> 与 6 个终端权）；单拍 CPU 占比，MPC 3.45%、模糊调度 0.61%、TSK 0.5%、PID 0.14%；验证工况 6 种（标称、延迟、增益、噪声、变速、变负载）。</p>
+<p>四个数里最容易被低估的是参数个数。三个参数的 PID 可以靠经验调，四十个参数的混合结构不行——它必须有回归测试和版本管理，否则“上次那组参数跑得挺好”会变成一句无法复现的话。一条可用的经验是：<strong>每增加十个参数，至少要增加一个验证工况</strong>。这条比例不是理论推导出来的，它来自“参数越多、越容易在没测过的工况上翻车”这个事实；比例本身可以商量，但“参数与工况要同步增长”这个约束不能省。</p>
+<p>CPU 预算还有一条容易忽略的账：3.45% 只是求解器本身，没算传感器读取、通信、日志、看门狗。真实系统里这些加起来常常超过 20%，再留 50% 余量，MPC 的实际可用预算大约只有周期的 20%–30%。本章 10 ms 周期下 0.345 ms 很宽裕，但若有人把周期改成 2 ms 而不改算法，就会直接超时——超时的后果不是“性能下降”，而是“控制量停在上一拍”，这在 72.6 节的权限语言里等价于 <span class="math inline">R</span> 突然变成 0，误差会跳回 0.1161 那一档。</p>
+<h3 id="接口契约的实现细节">接口契约的实现细节</h3>
+<p>72.3 节给过接口表的四列（输入、输出、周期、降级），那是设计层面。落到代码还有五件事必须写死。</p>
+<p>第一，<strong>单位统一</strong>。内部一律用 SI 单位，归一化只在模块入口做一次，出口立刻还原。混合架构里最常见的量纲错误是“上层以为自己在输出物理量，下层以为收到的是归一化量”，结果控制量差一个比例因子，波形看起来像“增益不对”，实际是单位错了。</p>
+<p>第二，<strong>限幅只做一次</strong>。本章的限幅在执行器入口，模块内部不再各自限幅。如果两个模块各限一次，有效权限就变成两者的较小值，而调参的人还在按外层那个数算账。</p>
+<p>第三，<strong>时序明确</strong>。所有模块在同一拍计算，输入都是上一拍的输出；若允许上层读本拍的输出，就形成代数环，仿真里可能收敛，实机上会抖。本章的分层结构里，MPC 用的是上一拍的状态，PID 用的是本拍的测量，两者不交叉。</p>
+<p>第四，<strong>时间戳</strong>。延迟补偿需要知道每个测量值是什么时候采的，而不是“什么时候送到的”。有通信的系统里这两个时刻能差好几拍，用错一个，延迟补偿就白做。</p>
+<p>第五，<strong>降级可执行</strong>。降级不能是一句“切回 PID”，而要写到能执行：看门狗超时多少毫秒、心跳丢几拍、默认值是多少、切回时积分要不要清零。本章的四个模块降级后全部退化成纯 PID，且积分状态保留——清零会让误差在切换瞬间跳一下，保留则平滑。</p>
+<h3 id="模式管理与状态机">模式管理与状态机</h3>
+<p>模式字是一个整数，每一位代表一个模块是否启用。规则只有一条：<strong>单一写者</strong>。模式字只能由一个状态机改写，其他模块只能读。多个地方都能改模式字，是混合架构里最难查的一类 bug——两个模块互相把对方关掉，表现是“系统随机退回 PID”。</p>
+<p>切换必须原子：模式字与新模块的初始状态在同一拍写入。如果先改模式字、下一拍才初始化新模块，中间那一拍新模块的输出是未定义的，可能直接顶到限幅。本章的双模结构里，模式翻转与 PD 的微分状态初始化在同一拍完成，所以切换瞬间的输出是确定的。</p>
+<p>上电流程建议分三段：先进入纯 PID 并稳定运行 <span class="math inline">N</span> 拍（本章取 200 拍，2 s），再让智能模块以影子模式运行 <span class="math inline">N</span> 拍并核对输出，最后才允许接管。三段都过，才进入正常模式。这段流程看起来繁琐，但它把“上电瞬间参数还没收敛”这类问题挡在了接管之前。</p>
+<h3 id="时序抖动混合架构最隐蔽的敌人">时序抖动：混合架构最隐蔽的敌人</h3>
+<p>混合架构里各模块的耗时差得很远：MPC 0.345 ms、模糊调度 0.061 ms、PID 0.014 ms。串行执行时，控制量真正写入执行器的时刻比起拍时刻晚，晚多少取决于这一拍各模块算了多久。这个“晚多少”本身不可怕，可怕的是它随工况变。</p>
+<p>本章实测的单拍耗时在 0.30–0.36 ms 之间浮动，相对波动两成。换成延迟的语言，等于实际生效的拍数在 4.7 到 5.3 拍之间漂。而 72.5 节已经证明，延迟估错一拍，脉冲矩阵就会整列错位，<span class="math inline">N_p=8</span> 的预测会把动作算到错误的拍上。仿真里延迟是整数、恒定，所以这件事根本不会出现；实机上它是常态。</p>
+<p>三条应对办法，按代价从低到高。第一，<strong>固定迭代上限</strong>。宁可牺牲一点最优性，也不要让执行时间随工况漂移；本章 <code>MPC</code> 的 <code>iters=80</code> 就是这个作用，它把“误差大时多算几轮”这条自适应路径直接掐掉。第二，<strong>按最坏情况留时间，不按平均值</strong>。3.45% 是均值，排程要按最大值算，还要留出中断与通信的抖动。第三，<strong>提前一拍求解</strong>。这一拍算下一拍的控制量，时序完全固定，代价是用预测状态代替实测状态，误差略大但在可接受范围内。</p>
+<p>还有一条容易混淆的账：采样周期的下界由对象带宽定，上界由“这一拍算不来得及”定。72.5 节讨论的是下界——<span class="math inline">T_s</span> 要小到不丢动态；这里讨论的是上界——<span class="math inline">T_s</span> 要大到一个周期内算得完所有模块。实际取值是两者中更严的那个，而混合架构把上界压低了：单模块时 2 ms 够用，五个模块串起来就不一定。</p>
+<h3 id="死链把没算完当成一种故障">死链：把“没算完”当成一种故障</h3>
+<p>看门狗人人都有，真正的分歧在“触发之后做什么”。混合架构里这个动作必须与降级路径是同一段代码，否则就会出现“看门狗切回 PID，但 PID 的积分还停在三秒前”这种半降级状态——此时误差不一定大，但控制量的跳变会直接把执行器顶到限幅。</p>
+<p>本章的做法很朴素：所有模块的失效值指向纯 PID，看门狗超时等价于把权限 <span class="math inline">R</span> 置零。这样“模块没算完”“模块算错”“模块被手动关闭”三种情况走的是同一条路径，只测一次就覆盖三种。反过来，如果每种情况各写一段处理逻辑，就等于给自己造了三条从未被同时测过的分支，而它们恰恰只在事故时才被走到。</p>
+<p>死链还有一个时间尺度问题：看门狗的门限不能等于周期的整数倍就完事，要留出至少两拍。原因是单拍超时往往是偶发的（一次内存抖动、一次总线重传），一拍超时就切回会造成无谓的模式抖动；两到三拍既能挡住真死锁，又不会被偶发延迟触发。本章的双模结构在这一点上有现成的对照：滞环 0.005、驻留 20 拍那一档，切换次数从 7 次降到 5 次，RMS 反而从 0.0822 降到 0.0814——<strong>给状态机加一点惯性，通常既不损失精度，还能减少抖动</strong>。</p>
+<h3 id="可观测性每个模块都要能录波">可观测性：每个模块都要能录波</h3>
+<p>混合架构出问题时，症状往往不是“坏了”，而是“没变好”。这类问题无法从输入输出波形反推，必须把模块内部量录下来。本章建议至少录八路：参考、输出、误差、控制量、模式字、三个调度系数、权限余量（<span class="math inline">R</span> 减去实际用掉的量）。</p>
+<p>判据很简单：<strong>出了问题能不能在五分钟内指出是哪个模块没工作</strong>。本章有一个现成的例子——2 输入 TSK 闭环失稳，如果只录 <span class="math inline">y</span> 与 <span class="math inline">u</span>，看到的是“输出顶在限幅上、控制量缓慢爬升”，很像对象参数变了；只有把补偿量单独录出来，才能看出是网络输出一路漂到限幅、反馈通道被它顶住了。八路里那三路调度系数与一路权限余量，平时几乎不看，出事时是唯一能定位的证据。</p>
+<h3 id="上线四步影子小权限逐级放大留退路">上线四步：影子、小权限、逐级放大、留退路</h3>
+<p>第一步是影子模式。智能模块照常计算，但输出不接入，权限 <span class="math inline">R=0</span>，只记录“如果接入会怎样”。这一步的真正目的是量出“影子输出与 PID 输出的差值分布”：差值的中位数有多大、有多少拍超过 <span class="math inline">R</span>、有没有出现饱和。如果差值经常超出预定权限，说明接口设计有问题，此时上线只会得到一个不断被限幅削平的补偿量。</p>
+<p>第二步给小权限。本章 <span class="math inline">R=0.05</span> 时 RMS 0.0920，比纯 PID 好 21%，总变差 1.658 还略低于 PID 的 1.708。这是一档“几乎不可能出事”的设置：即使补偿量全错，误差也只从 0.1161 变成大约 0.19，仍在可接受范围。</p>
+<p>第三步逐级放大，每一级至少跑一个完整的工况周期。放大判据用 72.3 节那条：权限再翻一倍，若 RMS 改善不足 5% 且总变差翻倍，就停在上一档。本章据此停在 0.20。</p>
+<p>第四步是留退路：任何一级都要能在不重启的情况下切回上一级。切回的动作必须与“降级”是同一段代码，不能是两套逻辑——两套逻辑意味着两条从未被同时测试过的路径。</p>
+<h3 id="参数版本与回归测试">参数版本与回归测试</h3>
+<p>参数集必须打标签：版本号、日期、对应用途、跑过的工况。没有标签的参数集，在三个月后就没人敢动。</p>
+<p>回归测试的规模不必大，本章建议三到五条固定轨迹：标称、延迟 8 拍、增益 1.5 倍、加噪声、变速。每次改动后全部跑一遍，记录 RMS、最大误差、总变差、饱和率。允许的漂移幅度取 RMS ±5%、总变差 ±20%；超出就必须解释，而不是“重新记一个基线”。本章的这些数字可以直接当基线用，因为它们都由 <code>code/ch072_sim.py</code> 一次跑出，不依赖人工抄写。</p>
+<p>这套流程的成本不高：五条轨迹、每条 400 拍，全部跑完在一秒量级。它挡住的是“换了个参数，标称变好 2%、延迟工况变差 40%”这类改动——而这类改动在混合架构里非常常见，因为参数之间是耦合的。</p>
+<h3 id="三条工程底线">三条工程底线</h3>
+<p>第一，<strong>任何智能模块都必须能在一拍内被旁路</strong>。旁路不是“关掉开关”，而是保证关掉之后闭环仍然稳定、误差有界。本章的做法是让所有模块的失效值都指向纯 PID，于是旁路等价于“把 <span class="math inline">R</span> 置零”。</p>
+<p>第二，<strong>任何模块失效都必须退化为一个你愿意单独交付的控制器</strong>。这句话在 72.3 节说过一次，这里再说一次，因为它是整章最实用的一条。退化目标选得好，混合架构就只是“锦上添花”；选不好，任何一个模块出错都会变成事故。</p>
+<p>第三，<strong>任何参数改动都必须可回滚、可复现</strong>。回滚靠版本号，复现靠固定随机种子与固定轨迹。本章所有实验都用固定种子，所以 0.1161 这个数在任何一台机器上都能重跑出来——这一点比数字本身更重要。</p>
+<p>三条底线都不涉及算法，全部是流程。混合架构的失败案例里，绝大多数不是“算法不够先进”，而是这三条里缺了一条。</p>
+<h2 id="优缺点与适用边界">72.11 优缺点与适用边界</h2>
+<h3 id="五种拓扑摊开看">五种拓扑摊开看</h3>
+<p>图 72-10 把本章五种结构的 RMS 画成横向条形，横轴取对数；右下角注的是单拍耗时。</p>
+<figure>
+<img src="figs/ch072/fig_072_10_topology.svg" alt="图 72-10 五种混合拓扑的精度与耗时" /><figcaption aria-hidden="true">图 72-10 五种混合拓扑的精度与耗时</figcaption>
+</figure>
+<p>把图与前面的表合起来，五种结构的画像就完整了。</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">拓扑</th>
+<th style="text-align: right;">RMS</th>
+<th style="text-align: right;">相对纯 PID</th>
+<th style="text-align: right;">总变差</th>
+<th style="text-align: right;">新增参数</th>
+<th style="text-align: left;">主要依赖</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">纯 PID</td>
+<td style="text-align: right;">0.1161</td>
+<td style="text-align: right;">—</td>
+<td style="text-align: right;">1.708</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: left;">无</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">串联调度</td>
+<td style="text-align: right;">0.1133</td>
+<td style="text-align: right;">−2.4%</td>
+<td style="text-align: right;">1.741</td>
+<td style="text-align: right;">9</td>
+<td style="text-align: left;">规则覆盖区域</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">并联前馈</td>
+<td style="text-align: right;">0.1057</td>
+<td style="text-align: right;">−9.0%</td>
+<td style="text-align: right;">1.695</td>
+<td style="text-align: right;">9</td>
+<td style="text-align: left;">补偿量可学</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">双模切换</td>
+<td style="text-align: right;">0.0814</td>
+<td style="text-align: right;">−29.9%</td>
+<td style="text-align: right;">2.281</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: left;">高增益段的稳定裕度</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">分层 MPC</td>
+<td style="text-align: right;">0.0310</td>
+<td style="text-align: right;">−73.3%</td>
+<td style="text-align: right;">2.462</td>
+<td style="text-align: right;">4 个整数 + 2 个权</td>
+<td style="text-align: left;">模型精度</td>
+</tr>
+</tbody>
+</table>
+<p>这张表最该注意的不是最后一列的数字，而是倒数第二列：<strong>改善最大的两级，新增参数反而最少</strong>。分层只多了 <span class="math inline">N_p</span>、<span class="math inline">N_u</span>、<span class="math inline">\lambda_u</span>、<span class="math inline">\lambda_d</span> 四个量，切换只多了阈值与高增益；而改善最小的两级，各自塞进了 9 个参数。这个反差是本章最重要的一条经验，它说明“参数多少”与“结构能力”之间没有正相关——<strong>能力来自模块的输入里有没有新信息，参数只是在这个能力之内做微调</strong>。</p>
+<h3 id="每种结构是怎么坏的">每种结构是怎么坏的</h3>
+<p>知道一个结构“好在哪”只算知道一半，另一半是“它怎么坏”。本章五种结构各有一个典型的失效模式，且都能从数字里读出来。</p>
+<p>串联调度坏在“静默失效”。它的稳定性由调度系数的界保证，所以几乎不会失稳；但它的收益依赖“规则表覆盖的区域被访问到”，而 72.6 节已经看到，闭环实际只走到曲面的一小块。失效时的症状是“系统运行完全正常，就是没有改善”，最难被发现，也最难被追责。</p>
+<p>并联前馈坏在“学错且限幅太宽”。补偿网络如果把噪声学进去，误差不会立刻变大，而是总变差先涨。本章残差 2 输入的总变差 5.208，是 PID 的三倍，误差同时从 0.1161 涨到 0.1913。所以并联结构的第一个报警指标不是误差，是总变差。</p>
+<p>双模切换坏在“抖振与跳变”。它的精度来自高增益段，而高增益段同时放大噪声与切换冲击。阈值太低会频繁切换，滞环太宽会卡在某一模式，驻留太长会拖慢响应。本章在阈值 0.06、0.08 两行看到误差抬升 10%–20%，就是“切得太晚”的直接后果。</p>
+<p>分层 MPC 坏在“模型错”。这是五种结构里唯一一个“标称极好、扰动下崩得最快”的：延迟从 5 拍变 8 拍，0.0048 变 0.0538，退化十倍；再叠加一个学习模块，0.0644 变 0.1711，比纯 PID 还差。分层的收益与模型精度同阶，这句话在 72.6 节说过，这里是它的代价面。</p>
+<h3 id="选型的判据先给误差归因">选型的判据：先给误差归因</h3>
+<p>选哪种结构，不该从“哪种方法新”出发，而该从“误差从哪来”出发。本章算例的误差可以拆成三块：稳态偏置（来自增益变化与积分不足）、换向滞后（来自延迟与相位）、以及轨迹形状本身的不可预测部分（几乎为零，因为参考是已知的）。</p>
+<p>三块误差对应三种结构。稳态偏置靠积分，调度与切换都能改；换向滞后靠相位，只有前馈与预测能补；不可预测部分只能靠反馈兜底。本章的分层结构之所以最好，是因为它同时覆盖了前两块：MPC 用模型补相位，PID 用积分消偏置。</p>
+<p>反过来，如果一个系统的误差主要来自“不可预测的扰动”，那么加前馈、加预测都没有用，因为它们补的是可预测部分。这时候正确的做法是提高反馈增益或加扰动观测器，而不是加一个更复杂的混合结构。<strong>归因错了，结构再好也只是在补一块不存在的误差。</strong></p>
+<p>这条判据还能解释第 66–71 章各自的位置：模糊规则适合“误差大小与最佳增益的关系明确”的场合；神经网络适合“非线性强、机理不清”的场合；强化学习适合“前馈形状未知但可试错”的场合；迭代学习适合“轨迹重复”的场合。本章不新增机制，只负责把它们接到同一个回路上——所以选型的第一步永远是先回到那几章，问清“这个系统属于哪一类”。</p>
+<h3 id="三个不要用">三个“不要用”</h3>
+<p>第一种不要用的情形是<strong>计算预算放不下</strong>。分层结构在本章占 3.45%，看着宽裕，但它依赖 10 ms 的周期。若系统必须跑在 1 ms，占比变成 34.5%，再叠加通信与日志就会超时；此时正确的选择是用解析式的预测补偿（例如第 47 章的预估器思路），而不是硬塞一个 MPC。</p>
+<p>第二种不要用的情形是<strong>模型不可信且无法在线辨识</strong>。分层结构的所有收益都建立在“模型能预测未来”上，模型错了，收益会反转。72.6 节那行 MPC(12)+残余学习 0.1711 就是榜样：它比纯 PID 差 43%，原因是把模型误差学进去了。若对象时变严重又没有辨识手段，宁可退回增益调度，因为调度的最坏情况有界。</p>
+<p>第三种不要用的情形是<strong>验证工况覆盖不了</strong>。四十个参数的混合结构，需要六种以上工况才能验收。若实际可测的工况只有两三种（例如大型装置一年只开几次），参数一多就无法验证，此时应当把结构砍到“参数少到能被人工审查”的程度。</p>
+<p>这三种情形有一个共同点：<strong>它们都不是“算法不好”，而是“条件不具备”</strong>。混合架构的适用边界，本质上是一条工程边界，而不是数学边界。</p>
+<h3 id="三种典型工况的选型实例">三种典型工况的选型实例</h3>
+<p>把上面的判据落到具体场景，差别会更容易看出来。下面三个场景都用本章算例的变形，数字可以直接对照。</p>
+<p>场景一，注塑机料筒温度。对象近似一阶惯性加纯延迟，延迟十几秒、时间常数几百秒，扰动主要是环境温度与料流量的慢漂。这类系统的误差几乎全部是稳态偏置，换向滞后可以忽略——因为它根本没有往复轨迹。此时串级 PID 加进料量前馈就是最优解；模糊调度能改善一点大偏差段的响应；双模与 MPC 都没有用武之地，前者没有“高增益窗口”可利用，后者要预测未来十几秒，模型精度撑不住。选型的结论是“简单那一档就够”，对应本章表里 0.1133 那一行。</p>
+<p>场景二，伺服压装。位置环在接触瞬间增益突变，行程短、节拍固定，要求“快到位且不超调”。误差主要是到位时间与过冲，而这两者在固定增益下互相矛盾——这正是双模切换最典型的适用场合：大误差段用高增益抢时间，小误差段用低增益防过冲。本章的 0.0814 与总变差 2.281 就是这个取舍的量化：误差降三成，总变差涨三成四。若节拍允许慢一点，把阈值抬高反而更稳，本章阈值 0.06、0.08 两行的 0.0835 与 0.0858 就是这个方向。</p>
+<p>场景三，无人机姿态跟踪。对象快、模型较准、参考连续可微、执行器带宽有限。误差主要是相位滞后，且参考已知——这是分层 MPC 的主场。本章 0.0310 与纯 PID 0.1161 的差距，几乎全部来自“提前看到未来”。代价也在这里：延迟从 5 拍变 8 拍，MPC(20) 从 0.0048 掉到 0.0538，退化十倍，只比双模的 0.0814 稍好；若延迟本身测不准，还不如老老实实用双模。</p>
+<p>三个场景摆在一起能看出一条规律：<strong>误差的“形状”决定结构，“形状”的稳定性决定能不能兑现</strong>。串级适合偏置型误差，双模适合“两段互相矛盾”的误差，MPC 适合相位型误差；只要误差形状随工况漂移，任何结构的收益都会打折。</p>
+<h3 id="混合架构的成本清单">混合架构的成本清单</h3>
+<p>前面一直在算收益，这里把成本也列清。成本有四项，前两项要钱，后两项要人的时间。</p>
+<p>第一项是算力。本章五个模块合计约 0.42 ms 每拍，占 10 ms 周期的 4.2%；看着不多，但它是“额外”的——纯 PID 只要 0.014 ms。第二项是内存与代码体积，300 行源码在嵌入式上占几 KB 到几十 KB，通常不是瓶颈，真正的瓶颈是它带来的审查工作量。第三项是验证：四十个参数、六种工况，每条轨迹都要跑、要存基线、要在每次改动后复跑。第四项是维护：三个月后接手的人要能看懂“为什么这里有个 <span class="math inline">R=0.20</span>”，这靠注释与文档，而注释与文档是最容易腐烂的部分。</p>
+<p>四项里，第一项最容易被高估，后三项最容易被低估。工程上常见的错误是“算力够，所以上”，结果上线后每次改参数都要把六种工况重验一遍，维护成本把收益吃光。这也是 72.3 节把“第零步：先判断该不该混合”放在最前面的原因——那一步问的不是技术问题，而是“你打算为这套结构付多少维护费”。</p>
+<h3 id="与相邻章的分工">与相邻章的分工</h3>
+<p>本章刻意没有重复推导任何单机制。PID 的三个参数怎么整定、为什么积分能消静差，见第 44 章；工程上的自整定与继电整定，见第 106 章。MPC 的预测模型、约束处理与稳定性证明，见第 58 章；工业现场的滚动优化实施细节，见第 80 章。纯延迟的 Smith 预估与它的改进型，分别见第 47 章与第 107 章。</p>
+<p>本章只做一件事：把这些已经成立的机制装进同一个回路，然后回答“装在一起时谁负责什么、接口怎么定、会不会互相打架”。凡是涉及“某个机制单独怎么设计”的问题，都应回到对应章节；凡是涉及“两个机制同时在场时怎么办”的问题，才属于本章。</p>
+<h3 id="一句话收尾">一句话收尾</h3>
+<p>回到 72.1 节那句：混合不是把多个控制器堆在一起，而是把不同性质的工作分给不同性质的模块，并为它们规定一个不会互相打架的接口。本章用同一套算例给出的全部证据，都可以压成三句：接口比参数重要（2 输入 2.8701，只参考 0.1057）；结构比形状重要（<span class="math inline">N_p</span> 改一个数换两个数量级，调度表改九个格子换 2.4%）；流程比算法重要（三条工程底线挡住的事故，比任何算法改进都多）。</p>
+<p>三句话指向同一个判断：<strong>当你想加一个模块时，先问它带来了什么新信息；如果答不上来，就该去改接口，而不是加参数。</strong></p>
+<h2 id="python-仿真代码">72.12 Python 仿真代码</h2>
+<h3 id="两个脚本的分工">两个脚本的分工</h3>
+<p>本章的代码分两份，都不带命令行参数，双击即可运行。</p>
+<p><code>code/ch072_sim.py</code> 负责出数字。它按六段组织：对象与任务、三种混合形态（模糊调度、双模切换、神经-模糊）、预测层（延迟感知 MPC）、终端值学习、协同设计（权限、无扰切换、计算预算）、鲁棒性表。入口是末尾的 <code>report()</code>，一次跑完十二组实验，把每个指标的六个数（RMS、最大误差、IAE、总变差、饱和率、切换次数）打到终端。</p>
+<p><code>code/ch072_figs.py</code> 负责出图。它导入 <code>ch072_sim</code>，复用同一批类与常量，不重新定义任何控制器——这一点很重要：如果出图脚本自己抄一份控制器，图与正文的数字就会悄悄分叉。十张图全部由 <code>styles/plot_styles.py</code> 与 <code>styles/block_styles.py</code> 绘制，<code>save()</code> 同时导出 SVG 与 PDF。</p>
+<h3 id="对象与闭环骨架">对象与闭环骨架</h3>
+<p>对象是最短的那一段，却决定了后面所有实验的口径。</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> Plant:</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">&quot;&quot;&quot;二阶非线性对象 + 纯延迟 + 输入限幅。&quot;&quot;&quot;</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>, gain_scale<span class="op">=</span><span class="fl">1.0</span>, delay<span class="op">=</span>DELAY, load<span class="op">=</span><span class="fl">0.0</span>):</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.gain_scale, <span class="va">self</span>.delay, <span class="va">self</span>.load <span class="op">=</span> gain_scale, delay, load</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.x1, <span class="va">self</span>.x2 <span class="op">=</span> R0, <span class="fl">0.0</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.buf <span class="op">=</span> [<span class="fl">0.0</span>] <span class="op">*</span> delay</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> step(<span class="va">self</span>, u):</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="va">self</span>.delay <span class="op">&gt;</span> <span class="dv">0</span>:</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>            <span class="va">self</span>.buf.append(u)</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>            up <span class="op">=</span> <span class="va">self</span>.buf.pop(<span class="dv">0</span>)</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>        <span class="cf">else</span>:</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>            up <span class="op">=</span> u</span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>        up <span class="op">=</span> up <span class="op">+</span> <span class="va">self</span>.load</span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> _ <span class="kw">in</span> <span class="bu">range</span>(SUB):</span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>            kk <span class="op">=</span> <span class="va">self</span>.gain_scale <span class="op">*</span> gain_at(<span class="va">self</span>.x1)</span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>            <span class="va">self</span>.x2 <span class="op">+=</span> TS <span class="op">/</span> SUB <span class="op">*</span> (<span class="op">-</span><span class="fl">2.0</span> <span class="op">*</span> <span class="va">self</span>.x2 <span class="op">+</span> kk <span class="op">*</span> up)</span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>            <span class="va">self</span>.x1 <span class="op">+=</span> TS <span class="op">/</span> SUB <span class="op">*</span> <span class="va">self</span>.x2</span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="va">self</span>.x1</span></code></pre></div>
+<p><code>buf</code> 是一个先进先出的列表，长度等于延迟拍数，这就是 72.5 节式 (72-16) 里 <span class="math inline">u_{k-d}</span> 的实现。<code>SUB=5</code> 是每个采样周期内的子步数，用五次欧拉代替一次，把积分误差从 <span class="math inline">(T_s)^2</span> 压到 <span class="math inline">(T_s/5)^2</span>；这样做不是为了精度，而是为了让“控制器每拍只算一次”这个前提在仿真里也成立。</p>
+<p>闭环的骨架只有十来行，所有控制器都通过同一个接口接入：</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> run(ctrl, gain_scale<span class="op">=</span><span class="fl">1.0</span>, delay<span class="op">=</span>DELAY, noise<span class="op">=</span><span class="fl">0.0</span>, load<span class="op">=</span><span class="fl">0.0</span>, seed<span class="op">=</span><span class="dv">0</span>, trace<span class="op">=</span><span class="va">None</span>):</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    rng <span class="op">=</span> np.random.default_rng(seed)</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    t <span class="op">=</span> np.arange(N) <span class="op">*</span> TS</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    r, rd <span class="op">=</span> ref_traj(t), ref_vel(t)</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    plant <span class="op">=</span> Plant(gain_scale, delay, load)</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    ctrl.reset()</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    y_prev, ie, dy_f <span class="op">=</span> plant.x1, <span class="fl">0.0</span>, <span class="fl">0.0</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> k <span class="kw">in</span> <span class="bu">range</span>(N):</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>        ym <span class="op">=</span> plant.x1 <span class="op">+</span> noise <span class="op">*</span> rng.standard_normal()</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>        e <span class="op">=</span> <span class="bu">float</span>(r[k] <span class="op">-</span> ym)</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>        dy_f <span class="op">+=</span> (TS <span class="op">/</span> (TAU_RATE <span class="op">+</span> TS)) <span class="op">*</span> ((ym <span class="op">-</span> y_prev) <span class="op">/</span> TS <span class="op">-</span> dy_f)</span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>        y_prev <span class="op">=</span> ym</span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>        ie <span class="op">=</span> <span class="bu">float</span>(np.clip(ie <span class="op">+</span> e <span class="op">*</span> TS, <span class="op">-</span><span class="fl">0.5</span>, <span class="fl">0.5</span>))</span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>        s <span class="op">=</span> <span class="bu">dict</span>(e<span class="op">=</span>e, ed<span class="op">=-</span>dy_f, ie<span class="op">=</span>ie, y<span class="op">=</span><span class="bu">float</span>(ym), r<span class="op">=</span><span class="bu">float</span>(r[k]),</span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>                 rd<span class="op">=</span><span class="bu">float</span>(rd[k]), k<span class="op">=</span>k)</span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>        u <span class="op">=</span> <span class="bu">float</span>(np.clip(ctrl.step(s), UMIN, UMAX))</span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> trace <span class="kw">is</span> <span class="kw">not</span> <span class="va">None</span>:</span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>            trace(k, ctrl, s)</span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>        plant.step(u)</span></code></pre></div>
+<p>三个细节对应正文的三条结论。<code>dy_f</code> 是式 (72-20) 那个 30 ms 一阶低通，它把式 (72-19) 的差分噪声压下去；<code>ie</code> 被限在 <span class="math inline">\pm0.5</span>，是积分抗饱和；<code>np.clip</code> 只在这里出现一次，对应 72.10 节“限幅只做一次”。最后的 <code>trace</code> 回调不参与控制，只用于出图时记录模块内部量——72.10 节说的“可观测性”，在仿真里就是这一个参数。</p>
+<h3 id="四个控制器的最短实现">四个控制器的最短实现</h3>
+<p>四个控制器都继承或复用了 <code>PID</code>，差别只在 <code>step()</code> 里怎么组合。并联结构最能说明“接口”这件事：</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> Parallel(PID):</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">&quot;&quot;&quot;并联混合：PID 基线 + 神经网络补偿，补偿量被限在 ±klip。&quot;&quot;&quot;</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>, net, gains<span class="op">=</span>FB, klip<span class="op">=</span><span class="fl">0.40</span>):</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>        <span class="bu">super</span>().<span class="fu">__init__</span>(gains)</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.net, <span class="va">self</span>.klip <span class="op">=</span> net, klip</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> step(<span class="va">self</span>, s):</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="bu">super</span>().step(s) <span class="op">+</span> <span class="bu">float</span>(np.clip(<span class="va">self</span>.net.step(s), <span class="op">-</span><span class="va">self</span>.klip, <span class="va">self</span>.klip))</span></code></pre></div>
+<p>整个结构就是一行加法加一次限幅。72.6 节说“并联的稳定性由限幅决定”，在代码里就是那个 <code>np.clip</code>；把 <code>klip</code> 改成 <code>None</code>（即去掉限幅），2 输入网络那组会直接把闭环推到饱和。这类“一句话就能改坏”的写法是本章有意保留的——读者可以自己试，试完就知道限幅不是装饰。</p>
+<p>MPC 的核心是脉冲矩阵。式 (72-17) 落到代码里是一个三重循环，看着笨，但每一步都能与公式对上：</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> _pulse(<span class="va">self</span>, K0):</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">&quot;&quot;&quot;G[i,j]：第 j 个控制块对第 i 拍输出的贡献（延迟 delay-1 拍生效）。&quot;&quot;&quot;</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    G <span class="op">=</span> np.zeros((<span class="va">self</span>.Np, <span class="va">self</span>.Nu))</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> j <span class="kw">in</span> <span class="bu">range</span>(<span class="va">self</span>.Nu):</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>        y <span class="op">=</span> v <span class="op">=</span> <span class="fl">0.0</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="va">self</span>.Np):</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>            m <span class="op">=</span> i <span class="op">-</span> (DELAY <span class="op">-</span> <span class="dv">1</span>)</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>            u <span class="op">=</span> <span class="fl">1.0</span> <span class="cf">if</span> (m <span class="op">&gt;=</span> <span class="dv">0</span> <span class="kw">and</span> <span class="va">self</span>._block_of(m) <span class="op">==</span> j) <span class="cf">else</span> <span class="fl">0.0</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>            <span class="cf">for</span> _ <span class="kw">in</span> <span class="bu">range</span>(SUB):</span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>                v <span class="op">+=</span> (TS <span class="op">/</span> SUB) <span class="op">*</span> (<span class="op">-</span><span class="fl">2.0</span> <span class="op">*</span> v <span class="op">+</span> K0 <span class="op">*</span> u)</span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>                y <span class="op">+=</span> (TS <span class="op">/</span> SUB) <span class="op">*</span> v</span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>            G[i, j] <span class="op">=</span> y</span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> G</span></code></pre></div>
+<p>注意 <code>m = i - (DELAY - 1)</code> 这一行：当 <span class="math inline">i&lt;4</span> 时 <span class="math inline">m&lt;0</span>，<code>u</code> 恒为 0，于是 <span class="math inline">G</span> 的前四行全零。72.5 节说的“零三角”，在代码里就是这四行。也正因为如此，<span class="math inline">N_p=4</span> 时 <span class="math inline">G</span> 整体为零，梯度恒为零，控制量一动不动——那个 0.000 的总变差不是调出来的，是这四行算出来的。</p>
+<h3 id="指标是怎么算出来的">指标是怎么算出来的</h3>
+<p>正文里反复出现的四个数，在 <code>run()</code> 之后由一段十几行的汇总算出，口径必须先说清，否则不同章节的数字没法比。</p>
+<p>RMS 是误差的均方根，取四百拍的平均，它衡量“平均偏差有多远”，对少数几拍的尖峰不敏感。最大误差取绝对值最大的一拍，它衡量“最坏时刻有多糟”，工程上它往往比 RMS 更重要，因为超差报警看的是它。IAE 是误差绝对值的积分，等价于 <span class="math inline">\sum|e_k|T_s</span>，它与 RMS 的区别在于对大误差的惩罚更线性，用来与经典文献对照。总变差 TV 定义为 <span class="math inline">\sum|u_k-u_{k-1}|</span>，它衡量的不是精度而是<strong>执行器的负担</strong>：同样的 RMS，TV 大的那个会让阀芯、电机、减速器磨损得更快。</p>
+<p>本章用 TV 而不是用控制量的方差，是因为方差对慢漂不敏感——一个缓慢爬升的控制量方差可能很小，但总变差很大，而后者才是磨损的直接来源。这也是为什么双模与分层在表里“精度更好、TV 更差”：它们用更多的执行器动作换精度，这笔交易必须显式写出来，不能只报 RMS。</p>
+<p>饱和率是控制量等于限幅值的拍数占比，它衡量“还有没有余量”。本章只有 2 输入 TSK 那一组出现 30.2%，它同时也是唯一一组失稳的——这不是巧合：一旦控制量长期顶在限幅上，反馈回路就被切断，误差只能靠对象自身衰减，而本章对象有两个极点，衰减得很慢。</p>
+<p>切换次数只对双模结构有意义，它统计模式翻转的次数。这个数本身不是性能指标，而是“抖振程度”的代理：7 次意味着平均每 0.6 s 翻一次，肉眼可见；若这个数涨到几十次，即使 RMS 好看，机械上也已经不可接受。</p>
+<p>四个数（外加切换次数）必须同时报，缺一个就会误判。这一点在写作上也有用：本章每一处“某结构更好”，后面都跟着另外两三个数的代价，读者可以自己判断这笔交易值不值。</p>
+<h3 id="训练集是怎么造的">训练集是怎么造的</h3>
+<p>神经-模糊那一组用的是监督学习，教师信号的选择直接决定结论，必须交代清楚。</p>
+<p>教师取“基线 PID 加精确前馈”，即 <span class="math inline">u^\star=(r&#39;&#39;+2r&#39;)/K(r)</span> 叠加 PID 的输出，再限幅。这个教师有两个性质：一是它在标称工况下确实能把误差压到很小，二是它是<strong>可计算的</strong>——不依赖任何优化，任意采样点都能算出标签。用 MPC 当教师也能得到更优的标签，但每采一个样本要解一次优化，2400 个样本的成本就上去了，而且标签本身带求解器噪声。</p>
+<p>样本的采法是在参考轨迹上均匀取点，每个点记录三样东西：误差 <span class="math inline">e</span>、误差变化率 <span class="math inline">\dot e</span>、参考位置 <span class="math inline">r</span>，标签是教师在这一点的输出。训练 1200 个、测试 1200 个，两者不重叠。这个规模很小，小到足以让“9 个参数不够用”这件事暴露出来——这正是本章想要的结果：如果样本多到能掩盖结构缺陷，负面结论就看不到了。</p>
+<p>三个输入变体的差别也在这里。2 输入（<span class="math inline">e</span>、<span class="math inline">\dot e</span>）的测试 RMSE 0.0893，3 输入（加上 <span class="math inline">r</span>）0.0243，差 3.7 倍；但闭环里差距被放大成 2.8701 对 0.1302，二十二倍。原因是开环误差会在闭环里累积：一个在训练集上“平均差 0.09”的网络，接进回路后每一拍的偏差都会变成下一拍的输入偏差，最终把工作点推出训练分布，输出一路漂到限幅。这也是 72.7 节那条“开环精度不等于闭环性能”的由来。</p>
+<p>残差形式的三个变体则说明另一件事：把网络放在 PID 之上学“还差多少”，比让它直接输出控制量安全得多。残差只参考位置那一组的闭环是 0.1057，反而优于纯 PID 的 0.1161——它其实退化成了一个一维查表，等于用九个参数记住了“相位该提前多少”。这条结果与 72.1 节的三档阶梯是同一个事实的两种说法。</p>
+<h3 id="十张图怎么来的">十张图怎么来的</h3>
+<p>出图脚本的 <code>main()</code> 先把数据采齐，再逐张调用绘图函数。数据采集复用 <code>run()</code>，只是多传一个 <code>trace</code>：</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>hist <span class="op">=</span> []</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>rec_fz <span class="op">=</span> cs.run(cs.FuzzyPID(), trace<span class="op">=</span><span class="kw">lambda</span> k, c, s: hist.append(c.last))</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>modes <span class="op">=</span> []</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>rec_dual <span class="op">=</span> cs.run(cs.DualMode(hyst<span class="op">=</span><span class="fl">0.005</span>, dwell<span class="op">=</span><span class="dv">20</span>),</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>                  trace<span class="op">=</span><span class="kw">lambda</span> k, c, s: modes.append(<span class="dv">1</span> <span class="cf">if</span> c.pd_mode <span class="cf">else</span> <span class="dv">0</span>))</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>nf <span class="op">=</span> cs.exp_neurofuzzy()</span></code></pre></div>
+<p>图 72-3 的三条系数曲线来自 <code>hist</code>，图 72-4 的模式阶梯来自 <code>modes</code>，图 72-5 的 27 个结论来自 <code>nf["nets"]</code> 里那个已训练的网络。这样做的好处是“图与数字同源”：正文里写的 0.955–1.164 就是图 72-3 纵轴的实际范围，不存在两套数据。</p>
+<p>框图（图 72-1 的四种拓扑）用 <code>block_styles</code>，语义色板固定为“控制器、对象、传感器、执行器、虚拟模块”五类，线宽统一 0.6 pt，坐标系 1 单位等于 1 cm。这样做是为了四个面板的尺寸严格一致——比较结构时，图本身的差异必须是零。</p>
+<p>所有图内文字遵守一条规则：<strong>中文写纯文本，公式单独用 <code>$...$</code></strong>，两者不写进同一个字符串。这条规则不是排版洁癖，而是字体回退的硬约束：中文字体没有数学符号的字形，混排会触发 <code>glyph missing</code>，导出的 PDF 里对应字符变成空白。</p>
+<h3 id="复现与改参数">复现与改参数</h3>
+<p>想改算例，有三处必须先想清楚。</p>
+<p>第一，改 <code>T_EP</code>（轨迹周期）会同时改变参考的主频与三次谐波频率，延迟造成的相位滞后随之改变。72.4 节那两个 4.5°、13.5° 是按 4 s 算的，改成 2 s 会翻倍。</p>
+<p>第二，改 <code>DELAY</code> 必须同步改 MPC 的 <code>Np</code>，否则会落进 72.5 节那个“零三角吃掉全部梯度”的陷阱。代码里 <code>DELAY</code> 是全局常量，<code>Np</code> 是每个 MPC 实例的参数，两者没有自动联动——这是有意的，因为工程上延迟变化时，人必须显式决定新时域。</p>
+<p>第三，改 <code>FB</code>（基线 PID）必须同步改调度表的中心 1.0。72.7 节说过，调度系数是相对量，中心一变，绝对增益就变；本章的最优固定增益是 <span class="math inline">(2.60,\,0.02,\,0.16)</span>，若把基线换成它，调度表的上界 1.30 就会把闭环推到 3.38，需要同时收窄范围。</p>
+<p>这三处都是“改一个数，动三个地方”的耦合。它们不是代码写得不好，而是混合架构本身的属性——72.7 节那一小节讲的就是这件事。</p>
+<p>还有一处最容易踩、却最不显眼的坑：<strong>随机种子</strong>。本章除噪声实验以外全部无随机，所以重跑逐位一致；一旦有人把训练样本的采样改成随机取点而不固定种子，2 输入与 3 输入两组的 RMSE 会各自漂动百分之一二，闭环结果可能从 2.8701 变成 2.9 或 2.8，正文里“二十二倍”的说法就不再成立。所以复现的前提不是“跑一遍脚本”，而是“在同一个种子上跑一遍脚本”——这条在 72.10 节的参数版本管理里对应“可复现”三个字。</p>
+<p>另一处是<strong>图的坐标系</strong>。本章十张图全部由 <code>styles/</code> 里的统一函数绘制，尺寸与字号固定，所以正文里“图 72-3 纵轴范围 0.955–1.164”可以被读者直接量出来。若有人改了图幅而不改字号，坐标刻度会变稀，量出来的数与正文就会差一点点——差得不多，但足以让核对变成一件需要解释的事。</p>
+<p>最后一句关于代码的：本章两个脚本都刻意不超过三百行，控制器不做类层次设计，指标不做通用框架。这不是偷懒，而是为了让读者能在半小时内把每个数字的来源读完。混合架构的问题从来不在代码写不出来，而在“写出来之后没人说得清它在做什么”。</p>
+
+<nav class="footnav"><a href="ch071.html">← 上一章</a><a href="index.html">返回目录</a><a href="ch073.html">下一章 →</a></nav>
+</body>
+</html>

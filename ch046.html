@@ -1,0 +1,1886 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="zh-CN" xml:lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>第 46 章　前馈控制与复合控制 · 控制大综合</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    span.underline{text-decoration: underline;}
+    div.column{display: inline-block; vertical-align: top; width: 50%;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    ul.task-list{list-style: none;}
+  </style>
+  <link rel="stylesheet" href="assets/book.css" />
+  <script src="assets/katex/katex.min.js"></script>
+  <script>document.addEventListener("DOMContentLoaded", function () {
+   var mathElements = document.getElementsByClassName("math");
+   var macros = [];
+   for (var i = 0; i < mathElements.length; i++) {
+    var texText = mathElements[i].firstChild;
+    if (mathElements[i].tagName == "SPAN") {
+     katex.render(texText.data, mathElements[i], {
+      displayMode: mathElements[i].classList.contains('display'),
+      throwOnError: false,
+      macros: macros,
+      fleqn: false
+     });
+  }}});
+  </script>
+  <link rel="stylesheet" href="assets/katex/katex.min.css" />
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+  <link rel="stylesheet" href="assets/site.css" />
+</head>
+<body>
+<nav class="topnav"><a class="home" href="index.html">目录</a><span class="pos">046 / 115</span><span class="pager"><a href="ch045.html">上一章</a><a href="ch047.html">下一章</a></span></nav>
+
+<nav id="TOC" role="doc-toc">
+<ul>
+<li><a href="#第46章-前馈控制与复合控制">第46章 前馈控制与复合控制</a>
+<ul>
+<li><a href="#动机与直观理解">46.1 动机与直观理解</a></li>
+<li><a href="#数学原理">46.2 数学原理</a></li>
+<li><a href="#设计步骤">46.3 设计步骤</a></li>
+<li><a href="#连续情形">46.4 连续情形</a></li>
+<li><a href="#离散情形">46.5 离散情形</a></li>
+<li><a href="#稳定性与性能">46.6 稳定性与性能</a></li>
+<li><a href="#参数意义与作用">46.7 参数意义与作用</a></li>
+<li><a href="#调参方法与经验">46.8 调参方法与经验</a></li>
+<li><a href="#优化与改进">46.9 优化与改进</a></li>
+<li><a href="#工程落地">46.10 工程落地</a></li>
+<li><a href="#优缺点与适用边界">46.11 优缺点与适用边界</a></li>
+<li><a href="#python-仿真代码">46.12 Python 仿真代码</a></li>
+</ul></li>
+</ul>
+</nav>
+<h1 id="第46章-前馈控制与复合控制">第46章 前馈控制与复合控制</h1>
+<h2 id="动机与直观理解">46.1 动机与直观理解</h2>
+<h3 id="一个现场场景">46.1.1 一个现场场景</h3>
+<p>第 45 章的串级解决的是“扰动进入对象之后，用快回路把它尽早压住”。但它有一个前提：扰动本身不可测，只能等它对副变量产生影响后再反应。如果扰动其实是可以测量的，还有更早的一步可走——<strong>在扰动进入对象之前就动手</strong>。</p>
+<p>考虑一台换热器：蒸汽流量阀开度 <span class="math inline">u</span> 控制出口温度 <span class="math inline">y</span>，入口物料温度 <span class="math inline">d</span> 是主要扰动。入口温度突然下降 <span class="math inline">1\,^\circ</span>C，物料要走完管道、经过管壁传热，出口温度才开始下降；等温度变送器看到变化、控制器算出差值、阀门动作，扰动已经在对象里走了十几秒。反馈控制再快，也只能“事后补救”。</p>
+<p>本章的算例把这件事量化。取主通道与扰动通道分别为</p>
+<p><span class="math display">
+G_p(s)=\frac{1.2\,e^{-2s}}{10s+1},\qquad
+G_d(s)=\frac{0.8\,e^{-6s}}{4s+1}
+</span></p>
+<p>扰动幅值 <span class="math inline">-1.0</span>、<span class="math inline">t=40</span> s 加入阶跃，纯反馈的峰值偏差为 0.4706，恢复到 <span class="math inline">\pm2\%</span> 带内要 31.65 s。若入口温度可以测量，前馈可以在同一时刻就给出一个反向的阀门动作，让扰动还没传到出口就被抵消掉。</p>
+<h3 id="反馈为什么慢">46.1.2 反馈为什么慢</h3>
+<p>反馈是“误差驱动”的：扰动先改变被控量，测量到误差，控制器才动作。这条链上有四段时间。</p>
+<p><strong>对象纯滞后。</strong> 本章主通道 2 s、扰动通道 6 s。也就是说，扰动从测量点走到出口要 6 s，而阀门动作走到出口只要 2 s——两者差 4 s。这 4 s 是前馈可以“抢”回来的时间。</p>
+<p><strong>对象惯性。</strong> 扰动通道时间常数 4 s、主通道 10 s，阶跃要走过几个时间常数才显现。</p>
+<p><strong>测量与采样。</strong> 变送器有滤波，DCS 有扫描周期，本章取 <span class="math inline">T_s=0.05</span> s，这一项相对前两项很小，但它决定了前馈的最短反应时间。</p>
+<p><strong>控制器运算。</strong> 常规 PID 一拍算完，可忽略。</p>
+<p>四段加起来，反馈的“看见—动作”至少晚一个扰动通道的滞后加惯性。前馈不改变这四段时间，它改变的是<strong>起点</strong>：不等误差出现，直接根据扰动测量值算出该给多少控制量。</p>
+<h3 id="前馈在做什么把扰动通道抵消掉">46.1.3 前馈在做什么：把扰动通道抵消掉</h3>
+<p>设前馈通道为 <span class="math inline">G_{ff}(s)</span>，控制量由两部分相加：</p>
+<p><span class="math display">
+u(s)=u_{fb}(s)+G_{ff}(s)\,d(s)
+</span></p>
+<p>若暂时不管反馈（令 <span class="math inline">u_{fb}=0</span>），被控量为</p>
+<p><span class="math display">
+y(s)=\left[G_d(s)+G_p(s)G_{ff}(s)\right]d(s)
+</span></p>
+<p>要让它对任意 <span class="math inline">d</span> 都为零，只需</p>
+<p><span class="math display">
+G_{ff}(s)=-\frac{G_d(s)}{G_p(s)}
+\tag{46-1}
+</span></p>
+<p>这就是<strong>理想前馈</strong>。代入本章对象：</p>
+<p><span class="math display">
+G_{ff}(s)=-\frac{0.8}{1.2}\cdot\frac{10s+1}{4s+1}\,e^{-4s}
+=-0.667\cdot\frac{10s+1}{4s+1}\,e^{-4s}
+\tag{46-2}
+</span></p>
+<p>三个因子各有含义。负号表示“扰动使温度下降，前馈就让蒸汽阀开大”，方向相反；<span class="math inline">(10s+1)/(4s+1)</span> 是超前-滞后环节，用来匹配两个通道的动态差异；<span class="math inline">e^{-4s}</span> 表示<strong>要等 4 s 再动</strong>——扰动比控制作用多走 4 s，前馈若立刻动作，反而会早到 4 s 而帮倒忙（§46.6 会给出延迟差 0.5 s 就使前馈失效的数据）。</p>
+<h3 id="结构三个信号相加">46.1.4 结构：三个信号相加</h3>
+<p>图 46-1 给出复合回路的信号关系。与第 45 章的串级相比，它多了一条从扰动测量直接到执行器的通路，少了“副变量”这一环。</p>
+<figure>
+<img src="figs/ch046/fig_046_01_ff_structure.svg" alt="图 46-1　前馈-反馈复合回路：扰动 d 经 G_d 进入输出，同时经 G_ff 前馈到控制量求和点" /><figcaption aria-hidden="true">图 46-1　前馈-反馈复合回路：扰动 d 经 G_d 进入输出，同时经 G_ff 前馈到控制量求和点</figcaption>
+</figure>
+<p>图中有三个信号：扰动测量 <span class="math inline">d</span>、前馈输出 <span class="math inline">u_{ff}</span>、反馈输出 <span class="math inline">u_{fb}</span>。执行器收到的是二者之和。三条通道的分工是：</p>
+<ul>
+<li><strong>扰动通道</strong> <span class="math inline">G_d</span>：扰动如何影响被控量，决定前馈“要抵消多少”；</li>
+<li><strong>前馈通道</strong> <span class="math inline">G_{ff}</span>：按扰动测量算出补偿量，是开环的，不参与反馈；</li>
+<li><strong>反馈通道</strong> <span class="math inline">C(s)</span>：兜底，负责前馈没抵消干净的部分、模型误差、以及其他不可测扰动。</li>
+</ul>
+<p>前馈是<strong>开环</strong>的：它不看 <span class="math inline">y</span>，因此不改变闭环特征方程，也就不改变稳定性（§46.2.4 严格说明）。代价是它的误差没有自我修正能力——模型错多少，残差就留多少，最后仍要靠反馈收尾。</p>
+<h3 id="三个常见误解">46.1.5 三个常见误解</h3>
+<p><strong>误解一：有了前馈就不需要反馈。</strong> 前馈只对“可测且模型已知”的扰动有效。本章把扰动通道增益改小 20%（前馈仍按名义值设计），动态前馈的峰值偏差从 0.0012 涨到 0.1188，是原来的 99 倍；稳态偏差最终仍由反馈积分拉回零。<strong>前馈管动态峰值，反馈管稳态与模型误差</strong>，两者缺一不可。</p>
+<p><strong>误解二：前馈越复杂越好。</strong> 理想动态前馈把峰值压到 0.0012，但前馈输出峰值 1.654，是静态前馈 0.667 的 2.5 倍；若扰动测量有 <span class="math inline">\sigma=0.02</span> 的噪声，动态前馈输出的抖动标准差 0.0309，静态前馈只有 0.0124。复杂前馈用执行器行程和噪声换来更小的峰值，是否划算要看阀门余量与测量品质（§46.9）。</p>
+<p><strong>误解三：静态前馈没什么用。</strong> 静态前馈只有一个增益，却把峰值从 0.4706 降到 0.2154，减少 54%，而且不放大噪声、不要求准确的动态模型。对大多数慢过程，静态前馈加反馈已经能拿到大部分收益，动态前馈是“锦上添花”而不是“必需”。</p>
+<h3 id="术语">46.1.6 术语</h3>
+<ul>
+<li><strong>前馈（feedforward）</strong>：按扰动测量直接产生控制作用，不经过误差比较。</li>
+<li><strong>复合控制（composite control）</strong>：前馈与反馈并存的结构，本章的主角。</li>
+<li><strong>不变性（invariance）</strong>：输出对某扰动完全无响应。式 (46-1) 叫绝对不变性；只让稳态无差叫稳态不变性。</li>
+<li><strong>二自由度（2-DOF）</strong>：设定值响应与扰动响应可以分别设计。参考前馈是其中一种实现（§46.2.7）。</li>
+<li><strong>静态前馈 / 动态前馈</strong>：前者只有增益，后者含超前-滞后等动态环节。</li>
+<li><strong>参考前馈</strong>：从设定值而不是扰动引出的前馈，用于改善跟踪。</li>
+</ul>
+<h3 id="本章要回答的三个问题">46.1.7 本章要回答的三个问题</h3>
+<p><strong>问题一，前馈通道怎么算、能不能实现？</strong> 理想解 <span class="math inline">G_{ff}=-G_d/G_p</span> 可能非因果、可能分子阶次高于分母，工程上要判断哪些部分能实现、哪些必须近似（§46.2–§46.3）。</p>
+<p><strong>问题二，模型不准、延迟对不齐时还剩多少收益？</strong> 本章会给出增益偏差 <span class="math inline">\pm20\%</span>、延迟偏差 <span class="math inline">\pm0.5</span> s 的定量结果，并说明为什么“前馈只在自己准确的频段内有效”（§46.4–§46.7）。</p>
+<p><strong>问题三，工程上怎么落地？</strong> 滤波、限幅、无扰投切、模型在线校正，每一项都会影响前馈能不能长期用下去（§46.8–§46.11）。</p>
+<p>本章路线与全书一致：先建立直观与数学（§46.1–§46.2），再给设计步骤与连续、离散结果（§46.3–§46.5），然后讨论稳定性、参数与整定（§46.6–§46.8），最后是改进、落地、边界与代码（§46.9–§46.12）。所有数字来自 <code>code/ch046_sim.py</code> 的实跑输出。</p>
+<h3 id="前馈与串级两条不同的路">46.1.8 前馈与串级：两条不同的路</h3>
+<p>第 45 章的串级与本章的前馈常被拿来比较，因为二者解决的是同一类问题——把扰动挡在主被控量之外——但手段完全不同。</p>
+<p>串级靠<strong>副回路</strong>。它把扰动进入的那条通道包进一个快速内环，扰动先影响副变量，内环在它传到主变量之前就把它压住。串级不要求知道扰动具体是什么，只要求存在一个能及时反映扰动的副变量，并且内环比外环快得多。</p>
+<p>前馈靠<strong>测量</strong>。它直接量出扰动，按模型算出一个抵消量。前馈不引入新的闭环，因此不带来新的稳定性问题；但它要求扰动可测，而且测量必须早于扰动对输出的作用。</p>
+<p>判据因此很清楚：</p>
+<ul>
+<li><strong>扰动从副回路内部进入、副变量可测</strong>，优先选串级。副回路的抑制不依赖扰动模型，鲁棒性更好。</li>
+<li><strong>扰动可测但构不成副回路</strong>（入口温度、原料浓度、环境温度、燃料热值），选前馈。这类量没有“流量”那样的中间可调变量，只能靠测量加模型。</li>
+<li><strong>两者都满足</strong>，叠加使用：串级压住阀门与蒸汽侧的快速波动，前馈削掉负荷侧的大幅慢变。这是后续章节常见的组合结构。</li>
+</ul>
+<p>本章的换热器可以用一句话分清：蒸汽压力波动走串级，入口温度波动走本章的前馈。若把两者用反——用前馈去对付压力波动（压力测点噪声大、且与蒸汽流量构成不了副回路），或用串级去对付入口温度（入口温度没有可调的中间变量）——结构上都装得上，但性能与维护成本都会明显变差。</p>
+<h3 id="一条趋势线上的时间账">46.1.9 一条趋势线上的时间账</h3>
+<p>前馈的作用可以用一条时间线看清。本章扰动在 <span class="math inline">t_0=40</span> s 加入，扰动通道纯滞后 6 s，主通道纯滞后 2 s，前馈延迟 4 s。于是：</p>
+<ul>
+<li><strong>40 s</strong>：扰动发生，扰动测量立即变化，但出口温度还没动；</li>
+<li><strong>40–44 s</strong>：前馈在延迟缓冲里等待，输出保持原值。这 4 s 不是浪费，而是必须——若此时就动作，补偿会早于扰动 4 s 到达出口，反而制造一个反向偏差；</li>
+<li><strong>44 s</strong>：前馈开始输出，经主通道 2 s 纯滞后与 10 s 一阶惯性逐步作用；</li>
+<li><strong>46 s</strong>：扰动经 6 s 滞后到达出口，同一时刻前馈的补偿也到达出口，两者在这一点上“撞车”并相互抵消。</li>
+</ul>
+<p>这条时间线是判断前馈参数对不对的最快方法：把 <span class="math inline">u_{ff}</span> 与出口温度画在同一张趋势图上，若 <span class="math inline">u_{ff}</span> 的起点比出口温度开始变化的时刻<strong>早</strong> <span class="math inline">\tau_p</span>，延迟就对了；早得太多说明 <span class="math inline">n_{ff}</span> 偏小，晚得太多说明 <span class="math inline">n_{ff}</span> 偏大。现场调试时，这一眼往往比算一遍传函更可靠（§46.8.4 会给出细扫方法）。</p>
+<h3 id="两条通道的物理来源">46.1.10 两条通道的物理来源</h3>
+<p>本章从头到尾用 <span class="math inline">G_p=1.2e^{-2s}/(10s+1)</span>、<span class="math inline">G_d=0.8e^{-6s}/(4s+1)</span> 这两条通道，但没有解释它们为什么长这样。理解这一点，才能判断换一台设备时参数该怎么估。</p>
+<p><strong>主通道</strong>是“蒸汽流量→出口温度”。蒸汽凝结放热，热量先传给管壁，再由管壁传给物料，两次热阻串联，宏观上表现为一个一阶惯性，时间常数 10 s 对应换热器与物料的热容。纯滞后 2 s 来自蒸汽阀到换热段的输送与混合时间。增益 1.2 的量纲是“单位阀门开度引起多少度”，取决于换热面积与蒸汽潜热。</p>
+<p><strong>扰动通道</strong>是“入口温度→出口温度”。物料带着热量直接流过去，不经过管壁，因此惯性小得多，时间常数 4 s；但入口温度的测点通常装在离换热器很远的上游管道上（为了抢出提前量），物料从测点走到出口要 6 s，所以纯滞后反而比主通道长。增益 0.8 小于 1，因为沿途有散热与混合，入口的 1 ℃ 波动传到出口已经衰减成 0.8 ℃。</p>
+<p>两条通道的这三个差别不是巧合，而是一般规律：</p>
+<ul>
+<li><strong>扰动通道惯性小</strong>：扰动直接改变物料本身的状态，而控制作用要经过执行器与传热环节；</li>
+<li><strong>扰动通道滞后长</strong>：测点为了“提前”必须放在上游，这段距离就是天然的时间窗；</li>
+<li><strong>增益比接近 1</strong>：同一股物料、同一个被控量，两个增益量级通常相当，因此 <span class="math inline">K_{ff}</span> 的绝对值常在 0.5–2 之间。</li>
+</ul>
+<p>由此可以推出一条工程判据：<strong>前馈可行性取决于“测点离扰动源近、离执行器远”</strong>。若把入口温度测点装在换热器出口附近，滞后差变成零甚至为负，前馈就失去了立足点。反过来，若测点在上游很远，时间窗很大，但测量滞后也随之增大（§46.3.9 的 <span class="math inline">\tau_m</span> 预算），两者需要折中。</p>
+<h2 id="数学原理">46.2 数学原理</h2>
+<h3 id="三条通道的代数关系">46.2.1 三条通道的代数关系</h3>
+<p>把图 46-1 写成方程。记设定值 <span class="math inline">r</span>、被控量 <span class="math inline">y</span>、可测扰动 <span class="math inline">d</span>、控制量 <span class="math inline">u</span>，反馈控制器 <span class="math inline">C(s)</span>、主通道 <span class="math inline">G_p(s)</span>、扰动通道 <span class="math inline">G_d(s)</span>、前馈通道 <span class="math inline">G_{ff}(s)</span>。执行器收到两路之和，前馈用的是扰动测量值（含噪声 <span class="math inline">n</span>）：</p>
+<p><span class="math display">
+u=u_{fb}+u_{ff},\qquad u_{fb}=C(s)\,[r-y],\qquad u_{ff}=G_{ff}(s)\,[d+n]
+\tag{46-3}
+</span></p>
+<p>被控量是扰动通道与主通道的叠加：</p>
+<p><span class="math display">
+y=G_d(s)\,d+G_p(s)\,u
+\tag{46-4}
+</span></p>
+<p>把式 (46-3) 代入式 (46-4)，令 <span class="math inline">n=0</span>（噪声单独在 §46.9 讨论），整理得</p>
+<p><span class="math display">
+y=\frac{G_pC}{1+G_pC}\,r+\frac{G_d+G_pG_{ff}}{1+G_pC}\,d
+\tag{46-5}
+</span></p>
+<p>式 (46-5) 是本章所有结论的出发点。它把输出分成两块：跟踪项只与 <span class="math inline">C</span>、<span class="math inline">G_p</span> 有关，扰动项则多了一个可以自由设计的 <span class="math inline">G_{ff}</span>。注意分母 <span class="math inline">1+G_pC</span> 里没有 <span class="math inline">G_{ff}</span>——这一点在 §46.2.4 会展开，它是“前馈不影响稳定性”的全部原因。</p>
+<h3 id="绝对不变性条件">46.2.2 绝对不变性条件</h3>
+<p>要让扰动对输出完全没有影响，只需式 (46-5) 第二项的分子恒为零：</p>
+<p><span class="math display">
+G_d(s)+G_p(s)G_{ff}(s)\equiv 0
+\tag{46-6}
+</span></p>
+<p>式 (46-6) 称为<strong>绝对不变性条件</strong>。它的解就是式 (46-1) 的 <span class="math inline">G_{ff}=-G_d/G_p</span>。这里换一个角度看：不变性是一个关于 <span class="math inline">s</span> 的多项式恒等式，要求两个通道在所有频率上幅值相等、相位相反。只要模型有一点点偏差，恒等式就不成立，只能做到“在某个频段内接近成立”。这解释了为什么工程上前馈永远与反馈配对使用。</p>
+<p>式 (46-6) 还有一个容易忽略的含义：<strong>前馈抵消的是通道之差，不是扰动本身</strong>。前馈并不“知道”扰动有多大，它只是让主通道产生一个与扰动通道等大反向的输出。因此扰动测量一旦有偏，前馈就会按同样的比例产生错误动作。</p>
+<h3 id="可实现性因果与阶次">46.2.3 可实现性：因果与阶次</h3>
+<p>把本章对象代入式 (46-1)：</p>
+<p><span class="math display">
+G_{ff}(s)=-\frac{K_d}{K_p}\cdot\frac{T_p s+1}{T_d s+1}\,e^{-(\tau_d-\tau_p)s}
+=-0.667\cdot\frac{10s+1}{4s+1}\,e^{-4s}
+\tag{46-7}
+</span></p>
+<p>一个传递函数要在实时系统里实现，必须满足两个条件。</p>
+<p><strong>因果性。</strong> 式 (46-7) 含 <span class="math inline">e^{-(\tau_d-\tau_p)s}</span>，指数为负才能用缓冲区延迟实现。要求</p>
+<p><span class="math display">
+\tau_d\ge\tau_p
+\tag{46-8}
+</span></p>
+<p>本章 <span class="math inline">\tau_d-\tau_p=6-2=4</span> s，可以做成 4 s 的纯延迟。反之，若扰动通道比主通道快（<span class="math inline">\tau_d&lt;\tau_p</span>），理想前馈需要 <span class="math inline">e^{+(\tau_p-\tau_d)s}</span>，即“预知未来”，物理上不可实现。这时只能退而求其次：删掉超前项做静态前馈，或把扰动测量点前移，让测量真正提前。</p>
+<p><strong>真性（relative degree）。</strong> 式 (46-7) 的分子、分母同阶，是 proper 的，可以直接用超前-滞后环节实现。一般地，要求</p>
+<p><span class="math display">
+\deg D_d-\deg N_d\ \ge\ \deg D_p-\deg N_p
+\tag{46-9}
+</span></p>
+<p>即扰动通道的相对阶不低于主通道。若不满足，<span class="math inline">G_{ff}</span> 的分子阶次高于分母，需要理想微分；工程上用带滤波的近似微分代替，代价是高频段残差变大。</p>
+<p>本章两项都满足，理论上可以做到峰值 0.0012（相对扰动幅值 1.0 仅 0.12%）。这不是“前馈特别好”，而是“这个算例的通道结构刚好允许绝对不变性”。</p>
+<h3 id="前馈不改变闭环特征方程">46.2.4 前馈不改变闭环特征方程</h3>
+<p>式 (46-5) 的两项共用分母 <span class="math inline">1+G_pC</span>。也就是说，闭环极点由 <span class="math inline">1+G_pC=0</span> 决定，与 <span class="math inline">G_{ff}</span> 无关。前馈只改变扰动项的<strong>分子</strong>，相当于给扰动通道加了一对零点。</p>
+<p>这条结论有三个直接推论。</p>
+<p>第一，前馈不能把一个不稳定的反馈回路救回来。若 <span class="math inline">1+G_pC</span> 有右半平面根，无论 <span class="math inline">G_{ff}</span> 怎么设计，扰动响应都会发散。</p>
+<p>第二，前馈也不会破坏一个稳定的回路。在线性范围内，加入前馈后增益裕度、相位裕度、穿越频率都不变。§46.6 会用实测裕度验证这一点。</p>
+<p>第三，一旦进入非线性（前馈输出限幅、阀门饱和），这条结论就失效。本章实测：不限幅时峰值 0.0012，前馈限到 <span class="math inline">[0,1.0]</span> 后峰值升到 0.1066，限到 <span class="math inline">[0,0.3]</span> 后升到 0.3520——此时前馈已经退化成“半开环”，残差全部压给反馈。所以“前馈不影响稳定性”这句话必须加上“线性、不限幅”的前提。</p>
+<h3 id="稳态不变性与静态前馈">46.2.5 稳态不变性与静态前馈</h3>
+<p>令 <span class="math inline">s\to0</span>，式 (46-7) 中惯性项趋于 1、延迟项趋于 1：</p>
+<p><span class="math display">
+K_{ff}=G_{ff}(0)=-\frac{K_d}{K_p}=-\frac{0.8}{1.2}=-0.667
+\tag{46-10}
+</span></p>
+<p>只取这个常数的前馈叫<strong>静态前馈</strong>，它满足的是<strong>稳态不变性</strong>：扰动过去很久、系统稳定后，输出回到设定值，前馈不需要积分器也能做到无静差。</p>
+<p>代价是动态过程完全没有补偿。静态前馈的残差为</p>
+<p><span class="math display">
+E_{\text{stat}}(s)=G_d(s)+K_{ff}G_p(s)
+=K_d\left[\frac{e^{-6s}}{4s+1}-\frac{e^{-2s}}{10s+1}\right]
+\tag{46-11}
+</span></p>
+<p>低频时两项几乎抵消（<span class="math inline">\omega=0.01</span> rad/s 处残差 0.01612），频率升高后相位差拉开，残差迅速变大：<span class="math inline">\omega=0.249</span> 处 0.35953，<span class="math inline">\omega=0.497</span> 处 0.41361。这就是静态前馈“只能压低峰值、压不到零”的数学原因。</p>
+<h3 id="残差通道与有效频段">46.2.6 残差通道与“有效频段”</h3>
+<p>定义残差通道</p>
+<p><span class="math display">
+E(s)=G_d(s)+G_{ff}(s)G_p(s)
+\tag{46-12}
+</span></p>
+<p>它就是式 (46-5) 中扰动项的分子，也是前馈“没抵消掉的部分”。两种常见失配有简洁的解析形式。</p>
+<p><strong>增益失配。</strong> 设实际前馈是理想值的 <span class="math inline">\kappa</span> 倍，即 <span class="math inline">G_{ff,a}=\kappa G_{ff}</span>，则</p>
+<p><span class="math display">
+E(s)=(1-\kappa)\,G_d(s)
+\tag{46-13}
+</span></p>
+<p>残差形状与扰动通道完全相同，只差一个比例。本章 <span class="math inline">\kappa=0.8</span> 时，<span class="math inline">|E|</span> 在低频为 <span class="math inline">0.2\times0.8=0.16</span>，实测 0.15987；到 <span class="math inline">\omega=0.992</span> rad/s 降为 0.03909，因为 <span class="math inline">|G_d|</span> 本身随频率衰减。<span class="math inline">\kappa=1.2</span> 时残差为 <span class="math inline">0.2|G_d|</span>，与 <span class="math inline">\kappa=0.8</span> 完全对称——实测两组数字逐点相同，说明增益失配的方向不改变残差大小，只改变符号。</p>
+<p><strong>静态前馈。</strong> 残差即式 (46-11)。低频很小、中频最大、高频又回落，形状不是单调的。这提示一件事：<strong>静态前馈的有效频段在低频，动态前馈的有效频段可以推到中频</strong>。若扰动主要是慢漂移，静态前馈足够；若扰动含快速成分，必须补动态环节。</p>
+<p>有了 <span class="math inline">E(s)</span>，复合回路的扰动响应可以写成</p>
+<p><span class="math display">
+\frac{y(s)}{d(s)}=\frac{E(s)}{1+G_p(s)C(s)}
+\tag{46-14}
+</span></p>
+<p>前馈把“扰动 → 输出”的分子从 <span class="math inline">G_d</span> 换成 <span class="math inline">E</span>，剩下的仍由反馈的灵敏度函数收尾。这也说明前馈与反馈不是竞争关系，而是串联在同一根分子上的两级衰减。</p>
+<h3 id="二自由度分解">46.2.7 二自由度分解</h3>
+<p>把式 (46-5) 改写成标准形式：</p>
+<p><span class="math display">
+y=T(s)\,r+S(s)\,E(s)\,d,\qquad
+T=\frac{G_pC}{1+G_pC},\quad S=\frac{1}{1+G_pC}
+\tag{46-15}
+</span></p>
+<p><span class="math inline">T</span> 是补灵敏度函数，<span class="math inline">S</span> 是灵敏度函数。反馈控制器 <span class="math inline">C</span> 同时决定 <span class="math inline">T</span> 与 <span class="math inline">S</span>，二者被 <span class="math inline">S+T=1</span> 绑死——想加快跟踪就必然放大某些频段的扰动。前馈在 <span class="math inline">S</span> 的分子上乘了一个 <span class="math inline">E(s)</span>，等于在<strong>不改变 <span class="math inline">S</span> 的前提下</strong>单独压低扰动通道。这就是“二自由度”的确切含义：一个自由度（<span class="math inline">C</span>）定回路形状，另一个（<span class="math inline">G_{ff}</span>）定扰动抑制。</p>
+<p>参考前馈是同一思想的另一用法：从设定值而不是扰动引出一条前馈，</p>
+<p><span class="math display">
+u_r=\frac{1}{K_p}\,r
+\tag{46-16}
+</span></p>
+<p>它让执行器在误差出现之前就先给出稳态所需的开度，跟踪因此变快。但式 (46-16) 是纯比例、无延迟匹配的，本章实测无滤波时超调 22.72%，执行器峰值 2.273；把设定值经 10 s 一阶滤波后再送入，超调降到 5.01%，峰值 1.022。<strong>参考前馈的收益与冲击是同一枚硬币的两面</strong>，滤波就是在两者之间取平衡（§46.7）。</p>
+<h3 id="从连续到离散的入口">46.2.8 从连续到离散的入口</h3>
+<p>工程实现时，式 (46-7) 要拆成三块：增益 <span class="math inline">-0.667</span>、超前-滞后 <span class="math inline">(10s+1)/(4s+1)</span>、纯延迟 <span class="math inline">e^{-4s}</span>。</p>
+<p>增益直接乘；超前-滞后用 Tustin 或零极点匹配离散；纯延迟在 <span class="math inline">T_s=0.05</span> s 下就是 80 拍的环形缓冲区。三块都不难，难的是<strong>三块必须同步</strong>：延迟少一拍、超前-滞后系数差一点，残差就会从 0 升到可观测的量级。</p>
+<p>本章实测了采样周期的影响：<span class="math inline">T_s</span> 从 0.05 s 增到 2 s，峰值从 0.0012 升到 0.0578，IAE 从 0.0206 升到 0.6989。采样越慢，延迟量化的误差越大（80 拍变成 2 拍），前馈的动作时刻越粗。这条曲线是 §46.5 的主题。</p>
+<h3 id="与前馈相邻的另一种思路由果推因">46.2.9 与前馈相邻的另一种思路：由果推因</h3>
+<p>前馈不是唯一利用模型抵消扰动的办法。扰动观测器走的是另一条路：先用主通道的名义模型算出“这点控制量本应产生多少输出”，再与实际输出相减，把差值归因于一个等效扰动，然后反向补偿。前馈是<strong>由因推果</strong>——看到扰动，按模型算它的影响；观测器是<strong>由果推因</strong>——看到偏差，按模型反推扰动的等效大小。</p>
+<p>两者的模型需求不同。前馈需要扰动通道与主通道的<strong>开环模型</strong> <span class="math inline">G_d</span>、<span class="math inline">G_p</span>，两个都要准；观测器主要需要主通道的名义模型，并要求它可逆。前馈的模型误差原样进入残差；观测器的误差被反馈闭合，有自我修正的成分，但它必须等偏差出现才能估计，时间上天然晚一步。</p>
+<p>可实现性的困难也相似。观测器求逆时，若名义模型相对阶较高，逆是非真的，必须加低通滤波截断高频——这与本章给前馈加 <span class="math inline">\tau_f</span> 是同一个交易：用带宽换可实现性。滤波越宽，估计越快、噪声越大；越窄，越平滑、越迟钝。</p>
+<p>有一条判据值得记住：<strong>扰动可测且测量足够早，用前馈；扰动不可测或测点太晚，才考虑观测器或纯反馈</strong>。观测器的性能上限由模型精度与滤波带宽共同决定，它无法突破“偏差出现之后才能动作”这一条，本质上更接近“带模型预测的反馈”。</p>
+<p>还有一处本质差别。前馈只看 <span class="math inline">d</span>、不看 <span class="math inline">y</span>，所以式 (46-5) 的分母里没有 <span class="math inline">G_{ff}</span>，闭环极点不变；观测器用了 <span class="math inline">y</span>，它属于反馈，会改变闭环极点，滤波设计不当还会吃掉裕度。这也是工程上“能测就做前馈、测不到才做观测器”的顺序由来。</p>
+<h3 id="时域残差与频域残差是同一件事">46.2.10 时域残差与频域残差是同一件事</h3>
+<p>式 (46-12) 把残差写成 <span class="math inline">E(s)=G_d+G_{ff}G_p</span>，式 (46-13) 又把它拆成 <span class="math inline">G_d(1-e^{-\Delta s})</span> 这样的形式。§46.4 用极值算峰值，§46.6 用 <span class="math inline">\lvert E(j\omega)\rvert</span> 画幅频，看起来是两套方法，其实是同一个量的两个投影。</p>
+<p>时域里，残差对阶跃扰动的响应是 <span class="math inline">E(s)/s</span> 的拉氏反变换，峰值就是这条曲线的最大值。频域里，<span class="math inline">\lvert E(j\omega)\rvert</span> 描述的是“每个频率成分被残留多少”。两者通过阶跃的频谱 <span class="math inline">1/(j\omega)</span> 联系：<strong>低频段决定拖尾，中频段决定峰值</strong>。这也解释了为什么静态前馈的峰值降了一半、拖尾反而变长（§46.4.2）——它在低频段补得准，在中频段补不准。</p>
+<p>延迟误差是理解这个联系的最好例子。设前馈的延迟偏差为 <span class="math inline">\Delta t</span>，则</p>
+<p><span class="math display">
+E(j\omega)=G_d(j\omega)\left(1-e^{-j\omega\Delta t}\right),\qquad
+\lvert 1-e^{-j\omega\Delta t}\rvert=2\left\lvert\sin\frac{\omega\Delta t}{2}\right\rvert
+</span></p>
+<p>在低频（<span class="math inline">\omega\Delta t\ll1</span>）时，这个因子近似等于 <span class="math inline">\omega\Delta t</span>，残差随频率线性上升——这就是“高通形状”的来历。频率越高残留越多，但 <span class="math inline">G_d</span> 本身在高频衰减，两者相乘后在某个中频处达到最大。</p>
+<p>用这组式子可以解释表 46-7 里那个看似矛盾的现象：延迟差 0.5 s 时峰值放大 78 倍，IAE 只放大 22 倍。峰值由中频段的最大残留决定，那里 <span class="math inline">\omega\Delta t</span> 已接近 1，放大倍数大；IAE 是对时间的积分，等效于按 <span class="math inline">1/\omega</span> 加权，低频权重更大，而低频段 <span class="math inline">\omega\Delta t</span> 很小，放大倍数自然小。<strong>同一个残差，峰值看最坏频段，IAE 看全频段平均</strong>。</p>
+<p>实用上，这套对应关系给了一个省事的判断法：调参数时先看 <span class="math inline">\lvert E(j\omega)\rvert</span> 的曲线（不用跑时域仿真，几行代码就能画），确认残差在扰动的主要频段内是否被压住；再用时域仿真验证峰值与 IAE。前者快，后者真，两者互相校验，比只看其中一个可靠。</p>
+<p>至此数学准备完成：式 (46-6) 给出目标，式 (46-8)(46-9) 给出可行性判据，式 (46-12) 给出误差的度量，式 (46-15) 给出与反馈的分工。§46.3 把这些变成可执行的设计步骤。</p>
+<h2 id="设计步骤">46.3 设计步骤</h2>
+<h3 id="六步流程">46.3.1 六步流程</h3>
+<p>把 §46.2 的结论变成工程动作，可以分成六步（图 46-2）。前两步是“能不能做”，中间两步是“做哪一种”，后两步是“做得对不对”。</p>
+<figure>
+<img src="figs/ch046/fig_046_02_design_flow.svg" alt="图 46-2　前馈设计六步流程：可行性判断在前，静态与动态分流在中，投切验收在后" /><figcaption aria-hidden="true">图 46-2　前馈设计六步流程：可行性判断在前，静态与动态分流在中，投切验收在后</figcaption>
+</figure>
+<p>图 46-2 右侧有一条回到“静态前馈”的支路。它对应最常见的情形：动态模型辨识不出来、或者扰动测量噪声太大，此时不要硬上动态前馈，退回静态前馈加反馈，收益仍有 50% 左右（§46.4）。设计流程要有退路，这是与前馈“开环、无自校正”的本质相匹配的。</p>
+<p>表 46-1 把六步的输入、输出与本章取值列在一起，后文逐条展开。</p>
+<table>
+<thead>
+<tr class="header">
+<th>步骤</th>
+<th>要回答的问题</th>
+<th>输入</th>
+<th>输出</th>
+<th>本章取值</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>一 可行性</td>
+<td>扰动可测吗？来得及吗？</td>
+<td>测量点位置、变送器滞后</td>
+<td>是否继续</td>
+<td><span class="math inline">\tau_m\ll4</span> s，继续</td>
+</tr>
+<tr class="even">
+<td>二 辨识</td>
+<td>两条通道各是什么？</td>
+<td>阶跃试验数据</td>
+<td><span class="math inline">K_p,T_p,\tau_p,K_d,T_d,\tau_d</span></td>
+<td><span class="math inline">1.2,10,2,0.8,4,6</span></td>
+</tr>
+<tr class="odd">
+<td>三 静态</td>
+<td>稳态该补多少？</td>
+<td>两个增益</td>
+<td><span class="math inline">K_{ff}</span></td>
+<td><span class="math inline">-0.667</span></td>
+</tr>
+<tr class="even">
+<td>四 选型</td>
+<td>要静态还是动态？</td>
+<td>扰动频谱、残差要求</td>
+<td>结构</td>
+<td>动态</td>
+</tr>
+<tr class="odd">
+<td>五 动态</td>
+<td>超前-滞后、延迟、滤波取多少？</td>
+<td>四个时间常数</td>
+<td><span class="math inline">T_1,T_2,\tau_{ff},\tau_f</span></td>
+<td><span class="math inline">10,4,4,1</span></td>
+</tr>
+<tr class="even">
+<td>六 投切</td>
+<td>怎么上线、怎么验收？</td>
+<td>限幅、切换逻辑</td>
+<td>可投运的前馈</td>
+<td><span class="math inline">[0,1.0]</span>，斜坡投入</td>
+</tr>
+</tbody>
+</table>
+<p>表 46-1　前馈设计六步的输入、输出与本章取值</p>
+<h3 id="第一步扰动可测而且来得及">46.3.2 第一步：扰动可测，而且“来得及”</h3>
+<p>可测是前提，但“可测”不等于“可用”。前馈要抢的是 <span class="math inline">\Delta\tau=\tau_d-\tau_p</span> 这段时间，本章为 4 s。如果扰动测量本身要经过 3 s 的取样管、5 s 的分析仪滞后，那么等前馈算出结果，扰动早已到达出口，前馈就变成了“迟到的反馈”。</p>
+<p>工程判据可以写得很朴素：<strong>测量链路的总滞后（取样 + 变送 + 滤波 + 扫描）应小于 <span class="math inline">\Delta\tau</span> 的三分之一</strong>。本章 4 s 的窗口对应 1.3 s 的测量预算，普通热电偶加 0.5 s 滤波可以满足；气相色谱这类分钟级滞后的测量则完全不可用。</p>
+<p>还有一条容易被忽略：测量点必须位于扰动向被控量传播的路径<strong>上游</strong>。换热器里测入口物料温度可以，测出口管壁温度就没有意义——那时扰动已经作用完了。位置错了，后面的模型再准也没用。</p>
+<h3 id="第二步辨识两条通道">46.3.3 第二步：辨识两条通道</h3>
+<p>前馈需要的是两条通道的<strong>比值</strong>，不是各自的绝对精度。这一点降低了辨识难度：只要两次阶跃试验在同一工况、同一负荷下做，增益的公共偏差会在比值里抵消一部分。</p>
+<p>本章的辨识结果直接取自对象参数：主通道 <span class="math inline">K_p=1.2</span>、<span class="math inline">T_p=10</span> s、<span class="math inline">\tau_p=2</span> s；扰动通道 <span class="math inline">K_d=0.8</span>、<span class="math inline">T_d=4</span> s、<span class="math inline">\tau_d=6</span> s。阶跃响应两点法即可读出这四个数：取响应达到稳态值 63.2% 与 28.3% 的时刻，两者之差给出时间常数，外推给出纯滞后。现场若有噪声，多做几次取中位数比做一次精细拟合更可靠。</p>
+<p>辨识要记录三件事：试验时的负荷、阀门开度、以及两条通道的增益符号。符号错了，前馈会从“抵消”变成“加倍”，这是投运阶段最危险的低级错误。本章 <span class="math inline">K_p&gt;0</span>、<span class="math inline">K_d&gt;0</span>，故 <span class="math inline">K_{ff}&lt;0</span>：扰动使温度下降时，前馈要让阀门开大。</p>
+<h3 id="第三步先把静态前馈做出来">46.3.4 第三步：先把静态前馈做出来</h3>
+<p>不要一上来就做动态前馈。静态前馈只需要两个增益，当天就能算出来、当天就能投：</p>
+<p><span class="math display">
+K_{ff}=-\frac{K_d}{K_p}=-\frac{0.8}{1.2}=-0.667
+\tag{46-17}
+</span></p>
+<p>本章实测，单加这一项，扰动峰值从 0.4706 降到 0.2154，降幅 54.2%；IAE 从 5.5520 降到 2.8975，降幅 47.8%。用两个常数换一半的扰动抑制，这是全书性价比最高的一处改进。</p>
+<p>但要注意一个反直觉现象：恢复时间从 31.65 s <strong>延长</strong>到 44.95 s。原因是静态前馈把响应曲线从“高而窄”压成“低而宽”——峰值下来了，可拖尾变长，进入 <span class="math inline">\pm2\%</span> 带反而更晚。这说明<strong>峰值、IAE、恢复时间是三个不同口径</strong>，不能只看一个。若工艺指标是“最大偏差不超限”，静态前馈很合适；若指标是“尽快回到带内”，它可能帮倒忙。§46.7 会专门讨论这三个口径的取舍。</p>
+<h3 id="第四步判断要不要动态">46.3.5 第四步：判断要不要动态</h3>
+<p>判断依据是<strong>扰动的主要频率成分落在残差的哪个频段</strong>。静态前馈的残差（式 46-11）在 <span class="math inline">\omega=0.01</span> rad/s 处只有 0.01612，到 0.249 rad/s 已涨到 0.35953，接近扰动通道本身的低频幅值 0.8 的一半。</p>
+<p>换算成时间尺度：<span class="math inline">\omega=0.01</span> rad/s 对应 628 s 的周期，<span class="math inline">\omega=0.25</span> rad/s 对应 25 s。也就是说，静态前馈能对付“几分钟才变一次”的慢漂移，对付不了“几十秒一个起伏”的扰动。本章的阶跃扰动含有丰富的快变成分，因此动态前馈才有 0.0012 对 0.2154 的巨大差距。</p>
+<p>现场可按三条问：</p>
+<ul>
+<li>扰动是阶跃、慢斜坡、还是周期脉动？前两者静态前馈够用，后者需要动态。</li>
+<li>工艺对峰值的要求是“不超报警线”还是“几乎不动”？前者静态够，后者要动态。</li>
+<li>有没有能力维护动态模型？没有就退回静态，别让前馈成为“投运三个月就没人敢动”的黑盒。</li>
+</ul>
+<h3 id="第五步动态前馈的三个参数">46.3.6 第五步：动态前馈的三个参数</h3>
+<p>动态前馈在静态增益之外再加三件东西：超前-滞后、纯延迟、以及一个可选的滤波。</p>
+<p><strong>超前-滞后</strong>由两条通道的时间常数决定：</p>
+<p><span class="math display">
+\frac{T_1s+1}{T_2s+1}=\frac{T_ps+1}{T_ds+1}=\frac{10s+1}{4s+1}
+\tag{46-18}
+</span></p>
+<p>分子时间常数取主通道、分母取扰动通道。物理含义是：扰动通道快（<span class="math inline">T_d=4</span> s）、主通道慢（<span class="math inline">T_p=10</span> s），前馈必须“先冲一下再收”，才能在动态上匹配。取反等于把快慢关系弄反，前馈的形状与两条通道之差不再相消，收益会明显缩水。</p>
+<p><strong>纯延迟</strong>取 <span class="math inline">\tau_{ff}=\tau_d-\tau_p=4</span> s，<span class="math inline">T_s=0.05</span> s 下为 80 拍。这一项对精度最敏感：偏差 0.5 s 峰值就从 0.0012 升到 0.0938，偏差 2 s 升到 0.3138，已经接近静态前馈的水平（§46.6 有完整数据）。</p>
+<p><strong>滤波</strong> <span class="math inline">\tau_f</span> 是工程上的折中。本章扰动测量叠加 <span class="math inline">\sigma=0.02</span> 噪声时，不加滤波的前馈输出抖动标准差 0.0309，<span class="math inline">\tau_f=0.5</span> s 降到 0.0065，<span class="math inline">\tau_f=2</span> s 降到 0.0030。代价是峰值从 0.0012 升到 0.1256（<span class="math inline">\tau_f=1</span> s）再到 0.1957（<span class="math inline">\tau_f=2</span> s）。本章推荐 <span class="math inline">\tau_f</span> 取 <span class="math inline">\Delta\tau</span> 的 1/8 到 1/4，即 0.5–1 s。</p>
+<h3 id="第六步投切与验收">46.3.7 第六步：投切与验收</h3>
+<p>前馈是开环通道，投切必须无扰。做法是：投运前先让前馈输出跟踪当前稳态值（把 <span class="math inline">u_{ff}</span> 初始化成 <span class="math inline">K_{ff}\cdot d_0</span>，<span class="math inline">d_0</span> 为当前扰动测量），再以 10–20 s 的斜坡把前馈从“跟随即刻值”过渡到“正常运算”，避免切换瞬间给阀门一个阶跃。</p>
+<p>验收建议用四个指标，缺一不可：</p>
+<table>
+<thead>
+<tr class="header">
+<th>指标</th>
+<th>含义</th>
+<th>本章目标值</th>
+<th>实测</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>峰值降幅</td>
+<td>相对纯反馈的峰值减少比例</td>
+<td>≥ 50%</td>
+<td>99.7%（动态）、54.2%（静态）</td>
+</tr>
+<tr class="even">
+<td>IAE 降幅</td>
+<td>全过程偏差积分减少比例</td>
+<td>≥ 40%</td>
+<td>99.6%（动态）、47.8%（静态）</td>
+</tr>
+<tr class="odd">
+<td>前馈峰值</td>
+<td>是否超出阀门余量</td>
+<td>≤ 阀门可用行程</td>
+<td>1.654（需 1.7 倍余量）</td>
+</tr>
+<tr class="even">
+<td>噪声抖动</td>
+<td>静默段前馈输出的标准差</td>
+<td>≤ 量程 2%</td>
+<td>0.0045（<span class="math inline">\tau_f=1</span> s）</td>
+</tr>
+</tbody>
+</table>
+<p>表 46-2　前馈投运的四项验收指标</p>
+<p>四项里最容易失守的是第三项。动态前馈的峰值 1.654 是静态值 0.667 的 2.5 倍，若阀门只剩 1.0 的行程，前馈会在最需要它的时刻被限幅卡住。本章实测限到 <span class="math inline">[0,1.0]</span> 后峰值回到 0.1066，收益从 99.7% 掉到 77.3%；限到 <span class="math inline">[0,0.7]</span> 就基本等于静态前馈（0.2153）。<strong>先算阀门余量，再决定要不要动态前馈</strong>，顺序不能反。</p>
+<h3 id="设计核对表">46.3.8 设计核对表</h3>
+<p>把六步压缩成一张投运前必须逐项打勾的清单：</p>
+<ol type="1">
+<li>扰动测量点在传播路径上游，测量总滞后 <span class="math inline">&lt;\Delta\tau/3</span>；</li>
+<li>两条通道在同一负荷下辨识，增益符号已确认；</li>
+<li>静态增益 <span class="math inline">K_{ff}=-K_d/K_p</span> 已算出并单独投运验证；</li>
+<li>已用扰动频谱确认需要动态环节，而非默认“越复杂越好”；</li>
+<li>超前-滞后时间常数取自 <span class="math inline">T_p/T_d</span>，未取反；</li>
+<li>延迟 <span class="math inline">\tau_{ff}=\tau_d-\tau_p</span> 已按采样拍数取整并核对；</li>
+<li>滤波 <span class="math inline">\tau_f</span> 在噪声抖动与峰值之间取过折中；</li>
+<li>前馈输出限幅不高于阀门可用行程，且限幅后的性能已实测；</li>
+<li>投切有无扰逻辑，初始化值等于当前稳态前馈值；</li>
+<li>四项验收指标全部记录，并留一份纯反馈的对照曲线。</li>
+</ol>
+<p>这十条里，第 3、5、6 条决定前馈“有没有用”，第 8、9 条决定前馈“能不能长期用”。前者靠数学，后者靠工程纪律。</p>
+<h3 id="先选对扰动变量">46.3.9 先选对扰动变量</h3>
+<p>六步流程的第一步是“确认扰动可测”，但“可测”只是门槛，选哪个变量做前馈，对最终效果的影响比参数整定大得多。三条标准按优先级排列。</p>
+<p><strong>第一，要早于输出到达。</strong> 前馈的全部价值来自时间差 <span class="math inline">\tau_d-\tau_p</span>，本章是 4 s。若测量环节自身滞后 <span class="math inline">\tau_m</span>（热电偶套管、取样管线、分析仪预处理），可用时间窗缩成 <span class="math inline">\tau_d-\tau_p-\tau_m</span>。经验上要求 <span class="math inline">\tau_m&lt;(\tau_d-\tau_p)/3</span>，即本章不超过 1.3 s；超过这个数，前馈的动作时刻被推到扰动到达之后，收益迅速消失。工程上换一支细套管热电偶、把取样点前移，往往比调参数有效。</p>
+<p><strong>第二，要对输出的贡献显著。</strong> 前馈只能抵消它测量的那一路。若某变量波动大但对出口温度影响很小（<span class="math inline">K_d</span> 小），做前馈的收益低于维护成本。判断方法是算稳态贡献 <span class="math inline">K_d\Delta d</span> 与总允许偏差的比值，超过 30% 才值得单独做一路。</p>
+<p><strong>第三，测量要有代表性。</strong> 单点测温可能落在混合不均的位置；换热器入口温度若分层，应取多点平均或装在混合器之后。测量没有代表性，前馈会按一个局部值去补偿整个截面，误差无法通过整定消除。</p>
+<p>多个扰动都显著时，处理顺序是：先做贡献最大的那一路，验收后再加第二路。多路前馈的结构是各自独立的前馈块，输出在同一个求和点相加，各自限幅、各自滤波。不要图省事把几路信号先加权合成一个“等效扰动”——除非它们的动态确实相同（例如同一股物流的流量与温度可按热负荷 <span class="math inline">F\Delta T</span> 合成），否则合成会引入额外的模型误差。</p>
+<p>最后一条容易忽略：<strong>不要用被控量的下游信号做前馈</strong>。例如用出口温度之后的回水温度做前馈，那个信号已经包含了控制作用，等于把反馈绕了一圈接进前馈，闭环特性会被悄悄改掉，§46.2.4 的“不进特征方程”也就不再成立。</p>
+<h2 id="连续情形">46.4 连续情形</h2>
+<h3 id="四种方案的响应形状">46.4.1 四种方案的响应形状</h3>
+<p>把纯反馈、静态前馈、动态前馈、动态前馈加一阶滤波四条曲线画在同一张图上（图 46-3），差别一眼可见。</p>
+<figure>
+<img src="figs/ch046/fig_046_03_dist_compare.svg" alt="图 46-3　四种方案的扰动响应：纯反馈高而窄，静态前馈低而宽，动态前馈几乎贴住设定值，滤波后介于两者之间" /><figcaption aria-hidden="true">图 46-3　四种方案的扰动响应：纯反馈高而窄，静态前馈低而宽，动态前馈几乎贴住设定值，滤波后介于两者之间</figcaption>
+</figure>
+<p>图 46-3 上半幅是输出，下半幅是前馈输出。四条曲线的形状可以这样概括：</p>
+<ul>
+<li><strong>纯反馈</strong>：峰值 0.4706，曲线先冲高再缓慢回落，恢复 31.65 s。这是“等误差出现再纠正”的典型形状。</li>
+<li><strong>静态前馈</strong>：峰值 0.2154，曲线低而宽，恢复反而拉长到 44.95 s。前馈在扰动测量到之后 4 s 动作，再经主通道 2 s 滞后，恰好与扰动到达出口的时刻对齐，把第一波削掉一半；但它没有能力匹配动态，剩余偏差靠反馈慢慢磨。</li>
+<li><strong>动态前馈</strong>：峰值 0.0012，曲线几乎是一条水平线。前馈输出在下半幅形成一个 1.654 的尖峰，形状与扰动通道的响应互补。</li>
+<li><strong>动态前馈 + 1 s 滤波</strong>：峰值 0.1256，恢复 23.70 s。滤波把尖峰削到 1.207，代价是补偿动作变钝。</li>
+</ul>
+<p>四条曲线的指标列在表 46-3。注意“恢复”一列：动态前馈为 0，因为它从未越过 <span class="math inline">\pm2\%</span> 带；静态前馈的 44.95 s 比纯反馈还长，这不是数据错误，而是“低而宽”曲线的必然结果。</p>
+<table>
+<thead>
+<tr class="header">
+<th>方案</th>
+<th>峰值偏差</th>
+<th>IAE</th>
+<th>恢复时间/s</th>
+<th>前馈峰值</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>纯反馈</td>
+<td>0.4706</td>
+<td>5.5520</td>
+<td>31.65</td>
+<td>0</td>
+</tr>
+<tr class="even">
+<td>静态前馈</td>
+<td>0.2154</td>
+<td>2.8975</td>
+<td>44.95</td>
+<td>0.667</td>
+</tr>
+<tr class="odd">
+<td>动态前馈</td>
+<td>0.0012</td>
+<td>0.0206</td>
+<td>0</td>
+<td>1.654</td>
+</tr>
+<tr class="even">
+<td>动态 + 滤波 1 s</td>
+<td>0.1256</td>
+<td>0.9243</td>
+<td>23.70</td>
+<td>1.207</td>
+</tr>
+<tr class="odd">
+<td>动态 + 滤波 2 s</td>
+<td>0.1957</td>
+<td>1.7013</td>
+<td>29.20</td>
+<td>1.035</td>
+</tr>
+</tbody>
+</table>
+<p>表 46-3　四种方案与两种滤波的扰动响应（扰动 <span class="math inline">-1.0</span>，<span class="math inline">t_0=40</span> s）</p>
+<p>表 46-3 里最值得琢磨的是“动态 + 滤波 2 s”这一行：峰值 0.1957 与静态前馈的 0.2154 相差无几，但 IAE 只有 1.7013，比静态前馈的 2.8975 小 41%，恢复时间也短 15 s。<strong>峰值相同不等于性能相同</strong>，滤波后的动态前馈在拖尾段仍然比静态前馈更贴合扰动通道。这说明选方案时至少要同时看峰值与 IAE 两个口径。</p>
+<h3 id="静态前馈为什么只拿走一半">46.4.2 静态前馈为什么只拿走一半</h3>
+<p>静态前馈的残差可以算得很干净。扰动与主通道的延迟已经由 4 s 的前馈延迟对齐，此后扰动通道的输出是 <span class="math inline">-0.8(1-e^{-t/4})</span>，前馈经主通道产生的补偿是 <span class="math inline">+0.8(1-e^{-t/10})</span>，两者相加：</p>
+<p><span class="math display">
+e(t)=0.8\left(e^{-t/10}-e^{-t/4}\right),\qquad t\ge0
+\tag{46-19}
+</span></p>
+<p>两个指数项的稳态值相同，所以 <span class="math inline">t\to\infty</span> 时残差为零——这正是稳态不变性。但在中间过程，慢的 <span class="math inline">e^{-t/10}</span> 还没衰减完，快的 <span class="math inline">e^{-t/4}</span> 已经掉下去了，差值先增后减。</p>
+<p>对式 (46-19) 求极值：令导数为零，得 <span class="math inline">0.25e^{-t/4}=0.1e^{-t/10}</span>，解出 <span class="math inline">t^\ast=6.1</span> s，代回得 <span class="math inline">|e|_{\max}=0.262</span>。本章闭环实测峰值 0.2154，比开环估算小 18%，差额由反馈在 6 s 内已经动作提供。<strong>静态前馈的极限就是这 0.26 的“形状差”</strong>，再怎么调增益也消不掉，因为它是两个不同时间常数的差，不是一个比例问题。</p>
+<p>这段推导也解释了为什么静态前馈的恢复时间会变长：式 (46-19) 的拖尾是 <span class="math inline">0.8e^{-t/10}</span>，时间常数 10 s，比扰动通道的 4 s 慢得多。峰值被削掉一半，拖尾却换成了更慢的指数，进入 <span class="math inline">\pm2\%</span> 带的时刻自然推后。</p>
+<h3 id="增益扫描峰值最优不等于稳态最优">46.4.3 增益扫描：峰值最优不等于稳态最优</h3>
+<p>把静态增益从 <span class="math inline">-1.2</span> 扫到 <span class="math inline">0</span>，得到图 46-4。两条曲线的极小点不在同一位置，这是本章最值得记住的一张图。</p>
+<figure>
+<img src="figs/ch046/fig_046_04_gain_scan.svg" alt="图 46-4　静态前馈增益扫描：峰值最优在 -0.9，IAE 最优在理论稳态值 -0.667" /><figcaption aria-hidden="true">图 46-4　静态前馈增益扫描：峰值最优在 -0.9，IAE 最优在理论稳态值 -0.667</figcaption>
+</figure>
+<p>峰值曲线在 <span class="math inline">K_{ff}=-0.9</span> 处最低（0.1370），而 IAE 曲线在 <span class="math inline">K_{ff}=-0.667</span> 处最低（2.8975）。理论稳态值给的是 IAE 最优，不是峰值最优。原因还是式 (46-19)：多补一点（<span class="math inline">|K_{ff}|</span> 更大）会让前馈的“冲劲”超过扰动，在峰值段形成反向偏差，把正向峰压得更低；但多补的部分在拖尾段要由反馈反向拉回，IAE 因此变大。</p>
+<p>表 46-4 摘了八个点。可以清楚看到：<span class="math inline">K_{ff}</span> 从 <span class="math inline">-0.667</span> 加到 <span class="math inline">-0.9</span>，峰值降 36%，IAE 升 14%；继续加到 <span class="math inline">-1.2</span>，峰值反弹到 0.2081，IAE 升到 4.6923。<strong>过补偿有一个最优点，过了就开始两头受损</strong>。</p>
+<table>
+<thead>
+<tr class="header">
+<th><span class="math inline">K_{ff}</span></th>
+<th>峰值</th>
+<th>IAE</th>
+<th>恢复/s</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><span class="math inline">-1.2</span></td>
+<td>0.2081</td>
+<td>4.6923</td>
+<td>51.30</td>
+</tr>
+<tr class="even">
+<td><span class="math inline">-1.0</span></td>
+<td>0.1494</td>
+<td>3.6531</td>
+<td>49.40</td>
+</tr>
+<tr class="odd">
+<td><span class="math inline">-0.9</span></td>
+<td>0.1370</td>
+<td>3.2900</td>
+<td>48.25</td>
+</tr>
+<tr class="even">
+<td><span class="math inline">-0.8</span></td>
+<td>0.1695</td>
+<td>3.0415</td>
+<td>47.00</td>
+</tr>
+<tr class="odd">
+<td><span class="math inline">-0.667</span></td>
+<td>0.2154</td>
+<td>2.8975</td>
+<td>44.95</td>
+</tr>
+<tr class="even">
+<td><span class="math inline">-0.5</span></td>
+<td>0.2760</td>
+<td>3.0301</td>
+<td>41.40</td>
+</tr>
+<tr class="odd">
+<td><span class="math inline">-0.2</span></td>
+<td>0.3911</td>
+<td>4.1627</td>
+<td>26.15</td>
+</tr>
+<tr class="even">
+<td><span class="math inline">0</span></td>
+<td>0.4706</td>
+<td>5.5520</td>
+<td>31.65</td>
+</tr>
+</tbody>
+</table>
+<p>表 46-4　静态前馈增益扫描（真值 <span class="math inline">-0.667</span>）</p>
+<p>恢复时间一列更说明问题：它从 <span class="math inline">-1.2</span> 的 51.30 s 单调降到 <span class="math inline">-0.2</span> 的 26.15 s，随后在 <span class="math inline">K_{ff}=0</span> 处又回升到 31.65 s。三个指标给出三个不同的“最优”，工程上必须事先声明用哪个口径验收，否则调试时会陷入“怎么调都有人说不行”的循环。</p>
+<p>对本章对象，建议仍取 <span class="math inline">K_{ff}=-0.667</span>。理由不是它峰值最低，而是它对应稳态不变性，模型漂移时偏差方向可预期；靠过补偿压峰值，等于把系统的鲁棒余量换成一次性的指标好看。</p>
+<h3 id="增益失配动态前馈的红利很脆弱">46.4.4 增益失配：动态前馈的红利很脆弱</h3>
+<p>动态前馈的 0.0012 依赖模型准确。把扰动通道增益按 <span class="math inline">0.5,0.75,1.0,1.25,1.5</span> 倍变化（前馈仍按名义值设计），得到图 46-5。</p>
+<figure>
+<img src="figs/ch046/fig_046_05_mismatch.svg" alt="图 46-5　增益失配下的动态前馈：残差与偏差倍数近似成正比，0.5 倍与 1.5 倍的峰值几乎相同" /><figcaption aria-hidden="true">图 46-5　增益失配下的动态前馈：残差与偏差倍数近似成正比，<span class="math inline">0.5</span> 倍与 <span class="math inline">1.5</span> 倍的峰值几乎相同</figcaption>
+</figure>
+<p>设扰动通道实际增益是名义值的 <span class="math inline">\kappa</span> 倍、前馈仍按名义值设计，则残差为 <span class="math inline">(\kappa-1)G_d</span>，幅值与式 (46-13) 的 <span class="math inline">|1-\kappa||G_d|</span> 相同。峰值应随 <span class="math inline">|1-\kappa|</span> 线性增长。实测峰值 0.2342、0.1165、0.0012、0.1188、0.2365，与 <span class="math inline">|1-\kappa|=0.5,0.25,0,0.25,0.5</span> 基本成比例：残差减半，峰值也减半。两端的细微不对称（0.2342 对 0.2365，差约 1%）来自扰动加入前基线未完全稳恒与峰值取样点的离散化，可视为对称。</p>
+<p>这里有一个很实用的结论：<strong>增益误差 50% 时，动态前馈的峰值 0.2342 已经不如静态前馈的 0.2154</strong>。也就是说，动态前馈的高精度是一次“全有或全无”的红利——模型准，收益是数量级的；模型差一半，连静态前馈都不如，还要多承担 2.5 倍的阀门行程和噪声放大。投运前必须问一句：这条扰动通道的增益，我能保证在 ±10% 以内吗？</p>
+<p>IAE 的对称性更好：0.5 倍与 1.5 倍分别为 2.7824 与 2.7754，差 0.25%。这说明积分型指标对失配方向不敏感，适合做长期趋势监控；峰值对失配幅值敏感，适合做报警限设计。</p>
+<h3 id="连续域的三条结论">46.4.5 连续域的三条结论</h3>
+<p>把本节收拢成三句话。</p>
+<p>第一，<strong>静态前馈的收益有上限</strong>。上限由两条通道时间常数之差决定，本章为 0.26，实测峰值 0.2154，已经接近这个上限。想再往下压，只能引入动态环节。</p>
+<p>第二，<strong>增益的选择取决于验收口径</strong>。峰值、IAE、恢复时间三个最优值分别是 <span class="math inline">-0.9</span>、<span class="math inline">-0.667</span>、<span class="math inline">-0.2</span>，彼此不重合。工程上应取稳态值 <span class="math inline">-0.667</span>，把峰值指标让给动态环节去解决，而不是靠过补偿硬压。</p>
+<p>第三，<strong>动态前馈对模型精度的要求是陡峭的</strong>。增益误差 25% 时峰值 0.1165，误差 50% 时 0.2342，后者已不如静态前馈。这决定了 §46.10 要用在线校正来维持模型精度，也决定了 §46.11 要把“模型可维护性”列为适用边界的第一条。</p>
+<p>以上都是连续域结论。实际系统按 <span class="math inline">T_s=0.05</span> s 采样，延迟要量化成整数拍，超前-滞后要离散化，这些会带来额外的性能损失，是 §46.5 的主题。</p>
+<h3 id="动态前馈的-0.0012-是从哪来的">46.4.6 动态前馈的 0.0012 是从哪来的</h3>
+<p>绝对不变性在理论上要求峰值严格为零，实测是 0.0012，为扰动幅值的 0.12%。这个数字值得拆开看，因为它决定了“还能不能更好”。</p>
+<p>残差有三个来源。第一是<strong>采样离散化</strong>：前馈的延迟、超前-滞后都在离散域实现，输出在 <span class="math inline">T_s</span> 内保持常值，等效于给通道加了约 <span class="math inline">T_s/2</span> 的附加滞后，与连续域的精确反相不再重合。第二是<strong>前馈与反馈的叠加</strong>：前馈按测量值算，反馈按 <span class="math inline">y</span> 算，两者在同一个求和点相加，反馈的微小动作会破坏前馈的精确抵消。第三才是<strong>参数误差</strong>：<span class="math inline">K_{ff}</span>、<span class="math inline">T_1/T_2</span>、<span class="math inline">n_{ff}</span> 都按名义值取，与仿真对象的真值之间有舍入差。</p>
+<p>三者中哪一项主导，表 46-5 已经给了答案：<span class="math inline">T_s</span> 从 0.05 s 增到 2 s，峰值从 0.0012 涨到 0.0578，放大 48 倍，而模型参数一个都没动。这说明 0.0012 主要是<strong>数值残差</strong>，不是设计残差。设计残差要看增益失配那一组数据：增益差 25% 就是 0.1165，比 0.0012 大两个数量级。</p>
+<p>这个区分有实际意义。追求 0.001 量级的峰值没有工程价值：本章 <span class="math inline">\sigma=0.02</span> 的测量噪声，即使加了 1 s 滤波，前馈输出本身仍有 0.0045 的抖动（表 46-2），比 0.0012 大一个数量级；阀门的分辨率、定位器的死区也都远大于此。<strong>动态前馈做得好不好，应该用 0.05 与 0.2 两条线来判断</strong>——0.05 以内视为理想，0.2 左右视为与静态前馈相当，超过 0.25 说明动态环节没有起到作用，应回头查延迟与时间常数，而不是继续微调增益。</p>
+<h3 id="扰动变大时结论怎么变">46.4.7 扰动变大时，结论怎么变</h3>
+<p>本章所有实验都用扰动 <span class="math inline">-1.0</span>。读者自然会问：如果扰动是 <span class="math inline">-2.0</span> 或 <span class="math inline">-0.5</span>，前面这些数字还成立吗？</p>
+<p><strong>在无限幅、无饱和的理想条件下，结论按比例缩放。</strong> 对象是线性的、PI 是线性的、前馈通道（超前-滞后加延迟）也是线性的，三者串联仍是线性系统。扰动幅值乘 2，输出偏差、IAE、前馈输出峰值都乘 2，而<strong>降幅百分比不变</strong>：扰动 <span class="math inline">-2.0</span> 时，纯反馈峰值应为 0.9412、静态前馈 0.4308、动态前馈 0.0024，与 <span class="math inline">-1.0</span> 时的 0.4706、0.2154、0.0012 严格成二倍关系。这也是为什么正文用“降幅”而不是“绝对值”来比较方案——降幅是线性系统的无量纲指标，可以跨工况引用。</p>
+<p>但<strong>绝对量不能这样推</strong>。前馈输出峰值 1.654 是按扰动 <span class="math inline">-1.0</span> 算的；若最大扰动是 <span class="math inline">-2.0</span>，前馈需要 3.3 的行程，阀门必须留出这么多余量。§46.3.7 的第三条验收指标（前馈峰值不超过阀门可用行程）必须按<strong>最大可能扰动</strong>校核，而不是按试验时用的那一个。</p>
+<p>限幅一旦起作用，线性就不再成立。本章限到 <span class="math inline">[0,1.0]</span> 时峰值 0.1066；若扰动加倍，前馈需求远超限幅，实际能提供的补偿仍是 1.0，相对补偿量减半，峰值会明显高于“0.1066 的两倍”。这种“扰动越大、前馈相对越弱”的特性，是限幅前馈的固有非线性，验收时应专门测一组不同幅值的扰动，画出“峰值—扰动幅值”曲线，看它在哪个幅值开始弯折（弯折点就是限幅开始起作用的点）。</p>
+<p>实践上有两条用法。第一，<strong>验收试验从小扰动起步</strong>，逐级加倍，直到设计幅值，每级都记录峰值；若某级开始偏离线性，说明限幅或阀门速率已经介入。第二，<strong>报警限按最大扰动设计，不要按试验扰动设计</strong>：本章的动态前馈在 <span class="math inline">-1.0</span> 时几乎完美，操作员容易误以为“任何扰动都没问题”，实际大幅扰动时它会退回限幅状态，行为接近静态前馈。</p>
+<h2 id="离散情形">46.5 离散情形</h2>
+<h3 id="三条通道都要落到同一个时标">46.5.1 三条通道都要落到同一个时标</h3>
+<p>连续域的式 (46-7) 在 DCS 里由三段代码实现：一个乘法、一个二阶差分方程、一个环形缓冲区。三者必须在<strong>同一个任务、同一个采样时刻</strong>执行，否则前馈内部就会出现拍级错位。</p>
+<p>本章代码的顺序是：先读扰动测量 <span class="math inline">d_k</span>，延迟 80 拍得到 <span class="math inline">d_{ff,k}</span>，送超前-滞后得到 <span class="math inline">u_{ff,k}</span>，同时用同一拍的 <span class="math inline">y_k</span> 算反馈 <span class="math inline">u_{fb,k}</span>，两者相加后输出。这个顺序保证前馈与反馈看到的是同一时刻的世界。若把前馈放在另一个扫描周期更慢的任务里，等效于给前馈额外加了半个到一个采样周期的滞后，§46.4 的延迟敏感性会立刻体现出来。</p>
+<h3 id="纯延迟的整数拍实现">46.5.2 纯延迟的整数拍实现</h3>
+<p>纯延迟在离散域最自然：</p>
+<p><span class="math display">
+n_{ff}=\operatorname{round}\!\left(\frac{\tau_d-\tau_p}{T_s}\right)
+=\operatorname{round}\!\left(\frac{4}{0.05}\right)=80
+\tag{46-20}
+</span></p>
+<p>80 拍就是 80 个浮点数的环形缓冲区，内存开销可以忽略。取整带来的延迟误差不超过 <span class="math inline">T_s/2</span>，本章 <span class="math inline">T_s=0.05</span> s 时为 25 ms，相对 4 s 只有 0.6%，可以忽略。</p>
+<p>需要注意两点。第一，<strong>不要用小数延迟插值</strong>。线性插值本质是一个低通滤波器，会额外引入相位滞后，把好不容易对齐的 4 s 又拖回去；整数拍加取整是更干净的做法。第二，<span class="math inline">n_{ff}</span> 必须由两个延迟分别取整后相减，而不是先算差值再取整：</p>
+<p><span class="math display">
+n_{ff}=\operatorname{round}\!\left(\frac{\tau_d}{T_s}\right)
+-\operatorname{round}\!\left(\frac{\tau_p}{T_s}\right)
+\tag{46-21}
+</span></p>
+<p>两种算法在本章都得到 120−40=80，但当 <span class="math inline">\tau_p</span> 不是 <span class="math inline">T_s</span> 的整数倍时，式 (46-21) 才与“两条通道各自延迟”的物理事实一致。</p>
+<h3 id="超前-滞后的离散化">46.5.3 超前-滞后的离散化</h3>
+<p>代码用零阶保持（ZOH）离散，因为它对分段常值输入是精确的，且与执行器的实际行为一致。对</p>
+<p><span class="math display">
+G(s)=K\frac{T_1s+1}{T_2s+1},\qquad K=-0.667,\ T_1=10,\ T_2=4
+\tag{46-22}
+</span></p>
+<p>ZOH 离散后有</p>
+<p><span class="math display">
+G(z)=\frac{b_0+b_1z^{-1}}{1+a_1z^{-1}},\qquad
+a_1=-e^{-T_s/T_2}=-0.98758
+\tag{46-23}
+</span></p>
+<p><span class="math display">
+b_0=K\frac{T_1}{T_2}=-1.6667,\qquad
+b_1=-K\left(a_1+\frac{T_1}{T_2}-1\right)=1.6584
+\tag{46-24}
+</span></p>
+<p>注意 <span class="math inline">b_0</span> 的物理含义：它是前馈在扰动阶跃瞬间的<strong>跳变幅值</strong>，等于静态增益乘时间常数比 <span class="math inline">T_1/T_2=2.5</span>。本章实测前馈峰值 1.654，与解析值 1.667 只差 0.8%，差额来自采样与反馈的微小作用。这条关系很好用：看到 <span class="math inline">u_{ff}</span> 的峰值，就能反推 <span class="math inline">T_1/T_2</span> 有没有取错。</p>
+<p>离散化还有两个必须核对的地方。<strong>直流增益</strong>：把 <span class="math inline">z=1</span> 代入式 (46-23)，应得 <span class="math inline">K=-0.667</span>；若系数舍入后偏差超过 1%，稳态不变性就被破坏。<strong>极点位置</strong>：<span class="math inline">a_1=-0.98758</span> 对应 <span class="math inline">z=0.98758</span>，反算时间常数 <span class="math inline">-T_s/\ln0.98758=4.00</span> s，与 <span class="math inline">T_2</span> 一致。这两项核对花不了一分钟，却能挡住大部分手工离散的低级错误。</p>
+<p>也可以改用 Tustin，系数为 <span class="math inline">b_0=2.4907</span>、<span class="math inline">b_1=-2.4783</span>、<span class="math inline">a_1=-0.98758</span>（未乘增益）。Tustin 在低频段与连续域吻合更好，但高频段会翘尾；对前馈这种工作在低频的通道，两种方法差别很小，选哪种取决于组态软件现成的功能块。</p>
+<h3 id="采样周期的影响">46.5.4 采样周期的影响</h3>
+<p>把 <span class="math inline">T_s</span> 从 0.05 s 逐步放大到 2 s，其余参数不变，得到图 46-8。</p>
+<figure>
+<img src="figs/ch046/fig_046_08_sampling.svg" alt="图 46-8　采样周期对动态前馈的影响：峰值与 IAE 随 Ts 单调增大，但即使 2 s 仍优于静态前馈" /><figcaption aria-hidden="true">图 46-8　采样周期对动态前馈的影响：峰值与 IAE 随 Ts 单调增大，但即使 2 s 仍优于静态前馈</figcaption>
+</figure>
+<table>
+<thead>
+<tr class="header">
+<th><span class="math inline">T_s</span>/s</th>
+<th>峰值</th>
+<th>IAE</th>
+<th>恢复/s</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>0.05</td>
+<td>0.0012</td>
+<td>0.0206</td>
+<td>0</td>
+</tr>
+<tr class="even">
+<td>0.10</td>
+<td>0.0027</td>
+<td>0.0339</td>
+<td>0</td>
+</tr>
+<tr class="odd">
+<td>0.20</td>
+<td>0.0055</td>
+<td>0.0643</td>
+<td>0</td>
+</tr>
+<tr class="even">
+<td>0.50</td>
+<td>0.0142</td>
+<td>0.1620</td>
+<td>0</td>
+</tr>
+<tr class="odd">
+<td>1.00</td>
+<td>0.0287</td>
+<td>0.3320</td>
+<td>14.0</td>
+</tr>
+<tr class="even">
+<td>2.00</td>
+<td>0.0578</td>
+<td>0.6989</td>
+<td>16.0</td>
+</tr>
+</tbody>
+</table>
+<p>表 46-5　采样周期对动态前馈性能的影响（扰动 <span class="math inline">-1.0</span>）</p>
+<p>峰值从 0.0012 增到 0.0578，放大了 48 倍；IAE 从 0.0206 增到 0.6989，放大约 34 倍。这个退化不是延迟量化造成的——本章的 4 s 在六个采样周期下都能被整除，<span class="math inline">n_{ff}</span> 分别为 80、40、20、8、4、2 拍，没有取整误差。退化来自两个机制。</p>
+<p><strong>零阶保持的相位滞后。</strong> 前馈输出在 <span class="math inline">T_s</span> 内保持不变，等效于给通道加了约 <span class="math inline">T_s/2</span> 的平均延迟。<span class="math inline">T_s=2</span> s 时，在 <span class="math inline">\omega=0.5</span> rad/s 处额外滞后约 0.5 rad，即 29°，足以让原本精确反相的补偿变得不对齐。</p>
+<p><strong>测量与控制的阶梯化。</strong> 扰动测量每 <span class="math inline">T_s</span> 才更新一次，前馈的“先冲一下”被拉成阶梯；反馈 PI 也同步变慢，闭环带宽下降，残差收尾更慢。两项叠加，才有了 48 倍的峰值退化。</p>
+<p>但要把这张表读对：即使 <span class="math inline">T_s=2</span> s，峰值 0.0578 仍只有静态前馈 0.2154 的 27%，IAE 0.6989 也只有 2.8975 的 24%。<strong>采样慢不会让前馈失效，只是把它从“几乎完美”降到“仍明显优于静态”</strong>。真正致命的是延迟对不准（§46.6）和模型失配（§46.4），而不是采样周期。</p>
+<p>从工程角度，<span class="math inline">T_s</span> 的选择应由闭环带宽决定，而不是由前馈决定。本章 PI 闭环的上升时间约 10 s，取 <span class="math inline">T_s=0.05</span> s 是每上升时间 200 拍，余量很大；现场常见 0.5–1 s 的扫描周期，对应的峰值约 0.014–0.029，完全够用。</p>
+<h3 id="离散实现的四条纪律">46.5.5 离散实现的四条纪律</h3>
+<p>第一，<strong>延迟用整数拍</strong>，且按式 (46-21) 分别取整。不要用插值延迟，那会引入额外低通。</p>
+<p>第二，<strong>超前-滞后核对直流增益与极点</strong>。<span class="math inline">z=1</span> 处增益必须等于 <span class="math inline">K_{ff}</span>，极点反算的时间常数必须等于 <span class="math inline">T_2</span>。</p>
+<p>第三，<strong>前馈与反馈同拍计算</strong>。放在同一个控制任务里，用同一个时间戳；跨任务传递要带时间标签，不能让前馈“看旧数据”。</p>
+<p>第四，<strong>系数用双精度或至少 32 位浮点</strong>。<span class="math inline">a_1=-0.98758</span> 离单位圆很近，定点数舍入会明显改变极点位置；现场的组态软件多用浮点，这一条通常自动满足，但移植到嵌入式平台时要专门核对。</p>
+<p>这四条都不涉及控制理论，却决定了 §46.4 的连续域结论能不能在 DCS 里复现。工程上“理论对、投运不对”的案例，多半栽在这类细节上。</p>
+<h3 id="延迟量化误差与扫描周期的匹配">46.5.6 延迟量化误差与扫描周期的匹配</h3>
+<p>§46.5.4 说 <span class="math inline">T_s</span> 应按闭环带宽选，这里补一条来自前馈的约束：<span class="math inline">T_s</span> 还要受延迟预算限制。</p>
+<p>式 (46-21) 的两个取整各自带来不超过 <span class="math inline">T_s/2</span> 的误差，最坏情况叠加为 <span class="math inline">T_s</span>。本章 <span class="math inline">\tau_p=2</span> s、<span class="math inline">\tau_d=6</span> s 都恰好是 <span class="math inline">T_s=0.05</span> s 的整数倍，量化误差为零，这是算例偏理想的地方。换成 <span class="math inline">T_s=0.3</span> s，<span class="math inline">n_p=\mathrm{round}(6.67)=7</span>（2.1 s）、<span class="math inline">n_d=\mathrm{round}(20)=20</span>（6.0 s），延迟差变成 3.9 s，误差 <span class="math inline">-0.1</span> s；换成 <span class="math inline">T_s=0.9</span> s，<span class="math inline">n_p=2</span>（1.8 s）、<span class="math inline">n_d=7</span>（6.3 s），延迟差 4.5 s，误差 <span class="math inline">+0.5</span> s——已经等于 §46.6.2 里“抹掉大半收益”的那个阈值。</p>
+<p>若把 §46.6.4 的工程容差（延迟误差不超过 0.2 s）当作硬指标，则 <span class="math inline">T_s\le0.2</span> s。现场常见的 0.5–1 s 扫描周期恰好做不到这一点：量化误差 0.5–1 s，与前馈的全部时间窗 4 s 相比占 12%–25%，动态前馈很难达到 0.05 的峰值。这类装置要么提高扫描频率（把前馈放在快速任务里），要么退回静态前馈——静态前馈不依赖延迟精度，只依赖增益比。</p>
+<p>还有一处需要说明。式 (46-21) 是“分别取整再相减”，另一种写法是“先算延迟差再取整”，两者在不能整除时最多差一拍。前者与两条通道各自被离散的物理事实一致，后者直接最小化前馈的时刻误差。工程上不必在这半拍上纠结：实际延迟本身就有辨识误差，按式 (46-21) 算出初值，再用 §46.8.4 的细扫修正，比在纸面上争半拍有效得多。</p>
+<h3 id="计算量与存储最不成问题的一环">46.5.7 计算量与存储：最不成问题的一环</h3>
+<p>初学者常担心“前馈会不会算不过来”。把这笔账算一遍，结论恰好相反：<strong>计算量是这个回路里最不重要的一环</strong>。</p>
+<p>一阶超前-滞后的差分方程每拍只需要两次乘法、两次加法（<span class="math inline">b_0d_k+b_1d_{k-1}-a_1u_{k-1}</span>）；纯延迟是一次数组取址；一阶滤波两次乘加；限幅两次比较；再加大约十次，一拍之内全部完成。存储上，80 拍的延迟缓冲区是 80 个浮点数，约 320 字节；加上几个状态变量，不到 1 KB。</p>
+<p>对比一下：<span class="math inline">T_s=0.05</span> s 意味着 50 ms 内要算完，现代 DCS 的一个控制任务能在这段时间里执行上千个类似的块；即便用 8 位单片机，几十次浮点运算是微秒量级。<strong>前馈从来不是被算力卡住的</strong>。</p>
+<p>真正卡住工程实现的是另外三件事。第一是<strong>时序</strong>：前馈必须与反馈在同一拍、用同一时间戳计算（§46.5.1），跨任务或跨网络传递会引入几十毫秒的抖动，比计算时间长一个数量级。第二是<strong>数据质量</strong>：坏值、冻结、超时（§46.10.7）比运算本身更容易出错，而且错得更隐蔽。第三是<strong>数值精度</strong>：<span class="math inline">a_1=-0.98758</span> 离单位圆很近，定点数舍入会改变极点位置（§46.5.5 第四条）。</p>
+<p>所以组态时不必在前馈块上省资源，反而应该给它足够的字长、独立的采样任务和完整的数据质量判断。省下来的那点运算时间，换不来任何性能；省掉的时序保证，却会让前面所有的分析失效。</p>
+<p>离散化之后，下一步要回答的是：前馈加进来，闭环还稳不稳？裕度变不变？这是 §46.6 的主题。</p>
+<h2 id="稳定性与性能">46.6 稳定性与性能</h2>
+<h3 id="裕度不变从公式到数字">46.6.1 裕度不变：从公式到数字</h3>
+<p>§46.2.4 已经证明前馈不进特征方程，这里把数字补上。回路传递函数为</p>
+<p><span class="math display">
+L(s)=C(s)G_p(s)=1.2\left(1+\frac{1}{10s}\right)\cdot\frac{1.2\,e^{-2s}}{10s+1}
+\tag{46-25}
+</span></p>
+<p>在 <span class="math inline">10^{-3}</span> 到 <span class="math inline">10</span> rad/s 的网格上逐点计算 <span class="math inline">L(j\omega)</span>，得到增益穿越频率 <span class="math inline">\omega_c=0.1441</span> rad/s、相位裕度 <span class="math inline">73.49^\circ</span>，相位穿越频率 <span class="math inline">\omega_{180}=0.7847</span> rad/s、增益裕度 <span class="math inline">14.73</span> dB。这两个数字与第 45 章整定 PI 时看到的量级一致：相位裕度七十多度，属于“偏保守但很稳”的配置。</p>
+<p>关键在于：式 (46-25) 里<strong>没有 <span class="math inline">G_{ff}</span></strong>。不论前馈取静态、动态、加不加滤波，<span class="math inline">L(s)</span> 都不变，因此 <span class="math inline">\omega_c</span>、PM、GM 一个数字都不会动。代码第十二段没有对四种方案分别算裕度，因为算了也是同一组数——这不是偷懒，而是结构决定的。</p>
+<p>同一段代码还打印了两种配置的跟踪指标：纯反馈与动态前馈都是 Mp 0.00%、<span class="math inline">t_r</span> 10.068 s、<span class="math inline">t_s</span> 19.750 s，逐位相同。原因是扰动为 0 时前馈输出恒为 0，前馈通道根本不参与设定值响应。这从另一个侧面说明：<strong>前馈是扰动通道上的并联支路，不是反馈回路的一部分</strong>。</p>
+<h3 id="延迟对不准最敏感的一项">46.6.2 延迟对不准：最敏感的一项</h3>
+<p>把前馈延迟在标称 4 s 上下拨动，其余参数不变，得到图 46-6。</p>
+<figure>
+<img src="figs/ch046/fig_046_06_delay_misalign.svg" alt="图 46-6　前馈延迟偏差对扰动响应的影响：±0.5 s 已使峰值放大约 78 倍，±2 s 后不如静态前馈" /><figcaption aria-hidden="true">图 46-6　前馈延迟偏差对扰动响应的影响：±0.5 s 已使峰值放大约 78 倍，±2 s 后不如静态前馈</figcaption>
+</figure>
+<table>
+<thead>
+<tr class="header">
+<th>延迟偏差/s</th>
+<th>峰值</th>
+<th>IAE</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><span class="math inline">-2.0</span></td>
+<td>0.3138</td>
+<td>1.8519</td>
+</tr>
+<tr class="even">
+<td><span class="math inline">-1.0</span></td>
+<td>0.1764</td>
+<td>0.9272</td>
+</tr>
+<tr class="odd">
+<td><span class="math inline">-0.5</span></td>
+<td>0.0938</td>
+<td>0.4603</td>
+</tr>
+<tr class="even">
+<td><span class="math inline">0</span></td>
+<td>0.0012</td>
+<td>0.0206</td>
+</tr>
+<tr class="odd">
+<td><span class="math inline">+0.5</span></td>
+<td>0.0939</td>
+<td>0.4833</td>
+</tr>
+<tr class="even">
+<td><span class="math inline">+1.0</span></td>
+<td>0.1769</td>
+<td>0.9514</td>
+</tr>
+<tr class="odd">
+<td><span class="math inline">+2.0</span></td>
+<td>0.3147</td>
+<td>1.8769</td>
+</tr>
+</tbody>
+</table>
+<p>表 46-6　前馈延迟偏差对性能的影响（标称 4 s）</p>
+<p>正负偏差几乎对称，这与 §46.4 的增益失配一致：残差只与偏差的幅值有关。偏差 0.5 s 时峰值 0.0938，是理想值的 78 倍；偏差 2 s 时 0.3138，已经<strong>不如静态前馈的 0.2154</strong>。换句话说，延迟错 2 s，动态前馈就白做了。</p>
+<p>这个结果有干净的解析解释。设实际延迟比标称多 <span class="math inline">\Delta</span>，则实际前馈为 <span class="math inline">G_{ff}e^{-\Delta s}</span>，残差为</p>
+<p><span class="math display">
+E(s)=G_d+G_{ff}e^{-\Delta s}G_p=G_d\left(1-e^{-\Delta s}\right)
+\tag{46-26}
+</span></p>
+<p>在频域，<span class="math inline">|1-e^{-j\omega\Delta}|=2|\sin(\omega\Delta/2)|\approx\omega\Delta</span>（小 <span class="math inline">\omega\Delta</span> 时）。这是一个<strong>高通形状</strong>：直流处为零，频率越高残差越大。所以延迟误差不破坏稳态，专门破坏动态峰值——这正好解释了为什么峰值放大 78 倍，IAE 只放大 22 倍。</p>
+<p>式 (46-26) 还给出一个工程推论：<strong>前馈补偿的频段越高，对延迟精度的要求越严</strong>。若只想补偿 <span class="math inline">\omega&lt;0.05</span> rad/s 的慢漂移，0.5 s 的延迟误差只带来 <span class="math inline">0.05\times0.5=2.5\%</span> 的残差；若要补偿到 0.5 rad/s，同样的误差就是 25%。这决定了动态前馈必须先把延迟核准，再谈超前-滞后。</p>
+<h3 id="残差频率特性有效频段在哪里">46.6.3 残差频率特性：有效频段在哪里</h3>
+<p>图 46-10 把三种情况的残差幅频曲线画在一起。</p>
+<figure>
+<img src="figs/ch046/fig_046_10_residual.svg" alt="图 46-10　前馈残差幅频特性：模型准确时全频段为零；增益偏差时残差近似常数；静态前馈的残差随频率上升" /><figcaption aria-hidden="true">图 46-10　前馈残差幅频特性：模型准确时全频段为零；增益偏差时残差近似常数；静态前馈的残差随频率上升</figcaption>
+</figure>
+<p>三条曲线对应三种失效模式，形状完全不同。</p>
+<p><strong>模型准确（实线）</strong>：全频段残差为 0，图上贴着 <span class="math inline">10^{-6}</span> 的下限。这是理想情况，只在仿真里成立。</p>
+<p><strong>增益偏差（虚线）</strong>：<span class="math inline">\kappa=0.8</span> 与 <span class="math inline">\kappa=1.2</span> 两条曲线重合，低频 0.15987，随频率缓慢下降，<span class="math inline">\omega=0.992</span> 处 0.03909。按式 (46-13)，残差是 <span class="math inline">0.2|G_d|</span>，形状就是扰动通道的幅频特性——一个 4 s 惯性环节，转折频率 0.25 rad/s，之后按 <span class="math inline">-20</span> dB/dec 衰减。</p>
+<p><strong>静态前馈（点线）</strong>：低频 0.01612，<span class="math inline">\omega=0.101</span> 处 0.17849，<span class="math inline">\omega=0.497</span> 处达到 0.41361，之后回落到 0.26264。它不是单调曲线，因为式 (46-11) 是两个不同极点、不同延迟的环节之差，幅值与相位都在变。</p>
+<p>三条曲线放在一起，可以读出“有效频段”的确切含义。若以残差 0.1 为界：</p>
+<ul>
+<li>静态前馈的有效频段约为 <span class="math inline">\omega&lt;0.065</span> rad/s（对应周期 97 s 以上）；</li>
+<li>增益偏差 20% 的动态前馈，全频段残差都在 0.16 以上，<strong>有效频段为零</strong>——它在任何频率都没有把残差压到 0.1 以下，只是把 0.8 的扰动压到 0.16；</li>
+<li>只有增益误差小于约 12% 时，动态前馈才能在低频段把残差压到 0.1 以下。</li>
+</ul>
+<p>这个结论比“动态前馈更好”精确得多：<strong>动态前馈的优点是残差形状平坦，缺点是残差下限由模型精度决定</strong>。静态前馈相反，残差在低频可以很小，但随频率迅速上升。选择哪一种，取决于扰动的主要频率落在哪里，以及模型能做到多准。</p>
+<h3 id="四类失配的横向比较">46.6.4 四类失配的横向比较</h3>
+<p>把本章测过的失配放在一张表里，可以看清哪一项最要命。</p>
+<table>
+<thead>
+<tr class="header">
+<th>失配类型</th>
+<th>失配量</th>
+<th>峰值</th>
+<th>相对理想倍数</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>无</td>
+<td>0</td>
+<td>0.0012</td>
+<td>1</td>
+</tr>
+<tr class="even">
+<td>增益偏低</td>
+<td>25%</td>
+<td>0.1165</td>
+<td>97</td>
+</tr>
+<tr class="odd">
+<td>增益偏低</td>
+<td>50%</td>
+<td>0.2342</td>
+<td>195</td>
+</tr>
+<tr class="even">
+<td>延迟偏大</td>
+<td>0.5 s</td>
+<td>0.0938</td>
+<td>78</td>
+</tr>
+<tr class="odd">
+<td>延迟偏大</td>
+<td>1.0 s</td>
+<td>0.1769</td>
+<td>147</td>
+</tr>
+<tr class="even">
+<td>一阶滤波</td>
+<td>1 s</td>
+<td>0.1256</td>
+<td>105</td>
+</tr>
+<tr class="odd">
+<td>前馈限幅</td>
+<td><span class="math inline">[0,1.0]</span></td>
+<td>0.1066</td>
+<td>89</td>
+</tr>
+<tr class="even">
+<td>前馈限幅</td>
+<td><span class="math inline">[0,0.7]</span></td>
+<td>0.2153</td>
+<td>179</td>
+</tr>
+</tbody>
+</table>
+<p>表 46-7　四类失配的峰值对比（理想值 0.0012）</p>
+<p>按相对失配量归一化，延迟最敏感：4 s 的 12.5%（0.5 s）就造成 78 倍退化；增益 25% 造成 97 倍，二者量级相当；滤波 1 s 造成 105 倍；限幅到 1.0（约 60% 行程）造成 89 倍。<strong>没有哪一项可以忽略，但延迟最容易在投运时被低估</strong>——它不像增益那样能从稳态数据反推，必须单独做延迟辨识。</p>
+<p>由此给出本章的工程容差建议：延迟误差不超过 0.2 s（5%），增益误差不超过 10%，滤波时间常数不超过 1 s，前馈限幅不低于 1.7（即静态值的 2.5 倍）。四项同时满足，峰值才可能控制在 0.2 以内，与静态前馈相当或更好；任何一项超差，动态前馈的收益都会被抹掉大半。</p>
+<h3 id="稳定性验收与执行器速率">46.6.5 稳定性验收与执行器速率</h3>
+<p>裕度不变，不等于投运时不用做稳定性检查。原因有两个。</p>
+<p>第一，<strong>限幅会把线性结论打破</strong>。前馈限到 <span class="math inline">[0,0.7]</span> 后峰值 0.2153，与静态前馈持平，此时前馈通道实际上处于“长期饱和”，其行为接近开环，回路对扰动的抑制能力退回到纯反馈加一个常数偏置。验收时要专门做“限幅边界”试验：把扰动加大到前馈刚好饱和，观察输出是否出现持续振荡。</p>
+<p>第二，<strong>执行器速率是新的约束</strong>。本章前馈的初始跳变 <span class="math inline">b_0=1.667</span>，在 <span class="math inline">T_s=0.05</span> s 内完成，等效阀门速度 33/s。实际调节阀全行程时间通常 10–60 s，根本跟不上。阀门跟不上，前馈的“先冲一下”就被削成斜坡，等效于额外加了滞后，§46.6.2 的延迟敏感性立刻出现。这就是为什么工程上必须给前馈加滤波或速率限制，也是 §46.7 要把 <span class="math inline">\tau_f</span> 作为独立参数讨论的原因。</p>
+<p>验收顺序建议是：先在前馈手动状态下测回路阶跃，确认 PM/GM 与设计值一致；再以小扰动投入前馈，逐级加大到设计幅值，每级观察阀门是否跟得上、输出是否单调回落；最后做限幅边界试验。三步都通过，才能认为“前馈不影响稳定性”这句话在本装置上成立。</p>
+<p>性能的上限已经清楚：模型精度定残差下限，延迟精度定峰值，执行器速率定前馈能有多“陡”。下一节把这些参数逐个拆开，说明它们各自改变曲线的哪一段。</p>
+<h3 id="前馈不会凭空消掉扰动">46.6.6 前馈不会凭空消掉扰动</h3>
+<p>本章的单回路仿真假设扰动只影响这一个回路。真实装置里，前馈把扰动“抵消”的方式是让执行器多走一段行程，这段行程本身会作用到别处。</p>
+<p>最典型的耦合路径是公用工程。前馈检测到入口温度下降，立刻开大蒸汽阀；蒸汽总管的压降随之增大，同一总管上的另一台换热器蒸汽流量减少，出口温度开始下降。对那台换热器来说，扰动不是“入口温度”，而是“总管压力”，而它的前馈测不到。于是前馈把原来只影响一个回路的小扰动，放大成了影响一片装置的大扰动。</p>
+<p>这类问题不能靠调参数解决，只能靠结构。三条常用措施：</p>
+<ul>
+<li><strong>限制前馈的速率与幅值</strong>，让执行器动作的“冲击”被摊平。§46.7.5 的滤波与 §46.7.6 的限幅都有这个副作用，设计时应有意识地利用。</li>
+<li><strong>在总管上加压力补偿</strong>，把压力作为第二路前馈送进各台换热器，或让总管压力回路先动作。这属于多变量协调，超出本章范围，但工程上很常见。</li>
+<li><strong>按总负荷校核</strong>，投运前算一遍“所有前馈同时动作时总管的最大需求”，确认不超过公用工程的可用量。</li>
+</ul>
+<p>还有一条更隐蔽的耦合：前馈输出进入执行器后，若执行器是分程控制或与其他回路共用，前馈的跳变会在另一条支路上产生反向跳变。这类问题在 P&amp;ID 上就能看出来，不需要仿真，但需要有人在投运前认真看一遍。</p>
+<p><strong>前馈抵消的是扰动对某一个输出的影响，不是扰动本身。</strong> 能量与物料仍然要经过装置，只是换了一条路径。把这句话记住，就不会指望前馈“把问题消灭”，而会去问“问题被搬到了哪里”。</p>
+<h3 id="四项容差如何合成一个预算">46.6.7 四项容差如何合成一个预算</h3>
+<p>表 46-7 给的是单项失配的峰值。投运时四项误差同时存在，需要回答一个更实际的问题：<strong>预算怎么分</strong>。</p>
+<p>先定总目标。若要求动态前馈的峰值不超过 0.2（与静态前馈相当），相当于理想值 0.0012 的 167 倍。四项单项失配的倍数分别是：延迟 0.5 s 为 78 倍、增益 25% 为 97 倍、滤波 1 s 为 105 倍、限幅到 1.0 为 89 倍——每一项单独都在预算内，但没有一项留出了足够余量给其他项。</p>
+<p>不能简单相加。78+97+105+89 远超 167，但这个加法假设四项误差的峰值在同一时刻叠加，实际不会：延迟误差造成的峰值出现在补偿到达后的最初几秒，滤波造成的峰值出现在补偿的上升沿，增益误差造成的偏差则贯穿全过程。峰值是取最大值，不是求和。</p>
+<p>工程上可行的分配方法是<strong>把误差分成两类</strong>：</p>
+<ul>
+<li><strong>时刻类</strong>（延迟、滤波、执行器速率）：它们改变补偿“什么时候到位”，残差集中在扰动到达后的短时间内；</li>
+<li><strong>幅值类</strong>（增益、限幅）：它们改变补偿“补多少”，残差表现为一段持续偏差。</li>
+</ul>
+<p>两类误差的峰值很少同时出现，因此可以分别给预算。建议的时刻类总预算为峰值的 1/2（约 0.1），幅值类总预算为 1/3（约 0.067），剩下 1/6 留给未建模因素（阀门非线性、测量滞后、采样）。</p>
+<p>按这个分配反推单项容差：延迟按 0.2 s、滤波按 0.5 s、执行器速率不低于前馈跳变的 1/5；增益按 10%，限幅不低于 1.7。用表 46-7 的倍数近似线性外推，0.2 s 延迟约对应 31 倍（0.037）、10% 增益约对应 39 倍（0.047）、0.5 s 滤波约对应 50 倍（0.06），三类各自都只占预算的一半左右，留出了余量。</p>
+<p>这组数字是按本章对象的实测数据外推的，不是通用标准；换一台设备，应先做一遍单项扫描，再按同样的方法分配。但方法本身通用：<strong>先定总目标，再按“峰值是否同时出现”分类，最后反推单项容差</strong>。直接把总目标平均分给四项，往往会导致最敏感的那一项超差而不自知。</p>
+<h2 id="参数意义与作用">46.7 参数意义与作用</h2>
+<h3 id="七个参数各管一段">46.7.1 七个参数各管一段</h3>
+<p>前馈-反馈复合回路有七个可调量，它们不是并列关系，而是各自负责响应曲线的一段。表 46-8 先给全貌。</p>
+<table>
+<thead>
+<tr class="header">
+<th>参数</th>
+<th>符号</th>
+<th>本章值</th>
+<th>主要影响</th>
+<th>失配后果</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>静态增益</td>
+<td><span class="math inline">K_{ff}</span></td>
+<td><span class="math inline">-0.667</span></td>
+<td>稳态与低频残差下限</td>
+<td>误差 50% 峰值 0.2342</td>
+</tr>
+<tr class="even">
+<td>超前时间</td>
+<td><span class="math inline">T_1</span></td>
+<td>10 s</td>
+<td>中频相位超前量</td>
+<td>形状不匹配</td>
+</tr>
+<tr class="odd">
+<td>滞后时间</td>
+<td><span class="math inline">T_2</span></td>
+<td>4 s</td>
+<td>中频相位滞后量</td>
+<td>形状不匹配</td>
+</tr>
+<tr class="even">
+<td>前馈延迟</td>
+<td><span class="math inline">\tau_{ff}</span></td>
+<td>4 s</td>
+<td>补偿与扰动的时间对齐</td>
+<td>偏差 0.5 s 峰值 78 倍</td>
+</tr>
+<tr class="odd">
+<td>滤波时间</td>
+<td><span class="math inline">\tau_f</span></td>
+<td>0–1 s</td>
+<td>高频噪声与动作陡度</td>
+<td>1 s 峰值 0.1256</td>
+</tr>
+<tr class="even">
+<td>前馈限幅</td>
+<td><span class="math inline">[u_{lo},u_{hi}]</span></td>
+<td><span class="math inline">[0,1.0]</span></td>
+<td>执行器保护</td>
+<td>限到 0.7 退化到静态水平</td>
+</tr>
+<tr class="odd">
+<td>反馈参数</td>
+<td><span class="math inline">K_c,T_i</span></td>
+<td>1.2 / 10 s</td>
+<td>残差收尾速度与裕度</td>
+<td>见 §46.7.7</td>
+</tr>
+</tbody>
+</table>
+<p>表 46-8　复合回路的七个可调量</p>
+<p>读这张表的正确方式是“从后往前”：先看限幅与反馈，因为它们决定前馈能不能安全地用；再看延迟与增益，因为它们决定前馈有没有用；最后看 <span class="math inline">T_1,T_2</span> 与 <span class="math inline">\tau_f</span>，它们只决定前馈用得“顺不顺”。顺序反了，就会在细节上耗掉大部分调试时间。</p>
+<h3 id="静态增益定补多少">46.7.2 静态增益：定“补多少”</h3>
+<p><span class="math inline">K_{ff}</span> 是唯一一个能直接从稳态数据算出来的参数，也是唯一一个错了会立即在稳态上暴露的参数。它的理想值 <span class="math inline">-K_d/K_p=-0.667</span> 对应稳态不变性；偏离它，稳态会出现一个与扰动成比例的固定偏差，由反馈积分慢慢消掉。</p>
+<p>但 §46.4 的扫描表明，<span class="math inline">K_{ff}</span> 的作用不止稳态：从 <span class="math inline">-0.667</span> 加到 <span class="math inline">-0.9</span>，峰值还能降 36%。所以这个参数实际上同时管“稳态补多少”和“峰值压多低”两件事，只是两个目标的最优点不重合。</p>
+<p>工程上取 <span class="math inline">-0.667</span>，理由是它对应可解释的物理量（两个增益之比），模型变化时偏差方向可预测。若工艺明确要求压峰值、且能接受更大的拖尾，可以取 <span class="math inline">-0.8</span> 到 <span class="math inline">-0.9</span>；再大就进入“两头受损”区，没有意义。</p>
+<h3 id="超前-滞后定补的形状">46.7.3 超前-滞后：定“补的形状”</h3>
+<p><span class="math inline">T_1</span> 与 <span class="math inline">T_2</span> 单独看没有意义，起作用的是它们的比值和绝对大小。比值决定初始跳变：</p>
+<p><span class="math display">
+\frac{b_0}{K_{ff}}=\frac{T_1}{T_2}=2.5
+\tag{46-27}
+</span></p>
+<p>本章前馈在扰动阶跃瞬间的理论跳变为 1.667（实测峰值 1.654），就是这个比值造成的。比值越大，前馈“冲”得越猛，对阀门速率要求越高；比值越小，前馈越平缓，但动态匹配越差。</p>
+<p>绝对大小决定补偿的时间尺度。<span class="math inline">T_1=10</span> s、<span class="math inline">T_2=4</span> s 对应两条通道的惯性；若现场辨识出的时间常数是 20 s 与 8 s，比值仍是 2.5，但补偿过程整体拉长一倍，滤波与限幅也要跟着放大。<strong>比值管形状，绝对值管尺度</strong>，调参时不要把两者混在一起。</p>
+<p>一个常见错误是把 <span class="math inline">T_1</span> 与 <span class="math inline">T_2</span> 取反。取反后比值变成 0.4，前馈在阶跃瞬间只跳到 0.267，随后缓慢爬升，完全跟不上扰动的快速上升段；此时即使增益准确，峰值也会明显高于静态前馈。</p>
+<h3 id="延迟定什么时候补">46.7.4 延迟：定“什么时候补”</h3>
+<p>延迟是七个参数里唯一“不能用增益补偿”的。增益错了可以调 <span class="math inline">K_{ff}</span>，滤波大了可以减小 <span class="math inline">\tau_f</span>，延迟错了只能重新辨识或改测量点。</p>
+<p>它的影响形状由式 (46-26) 决定：残差正比于 <span class="math inline">|1-e^{-j\omega\Delta}|</span>，是一个随频率上升的高通。这意味着延迟误差专门破坏高频补偿，对稳态几乎无影响。本章 0.5 s 误差使峰值放大 78 倍，却只让 IAE 放大 22 倍，就是这个原因。</p>
+<p>现场辨识延迟的可靠办法是<strong>双通道阶跃试验</strong>：同时记录扰动测量与输出，分别数出两次响应开始变化的时刻，差值就是 <span class="math inline">\tau_d-\tau_p</span>。不要用“阀门动作到输出变化”的单一试验去推，那条路径只给出 <span class="math inline">\tau_p</span>，推不出 <span class="math inline">\tau_d</span>。</p>
+<h3 id="滤波定补多快">46.7.5 滤波：定“补多快”</h3>
+<p><span class="math inline">\tau_f</span> 是噪声与峰值之间的旋钮。本章在扰动测量上叠加 <span class="math inline">\sigma=0.02</span> 的噪声，结果如表 46-9。</p>
+<table>
+<thead>
+<tr class="header">
+<th><span class="math inline">\tau_f</span>/s</th>
+<th>std(<span class="math inline">u_{ff}</span>)</th>
+<th><span class="math inline">\lvert u_{ff}\rvert_{\max}</span></th>
+<th>IAE</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>0</td>
+<td>0.0309</td>
+<td>1.644</td>
+<td>0.1325</td>
+</tr>
+<tr class="even">
+<td>0.2</td>
+<td>0.0100</td>
+<td>1.488</td>
+<td>0.3096</td>
+</tr>
+<tr class="odd">
+<td>0.5</td>
+<td>0.0065</td>
+<td>1.351</td>
+<td>0.5856</td>
+</tr>
+<tr class="even">
+<td>1.0</td>
+<td>0.0045</td>
+<td>1.218</td>
+<td>1.0140</td>
+</tr>
+<tr class="odd">
+<td>2.0</td>
+<td>0.0030</td>
+<td>1.035</td>
+<td>1.7612</td>
+</tr>
+</tbody>
+</table>
+<p>表 46-9　前馈滤波对噪声与性能的影响（<span class="math inline">\sigma=0.02</span>）</p>
+<p>噪声标准差从 0.0309 降到 0.0030，改善 10 倍；IAE 从 0.1325 升到 1.7612，恶化 13 倍。这是一条典型的“用性能换平稳”的曲线，没有免费的中间点。</p>
+<p>选择 <span class="math inline">\tau_f</span> 的依据是<strong>噪声引起的阀门抖动是否可接受</strong>。若阀门定位器对 0.03 的指令抖动不敏感，<span class="math inline">\tau_f=0</span> 最好；若有明显抖动或定位器频繁动作，取 0.5–1 s，牺牲一部分峰值换设备寿命。本章推荐 1 s，对应 std 0.0045、峰值 0.1256，仍在静态前馈之上。</p>
+<h3 id="限幅定最多补多少">46.7.6 限幅：定“最多补多少”</h3>
+<p>限幅不是控制参数，是保护参数。它的取值应由执行器余量决定，而不是由前馈的理想峰值决定。本章的理想峰值 1.654，若阀门只剩 1.0 的行程，就必须限到 1.0。</p>
+<table>
+<thead>
+<tr class="header">
+<th>限幅</th>
+<th>峰值</th>
+<th>IAE</th>
+<th>恢复/s</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>不限</td>
+<td>0.0012</td>
+<td>0.0206</td>
+<td>0</td>
+</tr>
+<tr class="even">
+<td><span class="math inline">[0,1.0]</span></td>
+<td>0.1066</td>
+<td>1.0224</td>
+<td>28.00</td>
+</tr>
+<tr class="odd">
+<td><span class="math inline">[0,0.7]</span></td>
+<td>0.2153</td>
+<td>2.8957</td>
+<td>44.90</td>
+</tr>
+<tr class="even">
+<td><span class="math inline">[0,0.5]</span></td>
+<td>0.2760</td>
+<td>3.0301</td>
+<td>41.40</td>
+</tr>
+<tr class="odd">
+<td><span class="math inline">[0,0.3]</span></td>
+<td>0.3520</td>
+<td>3.6574</td>
+<td>23.75</td>
+</tr>
+</tbody>
+</table>
+<p>表 46-10　前馈输出限幅的影响</p>
+<p>限到 0.7 时峰值 0.2153，与静态前馈的 0.2154 几乎相同——这不是巧合：0.7 刚好等于静态前馈的稳态输出 0.667，动态前馈的“超前”部分被完全削掉，只剩下静态分量。<strong>限幅值低于静态输出，等于把动态前馈退化成静态前馈</strong>，这是选限幅时的一个实用判据。</p>
+<p>限到 0.5 与 0.3 时峰值反而上升、恢复时间却缩短，因为深度限幅让前馈变成一个“短促的脉冲”，削掉了拖尾。这种形状对峰值不利、对恢复有利，一般不应作为设计目标，只在阀门严重受限时被动接受。</p>
+<h3 id="反馈参数定残差收多快">46.7.7 反馈参数：定“残差收多快”</h3>
+<p>前馈把大头抵消后，剩下的残差由反馈收尾。反馈越快，残差消得越快；但反馈太快会吃掉稳定裕度。本章扫了 <span class="math inline">K_c</span> 与 <span class="math inline">T_i</span>，结果如表 46-11。</p>
+<table>
+<thead>
+<tr class="header">
+<th><span class="math inline">K_c</span></th>
+<th><span class="math inline">T_i</span>/s</th>
+<th>纯反馈峰值</th>
+<th>复合峰值</th>
+<th>纯反馈 IAE</th>
+<th>复合 IAE</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>0.6</td>
+<td>10</td>
+<td>0.5165</td>
+<td>0.0391</td>
+<td>9.4796</td>
+<td>1.9006</td>
+</tr>
+<tr class="even">
+<td>0.9</td>
+<td>10</td>
+<td>0.4962</td>
+<td>0.0045</td>
+<td>7.2344</td>
+<td>0.2200</td>
+</tr>
+<tr class="odd">
+<td>1.2</td>
+<td>10</td>
+<td>0.4706</td>
+<td>0.0012</td>
+<td>5.5520</td>
+<td>0.0206</td>
+</tr>
+<tr class="even">
+<td>1.5</td>
+<td>10</td>
+<td>0.4500</td>
+<td>0.0014</td>
+<td>4.4481</td>
+<td>0.0144</td>
+</tr>
+<tr class="odd">
+<td>1.8</td>
+<td>10</td>
+<td>0.4344</td>
+<td>0.0013</td>
+<td>3.7061</td>
+<td>0.0131</td>
+</tr>
+<tr class="even">
+<td>1.2</td>
+<td>5</td>
+<td>0.4508</td>
+<td>0.0125</td>
+<td>5.1339</td>
+<td>0.6301</td>
+</tr>
+<tr class="odd">
+<td>1.2</td>
+<td>20</td>
+<td>0.4470</td>
+<td>0.0776</td>
+<td>7.0153</td>
+<td>3.0887</td>
+</tr>
+</tbody>
+</table>
+<p>表 46-11　反馈 PI 参数与前馈的配合（动态前馈按名义模型）</p>
+<p>这张表最有价值的一列是“复合峰值”。<span class="math inline">K_c</span> 从 0.6 增到 1.2，纯反馈峰值只从 0.5165 降到 0.4706，变化 9%；复合峰值却从 0.0391 降到 0.0012，变化 30 倍。原因很简单：前馈抵消后剩下的残差很小，反馈的每一次动作都直接作用在这点残差上，增益高低被放大。</p>
+<p><span class="math inline">T_i</span> 的影响更明显：<span class="math inline">T_i=20</span> s 时复合峰值 0.0776，是 <span class="math inline">T_i=5</span> s 时 0.0125 的 6 倍。积分慢，残差停留久，峰值自然高。但 <span class="math inline">T_i</span> 也不是越短越好：<span class="math inline">T_i=5</span> s 时 <span class="math inline">K_i</span> 翻倍，反馈会对前馈残留的微小误差过度反应，复合 IAE 反而从 0.0206 升到 0.6301。本章的最优点就在 10 s 附近。</p>
+<p>但不能反过来推“前馈投运后可以把 <span class="math inline">K_c</span> 调很大”。<span class="math inline">K_c</span> 从 1.2 增到 1.8，复合峰值只从 0.0012 变到 0.0013，几乎没有收益，相位裕度却从 73.49° 降到 65.24°。前馈不改变裕度，也不替反馈承担稳定性责任；反馈参数应按回路裕度整定，而不是按复合峰值整定。</p>
+<h3 id="参考前馈的滤波定设定值冲击多大">46.7.8 参考前馈的滤波：定“设定值冲击多大”</h3>
+<p>参考前馈的参数是 <span class="math inline">\tau_r</span>，作用与扰动前馈的 <span class="math inline">\tau_f</span> 类似，但权衡的对象不同：这里换的是“跟踪速度”与“超调/执行器冲击”。</p>
+<table>
+<thead>
+<tr class="header">
+<th>方案</th>
+<th>Mp/%</th>
+<th><span class="math inline">t_r</span>/s</th>
+<th><span class="math inline">t_s</span>/s</th>
+<th><span class="math inline">\lvert u\rvert_{\max}</span></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>仅反馈</td>
+<td>0.00</td>
+<td>10.068</td>
+<td>19.750</td>
+<td>1.440</td>
+</tr>
+<tr class="even">
+<td>参考前馈 无滤波</td>
+<td>22.72</td>
+<td>4.044</td>
+<td>43.700</td>
+<td>2.273</td>
+</tr>
+<tr class="odd">
+<td>参考前馈 2 s</td>
+<td>21.13</td>
+<td>5.405</td>
+<td>45.950</td>
+<td>1.813</td>
+</tr>
+<tr class="even">
+<td>参考前馈 5 s</td>
+<td>14.44</td>
+<td>8.256</td>
+<td>50.200</td>
+<td>1.360</td>
+</tr>
+<tr class="odd">
+<td>参考前馈 10 s</td>
+<td>5.01</td>
+<td>13.876</td>
+<td>54.700</td>
+<td>1.022</td>
+</tr>
+<tr class="even">
+<td>参考前馈 20 s</td>
+<td>0.01</td>
+<td>31.798</td>
+<td>63.800</td>
+<td>0.833</td>
+</tr>
+</tbody>
+</table>
+<p>表 46-12　参考前馈与设定值滤波的权衡</p>
+<p>这张表给出的结论有点扫兴：参考前馈把上升时间从 10.068 s 缩短到 4.044 s，代价是 22.72% 的超调和 2.273 的执行器峰值；把滤波加到 10 s，超调降到 5.01%，但上升时间反而比纯反馈慢；加到 20 s，超调没了，上升时间却是纯反馈的 3 倍。</p>
+<p>也就是说，<strong>本章这个对象并不需要参考前馈</strong>。PI 本身已经给出零超调、10 s 上升时间的响应，参考前馈只能在“更快”与“更稳”之间搬家，搬完还不如原来。参考前馈真正有价值的场合是：设定值频繁大幅变化、执行器余量充足、且工艺更看重跟踪速度而非超调。三条不同时满足，就不要加。</p>
+<p>参数讲完，接下来是整定顺序：七个参数先调哪个、后调哪个、每步看什么曲线。这是 §46.8 的内容。</p>
+<h3 id="三个参数对应曲线的三段">46.7.9 三个参数对应曲线的三段</h3>
+<p><span class="math inline">K_{ff}</span>、<span class="math inline">T_1/T_2</span>、<span class="math inline">T_2</span> 这三个参数在式 (46-23)(46-24) 里是耦合的：<span class="math inline">b_0=K_{ff}T_1/T_2</span> 同时含增益与时间常数比，<span class="math inline">a_1=-e^{-T_s/T_2}</span> 只含 <span class="math inline">T_2</span>。耦合看起来麻烦，反过来却给了一个很好的诊断工具：<strong>前馈自己的输出曲线上，三段形状分别对应三个参数</strong>。</p>
+<ul>
+<li><strong>阶跃瞬间的跳变</strong>读 <span class="math inline">T_1/T_2</span>。本章跳变 1.654，对应 <span class="math inline">0.667\times2.5=1.667</span>；若把 <span class="math inline">T_1</span> 与 <span class="math inline">T_2</span> 取反，跳变只有 <span class="math inline">0.667\times0.4=0.267</span>，前馈初期严重不足，只能靠滞后段慢慢补，结果是峰值大、拖尾长——这是时间常数比取反的典型症状。</li>
+<li><strong>跳变之后的衰减速度</strong>读 <span class="math inline">T_2</span>。<span class="math inline">T_2</span> 取大，衰减慢，前馈“补得久”，容易出现反向过冲；取小，衰减快，前馈“补一下就撤”，拖尾补偿不足。</li>
+<li><strong>长时间后的稳态值</strong>读 <span class="math inline">K_{ff}</span>。稳态时超前-滞后环节增益为 1，<span class="math inline">u_{ff}/d</span> 直接等于 <span class="math inline">K_{ff}</span>，与两个时间常数无关。</li>
+</ul>
+<p>三段可分离，意味着现场可以只凭一条前馈输出趋势反推三个参数有没有取错。这比重新做一次双通道辨识省事得多，也是 §46.10.6 要把 <span class="math inline">u_{ff}/d</span> 作为长期监控量的原因。</p>
+<p>需要提醒的是，三段可分离只在<strong>扰动是阶跃</strong>时成立。若扰动是斜坡或脉冲，跳变段与稳态段混在一起，读数会失真。现场验证参数时，应尽量找一次真实的阶跃扰动（例如切泵、切换原料罐），或在前馈手动状态下人为制造一个小阶跃。</p>
+<h3 id="把不同误差折算成同一个尺度">46.7.10 把不同误差折算成同一个尺度</h3>
+<p>增益误差用百分比表示，延迟误差用秒表示，滤波误差用时间常数表示——三个量纲不同，无法直接比较谁更严重。本章的实测数据恰好可以把它们折算到同一个尺度：<strong>等效峰值</strong>。</p>
+<p>先看增益。扰动通道增益偏差 <span class="math inline">\kappa</span> 时，峰值 0.2342（<span class="math inline">\kappa=0.5</span>）、0.1165（<span class="math inline">\kappa=0.25</span>）、0.0012（<span class="math inline">\kappa=0</span>），三者与 <span class="math inline">0.4706\lvert1-\kappa\rvert</span> 几乎完全吻合（<span class="math inline">0.4706\times0.5=0.2353</span>，<span class="math inline">0.4706\times0.25=0.1177</span>）。也就是说：</p>
+<p><span class="math display">
+\text{峰值}\approx 0.4706\times\lvert\text{相对增益误差}\rvert
+</span></p>
+<p>系数 0.4706 正是纯反馈的峰值。物理含义很清楚：前馈完全失效时，系统退化为纯反馈；前馈部分失效时，剩下的残差按“失效比例”从纯反馈峰值往下降。<strong>增益误差 30%，等于把前馈的收益退回 70% 的纯反馈水平</strong>。</p>
+<p>再看延迟。0.5 s 偏差给出 0.0938，1.0 s 给出 0.1769，换算成“等效增益误差”分别是 <span class="math inline">0.0938/0.4706=20\%</span> 与 <span class="math inline">0.1769/0.4706=38\%</span>。线性拟合给出一个很好记的近似：</p>
+<p><span class="math display">
+\text{等效增益误差}\approx 0.4\times\Delta t\ (\text{s})
+</span></p>
+<p>即<strong>每 1 s 的延迟误差，相当于 40% 的增益误差</strong>。这条换算在本章对象上成立（<span class="math inline">\Delta t</span> 在 0.5–1 s 范围内），换对象需要重测，但量级可以借用。</p>
+<p>折算之后，容差分配就有了统一语言。§46.6.7 建议延迟 0.2 s、增益 10%，用这条换算看，0.2 s 相当于 8% 的增益误差，与 10% 的增益容差基本等重——两项被分配了相近的预算，这与“延迟更敏感”的直觉一致，也说明那组容差不是随手定的。</p>
+<p>两类误差同时存在时，不能直接把等效值相加。延迟误差的残差与增益误差的残差在时间上错开、在相位上不同，保守估计可用平方和开方：<span class="math inline">\sqrt{0.08^2+0.10^2}=12.8\%</span>，仍低于“把前馈收益退回 87%”的水平。这个估算方法给出的是保守上界，够用来判断“当前误差水平下前馈还值不值得留”。</p>
+<h2 id="调参方法与经验">46.8 调参方法与经验</h2>
+<h3 id="四条顺序原则">46.8.1 四条顺序原则</h3>
+<p>前馈整定最容易犯的错误是“一上来就调动态参数”。正确顺序由四条原则决定。</p>
+<p><strong>先手动，后自动。</strong> 整定反馈时把前馈切手动、输出置零，先得到一条干净的纯反馈基线。本章基线是峰值 0.4706、IAE 5.5520、恢复 31.65 s。没有这条基线，后面所有“改善百分比”都无从谈起。</p>
+<p><strong>先静态，后动态。</strong> 静态前馈只有两个增益，投运当天就能验证符号和量级；动态前馈有四个参数，任何一个错了都会掩盖其他错误。先用静态把“方向对不对”确认掉，再上动态。</p>
+<p><strong>先延迟，后形状。</strong> 延迟误差的残差是高通，会污染整个动态段；形状参数（<span class="math inline">T_1,T_2</span>）的误差是低通，主要影响中频。先对齐时间，再修形状，否则调 <span class="math inline">T_1</span> 时看到的改善可能只是延迟碰巧对了一点。</p>
+<p><strong>先安全，后性能。</strong> 限幅与滤波决定前馈能不能安全地用，应该在追求峰值之前定下来。反过来做，往往是把峰值调到 0.001，投运第一天就因为阀门饱和被打回原形。</p>
+<h3 id="第一步把反馈调到可用">46.8.2 第一步：把反馈调到“可用”</h3>
+<p>反馈是兜底，必须先独立可用。本章取 <span class="math inline">K_c=1.2</span>、<span class="math inline">T_i=10</span> s，对应相位裕度 73.49°、增益裕度 14.73 dB。这个裕度偏保守，但对前馈有利：前馈的残差要靠反馈收尾，反馈越稳，残差收得越干净。</p>
+<p>整定目标建议设在相位裕度 60°–75°。低于 60°，前馈残差容易激发振荡；高于 75°，反馈太慢，残差拖尾长，复合 IAE 反而大。本章 73.49° 在上沿，是因为对象纯滞后 2 s，留够余量更稳妥。</p>
+<p>这一步不要追求“纯反馈的峰值最小”。纯反馈峰值从 <span class="math inline">K_c=0.6</span> 的 0.5165 到 <span class="math inline">K_c=1.8</span> 的 0.4344，只差 16%，而裕度掉了 16.5°。用裕度换这点峰值不划算，峰值应该交给前馈去压。</p>
+<h3 id="第二步静态前馈的三个检查">46.8.3 第二步：静态前馈的三个检查</h3>
+<p>静态前馈投运前做三个检查，每个都有明确的通过标准。</p>
+<p><strong>符号检查。</strong> 手动给扰动测量加一个正偏置，观察前馈输出方向：本章 <span class="math inline">K_{ff}&lt;0</span>，扰动增大时前馈应减小。符号错了，前馈会从“抵消”变成“加倍”，峰值成倍上升，一眼就能看出来。</p>
+<p><strong>量级检查。</strong> 用稳态数据核对 <span class="math inline">u_{ff}=K_{ff}\cdot d</span>。本章扰动 <span class="math inline">-1.0</span> 时前馈应为 <span class="math inline">+0.667</span>；若现场读到 0.3 或 1.3，说明增益比算错或测量有标度问题。</p>
+<p><strong>稳态检查。</strong> 投入静态前馈，等扰动稳定后看输出是否回到设定值。若稳态有固定偏差，说明 <span class="math inline">K_{ff}</span> 与真实的 <span class="math inline">K_d/K_p</span> 不符，或者反馈积分被限幅卡住。</p>
+<p>三项通过后，峰值应从 0.4706 降到 0.2154 附近。若降幅不到 30%，不要急着上动态，先查测量点位置和延迟——静态前馈都拿不到一半收益，动态前馈也不会凭空变好。</p>
+<h3 id="第三步延迟对齐的细扫法">46.8.4 第三步：延迟对齐的细扫法</h3>
+<p>延迟是唯一必须“扫”出来的参数。解析值 4 s 只是起点，现场要按拍细扫。</p>
+<p>做法是：从解析值 <span class="math inline">n_{ff}=80</span> 开始，依次取 78、79、80、81、82 拍，每拍记录峰值。本章的粗扫结果呈明显的 V 形：偏差 0.5 s（10 拍）峰值 0.0938，偏差 0 时 0.0012。用 V 形底部三个点做抛物线拟合，可以把对齐精度推到 <span class="math inline">\pm0.05</span> s，即一拍以内。</p>
+<p>两个判据决定细扫是否可信。<strong>V 形要尖</strong>：若底部很平，说明前馈的其他参数（增益或 <span class="math inline">T_1/T_2</span>）有明显误差，先修那些，再回来扫延迟。<strong>最小值要低</strong>：若扫遍所有拍，峰值最低仍高于 0.05，说明模型结构不对（例如扰动通道不是一阶），此时继续调延迟没有意义。</p>
+<p>细扫时要用同一段扰动数据反复回放，不要每次重新做阶跃试验。现场的负荷波动会让两次试验不可比，把延迟的 0.05 s 差异淹没在噪声里。</p>
+<h3 id="第四步形状参数的微调">46.8.5 第四步：形状参数的微调</h3>
+<p><span class="math inline">T_1</span> 与 <span class="math inline">T_2</span> 来自辨识，原则上不应大改。现场允许的修正幅度是 ±20%，超过这个范围应先怀疑辨识数据。</p>
+<p>微调时看两个特征。<strong>峰值段</strong>由 <span class="math inline">T_1/T_2</span> 的比值决定：峰值偏高，说明前馈“冲”得不够，可略增 <span class="math inline">T_1</span>；峰值出现反向过冲，说明冲过头，略减 <span class="math inline">T_1</span>。<strong>拖尾段</strong>由 <span class="math inline">T_2</span> 的绝对值决定：拖尾长，略减 <span class="math inline">T_2</span> 让前馈收得更快；拖尾出现振荡，略增 <span class="math inline">T_2</span>。</p>
+<p>两条要一起看。只调 <span class="math inline">T_1</span> 会把比值带偏，只调 <span class="math inline">T_2</span> 会把时间尺度带偏。经验做法是保持比值不变、整体缩放，先确认形状对不对，再确认尺度对不对。</p>
+<p>一个反例：现场看到峰值高，就把 <span class="math inline">T_1</span> 从 10 s 加到 20 s，比值变成 5，前馈初始跳变从 1.667 涨到 3.33，阀门直接饱和，峰值反而更高。<strong>形状参数的调整必须受执行器余量约束</strong>，这是 §46.7.6 限幅讨论的延续。</p>
+<h3 id="第五步限幅与滤波的先后">46.8.6 第五步：限幅与滤波的先后</h3>
+<p>正确顺序是<strong>先定限幅，再定滤波</strong>。原因：限幅改变的是前馈的有效形状，滤波改变的是前馈的平滑度，前者对峰值的影响更大。先把限幅定在阀门可用行程，再在剩余空间里用滤波换平稳。</p>
+<p>本章单独测过两项：限幅 <span class="math inline">[0,1.0]</span> 使峰值从 0.0012 退到 0.1066；单独加 1 s 滤波使峰值升到 0.1256、噪声 std 从 0.0309 降到 0.0045。两项叠加后的峰值不能简单相加，要在限幅值确定后重新实测一次。</p>
+<p>反过来做——先加滤波把峰值调到 0.1256，再发现阀门只能到 1.0，限幅与滤波的联合效果还得重测——等于白走一遍。顺序错了，返工是必然的。</p>
+<h3 id="第六步复核反馈参数">46.8.7 第六步：复核反馈参数</h3>
+<p>前馈投运后要复核反馈，但复核的口径是“复合 IAE”，不是“复合峰值”。</p>
+<p>本章数据：<span class="math inline">K_c</span> 在 1.2–1.5 之间复合 IAE 分别为 0.0206 与 0.0144，差别很小；<span class="math inline">K_c=0.6</span> 时升到 1.9006，明显变差。<span class="math inline">T_i</span> 在 10 s 时复合 IAE 0.0206，5 s 时 0.6301，20 s 时 3.0887，最优点明确。</p>
+<p>复核的结论通常是“反馈不用大改”。前馈已经把大头拿走，反馈只需要按原裕度稳定工作；为追 0.001 的峰值去动 <span class="math inline">K_c</span>，代价是裕度，不划算。</p>
+<h3 id="六个常见错误">46.8.8 六个常见错误</h3>
+<ol type="1">
+<li><strong>符号错</strong>：把 <span class="math inline">K_{ff}</span> 取成正的，扰动被放大一倍。</li>
+<li><strong>忘记延迟</strong>：直接拿扰动测量乘增益，前馈早到 4 s，峰值比不加还高。</li>
+<li><strong>滤波放在延迟前</strong>：先把测量滤平滑再延迟，等效延迟变了，对齐白做。正确顺序是延迟 → 超前-滞后 → 滤波 → 限幅。</li>
+<li><strong>限幅加在总输出上</strong>：把 <span class="math inline">u_{fb}+u_{ff}</span> 一起限，反馈积分会被前馈拖进饱和。限幅只应加在前馈支路。</li>
+<li><strong>投切无扰缺失</strong>：前馈从 0 直接跳到 0.667，阀门受一次冲击。应初始化到当前稳态值再斜坡投入。</li>
+<li><strong>只记峰值不记 IAE</strong>：静态前馈峰值降 54%，恢复时间却从 31.65 s 拉到 44.95 s，只看峰值会得出错误结论。</li>
+</ol>
+<h3 id="整定记录表">46.8.9 整定记录表</h3>
+<p>每次整定留一份记录，至少包含：日期与负荷、<span class="math inline">K_{ff}</span>、<span class="math inline">T_1/T_2</span>、<span class="math inline">n_{ff}</span>（拍）、<span class="math inline">\tau_f</span>、限幅、四项验收指标（峰值、IAE、恢复、前馈峰值）、以及当次的纯反馈对照。</p>
+<p>记录的作用不是存档，而是<strong>下次模型漂移时能快速定位</strong>：峰值变大而稳态正常，多半是延迟或 <span class="math inline">T_1/T_2</span> 变了；稳态有偏差，多半是 <span class="math inline">K_{ff}</span> 对应的增益比变了；噪声变大而峰值不变，多半是测量回路的问题。三类症状对应三组参数，有记录就能一次查对。</p>
+<p>整定方法讲完，接下来讨论超出基本结构的改进：前馈模型在线校正、增益调度、以及参考前馈与扰动前馈的组合。这些是 §46.9 的内容。</p>
+<h3 id="三个不要调">46.8.10 三个“不要调”</h3>
+<p>整定现场最常见的低效，是用一个参数去补另一个参数的错。三种情形要特别警惕。</p>
+<p><strong>不要用 <span class="math inline">K_{ff}</span> 补延迟误差。</strong> 延迟差 0.5 s 时峰值 0.0938，形状是“先补早了、再补晚了”的双峰。此时加大 <span class="math inline">|K_{ff}|</span> 会把前一个峰压下去、后一个峰抬起来，峰值可能短暂变小，IAE 却明显变差。表 46-4 里 <span class="math inline">K_{ff}=-1.2</span> 的峰值 0.2081、恢复 51.30 s，就是“过补偿掩盖时机错误”的样子：峰值与纯反馈相当，拖尾却比纯反馈多出近 20 s。正确做法是先按 §46.8.4 细扫 <span class="math inline">n_{ff}</span>，把双峰合成单峰，再谈增益。</p>
+<p><strong>不要用滤波掩盖增益误差。</strong> 滤波能把尖锐的残差磨平，1 s 滤波就把动态前馈的峰值从 0.0012 抬到 0.1256，同时也把 IAE 从 0.0206 抬到 0.9243。它磨平的是<strong>所有</strong>快速成分，包括正确的补偿。增益误差的残差是慢变的持续偏差，滤波对它几乎无效，只会让整个回路更迟钝。增益错了就改增益，这是唯一有效的办法。</p>
+<p><strong>不要在反馈还没稳的时候调前馈。</strong> 前馈的开环结论建立在小信号线性之上，若反馈本身在振荡或接近饱和，前馈的动作会被叠加到不稳定的基线上，任何整定都读不出因果。顺序必须是：先按 §46.6.5 验收反馈（阶跃、PM/GM、限幅边界），再投前馈。</p>
+<p>这三条的共同点是：<strong>先定位误差来源，再动对应的参数</strong>。前馈支路的可调量本来就不多，两两之间又高度耦合，盲目试凑的空间很小；把症状与参数对上，往往一两次试验就能收敛。</p>
+<h2 id="优化与改进">46.9 优化与改进</h2>
+<h3 id="模型为什么会漂移">46.9.1 模型为什么会漂移</h3>
+<p>§46.4 的数据说得很直白：增益误差 50%，动态前馈的峰值 0.2342，已经不如静态前馈。而工业对象的增益恰恰是最容易漂移的量——换热器结垢、催化剂老化、原料批次变化、负荷大幅调整，都会让 <span class="math inline">K_p</span> 或 <span class="math inline">K_d</span> 偏离辨识值。</p>
+<p>有意思的是，<span class="math inline">K_{ff}=-K_d/K_p</span> 只用<strong>比值</strong>。若结垢让两条通道的增益同比例下降，比值不变，前馈不需要改；真正有害的是<strong>两条通道不同步变化</strong>：扰动测量点保温损坏使 <span class="math inline">K_d</span> 虚高、主通道阀门特性变化使 <span class="math inline">K_p</span> 偏移、或者负荷变化让某一侧的增益先饱和。</p>
+<p>这给出在线校正的第一个判断：不是所有漂移都要校正，只有“比值漂移”才需要。工程上可以通过定期做一次双通道阶跃试验来区分：若两条通道增益同向同幅变化，只更新模型记录、不动 <span class="math inline">K_{ff}</span>；若比值变了，才启动校正。</p>
+<h3 id="稳态比值法用反馈的积分反推误差">46.9.2 稳态比值法：用反馈的积分反推误差</h3>
+<p>前馈误差最终会由反馈补上。稳态时，反馈输出里就含着“前馈少补或多补了多少”的信息，可以拿来反推。</p>
+<p>推导很短。稳态下 <span class="math inline">y=r</span>，主通道满足</p>
+<p><span class="math display">
+0=K_d\,d+K_p\left(u_{ff}+u_{fb}\right)
+\tag{46-28}
+</span></p>
+<p>把 <span class="math inline">u_{ff}=K_{ff}d</span> 代入，解出</p>
+<p><span class="math display">
+\frac{u_{fb}}{d}=K_{ff}^{\ast}-K_{ff}
+\tag{46-29}
+</span></p>
+<p>其中 <span class="math inline">K_{ff}^{\ast}=-K_d/K_p</span> 是真实值。于是有一个极简的校正律：</p>
+<p><span class="math display">
+K_{ff}\leftarrow K_{ff}+\gamma\,\frac{u_{fb}}{d}
+\tag{46-30}
+</span></p>
+<p><span class="math inline">\gamma</span> 取 0.01–0.05，每 10–60 分钟更新一次。举例：真实值 <span class="math inline">-0.667</span>、当前值 <span class="math inline">-0.5</span>、扰动 <span class="math inline">-1.0</span>，则稳态 <span class="math inline">u_{fb}=0.167</span>，<span class="math inline">u_{fb}/d=-0.167</span>，更新后 <span class="math inline">K_{ff}=-0.667</span>，一步到位（<span class="math inline">\gamma=1</span> 时）；实际取小 <span class="math inline">\gamma</span> 是为了抗噪。</p>
+<p>这个方法的优点是不需要额外试验、不需要扰动辨识，直接用运行数据。缺点有四个，必须逐条设防。</p>
+<p><strong>只在稳态用。</strong> 动态过程中 <span class="math inline">u_{fb}</span> 含比例项和未衰减的积分，式 (46-29) 不成立。判据是 <span class="math inline">|y-r|</span> 小于阈值且持续一段时间。</p>
+<p><strong>只在扰动主导时用。</strong> 若同时有其他不可测扰动，<span class="math inline">u_{fb}</span> 里混入了它们的贡献，反推会偏。判据是 <span class="math inline">|d|</span> 大于阈值，且扰动测量与 <span class="math inline">u_{fb}</span> 的相关性足够高。</p>
+<p><strong>除法要用带符号的 <span class="math inline">d</span>。</strong> <span class="math inline">d</span> 可正可负，除以 <span class="math inline">d</span> 而不是 <span class="math inline">|d|</span>，否则校正方向会错。实现时对 <span class="math inline">|d|</span> 设下限，避免除零。</p>
+<p><strong>更新要限幅。</strong> 单次更新不超过名义值的 10%，累计不超过 ±50%，防止一段异常数据把前馈带跑。</p>
+<h3 id="增益调度按负荷切参数">46.9.3 增益调度：按负荷切参数</h3>
+<p>当对象非线性明显时，单一 <span class="math inline">K_{ff}</span> 不够用。典型场景是负荷从 30% 升到 100%，主通道增益下降一半，而扰动通道增益基本不变，比值随之变化。</p>
+<p>做法是把负荷（或流量、产量）作为调度变量，存 3–5 个断点的 <span class="math inline">K_{ff}</span>，中间线性插值：</p>
+<p><span class="math display">
+K_{ff}(L)=K_{ff,i}+\frac{L-L_i}{L_{i+1}-L_i}\left(K_{ff,i+1}-K_{ff,i}\right)
+\tag{46-31}
+</span></p>
+<p>三个工程要点。<strong>断点要覆盖实际运行区间</strong>，不要外推；<strong>切换要无扰</strong>，负荷跨越断点时用斜坡过渡 10–20 s；<strong>调度变量要与扰动解耦</strong>，若负荷本身也是扰动，调度会与前馈互相打架。</p>
+<p>调度表的每个断点都要有试验依据。常见错误是“按机理估算几个点”，投运后发现中间负荷段反而变差——插值区间内的非线性未必单调，必须实测。</p>
+<h3 id="参考前馈与扰动前馈的组合">46.9.4 参考前馈与扰动前馈的组合</h3>
+<p>两种前馈可以同时存在：扰动前馈管 <span class="math inline">d</span>，参考前馈管 <span class="math inline">r</span>，执行器收到三路之和。图 46-7 给出参考前馈单独作用时的四条曲线。</p>
+<figure>
+<img src="figs/ch046/fig_046_07_two_dof.svg" alt="图 46-7　参考前馈与设定值滤波：无滤波时上升最快但超调 22.72%，滤波 10 s 后超调降到 5.01%" /><figcaption aria-hidden="true">图 46-7　参考前馈与设定值滤波：无滤波时上升最快但超调 22.72%，滤波 10 s 后超调降到 5.01%</figcaption>
+</figure>
+<p>组合的第一约束是<strong>执行器预算</strong>。本章扰动前馈峰值 1.654，参考前馈稳态 0.833，两者在最不利时刻叠加可达 2.49，远超阀门余量 1.0。也就是说，本章对象根本装不下两路前馈——不是理论不允许，是物理行程不够。</p>
+<p>第二约束是<strong>目标冲突</strong>。参考前馈要“快”，扰动前馈要“准”，两者都要求阀门快速大幅动作。当阀门成为瓶颈时，先保扰动前馈：扰动是外来的、不可避免的，设定值变化是人为的、可以放缓。工程上的优先级通常是“扰动前馈 &gt; 设定值成形 &gt; 参考前馈”。</p>
+<p>第三约束是<strong>调试复杂度</strong>。两路前馈同时在线，出现异常时很难判断是哪一路的问题。稳妥做法是分时投运：先扰动前馈稳定运行一个月，再评估是否需要参考前馈；需要时也先加设定值滤波，最后才加前馈增益。</p>
+<p>对本章对象，结论是明确的：不加参考前馈。§46.7.8 的数据已经说明，PI 本身的跟踪响应（零超调、10.068 s 上升）比任何参考前馈配置都好；参考前馈只能把上升时间压到 4 s，代价是 22.72% 超调和 2.273 的执行器峰值。这个交易在本对象上不划算。</p>
+<h3 id="与串级控制结合">46.9.5 与串级控制结合</h3>
+<p>第 45 章的串级与本章的前馈可以叠加，形成“前馈 + 串级 + 反馈”的三层结构。这时前馈加在哪一层，有三种选择。</p>
+<p><strong>加在内环输出。</strong> 前馈直接叠加到副回路控制器的输出，与副回路执行器共用。优点是响应最快，缺点是通过副回路对象的动态，前馈模型要按“扰动 → 内环输出 → 主变量”重新辨识。</p>
+<p><strong>加在内环设定值。</strong> 前馈改变副回路的设定值，由副回路去执行。优点是不直接碰执行器，副回路的抗扰与限幅仍然有效；缺点是前馈要经过副回路的闭环动态，等效延迟增加，补偿精度下降。</p>
+<p><strong>加在外环输出（即内环设定值之前）。</strong> 与前一种类似，但多经过一层外环控制器，最慢。</p>
+<p>选择依据是<strong>扰动进入的位置</strong>。若扰动直接作用于内环对象（如蒸汽压力波动），加在内环输出最直接；若扰动作用于外环对象（如入口物料温度），加在内环设定值更合理，因为它与外环的控制意图在同一层。</p>
+<p>三种方式都需要重新辨识前馈通道。串级的引入改变了“扰动 → 被控量”的等效传递函数，第 45 章式 (45-13) 给出的 <span class="math inline">T_1</span>、<span class="math inline">S_1</span> 会进入前馈模型。直接套用单回路的前馈参数，通常只能拿到一半收益。</p>
+<h3 id="抗饱和与无扰切换">46.9.6 抗饱和与无扰切换</h3>
+<p>前馈是开环支路，它的饱和与反馈的饱和是两件事，必须分开处理。</p>
+<p><strong>前馈支路的限幅</strong>只限制 <span class="math inline">u_{ff}</span>，不限制 <span class="math inline">u_{fb}</span>。本章第九段实验就是这么做的。若把限幅加在总和上，前馈的大幅动作会把反馈积分顶到饱和，扰动过去后积分要很久才能退出来，表现为“恢复特别慢”。</p>
+<p><strong>反馈的抗饱和</strong>要在前馈存在时重新核对。前馈已经把执行器推到接近上限，反馈能用的余量更小，抗饱和阈值应相应收紧。第 45 章式 (45-27) 的回算方法仍然适用，但回算的起点要改成“总和减去前馈”，否则前馈会被误判为反馈的输出。</p>
+<p><strong>无扰切换</strong>要处理三个时刻：前馈投入、前馈切除、前馈参数在线修改。三个时刻的共同要求是“切换前后执行器指令连续”。做法是维护一个跟踪值 <span class="math inline">u_{ff}^{trk}</span>，手动时让它跟随实际前馈输出，切自动时从 <span class="math inline">u_{ff}^{trk}</span> 起步，再用 10–20 s 斜坡过渡到计算值。</p>
+<p>参数在线修改（例如 §46.9.2 的增益校正）也属于切换。若校正每 10 分钟改一次 <span class="math inline">K_{ff}</span>，而 <span class="math inline">d</span> 是慢变量，单次改动带来的 <span class="math inline">u_{ff}</span> 变化很小，可以不做斜坡；若 <span class="math inline">d</span> 接近满量程，单次 10% 的增益改动就会造成 0.067 的指令跳变，必须加斜坡或限制变化率。</p>
+<h3 id="改进的收益递减">46.9.7 改进的收益递减</h3>
+<p>本章的改进路径可以排成一个收益序列：</p>
+<ul>
+<li>纯反馈 → 静态前馈：峰值 0.4706 → 0.2154，降 54%；</li>
+<li>静态 → 动态：0.2154 → 0.0012，降 99.4%；</li>
+<li>动态 → 动态加在线校正：把漂移后的残差拉回设计值附近，收益取决于漂移幅度，需现场验证；</li>
+<li>动态 → 动态加增益调度：只在非线性显著时有收益；</li>
+<li>动态 → 动态加参考前馈：本章对象无收益。</li>
+</ul>
+<p>每一步的投入产出比在快速下降。静态前馈只需要两个数，当天见效；动态前馈要辨识四个参数，还要扫延迟；在线校正要写自适应逻辑、设四个判据；增益调度要维护一张表。<strong>改进到哪一步为止，取决于模型能维护多久，而不是取决于理论能压到多低</strong>。</p>
+<p>一条实用的停止准则：当“当前峰值已经低于工艺报警线的 1/3”且“模型参数半年内没有明显漂移”时，停止改进。继续投入的边际收益，已经小于维护复杂度带来的风险。</p>
+<p>工程落地要处理的还不止这些：测量回路、DCS 组态、投运步骤、故障预案。这些是 §46.10 的内容。</p>
+<h3 id="从单回路前馈到解耦与预测控制">46.9.8 从单回路前馈到解耦与预测控制</h3>
+<p>本章的前馈是单输入单输出的：一个扰动、一个执行器、一个被控量。装置规模一大，同样的思想会以两种形式出现。</p>
+<p><strong>解耦器</strong>是多变量版本的前馈。当两个回路通过对象耦合（例如两个串联换热器共用蒸汽），一个回路的阀门动作会影响另一个回路的输出。解耦器在控制器与对象之间插入一个矩阵 <span class="math inline">D(s)</span>，使 <span class="math inline">G_p(s)D(s)</span> 近似对角——本质是矩阵求逆，与单回路的 <span class="math inline">G_{ff}=-G_d/G_p</span> 同源。它同样要求模型准确、同样可能非因果、同样不改变（在理想解耦下的）各个单回路的稳定性；模型一错，解耦反而会把扰动“送”到另一个回路。</p>
+<p><strong>模型预测控制</strong>把前馈做进了预测模型：可测扰动作为已知的未来输入进入预测，控制器在优化时自动算出抵消量。它比本章的前馈多了两件事——处理约束、多步预测；代价是需要在线求解、需要完整的多变量模型、需要专人维护。本章的单回路前馈可以看作它的退化情形：一步预测、无约束、单变量、目标函数只有跟踪误差。</p>
+<p>三条选择判据：</p>
+<ul>
+<li>通道少（两三个）、耦合弱、模型准，用<strong>解耦器加单回路控制器</strong>，组态简单、行为可解释；</li>
+<li>通道多、有硬约束（阀位、温度上限）、经济目标明确，用<strong>预测控制</strong>；</li>
+<li>只有一个主导扰动、一个执行器，就是<strong>本章的复合控制</strong>，不要为了“先进”去上更大的框架。</li>
+</ul>
+<p>工程上最常见的错误是“用预测控制解决一个前馈就能解决的问题”。预测控制的模型维护成本比前馈高一个数量级，而它相对前馈的增量收益，往往只体现在约束边界附近。</p>
+<h3 id="改进效果怎么算数">46.9.9 改进效果怎么算数</h3>
+<p>本章所有数字都来自理想条件：扰动是干净的阶跃、初始状态完全稳恒、噪声固定种子。现场不可能这样，因此“投运后峰值从 0.47 降到 0.21”这类结论不能靠一两次事件下判断。</p>
+<p>可靠的做法是<strong>比较分布，而不是比较极值</strong>：</p>
+<ol type="1">
+<li>取投运前 20–30 次同类扰动事件（同一扰动源、同一负荷区间），记录每次的峰值与 IAE；</li>
+<li>投运后再取同样数量的事件，同样记录；</li>
+<li>比较两组的中位数与 90 分位，不要比最大值——最大值由最异常的那一次决定，与方案好坏关系不大。</li>
+</ol>
+<p>判读规则也很直接。中位数与 90 分位同时改善，说明改进是普遍的；只有中位数改善、90 分位没动，说明改进只对小扰动有效，多半是前馈在大扰动时被限幅卡住（§46.7.6）；只有 90 分位改善、中位数没动，说明改进只对大幅扰动有效，通常是静态前馈的增益偏保守。</p>
+<p>还有一个容易忽略的污染源：<strong>工况漂移</strong>。前后两组事件的负荷、环境温度、原料批次若不同，比较就没有意义。正确做法是按工况分层，每一层内部分别比较；层内样本不足时，宁可延长观察期，也不要把不同工况混在一起算平均。</p>
+<p>最后一条纪律：<strong>留对照</strong>。投运后每隔一段时间（例如一个月）把前馈退出一天，采一组纯反馈数据。历史数据只能说明“过去怎样”，不能说明“现在的前馈是否还有效”；定期对照才能发现模型漂移带来的收益衰减，这比任何离线辨识都及时。</p>
+<h3 id="前馈在信号优先级里的位置">46.9.10 前馈在信号优先级里的位置</h3>
+<p>DCS 里一个执行器往往接收多路指令，前馈只是其中之一。它的位置必须摆对，否则会在异常时与联锁、手动操作打架。</p>
+<p>优先级从高到低通常是：<strong>联锁与停车 &gt; 操作员手动 &gt; 反馈自动 &gt; 前馈修正</strong>。前馈永远是被叠加的“修正量”，不能覆盖手动值，更不能绕过联锁。实现上有三条具体要求：</p>
+<ol type="1">
+<li><strong>手动时前馈要跟踪</strong>。操作员切手动后，前馈块继续计算但输出被旁路，跟踪值等于实际前馈输出；切回自动时从跟踪值起步，避免跳变（§46.9.6）。</li>
+<li><strong>联锁时前馈强制清零</strong>。联锁动作会把阀门推到安全位置，此时若前馈仍在累加，会在联锁复位瞬间给阀门一个错误的偏置。</li>
+<li><strong>联锁复位后斜坡恢复</strong>。清零是瞬时的，恢复不能瞬时；用 10–20 s 斜坡把前馈拉回计算值，让反馈有时间接管。</li>
+</ol>
+<p>报警设计上，除了 §46.10.4 的状态报警，还有一条诊断性的报警值得加：<strong>前馈与反馈长期反向</strong>。本章 <span class="math inline">K_p&gt;0</span>、<span class="math inline">K_d&gt;0</span>、<span class="math inline">K_{ff}&lt;0</span>，扰动使温度下降时，反馈要开大阀门（<span class="math inline">u_{fb}&gt;0</span>），前馈也要开大阀门（<span class="math inline">u_{ff}=K_{ff}d&gt;0</span>），两者<strong>同向</strong>。若观察到两者持续反向，只有三种可能：增益符号取错、扰动通道符号变了（例如换了一种物料）、或者前馈的延迟错得离谱，导致它在扰动过后还在补。这条报警不增加任何硬件，却能在模型失效的早期给出提示。</p>
+<p>最后一条纪律：<strong>前馈不能改变手动/自动的状态</strong>。有些老组态把前馈输出直接写进 PID 的输出端，绕过了手自动切换逻辑，结果操作员切手动后前馈仍在动作，阀门不听人。正确接法是前馈进入 PID 块的“前馈输入”端子（若有），或在 PID 输出之后、AO 之前用独立的求和块，且求和块受手自动状态控制。</p>
+<h2 id="工程落地">46.10 工程落地</h2>
+<h3 id="测量回路是前馈的眼睛">46.10.1 测量回路是前馈的眼睛</h3>
+<p>前馈是开环的，它唯一的输入是扰动测量。测量错了，前馈会“认真地”把错误放大到执行器上，而且没有反馈那样的自我纠正。所以工程落地的第一件事不是组态前馈块，而是把测量回路查清楚。</p>
+<p><strong>位置。</strong> 测量点必须在扰动传播路径的上游，且尽量靠近扰动源。位置偏下游，<span class="math inline">\Delta\tau</span> 变小，前馈可用的时间窗口缩短；位置偏上游但取样管太长，测量滞后又会吃掉窗口。两者要一起权衡。</p>
+<p><strong>滞后。</strong> 取样、变送、滤波、扫描四段滞后之和应小于 <span class="math inline">\Delta\tau/3</span>。本章 4 s 的窗口对应 1.3 s 预算；若变送器自带 2 s 阻尼，前馈还没动作，扰动已经到出口。</p>
+<p><strong>噪声。</strong> 噪声不会被前馈平均掉，只会被原样放大。本章 <span class="math inline">\sigma=0.02</span> 的测量噪声，在不滤波时让前馈输出抖动 0.0309，是静态前馈稳态值 0.667 的 4.6%。图 46-9 给出滤波与噪声、性能之间的完整折中。</p>
+<figure>
+<img src="figs/ch046/fig_046_09_noise.svg" alt="图 46-9　前馈滤波的折中：噪声标准差随滤波时间下降，IAE 随之上扬，两条曲线没有共同的极小点" /><figcaption aria-hidden="true">图 46-9　前馈滤波的折中：噪声标准差随滤波时间下降，IAE 随之上扬，两条曲线没有共同的极小点</figcaption>
+</figure>
+<p>图 46-9 的横轴是滤波时间常数，纵轴分别是噪声标准差与 IAE。两条曲线的走向相反，说明这是一个纯粹的权衡，不存在“又稳又准”的滤波参数。选择依据只能是工艺对阀门动作频率的容忍度。</p>
+<p><strong>标度与零点。</strong> 这是最容易被忽略的一项。噪声是零均值的，长期看不影响稳态；零点漂移是系统性的，会让前馈长期偏一个固定量，稳态偏差被反馈默默补掉，运行人员看不到，直到前馈输出顶到限幅才发现。建议每季度核对一次扰动测量的零点，尤其是差压、流量这类容易漂的变量。</p>
+<h3 id="dcs-组态块的顺序就是算法的顺序">46.10.2 DCS 组态：块的顺序就是算法的顺序</h3>
+<p>前馈在 DCS 里是一串功能块，块的连接顺序决定了算法的正确性。推荐顺序是：</p>
+<ol type="1">
+<li>模拟输入与质量位判断；</li>
+<li>纯延迟（整数拍缓冲区）；</li>
+<li>超前-滞后；</li>
+<li>一阶滤波；</li>
+<li>前馈限幅；</li>
+<li>与反馈输出相加；</li>
+<li>执行器输出与跟踪。</li>
+</ol>
+<p>有两个顺序细节必须强调。<strong>延迟放在最前，滤波放在超前-滞后之后</strong>。线性环节在数学上可以交换，工程上这样排有三个理由：延迟拍数直接对应物理时间 <span class="math inline">\tau_d-\tau_p</span>，不会被滤波器的滞后“污染”；滤波直接作用在前馈指令上，能压住超前-滞后的初始跳变；调试时可以单独旁路滤波，观察它对峰值和噪声各自的影响。</p>
+<p><strong>限幅在相加之前</strong>。前馈限幅只约束前馈支路，不能约束总和；否则反馈的动态会被前馈的饱和拖住。这一点在 §46.9.6 已经从控制角度说过，在组态上就是“限幅块必须接在前馈支路的末端”。</p>
+<p>扫描周期与相位也要对齐。前馈块、反馈块、输出块应在同一个任务里，周期相同；若前馈在慢任务（如 1 s）、反馈在快任务（如 0.1 s），前馈的等效延迟会增加 0.5–1 s，§46.6.2 的敏感性会立刻显现。</p>
+<h3 id="投运的八个步骤">46.10.3 投运的八个步骤</h3>
+<p>把 §46.8 的整定方法落成现场步骤，可以写成八步。</p>
+<p><strong>一、回路检查。</strong> 确认扰动测量、主变量测量、阀门方向与量程正确；手动给阀门几个开度，记录主变量响应，核对 <span class="math inline">\tau_p</span> 与 <span class="math inline">T_p</span>。</p>
+<p><strong>二、反馈整定。</strong> 前馈切手动、输出置零，按 §46.8.2 把 PI 调到相位裕度 60°–75°，记录纯反馈基线（本章 0.4706 / 5.5520 / 31.65 s）。</p>
+<p><strong>三、静态前馈。</strong> 按 §46.8.3 做符号、量级、稳态三项检查，确认峰值降到 0.2154 附近。</p>
+<p><strong>四、延迟对齐。</strong> 按 §46.8.4 细扫 <span class="math inline">n_{ff}</span>，找到 V 形底部；记录最优拍数与对应的峰值。</p>
+<p><strong>五、动态环节。</strong> 投入超前-滞后，核对 <span class="math inline">T_1/T_2</span> 与初始跳变；观察峰值是否进入 0.01 量级。</p>
+<p><strong>六、滤波与限幅。</strong> 按 §46.8.6 先定限幅、再定滤波；记录两项叠加后的峰值与噪声。</p>
+<p><strong>七、扰动试验。</strong> 人为制造 3–5 次不同幅值的扰动（建议从 <span class="math inline">-1.0</span> 到 <span class="math inline">-0.25</span> 逐档减小），确认线性度；若大幅扰动下峰值比例明显偏离，说明存在非线性，需要考虑增益调度。</p>
+<p><strong>八、72 小时试运行。</strong> 连续记录前馈输出、限幅状态、扰动测量、主变量；每天统计一次峰值与 IAE（只在有扰动的时段统计），确认没有漂移、没有持续饱和、没有异常抖动。</p>
+<h3 id="故障预案">46.10.4 故障预案</h3>
+<p>前馈的开环特性决定了它对故障没有自愈能力，必须靠外部逻辑兜底。表 46-13 列出六种常见故障与对应动作。</p>
+<table>
+<thead>
+<tr class="header">
+<th>故障</th>
+<th>检测方式</th>
+<th>前馈动作</th>
+<th>反馈动作</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>测量质量坏</td>
+<td>质量位、超量程</td>
+<td>切手动，输出斜坡归零</td>
+<td>正常，接管全部扰动</td>
+</tr>
+<tr class="even">
+<td>测量冻结</td>
+<td>长时间方差为零</td>
+<td>切手动并报警</td>
+<td>正常</td>
+</tr>
+<tr class="odd">
+<td>前馈持续饱和</td>
+<td>限幅标志持续 5 min</td>
+<td>报警，启动增益校正</td>
+<td>正常</td>
+</tr>
+<tr class="even">
+<td>校正参数越界</td>
+<td><span class="math inline">\lvert K_{ff}\rvert&gt;1.5</span> 倍名义值</td>
+<td>冻结校正，保留原值</td>
+<td>正常</td>
+</tr>
+<tr class="odd">
+<td>控制任务超时</td>
+<td>看门狗计数</td>
+<td>保持上一拍输出</td>
+<td>正常</td>
+</tr>
+<tr class="even">
+<td>阀门到限</td>
+<td>输出贴限</td>
+<td>前馈限幅生效</td>
+<td>抗饱和回算</td>
+</tr>
+</tbody>
+</table>
+<p>表 46-13　前馈回路的六种故障与动作</p>
+<p>三条设计原则贯穿这张表。</p>
+<p><strong>失效要往“无前馈”退，不要往“满前馈”退。</strong> 测量坏了，最安全的动作是让前馈退出、把扰动交还给反馈；绝不能保持最后一个前馈值不动，那相当于给阀门加了一个错误的固定偏置。</p>
+<p><strong>退出要斜坡。</strong> 前馈从 0.667 直接切到 0，等于给阀门一个反向阶跃。正确做法是用 10–20 s 斜坡降到零，让反馈有时间接管。</p>
+<p><strong>报警要报“状态”，不要报“数值”。</strong> 操作员需要知道的是“前馈已退出”“前馈在限幅”，而不是当前 <span class="math inline">u_{ff}</span> 等于 0.42。状态量能直接对应动作，数值只会增加判断负担。</p>
+<h3 id="操作员接口">46.10.5 操作员接口</h3>
+<p>前馈回路对操作员应该只有三个可见元素：一个投切开关、一个手动偏置、两个状态指示（运行/退出、正常/限幅）。</p>
+<p>投切开关用于检修和异常处置；手动偏置用于小范围修正（一般 ±10%），不要做成第二个增益旋钮；两个状态指示让操作员一眼判断前馈是否在工作。</p>
+<p><span class="math inline">T_1</span>、<span class="math inline">T_2</span>、<span class="math inline">n_{ff}</span> 这些参数不应暴露在操作画面上。它们属于模型参数，改动需要重新辨识和验收，不适合运行中随手调整。把它们藏进工程师权限，是对前馈的一种保护。</p>
+<h3 id="长期监控的三条趋势">46.10.6 长期监控的三条趋势</h3>
+<p>前馈投运后不是“设好就不管”，需要三条长期趋势来监控健康度。</p>
+<p><strong>静默段的前馈标准差。</strong> 没有扰动时 <span class="math inline">u_{ff}</span> 应接近常数，其标准差反映测量噪声与滤波效果。本章 <span class="math inline">\tau_f=1</span> s 时为 0.0045；若某天升到 0.02，说明测量回路出了问题（接地、屏蔽、变送器老化）。</p>
+<p><strong><span class="math inline">u_{ff}/d</span> 的比值。</strong> 稳态时这个比值应等于 <span class="math inline">K_{ff}</span>。它的慢漂移直接反映模型失配，可以作为 §46.9.2 在线校正的输入，也可以作为“该重新辨识了”的提醒。</p>
+<p><strong>限幅时间占比。</strong> 前馈输出贴限的时间比例，反映执行器余量是否足够。若长期超过 5%，说明前馈设计超出了阀门能力，应该降低动态前馈的激进程度（增大 <span class="math inline">\tau_f</span> 或退回静态前馈）。</p>
+<p>三条趋势对应三个部件：测量、模型、执行器。每月看一次，比每年做一次大修式的重新辨识更有效，也更省人力。</p>
+<h3 id="数据质量位比数值更重要">46.10.7 数据质量位比数值更重要</h3>
+<p>前馈块拿到的不是一个干净的浮点数，而是“数值加质量”。工程上必须把质量位当成第一等输入来处理，否则会出现“数值看着正常、其实是坏值”的隐性故障。</p>
+<p>四类要检测的异常：</p>
+<ul>
+<li><strong>坏值</strong>：变送器故障、断线，DCS 给出 BAD。前馈应立即退出，不能参与运算。</li>
+<li><strong>超量程</strong>：读数贴在量程上下限，多半是仪表故障或工艺异常。此时按坏值处理。</li>
+<li><strong>冻结</strong>：数值长期完全不变，而相邻变量仍在变化。这类故障最危险，因为质量位往往是 GOOD。检测方法是“连续 <span class="math inline">N</span> 拍方差为零”且“关联变量有变化”，<span class="math inline">N</span> 取 20–30 拍即可。</li>
+<li><strong>通信超时</strong>：数据超过 2–3 个扫描周期未更新。用时间戳判断，不要用数值变化判断。</li>
+</ul>
+<p>处理策略统一为一条：<strong>任何一项异常，前馈退出、切到零、由反馈接管</strong>。不要用替代值，不要保持最后值，也不要用 0 以外的常数——替代值本身就是一个错误的前馈量（§46.10.4）。</p>
+<p>量程也需要核对。若扰动测量的量程远大于实际波动范围（例如正常波动 5 ℃、量程 0–500 ℃），量化台阶会把前馈输出变成阶梯状，看起来像“前馈在抖”。经验上量程不应超过正常波动范围的 3 倍；已经装好的宽量程仪表，可以在 DCS 里做一次线性变换后再送前馈，但要注意变换不改变噪声的相对大小。</p>
+<p>还有一处时序问题：若 AI 通道自带滤波（很多 DCS 默认开一阶滤波），这个滤波会叠加到 §46.7.5 的 <span class="math inline">\tau_f</span> 上，等效时间常数是两者之和。组态时必须查清 AI 的滤波是否开启，否则会出现“参数按 1 s 整定、实际却是 3 s”的情况。</p>
+<h3 id="移交什么才算交接完成">46.10.8 移交什么，才算交接完成</h3>
+<p>前馈回路最容易被“交接”毁掉。投运时一切都对，两年后换了一批人，参数还在、模型早就不对，没人知道该怎么判断。避免这种情况，靠的是一份完整的移交包。</p>
+<p><strong>必须移交的六项：</strong></p>
+<ol type="1">
+<li><strong>辨识数据</strong>：两条通道的阶跃响应原始曲线与辨识结果，注明当时的负荷、工况、日期；</li>
+<li><strong>模型参数与不确定度</strong>：不只是 <span class="math inline">K_{ff}</span>、<span class="math inline">T_1</span>、<span class="math inline">T_2</span>、<span class="math inline">n_{ff}</span> 的数值，还要写明每个值可能的误差范围；</li>
+<li><strong>整定记录</strong>：按 §46.8.9 的格式，含每次改动前后的四项指标；</li>
+<li><strong>验收曲线</strong>：纯反馈、静态、动态、动态加滤波四条曲线的对照图，这是后续判断“性能是否退化”的基准；</li>
+<li><strong>故障处理卡</strong>：一页纸，写清“前馈退出后怎么办”“测量坏了怎么办”“限幅长期贴着怎么办”；</li>
+<li><strong>假设清单</strong>：<span class="math inline">\tau_d\ge\tau_p</span>、增益比在某区间内、负荷在某范围内——所有让这套参数成立的前提。</li>
+</ol>
+<p>第 6 项最常被漏掉，却最要命。工艺改造（换换热器、加保温、改管线走向）会直接改变 <span class="math inline">\tau_d</span>、<span class="math inline">\tau_p</span> 与增益比，参数表上的数字一个都没变，前馈却已经失效。变更管理里应有一条硬规定：<strong>凡是影响扰动路径或主通道动态的改造，投运前必须重新做双通道辨识</strong>。</p>
+<p>最后一条是习惯问题：把“如何退出前馈”写成操作票，贴在操作室。前馈是开环的，出问题时操作员的第一反应必须是退出它，而不是调它。</p>
+<p>移交包还应随 DCS 组态一起做版本管理：每次改参数留痕，注明改动人、原因与前后指标。没有版本管理的参数表，两年后基本无法追溯——“这个数是谁改的、为什么改”答不上来，等于没有移交。</p>
+<p>工程落地的内容到此为止。下一节把前馈的优缺点摆开，明确它适合什么、不适合什么。</p>
+<h2 id="优缺点与适用边界">46.11 优缺点与适用边界</h2>
+<h3 id="五个优点">46.11.1 五个优点</h3>
+<p><strong>第一，动作早。</strong> 这是前馈唯一的、也是不可替代的优势。反馈必须等误差出现，前馈在扰动测量到的那一刻就能动手。本章 4 s 的时间窗，把峰值从 0.4706 压到 0.2154（静态）甚至 0.0012（动态），靠的就是这 4 s。</p>
+<p><strong>第二，不改变稳定性。</strong> 前馈不进特征方程，<span class="math inline">\omega_c</span>、PM、GM 都不变（本章 0.1441 rad/s、73.49°、14.73 dB）。这意味着可以在一个已经调好的回路上“加装”前馈，而不必重新整定反馈。对不能停产的装置，这一点极为重要。</p>
+<p><strong>第三，作用有针对性。</strong> 反馈对所有扰动一视同仁，前馈只针对它测量的那一个。对于“主要扰动明确、其他扰动很小”的场合，前馈的投入产出比远高于把反馈调快。</p>
+<p><strong>第四，静态前馈极其便宜。</strong> 两个增益、一行乘法，当天就能投运，收益 54%。这是全书所有改进措施里成本最低的一项。</p>
+<p><strong>第五，物理意义清楚。</strong> <span class="math inline">K_{ff}=-K_d/K_p</span>、<span class="math inline">\tau_{ff}=\tau_d-\tau_p</span>、<span class="math inline">T_1/T_2=T_p/T_d</span>，每个参数都能对应到对象的物理量。运行人员能理解，工程师能复核，出了问题能定位。</p>
+<h3 id="五个缺点">46.11.2 五个缺点</h3>
+<p><strong>第一，完全依赖模型。</strong> 增益误差 50% 时，动态前馈的峰值 0.2342，已经不如静态前馈。前馈没有自校正能力，模型错多少，残差就留多少。</p>
+<p><strong>第二，对延迟极其敏感。</strong> 4 s 的 12.5%（0.5 s）就使峰值放大 78 倍；错 2 s 直接不如静态前馈。延迟又偏偏是最难在线辨识的量。</p>
+<p><strong>第三，放大测量噪声。</strong> 不滤波时前馈输出抖动 0.0309，滤波又牺牲峰值。噪声与性能之间没有免费的解。</p>
+<p><strong>第四，占用执行器行程。</strong> 动态前馈峰值 1.654，是静态值 0.667 的 2.5 倍。行程不够，前馈会在最需要它的时候被限幅卡住，收益从 99.7% 掉到 77.3%。</p>
+<p><strong>第五，维护成本高。</strong> 模型会漂移，延迟会变，测量会老化。前馈投运只是开始，后面是长期的核对、校正、重新辨识。</p>
+<h3 id="适用条件清单">46.11.3 适用条件清单</h3>
+<p>前馈能用，需要同时满足六条。缺一条，收益都会大打折扣。</p>
+<ol type="1">
+<li><strong>扰动可测</strong>，且测量点在上游；</li>
+<li><strong>测量滞后</strong>小于 <span class="math inline">\Delta\tau/3</span>；</li>
+<li><strong><span class="math inline">\tau_d\ge\tau_p</span></strong>，即扰动通道不比主通道快；</li>
+<li><strong>两条通道可辨识</strong>，增益与时间常数在 ±10% 内可复现；</li>
+<li><strong>执行器有余量</strong>，至少能提供静态值的 2.5 倍行程；</li>
+<li><strong>有人维护模型</strong>，能定期做双通道试验。</li>
+</ol>
+<p>这六条里，第 3 条是硬约束，不满足就只能做静态前馈或改测量点；第 5 条是物理约束，不满足就只能限幅；其余四条是工程约束，可以通过投入资源改善。</p>
+<h3 id="不适用的六种场景">46.11.4 不适用的六种场景</h3>
+<p><strong>扰动不可测。</strong> 这是最根本的排除条件。负荷、环境温度、原料批次这类“知道存在但测不到”的扰动，只能靠反馈或软测量。</p>
+<p><strong>扰动通道比主通道快。</strong> <span class="math inline">\tau_d&lt;\tau_p</span> 时理想前馈非因果，物理上不可实现。此时前馈只能做静态，或者把测量点前移到真正“提前”的位置。</p>
+<p><strong>测量滞后大于时间窗。</strong> 在线分析仪、取样管长的场合，等测量出来扰动已经作用完，前馈变成“迟到的反馈”，不如不加。</p>
+<p><strong>模型频繁变化且无法在线校正。</strong> 批次生产、原料频繁切换的场合，前馈参数刚整定好就过时，维护成本会超过收益。</p>
+<p><strong>执行器已经饱和。</strong> 阀门长期在 90% 以上开度，前馈没有可用行程，加了也白加，还会加剧饱和。</p>
+<p><strong>多扰动且都不可忽略。</strong> 前馈只能对付它测量的那一个；若同时有三四个量级相当的扰动，需要多路前馈，执行器与调试复杂度都会迅速失控。</p>
+<h3 id="四种结构的选型对照">46.11.5 四种结构的选型对照</h3>
+<p>把第 44–46 章的结构放在一起比较，选型思路会更清楚。</p>
+<table>
+<thead>
+<tr class="header">
+<th>结构</th>
+<th>核心机制</th>
+<th>最适合</th>
+<th>主要代价</th>
+<th>稳定性影响</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>单回路反馈</td>
+<td>误差驱动</td>
+<td>扰动不可测、模型差</td>
+<td>动作晚</td>
+<td>基准</td>
+</tr>
+<tr class="even">
+<td>串级</td>
+<td>快回路压内扰</td>
+<td>副变量可测、内扰频繁</td>
+<td>需副变量测量与整定</td>
+<td>外环特性改变</td>
+</tr>
+<tr class="odd">
+<td>前馈</td>
+<td>扰动测量直接补偿</td>
+<td>主扰动可测、<span class="math inline">\tau_d&gt;\tau_p</span></td>
+<td>依赖模型与延迟</td>
+<td>不变</td>
+</tr>
+<tr class="even">
+<td>复合</td>
+<td>前馈 + 反馈</td>
+<td>主扰动可测且要求高</td>
+<td>前馈的全部代价</td>
+<td>不变</td>
+</tr>
+</tbody>
+</table>
+<p>表 46-14　四种抗扰结构的选型对照</p>
+<p>选型的顺序建议是：先问“主扰动可测吗”，可测且 <span class="math inline">\tau_d&gt;\tau_p</span> 就上前馈；再问“有中间变量可测吗”，有就考虑串级；两者都不满足，就把反馈调到最好，并接受它的物理极限。</p>
+<p>前馈与串级不是互斥的。§46.9.5 已经说明，两者可以叠加成三层结构，但每加一层都要重新辨识、重新验收，复杂度是累加的。</p>
+<h3 id="三条隐含边界">46.11.6 三条隐含边界</h3>
+<p>本章的所有结论都建立在三个前提上，越界时要重新评估。</p>
+<p><strong>线性。</strong> 式 (46-1) 的推导用了叠加原理。若阀门有明显死区、对象增益随负荷变化，前馈的“抵消”只在工作点附近成立。本章的增益调度（§46.9.3）就是为这条边界准备的。</p>
+<p><strong>时不变。</strong> <span class="math inline">K_{ff}</span>、<span class="math inline">T_1</span>、<span class="math inline">T_2</span> 都假设不随时间变。实际对象会结垢、老化，所以需要 §46.9.2 的在线校正。</p>
+<p><strong>单扰动。</strong> 推导只考虑一个 <span class="math inline">d</span>。多扰动时，各路前馈线性叠加，但执行器行程与测量噪声也叠加，实际可用性要重新评估。</p>
+<p>三条边界都不难理解，难的是在投运前想到它们。工程上出问题的前馈，多半不是公式错了，而是越过了其中一条边界却没人察觉。</p>
+<h3 id="什么时候该拆掉前馈">46.11.7 什么时候该拆掉前馈</h3>
+<p>前馈不是装上就必须永久保留的设备。四种情况下，拆掉它（或降级为静态）比继续维护更合理。</p>
+<p><strong>扰动本身消失了。</strong> 工艺改造常会意外消掉扰动源：上游加了缓冲罐，入口温度波动被抹平；管线加了伴热与保温，环境温度不再影响；换了变频泵，压力波动减小。这时前馈仍在“忠实地”补偿一个几乎不存在的扰动，它的输出主要由噪声驱动，反而给阀门增加了无谓的动作。</p>
+<p><strong>模型无法维护。</strong> 一年内做了两次辨识，参数仍然在几个月内漂到验收线以外，说明这个对象的增益比或延迟本身不稳定，超出了开环补偿能覆盖的范围。此时应退回静态前馈（只保留增益比，对动态不敏感），或干脆退回反馈。</p>
+<p><strong>执行器没有余量。</strong> §46.10.6 的限幅时间占比长期超过 5%，且扩容不可行。前馈在关键时刻被限幅，收益已经名存实亡，却仍占用阀门行程、干扰反馈。</p>
+<p><strong>风险大于收益。</strong> 前馈误动作的后果很严重（例如把阀门推到工艺联锁边界），而它带来的峰值改善相对有限。这种场合应把前馈改成“只报警、不动作”的监视模式，或者加更严格的限幅与速率限制。</p>
+<p>拆的方式也有讲究，不要一步切到零：先把动态降为静态（只留 <span class="math inline">K_{ff}</span>），观察一个周期；确认无异常后再退出。测量回路建议保留，作为扰动报警与后续分析的输入——拆掉的是补偿，不是信息。</p>
+<p><strong>降级不是失败。</strong> 从动态退回静态、从静态退回反馈，都是根据对象可维护性做出的合理工程判断。真正不该发生的是“参数早就失效，却因为没人敢动而一直挂着”——那才是前馈最容易造成的隐性损失。</p>
+<h3 id="新回路的六问判别顺序">46.11.8 新回路的六问判别顺序</h3>
+<p>把本章的判断压缩成一个可以照着走的顺序，遇到新回路时按这六问问下去，每一步的“否”都对应一个明确的退路。</p>
+<p><strong>一问：扰动可测吗？</strong> 不可测就停在这里，改用反馈、串级或观测器（§46.2.9），不要试图“用模型猜”。</p>
+<p><strong>二问：测量比扰动到达早吗？</strong> 要求 <span class="math inline">\tau_m&lt;(\tau_d-\tau_p)/3</span>。不满足就先改测点或换仪表（§46.3.9），改不了就停。</p>
+<p><strong>三问：执行器有 2.5 倍余量吗？</strong> 没有就只做静态前馈（§46.7.6），或者先扩容。</p>
+<p><strong>四问：扰动主要是慢变吗？</strong> 是，静态前馈就够（§46.3.5），不必上动态。</p>
+<p><strong>五问：有人能维护动态模型吗？</strong> 没有就停在静态。动态前馈的收益会被模型漂移吃掉，而维护成本是长期的（§46.9.1）。</p>
+<p><strong>六问：需要参考前馈吗？</strong> 先算一遍表 46-12 那样的对比。本章对象不需要；只有设定值频繁大幅变化、执行器余量充足、工艺更看重跟踪速度时才考虑。</p>
+<p>六问都通过，才进入 §46.3 的六步设计与 §46.8 的整定。这个顺序的价值在于：<strong>它把“能不能做”放在“做得多好”之前</strong>，而现场失败的回路，绝大多数是跳过了前两问。</p>
+<h3 id="本章结论">46.11.9 本章结论</h3>
+<p>前馈控制的价值可以用一句话概括：<strong>它把“等误差出现再纠正”变成“在扰动到达之前就抵消”</strong>。本章用 4 s 的时间窗，换来了峰值 99.7% 的下降；代价是对模型、延迟、测量、执行器的全面依赖。</p>
+<p>对工程实践，最重要的三条结论是：</p>
+<p>第一，<strong>先做静态前馈</strong>。两个增益、54% 收益、不改变稳定性，没有理由跳过。</p>
+<p>第二，<strong>延迟比增益更重要</strong>。0.5 s 的延迟误差就能抹掉大半收益，而它又最容易被忽略。投运时把细扫延迟放在调形状之前。</p>
+<p>第三，<strong>前馈不替反馈负责</strong>。它不改裕度、不做稳态校正、不处理不可测扰动。前馈做得再好，反馈仍要按原裕度稳定运行。</p>
+<p>本章与第 47 章有一层对照关系。前馈是“用模型提前算出一个控制动作”，因为它有一个可测的扰动源；Smith 预估器则是“用模型把纯滞后搬到闭环之外”，它面对的是不可测的滞后，只能让模型在内部先跑一遍。两者都靠模型精度吃饭，也都会在模型失配时明显退化，但失效方式不同：前馈的模型误差表现为“补多补少”，不改变稳定性；Smith 的模型误差会让被搬走的滞后重新回到闭环里，直接影响稳定裕度。把这两章放在一起读，会对“模型在控制里到底起什么作用”有更完整的理解。</p>
+<p>§46.12 给出本章全部仿真的代码结构与阅读方法，读者可以据此复现每一个数字。</p>
+<h2 id="python-仿真代码">46.12 Python 仿真代码</h2>
+<p>本章所有数字都可以在本机复现，不依赖任何外部数据。这一节说明代码的组织方式、接口含义与阅读顺序，读者据此可以逐个复核正文中的指标，也可以把自己的对象参数换进去。</p>
+<h3 id="文件与运行">46.12.1 文件与运行</h3>
+<p>三个位置分工明确：</p>
+<ul>
+<li><code>code/ch046_sim.py</code>：对象参数、离散化工具、<code>simulate()</code>、指标函数、频域函数，以及 <code>main()</code> 的十三段输出。正文里的每一个峰值、IAE、恢复时间都来自它的终端输出。</li>
+<li><code>code/ch046_figs.py</code>：调用 <code>ch046_sim.py</code> 里的函数生成十张图，每张同时输出 svg 与 pdf，统一放在 <code>figs/ch046/</code>，文件名形如 <code>fig_046_03_dist_compare.svg</code>。</li>
+<li><code>figs/ch046/</code>：正文引用的十张图，编号 46-1 至 46-10 与文件名中的序号一一对应。</li>
+</ul>
+<p>运行方式（Windows，py311 环境）：</p>
+<pre><code>&quot;D:\Anaconda3\envs\py311\python.exe&quot; code\ch046_sim.py
+&quot;D:\Anaconda3\envs\py311\python.exe&quot; code\ch046_figs.py</code></pre>
+<p>依赖只有三个外部库：<code>numpy</code>、<code>control</code>、<code>matplotlib</code>；<code>simlib</code> 是本书自带的工具模块，提供 <code>step_metrics</code> 等指标函数，与前面各章口径一致。整章仿真在普通笔记本上几秒内跑完，可以放心反复改参数。</p>
+<h3 id="为什么不用-simlib-的单回路接口">46.12.2 为什么不用 simlib 的单回路接口</h3>
+<p><code>simlib</code> 的单回路接口适合“一个控制器加一个对象”的结构，本章需要的四件事它表达不了：</p>
+<ol type="1">
+<li>前馈支路与反馈支路要分别记录，才能画出图 46-3 下半幅的 <span class="math inline">u_{ff}</span>；</li>
+<li>纯延迟只能加在前馈通道上，对象自身的延迟另算；</li>
+<li>限幅只能加在前馈支路，不能把 <span class="math inline">u_{fb}+u_{ff}</span> 一起限（§46.8.8 第 4 条错误）；</li>
+<li>参考前馈是第三路信号，与反馈、扰动前馈在同一个求和点相加。</li>
+</ol>
+<p>所以 <code>simulate()</code> 自己写了逐步循环。对象仍用 ZOH 离散（<code>control.c2d</code>），与 <code>simlib</code> 的口径一致；设定值跟踪指标直接复用 <code>sl.step_metrics</code>，保证与第 44、45 章的数字可比。</p>
+<h3 id="simulate-的接口">46.12.3 simulate() 的接口</h3>
+<p><code>simulate()</code> 有十九个参数，按用途分三组。表 46-15 给全貌。</p>
+<table>
+<thead>
+<tr class="header">
+<th>参数</th>
+<th>默认值</th>
+<th>作用</th>
+<th>正文对应</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>cascade_ff</code></td>
+<td><code>"none"</code></td>
+<td>选择 <code>"none"</code>/<code>"static"</code>/<code>"dynamic"</code></td>
+<td>§46.4.1</td>
+</tr>
+<tr class="even">
+<td><code>k_ff</code></td>
+<td><span class="math inline">-0.6667</span></td>
+<td>前馈静态增益，改它即制造增益失配</td>
+<td>§46.4.3、§46.4.4</td>
+</tr>
+<tr class="odd">
+<td><code>t_lead</code>、<code>t_lag</code></td>
+<td>10、4</td>
+<td>超前-滞后的两个时间常数</td>
+<td>§46.7.3</td>
+</tr>
+<tr class="even">
+<td><code>tau_f</code></td>
+<td>0</td>
+<td>前馈通道一阶滤波时间常数</td>
+<td>§46.7.5、§46.9</td>
+</tr>
+<tr class="odd">
+<td><code>ff_limit</code></td>
+<td><code>None</code></td>
+<td>前馈输出限幅，元组 <code>(lo, hi)</code></td>
+<td>§46.7.6</td>
+</tr>
+<tr class="even">
+<td><code>ref_ff</code>、<code>tau_r</code></td>
+<td><code>False</code>、0</td>
+<td>参考前馈开关与其设定值滤波</td>
+<td>§46.7.8、§46.9.4</td>
+</tr>
+<tr class="odd">
+<td><code>Ts</code>、<code>N</code></td>
+<td>0.05、2400</td>
+<td>采样周期与总拍数，<span class="math inline">2400\times0.05=120</span> s</td>
+<td>§46.5.4</td>
+</tr>
+<tr class="even">
+<td><code>t0</code>、<code>dist_amp</code></td>
+<td>40、<span class="math inline">-1.0</span></td>
+<td>扰动加入时刻与幅值</td>
+<td>全章</td>
+</tr>
+<tr class="odd">
+<td><code>ref</code></td>
+<td>1.0</td>
+<td>设定值，扰动实验里保持不变</td>
+<td>§46.7.8</td>
+</tr>
+<tr class="even">
+<td><code>noise</code>、<code>seed</code></td>
+<td>0、0</td>
+<td>扰动测量的高斯噪声标准差与随机种子</td>
+<td>§46.7.5、§46.10.7</td>
+</tr>
+<tr class="odd">
+<td><code>k_p</code>、<code>k_d</code></td>
+<td>1.2、0.8</td>
+<td><strong>对象真值</strong>，改它即制造对象失配</td>
+<td>§46.4.4</td>
+</tr>
+<tr class="even">
+<td><code>kc</code>、<code>ti</code></td>
+<td>1.2、10</td>
+<td>反馈 PI 的增益与积分时间</td>
+<td>§46.7.7、§46.8.7</td>
+</tr>
+</tbody>
+</table>
+<p>表 46-15　<code>simulate()</code> 的参数与正文对应</p>
+<p>三组参数的用法要分清。第一组决定<strong>结构</strong>，<code>cascade_ff</code> 一次只选一种，比较不同方案就是换这个值；第二组是<strong>前馈整定</strong>的重点，也是全书反复讨论的五个量；第三组是<strong>仿真环境</strong>，其中 <code>k_p</code>、<code>k_d</code> 是对象真值——想制造模型失配，改它们，而不是改 <code>k_ff</code>。这一点很容易搞反：改 <code>k_ff</code> 是“设计错了”，改 <code>k_p</code>、<code>k_d</code> 是“对象变了、设计没跟上”，两者在 §46.4.4 里是同一件事的两种说法，但在代码里必须区分清楚，否则无法复现“前馈按名义值设计、对象已漂移”的场景。</p>
+<h3 id="主循环的时序">46.12.4 主循环的时序</h3>
+<p>逐步循环里，每一拍的顺序固定为六步，顺序本身就是设计的一部分：</p>
+<ol type="1">
+<li><strong>算输出</strong>：<span class="math inline">y_k</span> 由两个对象的状态直接相加得到，此时对象还没推进，所以这一步读的是“上一拍作用后的结果”；</li>
+<li><strong>先算设定值通道</strong>：<code>ref_ff</code> 打开时，先由 <span class="math inline">\tau_r</span> 滤波得到 <span class="math inline">r_f</span>，再取 <span class="math inline">u_{ref}=r_f/K_p</span>，同时把 <span class="math inline">r_f</span> 作为反馈的设定值 <code>r_eff</code>。<strong>这一步必须在误差之前</strong>，否则参考前馈用的是本拍设定值、反馈用的是上拍设定值，两者错开一拍；</li>
+<li><strong>算反馈</strong>：<span class="math inline">u_{fb}=K_c e+K_i x_i</span>，其中 <span class="math inline">e=r_{eff}-y_k</span>；</li>
+<li><strong>算前馈</strong>：先从延迟缓冲区取 <span class="math inline">d_{ff,k}</span>，送超前-滞后的状态方程，得到 <span class="math inline">u_{ff}</span>；再依次过一阶滤波与限幅。滤波用的是上一拍的输出 <code>uff_seq[k-1]</code>，系数 <span class="math inline">\alpha=T_s/(\tau_f+T_s)</span>，与连续域的一阶惯性对应；</li>
+<li><strong>相加输出</strong>：<span class="math inline">u_k=u_{fb}+u_{ff}+u_{ref}</span>，三条支路都在这一拍合成；</li>
+<li><strong>推进</strong>：积分器累加 <span class="math inline">T_s e</span>，主通道用 <span class="math inline">u_{k-n_p}</span> 作为输入（前 <span class="math inline">n_p</span> 拍补零），扰动通道用已经延迟 <span class="math inline">n_d</span> 拍的 <span class="math inline">d</span>。</li>
+</ol>
+<p>第 6 步里“主通道用 <span class="math inline">u_{k-n_p}</span>”是延迟的另一种写法：不在对象内部设延迟，而是让输入回到历史缓冲区取值。这样对象的离散状态方程保持一阶、干净，纯延迟的拍数也可以随时改——§46.6.2 的延迟扫描就是这么做的。</p>
+<p>还有一处是刻意简化的：积分器没有抗饱和。原因是本章的扰动幅值小、前馈又削掉了大部分偏差，积分器几乎不会长时间饱和；把抗饱和加进来会让“前馈与反馈的配合”这一主题变得难以分离。真实工程必须加，§46.9.6 与 §46.10.4 给的是工程做法，不在仿真里体现。</p>
+<h3 id="三个工具函数">46.12.5 三个工具函数</h3>
+<p>全部离散化工作由三个短函数完成，每个都对应正文的一条纪律。</p>
+<p><code>_ss(sys, Ts)</code> 把连续传递函数转成 ZOH 离散状态空间四元组。逐步循环里需要的是 <span class="math inline">x_{k+1}=Ax_k+Bu_k</span> 这种矩阵形式，状态空间比传递函数少一次转换；<code>control.c2d</code> 与 <code>simlib</code> 用的是同一个方法，因此本章与前面各章的对象离散化口径一致。</p>
+<p><code>_leadlag(gain, t_lead, t_lag, Ts)</code> 构造 <span class="math inline">K(T_1s+1)/(T_2s+1)</span> 的离散四元组。分子写成 <code>[gain*t_lead, gain]</code>，顺序不能反；若写成 <code>[gain, gain*t_lead]</code>，直流增益会变成无穷大，仿真一开始就发散。构造完可以顺手核一次直流增益：<span class="math inline">z=1</span> 处应等于 <code>gain</code>，这是 §46.5.3 那条纪律的代码版。</p>
+<p><code>_delay(seq, n)</code> 是整数拍延迟，<code>out[:n]</code> 用初值填充、<code>out[n:]</code> 取 <code>seq[:-n]</code>。前 <span class="math inline">n</span> 拍填初值而不是零，对应“仿真从稳态开始”的假设：对象初始为零、扰动初始也为零，填初值与填零等价；若扰动初值不为零（例如研究一段已有的偏差），则应改成零填充，否则会凭空多出一段延迟后的阶跃。</p>
+<h3 id="两个指标函数的口径">46.12.6 两个指标函数的口径</h3>
+<p><code>dist_metrics()</code> 计算扰动响应的四个量：峰值偏差、IAE、恢复时间、执行器最大偏移。口径上有三处必须注意。</p>
+<p><strong>基线取 <span class="math inline">t_0</span> 前一拍的值</strong>，不是取零。本章设定值为 1.0，若用零做基线，峰值会变成设定值本身（约 1.0），扰动造成的 0.47 变化被完全淹没。这也是为什么扰动实验里必须让设定值保持不变：基线一旦漂移，指标就失去意义。</p>
+<p><strong>恢复时间取“最后一次越界”的时刻</strong>，不是“第一次进入 <span class="math inline">\pm2\%</span> 带的时刻”。前者对噪声与二次回升更稳健；后者一旦曲线短暂穿过带又出去，会给出一个虚假的短恢复时间。</p>
+<p><strong>窗口取 60 s</strong>，必须覆盖整个拖尾。本章静态前馈的恢复时间 44.95 s 已经接近窗口上限；若把窗口缩到 40 s，它会因为“窗口结束时仍在带外”被判为 <code>nan</code>，而不是给出一个偏小的数。读表时看到 <code>nan</code>，先查窗口，再查控制器。</p>
+<p><code>ref_metrics()</code> 直接复用 <code>simlib.step_metrics</code>，返回 <code>overshoot</code>、<code>rise_time</code>、<code>settling_time</code> 三个键。注意键名是 <code>settling_time</code> 而不是 <code>settle_time</code>，写错会直接抛 <code>KeyError</code>——这是本章代码调试时踩过的一个坑，写在这里省得读者再踩一次。</p>
+<h3 id="频域函数与一个符号陷阱">46.12.7 频域函数与一个符号陷阱</h3>
+<p><code>ff_freq()</code> 给出前馈通道自身的幅频与相频，用来解释图 46-10 里“前馈是一个高通形状”这件事：超前-滞后在低频增益为 1，在高频增益趋于 <span class="math inline">T_1/T_2=2.5</span>，因此扰动测量里的高频噪声会被放大 2.5 倍送到阀门。</p>
+<p><code>residual_freq()</code> 直接按复数算残差的模：</p>
+<p><span class="math display">
+\lvert E(j\omega)\rvert=\lvert G_d(j\omega)+G_{ff}(j\omega)G_p(j\omega)\rvert
+</span></p>
+<p>这里有一个反复出现的符号陷阱。<span class="math inline">G_{ff}</span> 的定义里已经含负号（<span class="math inline">-K_d/K_p</span>），所以残差是“<strong>加</strong>”而不是“减”。若写成 <span class="math inline">G_d-G_{ff}G_p</span>，模型准确时会算出 <span class="math inline">2\lvert G_d\rvert</span> 的残差，图上看起来像“前馈把扰动放大了一倍”——这个错误在讲义与论文里都不止出现过一次。判断自己有没有写错，最快的办法是看 <span class="math inline">\omega\to0</span> 的极限：正确写法应趋于零，写错则趋于 <span class="math inline">2\lvert K_d\rvert</span>。</p>
+<p>同一个函数里还有一处容易漏：<span class="math inline">G_{ff}</span> 必须带上 <span class="math inline">e^{-(\tau_d-\tau_p)s}</span>。漏掉延迟项，低频残差会凭空变大，而且相位曲线会整体平移，看起来像“模型不准”，实际是代码少了一项。</p>
+<h3 id="十三段输出与正文的对应">46.12.8 十三段输出与正文的对应</h3>
+<p><code>main()</code> 从基线到参数配合共十三段，每段对应正文的一处结论。表 46-16 是索引。</p>
+<table>
+<thead>
+<tr class="header">
+<th>段</th>
+<th>内容</th>
+<th>对应正文</th>
+<th>关键输出</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>一</td>
+<td>纯反馈基线</td>
+<td>§46.4.1</td>
+<td>Mp 0.00%、<span class="math inline">t_r</span> 10.068 s、峰值 0.4706</td>
+</tr>
+<tr class="even">
+<td>二</td>
+<td>四方案对比</td>
+<td>§46.4.1</td>
+<td>0.2154 / 0.0012 / 0.1256</td>
+</tr>
+<tr class="odd">
+<td>三</td>
+<td>静态增益扫描</td>
+<td>§46.4.3</td>
+<td>峰值最优 <span class="math inline">-0.9</span>，IAE 最优 <span class="math inline">-0.667</span></td>
+</tr>
+<tr class="even">
+<td>四</td>
+<td>增益失配</td>
+<td>§46.4.4</td>
+<td>0.2342 与 0.2365</td>
+</tr>
+<tr class="odd">
+<td>五</td>
+<td>延迟扫描</td>
+<td>§46.6.2</td>
+<td>0.5 s 偏差即 0.0938</td>
+</tr>
+<tr class="even">
+<td>六</td>
+<td>参考前馈</td>
+<td>§46.7.8</td>
+<td>Mp 22.72% 至 0.01%</td>
+</tr>
+<tr class="odd">
+<td>七</td>
+<td>采样周期</td>
+<td>§46.5.4</td>
+<td>0.0012 至 0.0578</td>
+</tr>
+<tr class="even">
+<td>八</td>
+<td>测量噪声</td>
+<td>§46.7.5</td>
+<td>std 0.0045（<span class="math inline">\tau_f=1</span> s）</td>
+</tr>
+<tr class="odd">
+<td>九</td>
+<td>前馈限幅</td>
+<td>§46.7.6</td>
+<td>0.1066（限到 1.0）</td>
+</tr>
+<tr class="even">
+<td>十</td>
+<td>前馈频响</td>
+<td>§46.6.3</td>
+<td>低频 0.667、高频 1.667</td>
+</tr>
+<tr class="odd">
+<td>十一</td>
+<td>残差频响</td>
+<td>§46.6.3</td>
+<td>峰值放大 78 倍、IAE 放大 22 倍</td>
+</tr>
+<tr class="even">
+<td>十二</td>
+<td>闭环裕度</td>
+<td>§46.6.1</td>
+<td>PM 73.49°、GM 14.73 dB</td>
+</tr>
+<tr class="odd">
+<td>十三</td>
+<td>反馈参数配合</td>
+<td>§46.7.7</td>
+<td>复合峰值 0.0012 对纯反馈 0.4706</td>
+</tr>
+</tbody>
+</table>
+<p>表 46-16　<code>main()</code> 十三段输出与正文的对应</p>
+<p>建议的阅读顺序不是从第一段读到最后，而是：先看第一、二段建立基线（纯反馈有多差、前馈能好多少），再看第十二段确认“前馈没有改变裕度”这个前提，然后按第五、四、八、九段的顺序看四类失配——顺序按“最敏感→最不敏感”排，与表 46-7 一致；最后看第十三段，理解反馈参数为什么要按裕度而不是按复合峰值整定。</p>
+<p>第十一段常有读者疑惑：为什么峰值放大 78 倍而 IAE 只放大 22 倍？原因是残差通道是高通形状，它把误差集中在扰动到达后的很短一段时间里；峰值只看那一个点，IAE 却把整段时间积分平均。两张口径的差别正是 §46.6.3 的结论。</p>
+<h3 id="复现与三个扩展练习">46.12.9 复现与三个扩展练习</h3>
+<p>复现只需两条命令（§46.12.1）。若想验证自己对参数的理解，建议做三个练习，每个都能用现有接口完成，不需要改代码。</p>
+<p><strong>练习一：把采样放慢。</strong> 令 <code>Ts=0.5</code>，总拍数改成 <code>N=240</code>，其余不动，重跑第二段。结果应与表 46-5 的 0.0142 一致。这个练习的目的是确认“采样变慢不等于前馈失效”。</p>
+<p><strong>练习二：把阀门关小。</strong> 加 <code>ff_limit=(0.0, 1.0)</code>，重跑第二段，峰值应为 0.1066。再把限幅放到 <code>(0.0, 0.667)</code>，峰值回到静态前馈的水平。这个练习验证“动态前馈的收益依赖执行器余量”。</p>
+<p><strong>练习三：让对象漂移。</strong> 把 <code>k_d</code> 改成 0.4（名义值仍是 0.8，前馈不变），重跑第四段。峰值应为 0.2342 左右，与 <span class="math inline">\kappa=1.5</span> 时的 0.2365 基本对称——因为残差按 <span class="math inline">\lvert1-\kappa\rvert</span> 成比例。这个练习是理解“在线校正为什么必要”的最短路径。</p>
+<p>若要把 <code>simulate()</code> 嵌进参数搜索，有两点需要注意。第一，<strong>先固定采样周期与反馈参数</strong>（<code>Ts</code>、<code>kc</code>、<code>ti</code>），只搜索前馈的 <span class="math inline">K_{ff}</span>、<span class="math inline">\tau_f</span> 与延迟拍数；否则维度上升，网格很快失去意义。第二，<strong>先筛硬约束再排序</strong>：把“峰值不超过 0.2”“前馈峰值不超过阀门行程”作为过滤条件，再在通过的组合里按 IAE 排序。直接按 IAE 排序容易选出“峰值很低但阀门早已饱和”的组合，那种解在现场无法投运。</p>
+<p>延迟拍数不在 <code>simulate()</code> 的参数表里，它由 <span class="math inline">n_{ff}=n_d-n_p</span> 自动算出；要做延迟方向的搜索，需参照 <code>_delay_scan_sim()</code> 的写法，把 <span class="math inline">n_{ff}</span> 提成一个可选参数（默认值仍为 <span class="math inline">n_d-n_p</span>）。该函数单独复制了一遍主循环，就是因为最初没有预留这个参数——这也算一处可以改进的地方，读者不妨把它合并回 <code>simulate()</code>。</p>
+<p>代码讲完，本章也就结束了。不同版本的 <code>numpy</code> 与 <code>control</code> 在末位可能有微小差异，但四位有效数字应当一致；若某一行对不上，先查采样周期与总拍数，再查是否改过默认参数。回到最初的问题：前馈值不值得做？答案是——<strong>只要扰动可测、测量够早、模型可维护，它就是用最小代价换最大峰值改善的手段；三条缺一条，就应该退回静态前馈或纯反馈</strong>。本章的 4 s 时间窗、0.4706 到 0.0012 的对比，说的都是这件事。</p>
+
+<nav class="footnav"><a href="ch045.html">← 上一章</a><a href="index.html">返回目录</a><a href="ch047.html">下一章 →</a></nav>
+</body>
+</html>

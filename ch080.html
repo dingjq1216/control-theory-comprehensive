@@ -1,0 +1,1393 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="zh-CN" xml:lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>第 80 章　学习增强的模型预测控制 · 控制大综合</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    span.underline{text-decoration: underline;}
+    div.column{display: inline-block; vertical-align: top; width: 50%;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    ul.task-list{list-style: none;}
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+  <link rel="stylesheet" href="assets/book.css" />
+  <script src="assets/katex/katex.min.js"></script>
+  <script>document.addEventListener("DOMContentLoaded", function () {
+   var mathElements = document.getElementsByClassName("math");
+   var macros = [];
+   for (var i = 0; i < mathElements.length; i++) {
+    var texText = mathElements[i].firstChild;
+    if (mathElements[i].tagName == "SPAN") {
+     katex.render(texText.data, mathElements[i], {
+      displayMode: mathElements[i].classList.contains('display'),
+      throwOnError: false,
+      macros: macros,
+      fleqn: false
+     });
+  }}});
+  </script>
+  <link rel="stylesheet" href="assets/katex/katex.min.css" />
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+  <link rel="stylesheet" href="assets/site.css" />
+</head>
+<body>
+<nav class="topnav"><a class="home" href="index.html">目录</a><span class="pos">080 / 115</span><span class="pager"><a href="ch079.html">上一章</a><a href="ch081.html">下一章</a></span></nav>
+
+<nav id="TOC" role="doc-toc">
+<ul>
+<li><a href="#第-80-章-学习增强的模型预测控制">第 80 章 学习增强的模型预测控制</a>
+<ul>
+<li><a href="#动机与直观理解">80.1 动机与直观理解</a></li>
+<li><a href="#数学原理">80.2 数学原理</a></li>
+<li><a href="#设计步骤">80.3 设计步骤</a></li>
+<li><a href="#连续情形">80.4 连续情形</a></li>
+<li><a href="#离散情形">80.5 离散情形</a></li>
+<li><a href="#稳定性与性能">80.6 稳定性与性能</a></li>
+<li><a href="#参数意义与作用">80.7 参数意义与作用</a></li>
+<li><a href="#调参方法与经验">80.8 调参方法与经验</a></li>
+<li><a href="#优化与改进">80.9 优化与改进</a></li>
+<li><a href="#工程落地">80.10 工程落地</a></li>
+<li><a href="#优缺点与适用边界">80.11 优缺点与适用边界</a></li>
+<li><a href="#python-仿真代码">80.12 Python 仿真代码</a></li>
+</ul></li>
+</ul>
+</nav>
+<h1 id="第-80-章-学习增强的模型预测控制">第 80 章 学习增强的模型预测控制</h1>
+<h2 id="动机与直观理解">80.1 动机与直观理解</h2>
+<p>模型预测控制（MPC）的全部结论都挂在一个前提上：预测模型足够准。第 58 章推导滚动优化时，把对象写成 <span class="math inline">\dot x=f(x)+g(x)u</span>，并默认 <span class="math inline">f</span>、<span class="math inline">g</span> 已知。真实系统里这句话很少成立：摩擦、气动阻尼、未标定的力场、负载变化，都不在名义模型里。它们不会让 MPC 立刻失效，而是让“预测的最优”和“实际的最优”逐渐分叉——约束算得刚刚好，实际却贴边；代价算得最小，实际却绕远。</p>
+<p>学习增强的 MPC 要解决的就是这个分叉。它的做法不是用一个神经网络替换整个控制器，而是在 MPC 的三处关键位置上，用数据补上模型不知道的那一块。这一节先把这个分叉写成一个可量化的算例，再说明三处插入点分别补什么。</p>
+<h3 id="一个具体的失效模型不知道的那部分">80.1.1 一个具体的失效：模型不知道的那部分</h3>
+<p>本章的算例是一个二维质点，状态是位置与速度，控制是加速度：</p>
+<p><span class="math display">
+\dot p=v,\qquad \dot v=u+f_r(p,v)
+\tag{80-1}
+</span></p>
+<p>其中 <span class="math inline">f_r</span> 是名义模型完全不知道的残差：</p>
+<p><span class="math display">
+f_r(p,v)=-c_d\|v\|v+\begin{bmatrix}a_f\sin(1.4p_x)\cos(1.1p_y)\\ a_f\cos(1.1p_x)\sin(1.4p_y)\end{bmatrix}
+\tag{80-2}
+</span></p>
+<p>第一项是二次阻尼，系数 <span class="math inline">c_d=0.35</span>；第二项是一个幅值 <span class="math inline">a_f=0.6</span> m/s² 的位置相关力场。名义模型只保留双积分器，也就是令 <span class="math inline">f_r\equiv0</span>。</p>
+<p>这两个数字不大，但它们与执行器能力的关系决定了问题的严重程度。本章取各轴加速度上限 <span class="math inline">u_{max}=3</span> m/s²，残差在整个工作空间内的一步均方根是 1.195 m/s²，相当于用掉了 40% 的控制权限。换句话说，名义 MPC 每算一次“该用多大加速度”，就有近一半的预算花在它看不见的地方。</p>
+<p>后果不必靠推理，仿真直接给出：让同一个 MPC 跟踪半径 1.2 m、角速度 0.6 rad/s 的圆周参考，名义模型的稳态跟踪误差是 7.19 cm，最大 7.85 cm。这个量级在多数巡检、搬运任务里已经不可接受——它不是随机噪声，而是持续偏向圆外的系统性偏差：轨迹的平均半径是 1.252 m，比参考多出 5 cm，同时还有相位滞后。阻尼持续偷走切向速度，未建模的力场又整体把轨迹向外推，两者叠加成这个偏差，而 MPC 对它们一无所知。</p>
+<p>把残差学出来再送回 MPC，同一个控制器、同一组权重、同一个时域，误差降到 1.71 cm。<strong>改动只有一处：预测时每一步多加一个由数据学出来的加速度项。</strong> 这就是本章要讲的全部技术的核心，剩下的都是围绕它的工程细节。</p>
+<h3 id="三处可以插入学习的位置">80.1.2 三处可以插入学习的位置</h3>
+<p>学习不是只有“学模型”一条路。按插入位置分，至少有三处，它们补的东西不同，代价也不同（图 80-1）。</p>
+<p>第一处是<strong>预测模型</strong>。用数据学 <span class="math inline">f_r</span>，让 MPC 的预测更接近真实。这是最直接、收益最确定的一处，也是本章篇幅最多的部分。它的代价是每次求解要多算 <span class="math inline">N</span> 次模型推理（<span class="math inline">N</span> 是预测时域）。</p>
+<p>第二处是<strong>终端代价</strong>。MPC 只优化有限时域，时域末尾的状态需要一个“未来还值多少钱”的估计，这就是终端代价矩阵 <span class="math inline">P</span>。经典做法是解离散 Riccati 方程，但它只对二次型代价、无约束线性系统精确。代价非二次、约束频繁激活时，<span class="math inline">P</span> 应该由数据学。这一处的代价最小——终端代价是离线学的，在线只多一个矩阵。</p>
+<p>第三处是<strong>优化器的初值</strong>。MPC 每个周期都要解一个优化问题，热启动能显著减少迭代。传统热启动用上一周期的解平移一位；用数据学一个“状态到首步控制”的映射，可以直接给出更好的初值。这一处不改变最优解，只改变求解速度，因此风险最低，收益取决于求解器。</p>
+<p>三处的共同点是：<strong>学习模块都只是“插件”，不改变 MPC 的骨架</strong>。约束还是那些约束，滚动优化的逻辑还是那一套，安全性仍然由约束保证。这一点很重要，它让学习部分可以被单独替换、单独验证、单独回滚。</p>
+<figure>
+<img src="figs/ch080/fig_080_01_three_insertions.svg" alt="图 80-1　学习增强 MPC 的三处插入点" /><figcaption aria-hidden="true">图 80-1　学习增强 MPC 的三处插入点</figcaption>
+</figure>
+<h3 id="本章算例与一句话核心">80.1.3 本章算例与一句话核心</h3>
+<p>为了让数字可复现，本章固定一套设置：采样周期 <span class="math inline">T_s=0.1</span> s，预测时域 <span class="math inline">N=15</span>（即前瞻 1.5 s），控制上限 <span class="math inline">\pm3</span> m/s²，状态权重 <span class="math inline">Q=\mathrm{diag}(10,10,1,1)</span>，输入权重 <span class="math inline">R=0.1I</span>。参考是圆周，仿真 12 s，共 120 个控制周期。所有数字来自 <code>code/ch080_sim.py</code>，图来自 <code>code/ch080_figs.py</code>。</p>
+<p>一句话核心可以这样表述：<strong>学习增强的 MPC 不是“用学习替代模型”，而是“用数据补上模型误差，并让这个补丁的误差可以被量化、被约束、被验证”。</strong> 三个动词分别对应本章的三条主线——补上（§80.2 的形式）、量化（§80.4 的置信界）、验证（§80.6 与 §80.10 的检查）。</p>
+<p>需要强调的是“补丁”这个词的贬义不该被继承。残差学习的效果完全可能超过重新辨识一个全局非线性模型，因为残差通常比原函数更平滑、幅值更小、更容易被有限的数据覆盖。本章的算例里，200 个采样点学出的 RBF 就把 20 步预测误差从 75.47 cm 压到 16.06 cm（GP），而训练数据只覆盖了 <span class="math inline">[-2,2]^2</span> 的位置范围。</p>
+<h3 id="学习不是替代-mpc">80.1.4 学习不是替代 MPC</h3>
+<p>有必要先划清一条界线：本章不讨论“用强化学习直接学一个策略”这条路。那条路的问题是，策略的性能上界由数据覆盖决定，而安全性与可行性没有结构性的保证；一旦遇到训练分布外的状态，输出没有任何可检查的依据。</p>
+<p>本章的方法保留了 MPC 的全部结构：显式的预测模型、显式的约束、显式的代价。学习只影响“模型准不准”“终端估得不准”“初值好不好”，不影响“约束必须满足”这件事。因此第 58 章关于递推可行性的结论仍然可用，第 79 章的安全滤波器仍然可以串在后面。这种“结构不动、参数变准”的组合，是工业场景里更容易被接受的一种增强方式。</p>
+<h3 id="残差的四种来源只有两种能这样学">80.1.5 残差的四种来源，只有两种能这样学</h3>
+<p>“残差”是一个笼统的词。按来源分，至少有四类，它们对学习的态度完全不同：</p>
+<p><strong>第一类，静态非线性。</strong> 同一状态、同一输入，残差总是同一个值。本章的阻尼与力场属于这一类。它可以用静态映射 <span class="math inline">f_r(x)</span> 学，而且学得会——这是本章方法的适用对象。</p>
+<p><strong>第二类，未建模的动态。</strong> 残差依赖最近的历史，而不只是当前状态。执行器滞后、传感器滤波、结构振动都属于这一类。用静态映射去学，只能学到它在某种平均工况下的等效值，一旦激励频率变了就失效。正确的做法是把缺失的状态补进 <span class="math inline">x</span>（例如把执行器输出当作状态），而不是加一层网络。</p>
+<p><strong>第三类，参数漂移。</strong> 残差的结构不变，但系数在慢变（负载、磨损、温度）。本章的离线训练只能抓住训练时刻的值；要跟上漂移，必须做 §80.9.5 的在线更新。它的特点是“学得会，但会过期”。</p>
+<p><strong>第四类，随机扰动。</strong> 同一状态重复到达，残差每次都不一样，且均值为零。这一类学不到——你学到的是噪声的均值，而均值接近零；硬学反而会把噪声拟合成结构，让控制器去追不存在的规律。它该由反馈与滤波处理，不是学习的对象。</p>
+<p>区分这四类不需要复杂实验，只要一条：<strong>让系统在同一状态下重复若干次，看残差的一致性</strong>。若重复之间的差异远小于均值（例如小于 20%），属于第一类或第三类，可以学；若差异与均值同量级，属于第四类，不要学；若残差与到达该状态的路径有关（同一状态、不同历史给出不同残差），属于第二类，该扩状态而不是加网络。</p>
+<p>本章的算例是纯第一类，这是它能用 200 个点学到 0.310 m/s² 的根本原因。换成第二类或第四类，同样的方法会失效，而失效的样子很像“过拟合”——这也是很多人误判的地方。</p>
+<h3 id="本章怎么读">80.1.6 本章怎么读</h3>
+<p>十二章的内容可以按三种读法取用。</p>
+<p><strong>工程师读法</strong>：§80.3（五步流程）、§80.5（离散实现的坑）、§80.8（调参）、§80.10（上线与监控）。这四节构成一条从零到上线的路径，其余章节按需查阅。若时间只够读一节，读 §80.3。</p>
+<p><strong>研究者读法</strong>：§80.2（三种参数化与两遍法）、§80.4（连续与离散的取舍）、§80.6（ISS 而非渐近稳定）、§80.9（未做的改进）。这四节讲的是“为什么这样做”，以及“哪里还不严谨”。</p>
+<p><strong>学生读法</strong>：按顺序读，但跳过 §80.10 与 §80.12 的代码细节。§80.1 与 §80.2 建立直觉，§80.3 到 §80.6 是主线，§80.7 与 §80.8 是工程配套，§80.11 收边界。</p>
+<p>三种读法共享一个核心判断：<strong>这一章解决的问题是“模型不准”，不是“没有模型”</strong>。若你的系统连名义模型都没有，该先回去做辨识；若模型已经足够准（残差低于 5%），该去做别的优化。这个判断比任何算法细节都重要。</p>
+<p>当然，保留结构也意味着保留了 MPC 的弱点：它仍然需要在线求解优化问题，仍然受时域长度限制，仍然依赖状态可测。学习不解决这些问题。把学习当成万能药，是这一方向最常见的误用。</p>
+<h2 id="数学原理">80.2 数学原理</h2>
+<p>这一节回答两个问题：残差怎么从数据里取出来，学出来的东西怎么进入 MPC 而不破坏它的凸性。前者是数据处理，后者是结构设计；两者都做对，学习才可能只带来好处。</p>
+<h3 id="残差分解">80.2.1 残差分解</h3>
+<p>把真实对象写成“名义模型 + 残差”的形式：</p>
+<p><span class="math display">
+x_{k+1}=Ax_k+Bu_k+B_r f_r(x_k),\qquad B_r=\begin{bmatrix}0\\T_sI\end{bmatrix}
+\tag{80-3}
+</span></p>
+<p>名义模型是 <span class="math inline">A</span>、<span class="math inline">B</span> 对应的双积分器，<span class="math inline">f_r</span> 是待学的加速度残差。<span class="math inline">B_r</span> 只作用在速度通道，这一点决定了后面所有的推导：残差不能直接移动位置，只能通过速度间接影响位置。</p>
+<p>残差的标签不需要额外的传感器，用相邻两拍的状态差分就能算：</p>
+<p><span class="math display">
+r_i=\frac{v_{i+1}-v_i}{T_s}-u_i
+\tag{80-4}
+</span></p>
+<p>式 (80-4) 看起来是“用差分代替微分”，实际误差很小：本章 <span class="math inline">T_s=0.1</span> s，速度在一个周期内的变化是 <span class="math inline">O(T_s)</span>，差分误差是 <span class="math inline">O(T_s^2)</span>，与残差本身的量级相比可以忽略。真正需要注意的是时间对齐——<span class="math inline">v_{i+1}</span> 必须与 <span class="math inline">u_i</span> 对应同一个控制周期，错一拍会让标签里混进 <span class="math inline">\dot u</span> 的信息，学出来的模型在控制量突变时会明显失真。</p>
+<p>采集时要保证激励充分。若数据全部来自一条平稳轨迹，<span class="math inline">f_r</span> 只在轨迹经过的窄带上被采样，模型在带外只能靠外推。本章的做法是在位置 <span class="math inline">[-2,2]^2</span>、速度 <span class="math inline">[-2,2]^2</span> 内均匀采样 200 个状态，每个状态配一个随机控制量，这样得到的标签覆盖了整个工作空间。</p>
+<h3 id="两种参数化rbf-与-gp">80.2.2 两种参数化：RBF 与 GP</h3>
+<p>RBF 网络把残差写成一组基函数的线性组合：</p>
+<p><span class="math display">
+\hat f_r(x)=\sum_{j=1}^{K}w_j\exp\!\left(-\frac{\|x-c_j\|^2}{2\sigma^2}\right)
+\tag{80-5}
+</span></p>
+<p>中心 <span class="math inline">c_j</span> 从训练数据中随机选取，宽度 <span class="math inline">\sigma</span> 是超参，输出权重 <span class="math inline">w_j</span> 有闭式解：</p>
+<p><span class="math display">
+W=(\Phi^{\mathsf T}\Phi+\lambda I)^{-1}\Phi^{\mathsf T}Y
+\tag{80-6}
+</span></p>
+<p>其中 <span class="math inline">\Phi</span> 是 <span class="math inline">n\times K</span> 的基函数矩阵，<span class="math inline">Y</span> 是 <span class="math inline">n\times2</span> 的残差标签，<span class="math inline">\lambda</span> 是岭正则。式 (80-6) 的好处是训练不需要迭代：给定中心和宽度，解一次线性方程就完事。代价是中心与宽度一旦选错，权重再优也补不回来。</p>
+<p>GP 回归给出的是分布而不是点估计：</p>
+<p><span class="math display">
+\hat f_r(x)\sim\mathcal N\!\left(k^{\mathsf T}K^{-1}Y,\ k(x,x)-k^{\mathsf T}K^{-1}k\right)
+\tag{80-7}
+</span></p>
+<p>核函数取平方指数：</p>
+<p><span class="math display">
+k(x,x&#39;)=\sigma_f^2\exp\!\left(-\frac{\|x-x&#39;\|^2}{2\ell^2}\right)
+\tag{80-8}
+</span></p>
+<p>GP 的均值与 RBF 的形式相近，但它多给了一个方差。这个方差不是装饰：它告诉你“这个位置的数据有多稀”，可以直接用来收紧约束（§80.4.3），也可以用来判断该不该信模型的输出。</p>
+<p>两种参数化的差别在数据量上最明显。本章的学习曲线（图 80-9）显示：20 个样本时 RBF 与 GP 的误差是 1.010 与 0.821，差距不大；320 个样本时 RBF 停在 0.659，GP 降到 0.295。RBF 的容量被 48 个固定中心锁死，数据再多也只能把权重拟合得更准；GP 的有效参数量随样本增长，因此能持续受益于更多数据。选哪个，取决于你能否持续采数据——一次性标定的项目用 RBF 更省事，长期运行、数据不断积累的系统用 GP 更划算。</p>
+<h3 id="koopman-提升把非线性藏进坐标">80.2.3 Koopman 提升：把非线性藏进坐标</h3>
+<p>第三条路不学残差，而是换坐标。取一组提升函数 <span class="math inline">\phi(x)</span>，希望在这个坐标里系统近似线性：</p>
+<p><span class="math display">
+z_{k+1}=A_z z_k+B_z u_k,\qquad z=\phi(x)
+\tag{80-9}
+</span></p>
+<p>本章取所有一次项与二次项，共 15 维：<span class="math inline">1</span>、<span class="math inline">p_x</span>、<span class="math inline">p_y</span>、<span class="math inline">v_x</span>、<span class="math inline">v_y</span>、<span class="math inline">p_x^2</span>、<span class="math inline">p_xp_y</span>、<span class="math inline">p_y^2</span>、<span class="math inline">v_x^2</span>、<span class="math inline">v_xv_y</span>、<span class="math inline">v_y^2</span>、<span class="math inline">p_xv_x</span>、<span class="math inline">p_xv_y</span>、<span class="math inline">p_yv_x</span>、<span class="math inline">p_yv_y</span>。用一步数据对做最小二乘即可拟合：</p>
+<p><span class="math display">
+[A_z\ B_z]=\arg\min\sum_{i}\left\|z_{i+1}-A_zz_i-B_zu_i\right\|^2
+\tag{80-10}
+</span></p>
+<p>式 (80-10) 就是扩展动态模式分解（EDMD）的回归形式，正则项加得极小即可。它把“非线性”转移到了坐标里：模型在 <span class="math inline">z</span> 空间是线性的，MPC 的约束与代价仍可写成二次型，求解器不用改。</p>
+<p>代价是截断误差。二次提升无法精确表示 <span class="math inline">|v|v</span> 这种非多项式项，只能在工作空间内近似。本章的结果是：Koopman 的一步误差 0.445 m/s²，比 RBF 的 0.624 好，比 GP 的 0.310 差；20 步预测误差 72.48 cm，几乎与名义模型（75.47 cm）持平。原因不难理解——提升阶数不够时，误差会随着预测步数指数放大，而 Koopman 模型的谱半径接近 1，放大的速度比残差模型更快。</p>
+<p>这条路的适用场景是：非线性主要来自多项式型耦合（例如机械臂的科氏力、刚体姿态的叉乘项），提升阶数取 2–3 就能覆盖；若非线性是强局部性的（饱和、死区、碰撞），多项式提升需要很高的阶数，不如直接学残差。</p>
+<h3 id="残差如何进入-mpc">80.2.4 残差如何进入 MPC</h3>
+<p>把学到的残差作为已知扰动加进预测：</p>
+<p><span class="math display">
+x_{k+1}=Ax_k+Bu_k+d_k,\qquad d_k=\begin{bmatrix}0\\T_s\hat f_r(\hat x_k)\end{bmatrix}
+\tag{80-11}
+</span></p>
+<p>优化问题本身不变：</p>
+<p><span class="math display">
+\min_{\{u_k\}}\ \sum_{k=0}^{N-1}\left[(x_k-x_k^{ref})^{\mathsf T}Q(x_k-x_k^{ref})+u_k^{\mathsf T}Ru_k\right]+(x_N-x_N^{ref})^{\mathsf T}P(x_N-x_N^{ref})
+\tag{80-12}
+</span></p>
+<p>约束仍是盒约束 <span class="math inline">|u_k|\le u_{max}</span> 与动力学等式。由于 <span class="math inline">d_k</span> 是常数向量，整个问题还是凸二次规划，结构与第 58 章完全一致。</p>
+<p>唯一的麻烦是 <span class="math inline">d_k</span> 依赖预测状态 <span class="math inline">\hat x_k</span>，而预测状态又是待优化的。严格做法是把 <span class="math inline">\hat f_r</span> 也放进优化，但那会引入非线性，破坏凸性。工程上的折中是<strong>两遍法</strong>：第一遍按名义模型求解，得到一条预测轨迹；在轨迹上逐点算残差；第二遍把残差当成固定扰动再解一次。两遍法的计算量是单遍的两倍，但收敛快、实现简单，且第二遍的解已经是“在残差已知的前提下”的最优。</p>
+<p>两遍法有一个隐含假设：第一遍的预测轨迹与第二遍足够接近，否则残差在错误的点上取值。本章的算例里这个假设成立——第一遍的轨迹偏差约 7 cm，残差场的空间尺度约 1 m，取值的相对误差在 10% 以内。若残差场变化很剧烈（例如经过一个窄峰），两遍法会低估峰值，需要改成迭代到不动点，或者把残差的不确定度也计入约束。</p>
+<h3 id="终端代价从-riccati-到数据">80.2.5 终端代价：从 Riccati 到数据</h3>
+<p>有限时域 MPC 的末尾需要一个代价：</p>
+<p><span class="math display">
+V_f(x)=x^{\mathsf T}Px
+\tag{80-13}
+</span></p>
+<p>当系统线性、代价二次、约束不活跃时，<span class="math inline">P</span> 由离散代数 Riccati 方程给出，且 <span class="math inline">V_f</span> 恰好等于无限时域最优代价。这是第 58 章的标准结论。</p>
+<p>一旦约束频繁激活，<span class="math inline">V_f</span> 就不再是二次型：靠近边界时“未来值多少钱”会因为可用控制量受限而急剧上升，二次型无法表达这种急剧变化。此时可以用数据直接拟合代价-to-go：</p>
+<p><span class="math display">
+J^*(x_i)\approx\phi(x_i)^{\mathsf T}\theta,\qquad \phi(x)=[1,x^{\mathsf T},(x_ix_j)_{i\le j}]^{\mathsf T}
+\tag{80-14}
+</span></p>
+<p>标签 <span class="math inline">J^*(x_i)</span> 由长时域 MPC 离线求解得到（本章用 <span class="math inline">N=40</span> 的解作为近似），再用最小二乘拟合 <span class="math inline">\theta</span>，把二次项部分还原成对称矩阵 <span class="math inline">P_\theta</span>。</p>
+<p>这是一个“以算力换结构”的做法：离线解 120 个 QP，换在线一个 4×4 矩阵。本章的结果是，在约束基本不活跃的近域内，<span class="math inline">P_\theta</span> 与 <span class="math inline">P_{lqr}</span> 的相对误差 7.4%；把采样范围扩大到 2.5 m、让输入饱和频繁出现后，误差升到 141.1%。后者不是拟合失败，而是二次型这个函数族本身装不下带约束的价值函数。</p>
+<h3 id="初值把求解器当被控对象">80.2.6 初值：把求解器当被控对象</h3>
+<p>第三处插入点是求解器的初值。MPC 每周期解的是同一个结构的 QP，只是参数（当前状态、参考）在变。若能把上一周期的解平移一位作为初值，热启动通常能省掉一半迭代；若再用数据学一个映射</p>
+<p><span class="math display">
+u_0\approx\pi(x-x^{ref})=W\begin{bmatrix}x-x^{ref}\\1\end{bmatrix}
+\tag{80-15}
+</span></p>
+<p>则初值不仅“接近”，而且“沿着最优解的规律”。<span class="math inline">W</span> 的训练标签是离线求解得到的首步控制，回归用最小二乘，训练成本可以忽略。</p>
+<p>需要看清这一处的边界：式 (80-15) 只是初值，不参与可行性判断，也不影响最终解。因此它可以很粗糙——本章的线性策略拟合误差是 0.325 m/s²，相对控制上限 3 m/s² 约 11%，仍然把求解时间从 3.40 ms 降到 1.54 ms。反过来，如果把它当作控制器直接输出，11% 的误差就会变成跟踪误差，这就是“策略蒸馏”与“热启动”的分界线。</p>
+<h3 id="为什么残差比原函数好学">80.2.7 为什么残差比原函数好学</h3>
+<p>文献里给“学残差”的常见理由是“残差幅值小、信噪比高”。这个理由在本章并不成立：残差 RMS 是 1.195 m/s²，而参考轨迹的加速度幅值只有 <span class="math inline">r\omega^2=1.2\times0.36\approx0.43</span> m/s²——残差比要跟踪的运动本身还大近三倍。真正让残差好学的不是幅值，而是另外三件事。</p>
+<p><strong>第一，残差是状态的光滑函数，而原函数不是。</strong> 残差场由二次阻尼与正弦力场叠加而成，在状态空间里连续可微、特征尺度约 1 m。原函数里还包含“控制怎么被施加”的部分——执行器的死区、饱和、一阶滞后，这些在状态空间里是折线甚至跳变。核方法、GP 这类工具擅长前者，不擅长后者。把光滑的部分交给学习、把不光滑的部分要么补进名义模型、要么扩状态，是本章方法能奏效的结构性原因。</p>
+<p><strong>第二，残差与控制解耦。</strong> 式 (80-1) 的 <span class="math inline">\hat f_r</span> 只依赖 <span class="math inline">x</span>，不含 <span class="math inline">u</span>。这一点不是巧合，而是必须。若残差依赖 <span class="math inline">u</span>，MPC 的预测就变成决策变量的非线性函数，第 58 章的 QP 立刻退化成非线性规划，本章所有的工程便利（凸性、求解时间、可行性判据）一并消失。所以建模时必须守住这条线：<strong>残差是状态的函数，不是控制的函数</strong>。</p>
+<p>这条线还能当一个诊断工具。若你发现“必须把 <span class="math inline">u</span> 作为学习器的输入，误差才降得下来”，那说明名义模型的 <span class="math inline">B</span> 写错了，或者系统有未建模的执行器动态。正确的修法是回去改 <span class="math inline">B</span>、或把执行器状态（例如阀门开度、电机电流）扩进状态向量，而不是给学习器多加一维输入。判据是做一个实验：同一状态下施加不同的 <span class="math inline">u</span>，看残差标签是否随 <span class="math inline">u</span> 变化。变化幅度超过标签噪声的 3 倍，就是执行器问题。</p>
+<p><strong>第三，残差被动力学结构吸收了一部分。</strong> 残差进预测的通道是 <span class="math inline">[\frac12T_s^2;T_s]</span>，位置通道还带着 <span class="math inline">T_s^2</span> 的小因子。这意味着残差有 30% 的误差时，折算到位置的偏差只有厘米级；而策略学习里 30% 的控制误差直接就是 30% 的控制误差，没有任何结构替它吸收。这就是“学模型”比“学策略”样本效率高的根本原因：MPC 免费提供了“模型怎么变成控制”这一段映射，学习只需要补最短的一截。</p>
+<p>把这三条合起来看，本章 200 个点能跑出 1.71 cm，不是运气，而是任务结构决定的：目标函数清楚、约束清楚、只剩一个光滑的低维函数不清楚。换个任务——比如目标函数本身说不清、或者最优行为依赖长程规划——这三条优势就全部消失，那时该考虑的是 §80.11.6 里的策略学习，而不是继续给残差模型加容量。</p>
+<h3 id="rbf-与-gp-其实是同一件事的两个极端">80.2.8 RBF 与 GP 其实是同一件事的两个极端</h3>
+<p>把式 (80-6) 的岭回归解代回预测式，会看到一个熟悉的结构。设新样本的核向量为 <span class="math inline">k(x)=[k(x,x_1),\dots,k(x,x_n)]^{\mathsf T}</span>，则</p>
+<p><span class="math display">
+\hat f_r(x)=k(x)^{\mathsf T}(K+\lambda I)^{-1}Y
+</span></p>
+<p>这正是 GP 后验均值（式 80-7）在噪声方差取 <span class="math inline">\sigma_n^2=\lambda</span> 时的形式。也就是说，<strong>本章的 RBF + 岭回归与 GP 的均值预测是同一个估计器</strong>，差别只在两处：</p>
+<ol type="1">
+<li><strong>基的个数。</strong> RBF 把 200 个样本压成 48 个中心，权重只有 96 个；GP 保留全部 200 个样本，权重 200 个。前者是后者的低秩近似，丢掉的是“中心之间那些样本携带的信息”。</li>
+<li><strong>有没有方差。</strong> GP 额外给出 <span class="math inline">k(x,x)-k(x)^{\mathsf T}K^{-1}k(x)</span>，RBF 没有。式 (80-20) 的置信界、式 (80-32) 的机会约束，全都依赖这一项。</li>
+</ol>
+<p>这个等价关系有三条实用推论，比“选哪个”更值得记。</p>
+<p><strong>第一，岭项与噪声方差是同一个旋钮。</strong> 在 RBF 里调 <span class="math inline">\lambda</span> 与在 GP 里调 <span class="math inline">\sigma_n^2</span>，数学上是同一件事，都对应“允许多大程度不穿过样本点”。所以看到文献里说“RBF 需要仔细调正则、GP 的超参有物理意义”时，不必当成两种技术——它们的数值行为一致，只是 GP 的参数有概率解释，因而更容易用边际似然自动选。</p>
+<p><strong>第二，容量瓶颈来自基的个数，不来自方法。</strong> 表 80-4 里 RBF 在 160 个样本后进入平台，而 GP 一路下降，根本原因是 48 个中心已经把 200 个样本压成了秩 48 的近似。把中心数加到与样本数同量级，RBF 的均值曲线就应当与 GP 重合，剩下的差别只有方差。读者可以改 <code>ch080_sim.py</code> 里 <code>RBFModel</code> 的 <code>k</code> 与 <code>sigma</code> 验证，判据是两者的验证误差差到 10% 以内。</p>
+<p><strong>第三，稀疏 GP 会退回 RBF 的容量限制。</strong> 样本到上千之后，GP 的 <span class="math inline">O(n^3)</span> 求逆不可接受，标准做法是选 <span class="math inline">m</span> 个诱导点做稀疏近似——这实质上就是把 <span class="math inline">n</span> 个样本压成 <span class="math inline">m</span> 个基，与 RBF 的 48 个中心是同一个操作。所以“用 GP 就不用担心规模”是错觉：规模一大，你仍然要面对“用多少基表示先验”这个选择，只是它换了个名字叫诱导点。</p>
+<p>本章选 GP 做最终配置，理由只有一个：200 个样本时它不需要做任何近似，且顺手给出了方差，供 §80.9.6 使用。样本量再大一个数量级，这个选择就要重新算一遍。</p>
+<h3 id="koopman-为什么在本章输了">80.2.9 Koopman 为什么在本章输了</h3>
+<p>表 80-1 里有一个反直觉的排序：一步误差 Koopman 是 0.445，比 RBF 的 0.624 更好；但 20 步位置误差是 72.48 cm，比 RBF 的 46.95 cm 更差；闭环误差 5.19 cm，也差于 RBF 的 3.98 cm。<strong>一步更准，多步更差，闭环最差</strong>——这个模式不是噪声，它指出了 Koopman 在本章失效的三个原因。</p>
+<p><strong>第一，最小二乘把容量分给了不重要的分量。</strong> EDMD 拟合的是 <span class="math inline">z_{k+1}=A_zz_k+B_zu_k</span> 的全部 15 个分量，其中一次项（<span class="math inline">p</span>、<span class="math inline">v</span>）幅值在 1–2 量级，二次项（<span class="math inline">p^2</span>、<span class="math inline">pv</span>、<span class="math inline">v^2</span>）幅值在 1–4 量级，但它们承载非线性。最小二乘按绝对残差加权，拟合会优先把一次项做准——因为一次项决定了一步预测的主体。结果是：一步预测看起来很好（主要靠一次项），而二次项系数有偏；一旦递推 20 步，二次项的偏差被反复放大，误差就追上甚至超过残差法。</p>
+<p><strong>第二，它必须同时拟合名义模型，浪费了容量。</strong> 残差法里 <span class="math inline">A</span>、<span class="math inline">B</span> 是解析给定的双积分器，学习只管那 1.195 m/s² 的偏差；Koopman 要把“双积分器 + 残差”一起从数据里拟合出来。后者当然需要更多数据、更多容量，而它拿到的数据量与残差法一样多（200 个点）。</p>
+<p><strong>第三，无约束最小二乘不保证稳定性。</strong> EDMD 解出的 <span class="math inline">A_z</span> 没有任何谱半径约束，数值上很容易出现略大于 1 的特征值；单步看不出来，多步就会指数增长。工程上必须显式检查 <span class="math inline">\rho(A_z)</span>，若大于 1，做一次稳定化投影（把超出的特征值拉回单位圆内）。这一步本章没有做，因为 Koopman 只是对照组的第三条，但它是一个必须记住的检查项。</p>
+<p>这三条合起来给出一条比“选哪个模型”更通用的教训：<strong>一步误差不能作为选型依据</strong>。§80.3.4 的验收线之所以要求看第 <span class="math inline">N</span> 步而不是第一步，就是因为存在“一步好、多步差”这一整类模型。判断一个模型能不能进 MPC，要问的是“它在 <span class="math inline">N</span> 步之后还可信吗”，而不是“它拟合得准不准”。</p>
+<p>反过来说，Koopman 也不是没有适用场景。若系统的非线性确实是多项式型、且你有足够数据覆盖高阶项、还能接受离线做稳定化处理，它的优势是<strong>线性</strong>——一旦提升完成，MPC 里就是纯矩阵乘，没有核函数、没有方差计算，在线成本最低。本章的算例里，它的耗时（32.45 ms）确实与名义模型（31.44 ms）几乎一样。所以正确的结论不是“Koopman 不行”，而是“在本章的残差结构下，把容量花在残差上比花在整体动力学上更划算”。</p>
+<h3 id="学习器的输入该给什么">80.2.10 学习器的输入该给什么</h3>
+<p>残差模型 <span class="math inline">\hat f_r</span> 的输入不是“状态越多越好”，而是一个需要论证的设计选择。本章给的是完整状态 <span class="math inline">(p,v)</span>，两条必须给的理由与三条必须守的禁忌都值得说清楚。</p>
+<p><strong>为什么必须给速度。</strong> 阻尼项是 <span class="math inline">-\rho\|v\|v</span>，它只依赖速度、不依赖位置。若输入只给位置，模型在这条维度上永远学不到东西，误差下限就是阻尼的贡献——本章约占残差的一半。判据很简单：画一张残差对 <span class="math inline">\|v\|</span> 的散点，若呈明显的二次趋势，速度必须进输入。</p>
+<p><strong>为什么必须给位置。</strong> 力场是正弦型，只依赖位置。这一项的判据是残差对 <span class="math inline">p</span> 的切片是否有周期性起伏（图 80-2 的左栏）。位置与速度各管一半，缺一个就只能学到一半。</p>
+<p><strong>为什么不该给 <span class="math inline">u</span>。</strong> §80.2.7 已经论证过：给了 <span class="math inline">u</span>，MPC 的预测就变成决策的非线性函数，QP 不再是 QP。这不是“精度换凸性”的取舍，而是“能不能用”的分界。</p>
+<p><strong>为什么不该给参考轨迹。</strong> 这一条最容易被诱惑。参考轨迹与位置强相关，把它作为输入，训练误差会明显下降——因为模型实际上在学“参考在该点要求什么”，而不是“对象在该点缺什么”。危险在于换一条轨迹后立刻失效：本章的圆周是 <span class="math inline">r=1.2</span> 的定圆，若把参考的相位作为输入，模型会把“沿圆的向心加速度”记成残差，换成直线轨迹就完全错了。检验办法只有一个：用两条不同的轨迹训练，在第三条上验证。若验证误差比训练误差高一个量级，说明输入里混进了与轨迹绑定的信息。</p>
+<p><strong>为什么不该输出位置增量。</strong> 输出必须与 <span class="math inline">B_r</span> 的结构一致，即只输出加速度（速度通道的增量除以 <span class="math inline">T_s</span>）。若让模型直接输出位置修正，它会与 §80.4.1 的离散化缺口纠缠在一起，换 <span class="math inline">T_s</span> 就得重训。</p>
+<p>还有一条实现层面的建议：<strong>归一化是输入设计的一部分，不是预处理</strong>。各维的量级差一个数量级以上时（例如位置用米、速度用毫米每秒），单一长度尺度的核会偏向大量级的那一维，等于隐式地把小量级维度丢掉了。本章两维都归一化到单位方差，<span class="math inline">0.7</span> 的核宽才有“与中心间距同量级”的含义。</p>
+<p>把这五条合起来，输入设计的原则可以压成一句：<strong>只给物理上真正进入残差的状态，不给任何与任务绑定的量</strong>。前者保证模型学的是对象，后者保证模型换任务还能用。本章的算例在这个原则下是最简单的情形——两个状态都进入、两个禁忌都不碰。</p>
+<h2 id="设计步骤">80.3 设计步骤</h2>
+<p>这一节给一条可执行的路线。顺序不能颠倒：先钉模型，再采数据，再选参数化，再接入，最后闭环验收。颠倒的典型后果是——先去调网络结构，回头发现残差标签本身算错了符号，前面所有工作作废。</p>
+<h3 id="第一步钉死名义模型测出残差的量级">80.3.1 第一步：钉死名义模型，测出残差的量级</h3>
+<p>名义模型不是“越准越好”，而是“必须显式写下来、且能复现”。本章的名义模型只有两个矩阵：</p>
+<p><span class="math display">
+A=\begin{bmatrix}I&amp;T_sI\\0&amp;I\end{bmatrix},\qquad B=\begin{bmatrix}\frac12T_s^2I\\T_sI\end{bmatrix}
+\tag{80-16}
+</span></p>
+<p>它对应“质点 + 理想加速度源”。真实对象在这之上多了阻尼与力场，这部分才是学习的目标。把名义模型写成式 (80-16) 的闭式，而不是直接拿一段仿真代码当模型，目的是让 MPC 的预测能与残差项解耦——否则你无法判断误差是模型结构错，还是残差没学好。</p>
+<p>接下来测残差的量级，只要一个数：<strong>残差的一步均方根与执行器上限之比</strong>。本章这个比值是 <span class="math inline">1.195/3\approx40\%</span>。它决定后面所有工作的必要性：</p>
+<ul>
+<li>低于 5%：学习带来的收益可能被求解噪声淹没，先别做；</li>
+<li>5%–20%：值得做，收益主要体现在稳态精度；</li>
+<li>高于 20%：必须做，否则约束会被系统性违反，第 58 章的可行性结论失效。</li>
+</ul>
+<p>这个判据很粗，但它能在投入之前给出“该不该做”的答案，比事后解释误差来源有用得多。</p>
+<h3 id="第二步采数据先解决时间对齐">80.3.2 第二步：采数据，先解决时间对齐</h3>
+<p>残差不能直接测量，只能从相邻两步的状态差里反推：</p>
+<p><span class="math display">
+r_i=\frac{v_{i+1}-v_i}{T_s}-u_i
+\tag{80-17}
+</span></p>
+<p>式 (80-17) 看着简单，却是整章最容易出错的地方。它隐含三个条件：<span class="math inline">u_i</span> 是这一步<strong>实际施加</strong>的控制（不是指令值）；<span class="math inline">v_{i+1}</span> 与 <span class="math inline">v_i</span> 的时间戳严格相差 <span class="math inline">T_s</span>；采样与执行之间没有未记录的延迟。三者任一不满足，残差里就混进了与状态无关的常值偏置，而这个偏置会被学习器当成“模型的一部分”学进去。</p>
+<p>差分本身还带来 <span class="math inline">O(T_s^2)</span> 的截断误差。本章 <span class="math inline">T_s=0.1</span> s，速度由加速度积分而来，差分的相对误差在千分之一量级，可以忽略；若 <span class="math inline">T_s</span> 取到 0.01 s 以下，位置量化噪声会被 <span class="math inline">1/T_s</span> 放大，这时应改用中心差分或直接对速度做低通后再差分。</p>
+<p>激励的设计比样本数量更重要。本章的数据是均匀随机采样：位置在 <span class="math inline">[-2,2]^2</span>、速度在 <span class="math inline">[-2,2]^2</span> 内各取 200 个点，标签直接由式 (80-2) 算出。这样做的理由是让残差场在状态空间里被均匀照亮——如果只用跟踪圆周的数据，样本会全部挤在环带附近，学出来的模型在环外完全没有依据。图 80-2 的两栏对比说明即使均匀采样也有类似的边缘问题：左栏是真实残差场，右栏是 RBF 的复现，中间区域吻合得不错，但靠近 <span class="math inline">p=\pm2</span> 的边界处右栏明显被拉平——那里邻域样本稀，核函数已经衰减到接近零。</p>
+<figure>
+<img src="figs/ch080/fig_080_02_residual_field.svg" alt="图 80-2　真实残差场（左）与 RBF 学到的残差场（右），速度固定为 (0.8,0)，画 x 分量" /><figcaption aria-hidden="true">图 80-2　真实残差场（左）与 RBF 学到的残差场（右），速度固定为 <span class="math inline">(0.8,0)</span>，画 x 分量</figcaption>
+</figure>
+<p>样本量按“参数个数 × 10”起步。RBF 有 <span class="math inline">48\times2</span> 个权重，本章用 200 个点，约 2 倍，偏少；学习曲线显示从 80 到 320 个样本，GP 的误差从 0.548 降到 0.295，还在一路下降。工程上更稳妥的做法是先用 100 个点跑通全链路，再按 §80.8 的判据决定要不要补数据。</p>
+<h3 id="第三步选参数化用一张表定下来">80.3.3 第三步：选参数化，用一张表定下来</h3>
+<p>三种参数化的选择不该靠偏好，而该看三件事：非线性是否多项式型、是否需要不确定度、数据是否会持续增长。表 80-1 是本章的判据。</p>
+<p>表 80-1　三种参数化的选择判据</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">判据</th>
+<th style="text-align: left;">选 RBF</th>
+<th style="text-align: left;">选 GP</th>
+<th style="text-align: left;">选 Koopman</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">非线性形态</td>
+<td style="text-align: left;">局部、光滑</td>
+<td style="text-align: left;">局部、光滑</td>
+<td style="text-align: left;">多项式耦合为主</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">是否需要方差</td>
+<td style="text-align: left;">不需要</td>
+<td style="text-align: left;">需要（安全约束用）</td>
+<td style="text-align: left;">不需要</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">数据是否持续增长</td>
+<td style="text-align: left;">一次性标定</td>
+<td style="text-align: left;">长期积累</td>
+<td style="text-align: left;">一次性标定</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">在线计算量</td>
+<td style="text-align: left;">最低（48 次核）</td>
+<td style="text-align: left;">中（需算核矩阵）</td>
+<td style="text-align: left;">最低（矩阵乘）</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">本章一步误差</td>
+<td style="text-align: left;">0.624</td>
+<td style="text-align: left;">0.310</td>
+<td style="text-align: left;">0.445</td>
+</tr>
+</tbody>
+</table>
+<p>表 80-1 里“在线计算量”一列容易被忽略。GP 的均值预测需要对全部训练样本算核函数，样本到 1000 时单次推理的成本会超过 QP 本身；RBF 的中心数固定，成本与样本量无关；Koopman 只是一次 15 维矩阵乘。这就是为什么本章的闭环耗时里，GP 的中位数（31.23 ms）并没有明显高于名义（31.44 ms）——样本只有 200 个，还没到 GP 的拐点。</p>
+<h3 id="第四步先离线验预测再接闭环">80.3.4 第四步：先离线验预测，再接闭环</h3>
+<p>接入 MPC 之前必须过一道离线关：<strong>多步预测误差</strong>。一步误差小不代表多步小，因为误差会在递推中放大。本章的四组数据（图 80-4）说明了这一点：</p>
+<p>表 80-2　多步开环预测的位置误差（单位 cm）</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">步数</th>
+<th style="text-align: left;">名义</th>
+<th style="text-align: left;">RBF</th>
+<th style="text-align: left;">GP</th>
+<th style="text-align: left;">Koopman</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">1</td>
+<td style="text-align: left;">0.28</td>
+<td style="text-align: left;">0.28</td>
+<td style="text-align: left;">0.28</td>
+<td style="text-align: left;">0.18</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">5</td>
+<td style="text-align: left;">6.31</td>
+<td style="text-align: left;">3.41</td>
+<td style="text-align: left;">1.26</td>
+<td style="text-align: left;">4.68</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">10</td>
+<td style="text-align: left;">22.79</td>
+<td style="text-align: left;">13.55</td>
+<td style="text-align: left;">4.21</td>
+<td style="text-align: left;">18.99</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">20</td>
+<td style="text-align: left;">75.47</td>
+<td style="text-align: left;">46.95</td>
+<td style="text-align: left;">16.06</td>
+<td style="text-align: left;">72.48</td>
+</tr>
+</tbody>
+</table>
+<p>表 80-2 的第 1 步四列几乎相同，原因是开环推演里残差只进速度通道，位置增量仍是 <span class="math inline">T_sv+\frac12T_s^2u</span>，四组模型在第一步给出的位置完全一样，差别只来自速度被修正后对下一步的影响。到第 20 步差距拉到 4.7 倍。这个现象给出一条实用的验收线：<strong>看第 <span class="math inline">N</span> 步（预测时域末端）的误差，而不是第一步</strong>。本章 <span class="math inline">N=15</span>，验收线取第 20 步，要求残差模型把误差压到名义的一半以下——RBF 与 GP 都过，Koopman 不过。</p>
+<figure>
+<img src="figs/ch080/fig_080_04_rollout_error.svg" alt="图 80-4　开环位置预测误差随预测步数的增长（纵轴对数）" /><figcaption aria-hidden="true">图 80-4　开环位置预测误差随预测步数的增长（纵轴对数）</figcaption>
+</figure>
+<p>图 80-4 把表 80-2 画成对数坐标，四条曲线的斜率差别一目了然。名义模型与 Koopman 的斜率最陡，说明误差在快速放大；GP 的斜率最平，20 步内只涨了不到两个数量级。斜率本身就是“模型的可信时长”的度量：把允许误差画一条水平线，曲线与它的交点就是可信步数。工程上判断 <span class="math inline">N</span> 该取多大，可以直接用这张图——<span class="math inline">N</span> 不应超过可信步数，否则时域末端的信息是噪声。</p>
+<p>过了离线关，再按两遍法接入（§80.2.4）。接入时有一个实现细节值得单独说：式 (80-11) 的 <span class="math inline">d_k</span> 只写了速度通道，漏掉了一步之内残差对位置的直接贡献 <span class="math inline">\frac12T_s^2\hat f_r</span>。完整的写法是 <span class="math inline">d_k=[\frac12T_s^2\hat f_r;\,T_s\hat f_r]</span>，本章为了保持“只加一项”的最小改动没有补。这一项的后果是位置通道出现固定滞后，量级约 0.6 cm，不随步数累加，因此不影响闭环收敛，但会抬高多步预测的绝对偏差。判断要不要补，就看 <span class="math inline">\frac12T_s^2|f_r|</span> 是否超过允许跟踪误差的 10%——本章是 0.6 cm 对 2 cm 的 30%，偏大，所以 §80.9 把它列为第一条改进。</p>
+<h3 id="第五步闭环验收三张图缺一不可">80.3.5 第五步：闭环验收，三张图缺一不可</h3>
+<p>闭环验收不能只看一条误差曲线。至少要三张图（图 80-5、图 80-6、图 80-8）：</p>
+<p><strong>第一张是轨迹图</strong>。它回答“车有没有走对地方”。本章四条轨迹都贴着圆周，差别在径向偏移：名义模型的平均半径比参考大 5 cm，叠加相位滞后后总误差 7.19 cm；GP 那条几乎与参考重合（平均半径 1.210 m 对 1.200 m）。</p>
+<p><strong>第二张是误差时间历程</strong>。它回答“误差是常值还是振荡”。名义模型的误差曲线是一条缓慢抬升后稳定的曲线，说明是系统性偏差；RBF 与 GP 的曲线在起步阶段有 2–3 s 的过渡，之后压到厘米级。若误差曲线出现周期性振荡，问题通常在预测时域与参考周期的匹配，而不在学习器。</p>
+<p><strong>第三张是耗时分布</strong>。它回答“这套东西能不能实时跑”。本章的中位数是 31.23–32.45 ms，P95 是 37.58–46.67 ms，全部低于 <span class="math inline">T_s=100</span> ms，余量约 2 倍。注意名义模型的中位数（31.44 ms）与 GP（31.23 ms）几乎一样，说明瓶颈在 QP 而不在模型推理——这也解释了为什么 §80.2.6 的热启动能把时间砍掉一半，而换更快的模型几乎不影响总耗时。</p>
+<p>三张图都过，才算这一章的方法在你的系统上可用。只过第一张不算，因为轨迹好看可能只是参考选得温和；只过第二张也不算，因为误差小可能靠的是权重调得软。</p>
+<h3 id="一条被省略的步骤先做安全兜底">80.3.6 一条被省略的步骤：先做安全兜底</h3>
+<p>这条路线里没有“调学习器”这一步，因为学习器的参数（中心数、核宽、正则）在第三步就定了，后面不再动。真正被省略的是安全兜底——它应该在第一步之前就接好，而不是等闭环出了问题再补。</p>
+<p>具体做法是把第 79 章的 CBF-QP 串在 MPC 之后：MPC 输出 <span class="math inline">u</span>，安全滤波器检查 <span class="math inline">u</span> 是否满足约束面，不满足就投影到最近的可行点。这样即使学习模型在数据覆盖外给出荒谬的残差，最坏结果也只是“MPC 的建议被否决”，而不是“系统撞上去”。本章的算例不涉及硬约束，因此仿真里没有接这一层；但只要你的系统有不可违反的边界，这一层就不能省。</p>
+<h3 id="在真实系统上采数据一次实验的设计">80.3.7 在真实系统上采数据：一次实验的设计</h3>
+<p>§80.3.2 的采样方式是仿真的特权：残差可以直接由式 (80-2) 算出，样本点想撒在哪就撒在哪，重复访问同一状态没有成本。真实系统上，采数据本身是一次实验，必须同时满足三个约束：<strong>安全</strong>（不能为了覆盖把系统开进危险区）、<strong>激励</strong>（数据必须在状态空间里“动”起来，否则学到的只是一个工作点附近的局部线性化）、<strong>可重复</strong>（同一状态要被访问多次，才能把噪声与模型误差分开）。</p>
+<p>先说激励信号。位置是速度的积分，速度是加速度的积分，真正被激励的是加速度通道，而加速度就是 <span class="math inline">u+\hat f_r</span>。所以激励应该加在 <span class="math inline">u</span> 上，且幅值要足够大——若 <span class="math inline">u</span> 只在 0.1 m/s² 附近抖动，残差（本章 RMS 1.195）会完全淹没在控制输入里，标签的信噪比接近零。经验做法是让激励幅值至少与残差的 RMS 同量级，本章即 <span class="math inline">|u|\ge1.2</span> m/s²，同时保留约 30% 的余量给反馈，避免开环激励把系统推出边界。</p>
+<p>波形选择上，四种常见做法的取舍是：</p>
+<ul>
+<li><strong>阶跃</strong>：频带窄，一次只激励一个方向，适合标定静态增益，不适合学残差场；</li>
+<li><strong>多正弦</strong>：每个轴 2–3 个频点，频段覆盖闭环带宽的 0.5–5 倍，幅值可精确控制，频谱已知，最容易复现；</li>
+<li><strong>随机游走</strong>：能量集中在低频，长时间跑会漂出工作区，需要额外的回复机制；</li>
+<li><strong>伪随机二值序列（PRBS）</strong>：频带最宽，实现最简单（一个移位寄存器），但幅值只有两档，对非线性系统会引入与幅值相关的偏置。</li>
+</ul>
+<p>本章的残差场空间尺度约 1 m，对应的时间尺度是 <span class="math inline">1/0.8\approx1.25</span> s，即 0.8 rad/s 上下。多正弦取 0.5、1.5、4 rad/s 三个频点，既覆盖了力场的主要起伏，又不至于把执行器推到饱和。</p>
+<p>再说覆盖度。覆盖度不能用“点数”衡量，因为点可以挤在一起。可操作的度量是<strong>分格计数</strong>：按残差场的特征尺度把每一维分成若干段——本章是位置每 1 m 一段、速度每 1 m/s 一段，<span class="math inline">[-2,2]^4</span> 因此被分成 <span class="math inline">4^4=256</span> 格——然后统计每格里的样本数。判据是至少 60% 的格子有 5 个以上样本。本章的 200 个点平均每格不到 1 个，这个密度在仿真里够用（标签无噪声），在真实系统上远远不够：测量噪声 0.05 m/s² 时，单点标签的标准差就有 0.05，要把它平均到 0.02 需要 6 个重复点。这是一个必须承认的差距，也是本章的算例只能当“方法演示”、不能当“工程指标”的原因。</p>
+<p>划分训练集与验证集时要按<strong>轨迹</strong>分，不能按点随机分。相邻采样点在时间上只差 0.1 s，状态几乎相同，标签高度相关；随机分点会让验证集里充满训练点的“邻居”，验证误差系统性偏乐观。正确做法是留出整段实验（例如五段激励里的最后一段）做验证。本章的算例是独立同分布采样，不存在这个问题，但真实数据一定有。</p>
+<p>还要估算时间预算。本章 200 个点乘 <span class="math inline">T_s=0.1</span> s 只有 20 s，看着很短，但真实系统每采一个点要“移动到目标状态—稳定—记录—离开”，平均 3–5 s，200 点就是 10–20 min；若每格还要求 5 个重复点，时间再乘 5。所以真实系统的数据量通常被时间预算卡住，而不是被存储卡住。这也是为什么 §80.9.3 的主动采样值得做：同样 200 个点，选点选得好，覆盖度能翻倍。</p>
+<p>最后是安全包络。采集时的状态包络应当比任务包络大 20% 左右，多出来的这部分就是“学习用的余量”：模型在任务边界附近必须有数据支撑，否则一到边界就开始外推。但包络不能大到连低增益控制器都拉不回来。可行的做法是采集阶段用一个小权重的 LQR 保底（<span class="math inline">Q/R</span> 比任务时小一个量级），让系统在激励下自由游走，一旦接近包络就由保底控制器拉回。这样采到的数据既有激励、又不会失控，代价是数据分布偏向包络内侧——这一点要在覆盖度统计里如实反映。</p>
+<p>采完之后先画三张图，再决定要不要训练：<strong>残差随位置的切片</strong>、<strong>残差随速度的切片</strong>、<strong>残差幅值的直方图</strong>。前两张看结构是否光滑——光滑才适合核方法，若切片上出现台阶或折线，说明有未建模的开关或饱和，先补进名义模型；第三张看有没有长尾——长尾说明存在未记录的延迟或限幅，此时应当回去查数据采集链路，而不是换一个更复杂的模型去拟合它。</p>
+<h3 id="五步之间的回路什么情况下要往回走">80.3.8 五步之间的回路：什么情况下要往回走</h3>
+<p>前面五步写成了一条直线，实际执行时一定会往回走。区别在于：往哪一步回，决定了你是补一轮数据、换一个参数化，还是重做整个接入。下面是本章总结的五个判定点与对应的回退目标，每一条都配了判据。</p>
+<p><strong>判定点一：一步误差是否降到残差 RMS 的 60% 以下。</strong> 本章的 GP 是 <span class="math inline">0.310/1.195=26\%</span>，RBF 是 52%，都过线；若你的模型停在 80% 以上，问题几乎一定在数据或标签，不在模型容量。此时应当回第二步查时间对齐、查是否用了实际施加的控制，而不是回第三步换一个更大的网络。这是最常见的误判：误差大就加容量，结果把噪声也拟合进去，验证误差反而更差。</p>
+<p><strong>判定点二：第 <span class="math inline">N</span> 步误差是否降到名义的一半以下。</strong> 本章用第 20 步做这条线（表 80-2）。若一步过关、多步不过关，说明误差的时间相关性太强或者模型在递推中失稳——回第三步，检查参数化是否合适（Koopman 就是栽在这里），或者缩短 <span class="math inline">N</span> 到可信步数以内。</p>
+<p><strong>判定点三：闭环误差是否落在离线界的 3 倍以内。</strong> 本章 GP 的界是 2.4 cm、实测 1.71 cm，落在界内；若实测比界大 3 倍以上，说明问题出在“接入”而不是“模型”——回第四步，检查两遍法的时域是否一致、式 (80-11) 的缺口是否过大、有没有未补偿的延迟（§80.5.7）。</p>
+<p><strong>判定点四：耗时是否在预算内。</strong> 若精度达标而 P95 超时，回第五步做热启动，或者缩短 <span class="math inline">N</span>。不要试图通过换更快的模型来解决——§80.6.4 已经量过，换模型对总耗时的影响不到 1%。</p>
+<p><strong>判定点五：换一条参考轨迹后是否还成立。</strong> 若离线与闭环在训练轨迹上都很好、换轨迹就崩，说明模型学到了与任务绑定的东西——回第一步，检查名义模型是否漏了结构项、学习器的输入里是否混进了参考（§80.2.10）。</p>
+<p>这五条的共同逻辑是：<strong>每一道验收关都对应一个特定的失败原因，不要把失败归到最后一个环节</strong>。工程上最常见的浪费不是某一步做错，而是错了之后从错误的步骤重来——把标签问题当成容量问题，把接入问题当成模型问题，每一次都要多花一轮完整的数据采集与训练。</p>
+<p>回退时还有一条纪律：<strong>每次只退一步，退完之后把下游的所有验收重跑一遍</strong>。跳过中间步骤直接改上游，会让你失去“到底是哪一处改动起了作用”的信息，而这正是表 80-6 那种调参记录存在的意义。</p>
+<h2 id="连续情形">80.4 连续情形</h2>
+<p>上一节的所有式子都是离散的：残差在采样点上定义，模型用 <span class="math inline">A</span>、<span class="math inline">B</span> 递推。真实的物理对象是连续的，学习模块最终要么嵌进连续时间的控制器，要么在离散化之后工作。这一节把这条缝补上，并说明两种做法在什么情况下会给出不同的结果。</p>
+<h3 id="先学再离散还是先离散再学">80.4.1 先学再离散，还是先离散再学</h3>
+<p>连续对象写成</p>
+<p><span class="math display">
+\dot x=f(x)+g(x)u,\qquad f(x)=f_0(x)+f_r(x)
+\tag{80-18}
+</span></p>
+<p>其中 <span class="math inline">f_0</span> 是名义模型（本章是双积分器），<span class="math inline">f_r</span> 是待学的残差。两条路线：</p>
+<p><strong>路线甲（先学再离散）</strong>：先用数据拟合 <span class="math inline">f_r</span> 这个连续向量场，再在 MPC 内部用数值积分（本章用 RK4）推演。好处是残差与采样周期解耦——换 <span class="math inline">T_s</span> 不用重训；坏处是每次预测要做 <span class="math inline">N\times4</span> 次函数求值，计算量是矩阵乘的十几倍。</p>
+<p><strong>路线乙（先离散再学）</strong>：把对象离散成 <span class="math inline">x_{k+1}=Ax_k+Bu_k+d_k</span>，直接学 <span class="math inline">d_k</span>。好处是 MPC 里只有一次矩阵乘加，最快；坏处是 <span class="math inline">d_k</span> 依赖 <span class="math inline">T_s</span>，而且它把“残差”与“离散化误差”混在了一起。</p>
+<p>本章用的是路线乙：式 (80-17) 的残差标签只统计速度通道。严格说，一步之内残差对位置的直接贡献是 <span class="math inline">\int_0^{T_s}(T_s-s)f_r\,ds\approx\frac12T_s^2f_r</span>，式 (80-11) 的 <span class="math inline">d_k</span> 里没有这一项。按 <span class="math inline">|f_r|=1.195</span> 估算，漏掉的量约 <span class="math inline">\frac12T_s^2|f_r|\approx0.6</span> cm。它的性质是<strong>固定滞后</strong>而非累积误差：每一步都落后同样的距离，不会越积越多。但 0.6 cm 与表 80-2 里第一步的位置误差（0.28 cm）同量级，说明第一步误差主要来自这处公式缺口，而不是模型学得不准。</p>
+<p>判断该走哪条路线，不能只看 <span class="math inline">T_s</span>，要看“被丢掉的那一项”相对残差本身有多大：</p>
+<ul>
+<li>丢掉项 / 残差 &lt; 1%：走路线乙，省算力；</li>
+<li>两者同量级：必须走路线甲，或者把离散公式补全，否则换一个 <span class="math inline">T_s</span> 就失效；</li>
+<li>残差本身接近零：说明名义模型已经够准，两条路都不用走。</li>
+</ul>
+<p><span class="math inline">T_s</span> 越小，丢掉项按 <span class="math inline">O(T_s^2)</span> 下降，这个判据越容易满足；但 <span class="math inline">T_s</span> 小到 10 ms 以下时，差分标签的噪声放大（§80.3.2）反而成了主要矛盾，这时应当改为路线甲，用积分而不是差分构造标签。</p>
+<h3 id="连续时间-gp把先验放在向量场上">80.4.2 连续时间 GP：把先验放在向量场上</h3>
+<p>若走路线甲，GP 的定义要改一处：样本不再是“一步的状态差”，而是“某一时刻的加速度观测”。观测模型写成</p>
+<p><span class="math display">
+y_i=f_r(x_i)+\varepsilon_i,\qquad \varepsilon_i\sim\mathcal N(0,\sigma_n^2I)
+\tag{80-19}
+</span></p>
+<p>形式与式 (80-7) 相同，但 <span class="math inline">y_i</span> 的来源变了：它可以是式 (80-17) 的差分，也可以是惯性单元的直接测量，还可以是离线辨识实验里的力传感器读数。核函数仍然取式 (80-8) 的平方指数，但长度尺度 <span class="math inline">\ell</span> 要按<strong>状态空间</strong>的距离来选，而不是按时间。本章 <span class="math inline">\ell=0.8</span>，对应“位置差 0.8 m 或速度差 0.8 m/s 时相关性衰减到 <span class="math inline">e^{-1/2}</span>”，与残差场的空间尺度（约 1 m）相当。</p>
+<p>GP 在这里的真正价值不是均值，而是方差可以转成一条<strong>逐点的误差上界</strong>：</p>
+<p><span class="math display">
+\|f_r(x)-\mu(x)\|\le\beta\,\sigma(x)
+\tag{80-20}
+</span></p>
+<p><span class="math inline">\beta</span> 取 2 对应约 95% 置信，取 3 对应约 99.7%。这个上界可以直接进入第 79 章的鲁棒 CBF 项：把 <span class="math inline">2\|d\|\Delta</span> 里的 <span class="math inline">\Delta</span> 换成 <span class="math inline">\beta\sigma(x)/T_s</span> 的量级，约束就会在数据稀疏处自动收紧。这是“学习 + 安全”两章之间最自然的一个接口，也是 GP 相对 RBF 唯一无法被替代的优势。</p>
+<figure>
+<img src="figs/ch080/fig_080_03_gp_slice.svg" alt="图 80-3　沿 y=0、v=(0.8,0) 切片的 GP 均值、95% 置信带与 RBF 对比" /><figcaption aria-hidden="true">图 80-3　沿 <span class="math inline">y=0</span>、<span class="math inline">v=(0.8,0)</span> 切片的 GP 均值、95% 置信带与 RBF 对比</figcaption>
+</figure>
+<p>图 80-3 把这件事画了出来。灰色带是 <span class="math inline">\pm2\sigma</span> 的区间，实线是 GP 均值，虚线是真值，点线是 RBF 的预测。沿这条切片量出的平均绝对误差是：<span class="math inline">|x|&lt;1.5</span> 内 GP 0.08、RBF 0.26（单位 m/s²）；靠边 <span class="math inline">|x|&gt;1.5</span> 时 GP 0.09–0.15、RBF 0.16–0.27。同时置信带的平均半宽从中间段的 0.25 涨到右端的 0.57，翻了一倍多——方差在提示“右边数据稀”。RBF 没有这个提示，它的曲线看着同样平滑，误差却是 GP 的三倍。<strong>方差的价值不在于让预测更准，而在于让你知道哪里不准。</strong></p>
+<p>需要提醒的是，本章的实测覆盖率是 100%，而名义置信水平是 95%——这说明方差偏保守。保守不是错误，但它会让约束在数据充足的区域也被无谓地收紧，代价是控制权限的浪费。校准的办法是看覆盖率随 <span class="math inline">\beta</span> 的变化：若 <span class="math inline">\beta=1.5</span> 时覆盖率仍有 98%，就把 <span class="math inline">\beta</span> 降到 1.5；若 <span class="math inline">\beta=2</span> 时覆盖率只有 80%，说明核参数选错了，该调 <span class="math inline">\ell</span> 而不是调 <span class="math inline">\beta</span>。</p>
+<h3 id="连续时间的终端代价hjb-而非-riccati">80.4.3 连续时间的终端代价：HJB 而非 Riccati</h3>
+<p>离散情形下终端代价由 Riccati 方程给出（式 80-13 的前提）。连续情形下对应的是 Hamilton-Jacobi-Bellman 方程：</p>
+<p><span class="math display">
+0=\min_u\left[\ell(x,u)+\nabla V(x)^{\mathsf T}(f(x)+g(x)u)\right]
+\tag{80-21}
+</span></p>
+<p>当 <span class="math inline">f</span> 线性、<span class="math inline">\ell</span> 二次、无约束时，<span class="math inline">V(x)=x^{\mathsf T}Px</span>，式 (80-21) 退化为连续代数 Riccati 方程，这就是第 58 章的结论。一旦 <span class="math inline">f</span> 含残差 <span class="math inline">f_r</span>，<span class="math inline">V</span> 就不再是二次型——残差把最优轨迹弯折，价值函数跟着弯折。</p>
+<p>这时有两种做法。第一种是把 <span class="math inline">f_r</span> 的均值代入式 (80-21)，用数值方法（例如策略迭代）解出 <span class="math inline">V</span> 的网格表，在线插值。第二种是仍用二次型，但把 <span class="math inline">P</span> 在<strong>残差影响下重新拟合</strong>——这正是 §80.2.5 的数据驱动做法，只是标签从离散 MPC 换成连续 HJB 的解。</p>
+<p>本章选第二种，原因是网格表在 4 维状态上需要 <span class="math inline">O(10^5)</span> 个点，在线插值的耗时超过 QP 本身；而二次型只需要 10 个独立元素，误差在近域是 7.4%（§80.2.5）。这个取舍的边界很清楚：<strong>状态维数不超过 4、精度要求不低于 5% 时用二次型；维数更高或需要贴边运行时，才值得上网格或函数逼近</strong>。</p>
+<h3 id="什么时候连续形式是必须的">80.4.4 什么时候连续形式是必须的</h3>
+<p>多数工程场景用离散形式就够了，因为控制器本来就是按周期跑的。但有三种情况必须回到连续形式：</p>
+<p>第一，<strong>执行器动态不可忽略</strong>。若执行器的时间常数与 <span class="math inline">T_s</span> 同量级，离散模型里的 <span class="math inline">u_k</span> 就不再是“这一步的恒定加速度”，而是一个被滤过的信号。这时要么把执行器状态并进 <span class="math inline">x</span>，要么用连续模型加零阶保持器重新离散，否则学到的残差里会混进执行器的滞后。</p>
+<p>第二，<strong>约束是连续的</strong>。第 79 章的 CBF 条件是逐时刻成立的，离散化之后只在采样点成立，两点之间可能越界。本章的护卫裕量（式 79-25）就是为这件事准备的，而它的推导依赖连续时间的导数，不能只在离散模型上做。</p>
+<p>第三，<strong>采样周期可变</strong>。事件触发、网络化控制里 <span class="math inline">T_s</span> 不是常数，路线乙的 <span class="math inline">d_k</span> 会随 <span class="math inline">T_s</span> 变化而失配。这时只能走路线甲。</p>
+<p>除这三种情况，连续形式带来的只是额外的计算与调试成本。工程判断的顺序应当是：先按离散做，跑通闭环，量出上述三条中是否有任何一条成立，再决定要不要改。</p>
+<h2 id="离散情形">80.5 离散情形</h2>
+<p>控制器最终是按周期执行的，所以离散形式才是落地的那一层。这一节把离散化的精确形式、采样周期的选法、可行性的保证方式、以及学习模块在数值上的坑逐条说清楚。</p>
+<h3 id="精确离散化而不是用-aia_ct_s-凑">80.5.1 精确离散化，而不是“用 <span class="math inline">A=I+A_cT_s</span> 凑”</h3>
+<p>对式 (80-18) 在零阶保持下做精确离散化，名义部分是矩阵指数：</p>
+<p><span class="math display">
+A=e^{A_cT_s},\qquad B=\int_0^{T_s}e^{A_c s}B_c\,ds
+\tag{80-22}
+</span></p>
+<p>对双积分器，<span class="math inline">A_c</span> 是幂零矩阵，指数级数只有前三项，式 (80-16) 就是它的精确值，不是近似。这一点常被忽略：很多实现里写 <span class="math inline">A=I+A_cT_s</span>，对双积分器会丢掉 <span class="math inline">\frac12T_s^2</span> 那一项，位置递推立刻错一半。判断方法是算 <span class="math inline">A</span> 与 <span class="math inline">e^{A_cT_s}</span> 的差，若不为零就不是精确离散。</p>
+<p>残差部分的处理有两种。把 <span class="math inline">f_r</span> 在一步内当常数，得到 <span class="math inline">d_k=[0;T_s\hat f_r]</span>，误差是 <span class="math inline">O(T_s^2|f_r|)</span>；把 <span class="math inline">f_r</span> 的线性项也保留，得到 <span class="math inline">d_k=[\frac12T_s^2\hat f_r;T_s\hat f_r]</span>，误差降到 <span class="math inline">O(T_s^3)</span>。前者是本章用的，后者是 §80.4.1 指出的改进项。两者的差只有 0.6 cm，但在 <span class="math inline">T_s=0.1</span> s、允许误差 2 cm 的场合，这 0.6 cm 占了 30%，不能算“次要项”。</p>
+<h3 id="采样周期三个约束同时成立才可选">80.5.2 采样周期：三个约束同时成立才可选</h3>
+<p><span class="math inline">T_s</span> 不是自由参数，它被三件事夹住：</p>
+<p><strong>第一，预测时域要覆盖对象的响应时间。</strong> 本章的参考周期是 <span class="math inline">2\pi/0.6\approx10.5</span> s，<span class="math inline">N T_s=1.5</span> s 只覆盖了七分之一圈。这在跟踪任务里够用，因为参考是缓变的；若参考里有 0.5 s 的阶跃，<span class="math inline">N T_s</span> 至少要 2 s。经验判据是 <span class="math inline">NT_s\ge3\tau</span>，<span class="math inline">\tau</span> 是被控对象的主导时间常数。</p>
+<p><strong>第二，QP 的规模随 <span class="math inline">N</span> 线性增长。</strong> 本章的决策变量是 <span class="math inline">4(N+1)+2N=94</span> 个，约束约 200 条，OSQP 的中位求解时间是 31 ms。<span class="math inline">N</span> 翻倍，时间大致翻倍；<span class="math inline">T_s</span> 减半而 <span class="math inline">NT_s</span> 不变，<span class="math inline">N</span> 也翻倍。所以“提高控制频率”和“加长预测时域”在算力上是同一件事，不能同时要。</p>
+<p><strong>第三，差分标签的噪声随 <span class="math inline">1/T_s</span> 放大。</strong> 式 (80-17) 里速度差除以 <span class="math inline">T_s</span>，若速度测量有 <span class="math inline">\sigma_v</span> 的噪声，残差标签的噪声就是 <span class="math inline">\sqrt2\sigma_v/T_s</span>。本章假设速度是干净的；实际系统里 <span class="math inline">\sigma_v=0.01</span> m/s、<span class="math inline">T_s=0.01</span> s 时，标签噪声达到 1.4 m/s²，与残差本身同量级，学出来的东西全是噪声。</p>
+<p>三条夹出来的可行区间通常很窄。本章的 <span class="math inline">T_s=0.1</span> s 是折中：<span class="math inline">N=15</span> 给出 1.5 s 的前瞻，QP 在 30 ms 量级，差分噪声可忽略。换一个系统，这个数要重新夹一遍，不能照抄。</p>
+<h3 id="可行性终端集与学习误差的叠加">80.5.3 可行性：终端集与学习误差的叠加</h3>
+<p>第 58 章证明递推可行性的标准做法，是要求终端状态落在一个控制不变集里：</p>
+<p><span class="math display">
+\mathbb X_f=\{x:\ x^{\mathsf T}Px\le\alpha\},\qquad x\in\mathbb X_f\Rightarrow\exists u\in\mathbb U:\ Ax+Bu\in\mathbb X_f
+\tag{80-23}
+</span></p>
+<p>学习模型进来之后，这个集合不能直接用。原因是 MPC 内部的预测用的是“名义 + 学到的残差”，而真实系统用的是“名义 + 真实残差”，两者的差就是学习误差 <span class="math inline">e_r=f_r-\hat f_r</span>。要保证递推可行性，终端集必须按误差膨胀：</p>
+<p><span class="math display">
+\mathbb X_f^{\epsilon}=\{x:\ \mathrm{dist}(x,\mathbb X_f)\le\epsilon\},\qquad \epsilon\approx\frac12NT_s^2\|e_r\|
+\tag{80-24}
+</span></p>
+<p>式 (80-24) 里的 <span class="math inline">N</span> 不能省。单步的位置偏差只有 <span class="math inline">\frac12T_s^2\|e_r\|\approx1.6</span> mm，看着可以忽略；但预测是 <span class="math inline">N</span> 步递推，偏差沿时域累加，<span class="math inline">N=15</span> 时最坏约 2.4 cm。本章的 GP 一步误差是 0.310 m/s²，乘上去正好是这个量级——与 2 cm 的允许跟踪误差相当，不能当作小量。</p>
+<p>这条式子给出一条清晰的判据：<strong>若 <span class="math inline">\epsilon</span> 达到允许跟踪误差的同一量级，学习误差就已经在吞掉精度预算，此时应当换更好的模型或缩短 <span class="math inline">N</span>，而不是收紧终端集</strong>。本章 GP 的 <span class="math inline">\epsilon\approx2.4</span> cm，与 2 cm 的允许误差刚好贴线——这解释了为什么闭环误差停在 1.71 cm 而没有进一步下降；换 RBF（0.624）时 <span class="math inline">\epsilon</span> 升到 4.7 cm，Koopman（0.445）时 3.3 cm，都越过了这条线，与闭环结果（3.98 cm 与 5.19 cm）的排序一致。</p>
+<p>比误差更麻烦的是<strong>外推</strong>：数据覆盖之外 <span class="math inline">\hat f_r</span> 可能给出任意值，此时式 (80-24) 的 <span class="math inline">\epsilon</span> 无界。这一条不能靠收紧终端集解决，只能靠两道工程措施：给学习输出加硬饱和 <span class="math inline">|\hat f_r|\le f_{max}</span>（<span class="math inline">f_{max}</span> 取训练集残差最大值的 1.5 倍），以及按 §80.3.6 串安全滤波器，让约束层不依赖学习模型。前者省算力，后者兜底，两条可以同时用。</p>
+<h3 id="数值条件核矩阵为什么需要岭项">80.5.4 数值条件：核矩阵为什么需要岭项</h3>
+<p>式 (80-6) 里的 <span class="math inline">\lambda</span> 不是用来提高精度的，而是用来兜底的。本章的 RBF 中心不是均匀网格，而是从 200 个训练样本里随机挑出的 48 个点，输入先按均值方差归一化，核宽 0.7 是归一化单位。随机挑选意味着一对中心可能落得很近：此时 <span class="math inline">\Phi</span> 的两列几乎线性相关，<span class="math inline">\Phi^{\mathsf T}\Phi</span> 的最小特征值趋零，直接 <code>solve</code> 会失败或给出量级错误的权重。</p>
+<p>本章这一组中心运气不错：<span class="math inline">\Phi^{\mathsf T}\Phi</span> 的迹是 138，最大特征值 19.7，最小 0.056，条件数 354；加 <span class="math inline">\lambda=10^{-6}</span> 之后条件数几乎不变（353.9），因为最小特征值远大于 <span class="math inline">\lambda</span>。这说明岭项在正常配置下确实只是保险。它的作用是给特征值一个下界——<span class="math inline">\Phi^{\mathsf T}\Phi+\lambda I</span> 的特征值不小于 <span class="math inline">\lambda</span>，条件数因此不超过 <span class="math inline">(\lambda_{max}+\lambda)/\lambda</span>。这个上界很松，保证的是“可解”，不是“良态”。</p>
+<p>真正的良态来自中心分布。若验证误差对 <span class="math inline">\lambda</span> 从 <span class="math inline">10^{-8}</span> 变到 <span class="math inline">10^{-2}</span> 都很敏感，说明中心选得不好——可能是两个中心几乎重合，也可能是核宽远小于中心间距——此时应改用 k-means 聚类中心或规则网格，而不是继续调 <span class="math inline">\lambda</span>。</p>
+<p>判断 <span class="math inline">\lambda</span> 是否合适，看两个量：训练残差与验证残差。<span class="math inline">\lambda</span> 太小，训练残差接近零而验证残差抬头，是过拟合；<span class="math inline">\lambda</span> 太大，两者都高，是欠拟合。本章的 <span class="math inline">\lambda</span> 取 <span class="math inline">10^{-6}</span>，是在 200 个样本、96 个权重的配置下试出来的，换配置要重试。</p>
+<p>GP 的对应问题是白噪声方差 <span class="math inline">\sigma_n^2</span>。它同时起两个作用：正则化核矩阵、解释测量噪声。<span class="math inline">\sigma_n</span> 取得太小（例如 <span class="math inline">10^{-4}</span>），<span class="math inline">K</span> 接近奇异，均值插值会穿过每个样本点，方差在样本处塌到零——这会让式 (80-20) 的界在样本点上过紧，一旦真实值偏离就漏检。本章取 <span class="math inline">\sigma_n=0.05</span>，与残差幅值（1.195）的比值约 4%，是一个偏保守的选择。</p>
+<h3 id="一个容易被忽略的细节两遍法的轨迹一致性">80.5.5 一个容易被忽略的细节：两遍法的轨迹一致性</h3>
+<p>§80.2.4 说过，两遍法要求第一遍的轨迹与第二遍足够接近。离散实现里这个条件还有一个更细的版本：<strong>两遍必须用同一个 <span class="math inline">T_s</span> 与同一个时域长度</strong>。若第一遍用 <span class="math inline">N=15</span>、第二遍为了省时间用 <span class="math inline">N=10</span>，残差序列的长度就对不上，程序不是报错就是静默截断，出来的解在末尾几步完全没有残差补偿。</p>
+<p>这个错误的症状很隐蔽：闭环误差比单遍还差，但看不出哪里错。检查方法是打印两遍的残差序列长度，确认都等于 <span class="math inline">N</span>；再确认第二遍的状态轨迹与第一遍的偏差小于残差场空间尺度的 10%。本章的这个偏差是 7 cm 对 1 m，满足条件。</p>
+<p>两遍法的另一个实现细节是热启动的传递。第一遍的解直接作为第二遍的初值，是最省事的做法；图 80-8 的单 QP 实验说明，热启动能把迭代数从 50 降到 25，时间从 3.40 ms 降到 1.63 ms。若两遍之间重新冷启动，第二遍的耗时会回到冷启动水平，两遍法的总代价接近单遍的三倍，性价比就没了。</p>
+<h3 id="终端集怎么算从-p-到-alpha">80.5.6 终端集怎么算：从 <span class="math inline">P</span> 到 <span class="math inline">\alpha</span></h3>
+<p>式 (80-23) 给了终端集的定义，式 (80-24) 给了它该怎么膨胀，但两式都默认 <span class="math inline">\alpha</span> 已知。实际工程里 <span class="math inline">\alpha</span> 是要算出来的，而且算法有三档，成本与保守性完全不同。</p>
+<p><strong>第一档是闭式估计，一行代码。</strong> 思路是放弃“MPC 在终端集内可行”这个强要求，只要求“存在一个局部线性控制器能让状态留在里面”。取 LQR 增益 <span class="math inline">K</span>，闭环 <span class="math inline">A_{cl}=A-BK</span> 在 <span class="math inline">P</span> 的度量下是收缩的，于是只剩输入约束要满足：<span class="math inline">x^{\mathsf T}Px\le\alpha</span> 时，第 <span class="math inline">i</span> 个控制分量的最大值是 <span class="math inline">\sqrt{\alpha\,(KP^{-1}K^{\mathsf T})_{ii}}</span>，要求它不超过 <span class="math inline">u_{max}</span>，得到</p>
+<p><span class="math display">
+\alpha\le\min_i\ \frac{u_{max}^2}{(KP^{-1}K^{\mathsf T})_{ii}}
+</span></p>
+<p>这个估计是保守的：它只用了 LQR 一个控制器，而 MPC 在终端集内的可行域更大。但对终端集来说保守是可以接受的——终端集的作用是“兜住时域末端”，不是“尽量大”。工程上先用它把闭环跑起来，等确认约束会激活，再换更精确的算法。</p>
+<p><strong>第二档是网格枚举，最直观。</strong> 把终端集所在的状态盒按每维 21 点离散，4 维共 <span class="math inline">21^4=194481</span> 个点，对每个点解一个小 QP，检查是否存在 <span class="math inline">u\in\mathbb U</span> 使 <span class="math inline">Ax+Bu</span> 仍落在椭球内；满足条件的最大 <span class="math inline">x^{\mathsf T}Px</span> 就是 <span class="math inline">\alpha</span>。这在离线做几分钟就能完成，得到的是“真实”上界，可以用来标定第一档保守了多少。维数再高就不行了，这是网格法在 4 维还能用的最后边界。</p>
+<p><strong>第三档是半正定规划。</strong> 把“存在 <span class="math inline">u</span>”写成线性矩阵不等式，用 SDP 求最大椭球。它给出的 <span class="math inline">\alpha</span> 最紧，但需要一个 SDP 求解器，且每次改 <span class="math inline">P</span> 都要重解。除非终端集大小直接决定可行域、而可行域又直接决定任务能不能完成，否则不值得上。</p>
+<p>算出 <span class="math inline">\alpha</span> 之后才是膨胀。这里有一个容易写错的细节：式 (80-24) 说的是“到终端集的欧氏距离不超过 <span class="math inline">\epsilon</span>”，而 <span class="math inline">\alpha</span> 是 <span class="math inline">P</span> 度量下的二次型上界，两者不能直接相加。正确的换算是用 <span class="math inline">P</span>-范数关于欧氏距离的 Lipschitz 常数 <span class="math inline">\sqrt{\lambda_{max}(P)}</span>：</p>
+<p><span class="math display">
+\alpha&#39;=\left(\sqrt{\alpha}+\epsilon\sqrt{\lambda_{max}(P)}\right)^2
+</span></p>
+<p>本章 <span class="math inline">\lambda_{max}(P)=62.06</span>，开方是 7.88；GP 的 <span class="math inline">\epsilon=0.024</span> m，乘上去是 0.189。若原来的 <span class="math inline">\sqrt{\alpha}</span> 是 0.1，膨胀后变成 0.289，<span class="math inline">\alpha&#39;</span> 是原来的 8 倍——这个数字说明<strong>用 <span class="math inline">\lambda_{max}</span> 做各向同性膨胀会严重高估</strong>。原因是 <span class="math inline">\lambda_{max}</span> 由速度通道主导（62.06 对 4.26），而 <span class="math inline">\epsilon</span> 是位置方向的偏差，两者量纲不同，硬乘在一起等于把位置误差当成速度误差来算。</p>
+<p>正确的做法是分块：位置块用 <span class="math inline">P</span> 的左上 <span class="math inline">2\times2</span> 子块的特征值，速度块用右下子块，<span class="math inline">\epsilon</span> 只进位置块，速度方向的等效偏差取 <span class="math inline">\epsilon/T_s</span>。这样算出来的膨胀量会小一个量级，才与 §80.5.3 的实测排序对得上。更稳妥的做法是不做解析膨胀，直接把“预测误差 <span class="math inline">\epsilon</span> 已经吃掉多少可行域”当成一个新的约束写进 SDP 重解一次。</p>
+<p>无论用哪一档，有一条工程约束必须记住：<strong><span class="math inline">\epsilon</span> 正比于 <span class="math inline">N</span>，所以 <span class="math inline">\alpha</span> 是 <span class="math inline">N</span> 的函数</strong>。第 58 章的 <span class="math inline">\alpha</span> 是离线算好的常数，换 <span class="math inline">N</span> 不用重算；本章的方法不行，改时域就得重算终端集。这一点在代码里很容易漏——改了 <code>n_h</code> 却沿用旧的 <span class="math inline">\alpha</span>，闭环不会立刻坏，只会在约束接近激活时偶发不可行，排查起来非常费时。若膨胀后的 <span class="math inline">\alpha&#39;</span> 超过原来的 2 倍，就不要继续靠膨胀终端集补救，按 §80.5.3 的判据去缩短 <span class="math inline">N</span> 或换模型。</p>
+<h3 id="延迟一个能解释全部误差的量">80.5.7 延迟：一个能解释全部误差的量</h3>
+<p>残差标签里最容易漏掉的一项不是噪声，而是延迟。若从指令发出到力矩真正作用在质量上隔了 <span class="math inline">d</span> 个采样周期，式 (80-17) 里的 <span class="math inline">u_i</span> 就对错了时刻：与 <span class="math inline">v_{i+1}-v_i</span> 匹配的应当是 <span class="math inline">u_{i-d}</span>，而不是 <span class="math inline">u_i</span>。标签里因此多出 <span class="math inline">-(\Delta u)/T_s</span> 这一项，其中 <span class="math inline">\Delta u=u_i-u_{i-d}</span>。</p>
+<p>先给一个能立刻用的诊断。一步延迟造成的位置偏差约等于 <span class="math inline">vT_s</span>。本章速度是 <span class="math inline">r\omega=0.72</span> m/s，<span class="math inline">T_s=0.1</span> s，乘积是 7.2 cm——与名义模型的闭环误差 7.19 cm 几乎一模一样。这个巧合值得记住：<strong>若你测出的稳态误差约等于 <span class="math inline">v_{max}T_s</span>，第一件事是查延迟，而不是查模型</strong>。当然本章的 7.19 cm 确实来自阻尼与力场，不是延迟（仿真里 <span class="math inline">d=0</span>），但这个量级上的吻合说明延迟足以单独解释掉一个典型的跟踪误差，不能当成二阶效应忽略。</p>
+<p>估计延迟 <span class="math inline">d</span> 的方法很简单：把输入序列与速度序列做互相关，峰值出现的滞后就是 <span class="math inline">d</span>。</p>
+<p><span class="math display">
+\hat d=\arg\max_{\ell}\ \sum_i (u_i-\bar u)^{\mathsf T}(v_{i+\ell}-\bar v)
+</span></p>
+<p>这个估计对噪声不敏感，但会被反馈污染——因为 <span class="math inline">u</span> 本身依赖 <span class="math inline">v</span>，闭环下的互相关峰可能被反馈环“拉”到零滞后。所以要在<strong>开环或弱闭环</strong>数据上估：采集阶段把反馈增益降到很小，用激励信号驱动，此时 <span class="math inline">u</span> 与 <span class="math inline">v</span> 的关系由物理通道决定，峰的位置才可信。</p>
+<p>估出 <span class="math inline">d</span> 之后，有两种处理方式，效果差别很大。</p>
+<p><strong>第一种是补偿标签。</strong> 把式 (80-17) 改成 <span class="math inline">r_i=(v_{i+1}-v_i)/T_s-u_{i-d}</span>，残差标签立刻变干净。这一步必须做，否则你学到的“残差”里混着一个与 <span class="math inline">\Delta u</span> 成正比的假项，而 <span class="math inline">\Delta u</span> 又与参考轨迹的加速度相关，模型会把参考的运动规律记成对象的物理特性——换一条轨迹就失效（这正是 §80.8.7 第一类失败）。</p>
+<p><strong>第二种是补偿预测。</strong> 在 MPC 里把延迟显式建模：前 <span class="math inline">d</span> 步的输入已经躺在执行器的管道里，不能改，只有 <span class="math inline">u_d,\dots,u_{N-1}</span> 是决策变量。实现上就是把 QP 的前 <span class="math inline">d</span> 列固定成上一轮的解，决策变量从第 <span class="math inline">d</span> 列开始。代价是有效时域缩短为 <span class="math inline">N-d</span>，可行域也相应变小；收益是预测与物理对齐，控制器不再“提前半拍”。</p>
+<p>只做第一种、不做第二种，闭环仍然会有一点过冲，因为控制器相信自己这一步的指令立刻生效，实际要等 <span class="math inline">d</span> 步。只做第二种、不做第一种，学习到的残差仍然是脏的，模型精度上不去。两件事要一起做。</p>
+<p>这与第 47 章的 Smith 预估器是同一个思路：Smith 用显式的延迟环节把被控对象的相位补回来，本章用 QP 里的固定列把延迟补回来。区别是 Smith 需要精确的延迟值、且对延迟失配敏感；MPC 里的固定列对 <span class="math inline">d</span> 的整数误差不敏感（差一步只是有效时域少一步），但对分数延迟无能为力——小于一个采样周期的延迟，只能通过提高 <span class="math inline">T_s</span> 的采样率或加一个一阶滞后环节近似。</p>
+<p>最后提醒一句：延迟不只存在于执行器。传感器滤波、通信总线、状态估计器都会引入延迟，它们的总和才是 <span class="math inline">d</span>。分别测、分别记，不要只测执行器那一段——工业现场最常见的错误是把 20 ms 的执行器延迟调好了，却漏掉了 30 ms 的滤波器群延迟。</p>
+<h2 id="稳定性与性能">80.6 稳定性与性能</h2>
+<p>学习模型改变了预测，也就改变了闭环的稳定性论证。第 58 章的证明依赖“预测模型 = 真实模型”这个等式，现在等式变成了近似，结论必须重写。这一节给出重写后的形式，并把实测的性能数字拆开看。</p>
+<h3 id="名义闭环的稳定性从哪里来">80.6.1 名义闭环的稳定性从哪里来</h3>
+<p>先回顾没有学习时的论证。设 <span class="math inline">V_N(x)</span> 是 MPC 的最优值函数，标准结论由三步组成：</p>
+<ol type="1">
+<li><strong>下降性</strong>：<span class="math inline">V_N(x_{k+1})\le V_N(x_k)-\ell(x_k,u_k)</span>，靠的是“把上一周期的解平移一位”仍可行；</li>
+<li><strong>正定性</strong>：<span class="math inline">V_N(x)\ge\ell(x,\kappa(x))</span>，最优值至少等于当前一步的代价；</li>
+<li><strong>终端代价</strong>：<span class="math inline">V_f</span> 是终端集上的 Lyapunov 函数，保证平移后的解在末尾仍可行。</li>
+</ol>
+<p>三条合起来给出 <span class="math inline">V_N</span> 沿闭环单调下降，从而收敛到原点。这三步里，第 1 步和第 3 步都用到“预测模型 = 真实模型”，第 2 步只用代价函数本身。</p>
+<h3 id="学习误差进来之后iss-而不是渐近稳定">80.6.2 学习误差进来之后：ISS 而不是渐近稳定</h3>
+<p>学习模型让第 1 步不再严格成立。预测的一步是 <span class="math inline">Ax+Bu+d_k</span>，真实的一步是 <span class="math inline">Ax+Bu+d_k+e_k</span>，其中 <span class="math inline">e_k=\frac12NT_s^2(f_r-\hat f_r)</span> 是学习误差造成的偏差。于是下降性变成一个带扰动的不等式：</p>
+<p><span class="math display">
+V_N(x_{k+1})\le V_N(x_k)-\ell(x_k,u_k)+\gamma\|e_k\|
+\tag{80-25}
+</span></p>
+<p><span class="math inline">\gamma</span> 是与终端代价梯度、时域长度有关的常数。式 (80-25) 说明的不再是“收敛到零”，而是“收敛到一个正比于 <span class="math inline">\|e_k\|</span> 的邻域”——这就是输入-状态稳定性（ISS）的表述。它给出一条工程上可用的界：</p>
+<p><span class="math display">
+\limsup_{k\to\infty}\|x_k\|\le\rho(\|e\|_\infty)
+\tag{80-26}
+</span></p>
+<p><span class="math inline">\rho</span> 单调且 <span class="math inline">\rho(0)=0</span>。换成直白的话：<strong>学习误差有界，闭环就有界；学习误差趋于零，闭环就回到原点</strong>。这个结论比渐近稳定弱，但它诚实——只要用了近似模型，就不可能得到严格收敛。</p>
+<p>本章没有给算例加终端约束（<span class="math inline">N=15</span> 的时域靠终端代价 <span class="math inline">P</span> 兜住），所以式 (80-23) 的终端集并不存在，严格意义上的递推可行性不成立。这是有意的取舍：加终端约束会让 QP 的可行域明显缩小，而本章的参考轨迹离约束边界很远，加了只会拖慢求解。工程上判断要不要加，就看“约束是否会激活”——会激活就必须加，不会激活就可以省。</p>
+<h3 id="性能把误差拆成三份">80.6.3 性能：把误差拆成三份</h3>
+<p>实测的四组闭环结果（图 80-5、图 80-6）是：</p>
+<p>表 80-3　四种预测模型的闭环性能（圆周跟踪，120 个控制周期）</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">模型</th>
+<th style="text-align: left;">RMSE/cm</th>
+<th style="text-align: left;">最大误差/cm</th>
+<th style="text-align: left;"><span class="math inline">\|u\|</span> 均值</th>
+<th style="text-align: left;">饱和占比</th>
+<th style="text-align: left;">中位耗时/ms</th>
+<th style="text-align: left;">P95/ms</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">名义</td>
+<td style="text-align: left;">7.19</td>
+<td style="text-align: left;">7.85</td>
+<td style="text-align: left;">0.603</td>
+<td style="text-align: left;">0%</td>
+<td style="text-align: left;">31.44</td>
+<td style="text-align: left;">46.67</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">RBF</td>
+<td style="text-align: left;">3.98</td>
+<td style="text-align: left;">5.18</td>
+<td style="text-align: left;">0.614</td>
+<td style="text-align: left;">0%</td>
+<td style="text-align: left;">31.78</td>
+<td style="text-align: left;">38.11</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">GP</td>
+<td style="text-align: left;">1.71</td>
+<td style="text-align: left;">2.48</td>
+<td style="text-align: left;">0.608</td>
+<td style="text-align: left;">0%</td>
+<td style="text-align: left;">31.23</td>
+<td style="text-align: left;">37.58</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Koopman</td>
+<td style="text-align: left;">5.19</td>
+<td style="text-align: left;">6.80</td>
+<td style="text-align: left;">0.611</td>
+<td style="text-align: left;">0%</td>
+<td style="text-align: left;">32.45</td>
+<td style="text-align: left;">38.63</td>
+</tr>
+</tbody>
+</table>
+<figure>
+<img src="figs/ch080/fig_080_05_paths.svg" alt="图 80-5　圆周参考与四条闭环轨迹" /><figcaption aria-hidden="true">图 80-5　圆周参考与四条闭环轨迹</figcaption>
+</figure>
+<figure>
+<img src="figs/ch080/fig_080_06_tracking_error.svg" alt="图 80-6　四条闭环的跟踪误差时间历程" /><figcaption aria-hidden="true">图 80-6　四条闭环的跟踪误差时间历程</figcaption>
+</figure>
+<p>图 80-5 与图 80-6 是同一组数据的两种视角。轨迹图上四条曲线都绕着圆走，差别在径向：名义模型与 Koopman 的轨迹整体偏外，平均半径分别是 1.252 m 与 1.247 m（参考 1.200 m）；RBF 是 1.237 m；GP 是 1.210 m，几乎与参考重合。误差历程图把“偏外”翻译成了时间信号：名义模型的误差在 2 s 内升到 7 cm 后基本不再变化，这是典型的系统性偏差；GP 的误差在过渡期后压到 2 cm 以内，偶尔有小幅波动，来自两遍法的轨迹不一致。</p>
+<p>这张表里最值得看的不是 RMSE 的排序，而是它为什么没有更低。把 GP 的 1.71 cm 拆开，至少有三份来源：</p>
+<p><strong>第一份是残差没学完的部分。</strong> GP 的一步误差 0.310 m/s²，按式 (80-24) 折算到位置约 2.4 cm 的上界，实测 1.71 cm 落在界内。这一份是主要的，也是唯一能靠“更多数据或更好的核”继续压的。</p>
+<p><strong>第二份是两遍法的轨迹偏差。</strong> 第一遍与第二遍的预测轨迹差约 7 cm，残差在这两个点上取值不同，导致第二遍的残差序列有约 10% 的误差。折算到闭环，量级在毫米级，不是主导项。</p>
+<p><strong>第三份是数值容差。</strong> OSQP 的 <code>eps_abs=1e-6</code>、<code>eps_rel=1e-6</code>，对应的解精度远高于毫米级，可以忽略。若把容差放宽到 <span class="math inline">10^{-3}</span> 换速度，这一份就会升到厘米级——这是“快”与“准”之间的一个真实旋钮。</p>
+<p>三份加起来，说明 1.71 cm 已经接近这套配置的下限。想再降，必须动模型，而不是动权重。</p>
+<h3 id="耗时瓶颈在-qp不在学习">80.6.4 耗时：瓶颈在 QP，不在学习</h3>
+<p>表 80-3 的耗时一列值得单独说。四组的中位数都在 31–32 ms，差异不到 4%；而残差模型的推理成本差别很大——GP 要对 200 个样本算核，RBF 只算 48 个，Koopman 是一次 15 维矩阵乘。差别被 QP 淹没了。</p>
+<p>这个观察有直接的工程含义：<strong>优化学习器的推理速度，收益接近于零；要让控制器跑得更快，只能动 QP</strong>。动 QP 的办法有三个：缩短 <span class="math inline">N</span>（线性降）、热启动（本章实测迭代数 50→25，时间 3.40→1.54 ms，图 80-8）、以及把两遍法改成一遍加一次性修正。</p>
+<p>P95 与中位数的比值是 1.2–1.5，说明求解时间有抖动但没有长尾。抖动来自 OSQP 的迭代数随问题条件变化，<span class="math inline">N</span> 越大抖动越明显。实时性验收要看 P95 而不是中位数：本章 P95 最大 46.67 ms，相对 <span class="math inline">T_s=100</span> ms 余量 2 倍，可以接受；若 P95 超过 <span class="math inline">T_s</span> 的 80%，就必须留降级路径（例如超时后用上一周期的解）。</p>
+<h3 id="什么情况下会不稳">80.6.5 什么情况下会不稳</h3>
+<p>ISS 的结论有前提，前提被破坏时闭环会失稳。三种典型情形：</p>
+<p><strong>学习误差无界。</strong> 数据覆盖外推时 <span class="math inline">\hat f_r</span> 可能给出与真实值反号的输出，等效于把残差加了两遍。症状是误差先缓慢增大，然后突然发散。判据是监控 <span class="math inline">\|\hat f_r\|</span> 是否超过训练集残差最大值的 1.5 倍，超过就切回名义模型。</p>
+<p><strong>终端代价不匹配。</strong> 用零矩阵或错误尺度的 <span class="math inline">P</span> 会让 MPC 短视，在时域末端“刹车”，表现为周期性的加减速（本章用零终端代价时 RMSE 6.73 cm，与名义的 7.19 接近，说明终端代价几乎没起作用）。判据是看 <span class="math inline">P</span> 的特征值是否与闭环极点匹配（图 80-7）。</p>
+<p><strong>约束与学习冲突。</strong> 若约束很紧、残差又大，两遍法的第二遍可能不可行。本章饱和占比 0%，没有触发；一旦触发，必须有可行回退（第 58 章的软约束或第 79 章的安全滤波）。</p>
+<h3 id="增益-gamma-怎么估第-58-章哪几条还能用">80.6.6 增益 <span class="math inline">\gamma</span> 怎么估，第 58 章哪几条还能用</h3>
+<p>式 (80-25) 里的 <span class="math inline">\gamma</span> 只说是“与终端代价梯度、时域长度有关的常数”，没有给算法。解析估计是可行的：<span class="math inline">\gamma</span> 本质上是最优值函数关于状态的 Lipschitz 常数乘以扰动到状态的传递增益，前者可以用 <span class="math inline">2\sqrt{\lambda_{max}(P)}</span> 量级估，后者由闭环极点决定。但这条链上每一步都保守，估出来的 <span class="math inline">\gamma</span> 常常比真实值大一个数量级，除了证明存在性没有别的用途。</p>
+<p>工程上更可靠的办法是<strong>用四个模型的实测数据反推</strong>。把表 80-3 的闭环稳态误差除以对应模型的一步误差，得到“每 1 m/s² 的一步误差换来多少厘米的稳态偏差”：</p>
+<ul>
+<li>名义：<span class="math inline">1.195\to7.19</span> cm，比值 6.02；</li>
+<li>RBF：<span class="math inline">0.624\to3.98</span> cm，比值 6.38；</li>
+<li>GP：<span class="math inline">0.310\to1.71</span> cm，比值 5.52；</li>
+<li>Koopman：<span class="math inline">0.445\to5.19</span> cm，比值 11.66（单位均为 cm·s²/m）。</li>
+</ul>
+<p>前三组的比值集中在 5.5–6.4，与 ISS 的线性界一致：稳态偏差正比于误差上界，斜率就是 <span class="math inline">\rho</span>。Koopman 的比值翻了一倍，原因不在幅值而在<strong>时间相关性</strong>——它的误差在相邻步之间高度相关，等于每一步都往同一个方向推，偏差沿时间累积；GP 的误差更接近白噪声，正负相消，同样幅值下累积得少。这条对比给出一个比 <span class="math inline">\gamma</span> 本身更有用的判据：<strong>同样的误差幅值，相关性强的模型更危险</strong>。评估一个残差模型时，除了看一步 RMSE，还应当看误差的自相关时间，后者才决定闭环能压到多少。</p>
+<p>有了这个比值，即使不做任何稳定性证明，也能在部署前给一个粗预测：若某个新模型的一步误差是 0.5 m/s²，闭环稳态大约在 3 cm 上下，前提是它的误差相关性不比 RBF 更强。这个预测的误差通常在 30% 以内，足以用来判断“值不值得上线”。</p>
+<p>再看第 58 章的结论哪些还能用。四条主要结论的命运各不相同：</p>
+<ol type="1">
+<li><strong>递推可行性</strong>：不能直接用。终端集必须按式 (80-24) 膨胀，且 <span class="math inline">\alpha</span> 随 <span class="math inline">N</span> 变（§80.5.6）。这是受影响最大的一条。</li>
+<li><strong>值函数下降性</strong>：退化为式 (80-25) 的带扰动不等式，结论从“收敛到原点”变成“收敛到邻域”。这是本质性的弱化，不能靠假设绕过。</li>
+<li><strong>终端代价正定</strong>：仍然成立，而且更重要了——它同时决定 <span class="math inline">\gamma</span> 的大小。这就是为什么 §80.8.3 里“零终端代价”那一组的误差会退回基线：不只是短视，还放大了扰动的传递。</li>
+<li><strong>约束满足</strong>：这条要打一个折。QP 里的约束是加在<strong>名义预测</strong>上的，物理状态可能越过边界，越界量正是 <span class="math inline">\epsilon</span>。所以硬约束必须预留 <span class="math inline">\epsilon</span> 的余量，把 <span class="math inline">u_{max}</span> 收紧到 <span class="math inline">u_{max}-\delta</span>，<span class="math inline">\delta</span> 按 <span class="math inline">\epsilon</span> 折算。</li>
+</ol>
+<p>第 4 条与第 79 章的护卫裕量是同一个结构。第 79 章的裕量是 <span class="math inline">m=\|v\|_{max}T_s+\frac12a_{max}T_s^2</span>，本章的膨胀是 <span class="math inline">\epsilon\approx\frac12NT_s^2\|e_r\|</span>；两者都是“把预测的不确定性折算成一段距离，再从可行域里扣掉”。差别只在来源：前者来自采样与延迟，后者来自学习误差。既然结构相同，工程上的处理也该相同——不要指望控制器“小心一点”就没事，要在约束里显式扣掉。</p>
+<h3 id="复现性为什么换个机器数字就变了">80.6.7 复现性：为什么换个机器数字就变了</h3>
+<p>这一章的所有数字都可能被别人质疑，第一句质疑通常是“我跑出来不是这个数”。要先分清三种复现性，它们的承诺完全不同。</p>
+<ul>
+<li><strong>结果可复现</strong>：误差、耗时在 1% 以内一致，结论不变。这是应当承诺的层次。</li>
+<li><strong>轨迹可复现</strong>：同一初始状态、同一参考，控制序列逐位相同。这在闭环里做不到，也不必要。</li>
+<li><strong>日志可复现</strong>：拿到同一份日志，能重放出同样的分析结论。这是排障时真正需要的层次。</li>
+</ul>
+<p>轨迹不可复现有三个来源。<strong>随机数</strong>是最容易想到的：本章的采样点（<code>seed=20261020</code>）、RBF 的中心选择（<code>seed=0</code>）、训练/验证划分，都依赖种子。种子固定后这一项就消失了。<strong>求解器迭代</strong>是第二个：OSQP 是 ADMM 类算法，迭代终止依赖容差与缩放，本身是确定性的；但热启动让它依赖<strong>历史</strong>——同一状态，若上一周期的解不同，迭代停在不同位置，<span class="math inline">u</span> 会有 <span class="math inline">10^{-6}</span> 量级的差异。闭环会把这个差异放大到可观测的量级，但它不影响任何结论。<strong>浮点并行</strong>是第三个，也是最隐蔽的：BLAS 的多线程归约顺序不固定，同一个矩阵乘在不同线程数下最后几位不同，随后被条件数放大。</p>
+<p>对应的工程做法是四条：</p>
+<ol type="1">
+<li>所有随机源显式给种子，并把种子写进日志；</li>
+<li>计时与对比实验固定线程数（例如 <code>OMP_NUM_THREADS=1</code>），否则耗时的方差会掩盖你要比较的差异；</li>
+<li>记录求解器版本。OSQP 不同版本的默认缩放与 polish 策略变过，跨版本比较迭代数没有意义；</li>
+<li>报告里写清跑了几次、取的是中位数还是均值。</li>
+</ol>
+<p>第 4 条经常被忽略。本章的 31.44 ms 是 120 个周期耗时的中位数，不是一次测量的结果；若只跑一次，同一个配置换台机器就能差出 20%。同理，表 80-3 的 P95 是从 120 个样本估出来的，它的置信区间并不窄——120 个点的 95 分位，本质上只由最慢的 6 个点决定。想让 P95 稳定，至少要几百个周期。</p>
+<p>最后是一条诊断经验：换机器后若<strong>耗时变了但解没变</strong>，是正常的；若<strong>解变了</strong>，说明问题的条件数不好，或者容差太松。前者可以通过缩放改善，后者应当把 <code>eps_abs</code>、<code>eps_rel</code> 从 <span class="math inline">10^{-6}</span> 收紧到 <span class="math inline">10^{-8}</span> 再试一次——若解随之变化，那你之前报告的精度本来就是容差决定的，不是算法决定的。</p>
+<h2 id="参数意义与作用">80.7 参数意义与作用</h2>
+<p>这一节把参数按“改了它，什么会变”的顺序过一遍。分成两组：学习器侧的超参（改的是模型的形状），MPC 侧的参数（改的是优化的行为）。两组会互相抵消，最后单独说这件事。</p>
+<h3 id="学习器侧中心数核宽岭项">80.7.1 学习器侧：中心数、核宽、岭项</h3>
+<p><strong>中心数 <span class="math inline">k</span></strong> 决定模型的容量上限。本章 <span class="math inline">k=48</span>，输出 2 维，共 96 个权重。<span class="math inline">k</span> 太小，残差场的高频成分学不出来，表现为训练误差与验证误差都高，且误差在空间上呈“块状”——每一块对应一个中心的影响域。<span class="math inline">k</span> 太大，权重多于样本，岭项开始主导，模型退化为“在样本点之间插值”，外推变差。</p>
+<p>判断 <span class="math inline">k</span> 是否合适，看学习曲线的拐点（图 80-9）。本章 80 个样本时 RBF 误差 0.810，160 个时 0.653，320 个时 0.659——从 160 到 320 几乎没降，说明 48 个中心的容量已经被数据填满，再加样本也没用。若曲线在 320 处仍在下降，说明容量不够，该加中心。</p>
+<p><strong>核宽 <span class="math inline">\sigma</span></strong> 决定每个中心的影响半径。本章取 0.7（归一化单位），与相邻中心的典型间距同量级。<span class="math inline">\sigma</span> 太小，中心之间出现“空洞”，模型在空洞里趋零；<span class="math inline">\sigma</span> 太大，所有中心的影响重叠，模型退化成线性回归，学不出局部结构。一个实用的初值是 <span class="math inline">\sigma\approx1.5k^{-1/d}</span>，<span class="math inline">d</span> 是输入维数；本章 <span class="math inline">d=4</span>、<span class="math inline">k=48</span>，给出 0.67，与 0.7 一致。</p>
+<p><strong>岭项 <span class="math inline">\lambda</span></strong> 只影响数值稳定性，不改变模型的表达能力（§80.5.4）。它的量级应该比 <span class="math inline">\Phi^{\mathsf T}\Phi</span> 的迹小两三个数量级：本章迹在 <span class="math inline">10^2</span> 量级，<span class="math inline">\lambda=10^{-6}</span> 合适；若把 <span class="math inline">\lambda</span> 加到 1，模型就明显欠拟合。</p>
+<h3 id="gp-的三个超参">80.7.2 GP 的三个超参</h3>
+<p>GP 的超参各有明确含义，不像神经网络那样只能靠试：</p>
+<p><strong>长度尺度 <span class="math inline">\ell</span></strong> 决定“多远算不相关”。本章 <span class="math inline">\ell=0.8</span>，对应残差场约 1 m 的空间尺度。<span class="math inline">\ell</span> 太大，模型过度平滑，学不出阻尼与力场的局部起伏；<span class="math inline">\ell</span> 太小，模型在样本之间快速回落，方差在样本点附近剧烈变化，式 (80-20) 的界变得毫无用处。判据是看 <span class="math inline">\ell</span> 与数据点平均间距的比值，取 2–5 之间比较稳。</p>
+<p><strong>信号方差 <span class="math inline">\sigma_f^2</span></strong> 决定残差的先验幅值。本章 <span class="math inline">\sigma_f=1.0</span>，与残差 RMS（1.195）接近。<span class="math inline">\sigma_f</span> 取得太小，模型不敢预测大幅值，均值被压向零；取得太大，方差整体抬高，式 (80-20) 的界失去区分度。</p>
+<p><strong>噪声方差 <span class="math inline">\sigma_n^2</span></strong> 同时是正则项与噪声模型（§80.5.4）。本章 <span class="math inline">\sigma_n=0.05</span>，对应 4% 的噪声水平；实测覆盖率 100%，说明这个值偏保守。若你的测量噪声确实有 4%，这个值就是对的；若测量很干净，应当降到 0.01 量级，让方差更紧。</p>
+<p>这三个参数都可以用边际似然做优化，本章没有做，因为样本只有 200 个，边际似然的曲面很平，优化出来的值与手选差别不大。样本上千之后再考虑。</p>
+<h3 id="mpc-侧时域权重终端代价">80.7.3 MPC 侧：时域、权重、终端代价</h3>
+<p><strong>预测时域 <span class="math inline">N</span></strong> 决定“看多远”。<span class="math inline">N</span> 太小，MPC 短视，跟踪滞后；<span class="math inline">N</span> 太大，计算量线性增长，而且远处的预测本来就不准。本章 <span class="math inline">N=15</span> 对应 1.5 s，约为参考周期的七分之一。判据是 <span class="math inline">NT_s\ge3\tau</span>（§80.5.2），<span class="math inline">\tau</span> 取闭环的主导时间常数。</p>
+<p><strong>权重比 <span class="math inline">Q/R</span></strong> 决定“跟踪紧还是省力”。本章 <span class="math inline">Q=\mathrm{diag}(10,10,1,1)</span>、<span class="math inline">R=0.1I</span>，位置权重是输入权重的 100 倍。这个比值直接决定闭环带宽：比值大，控制器激进，误差小但输入抖动；比值小，控制器保守，误差大但平滑。学习模型进来之后，这个比值的作用被削弱了一部分——因为残差补偿已经消掉了系统性偏差，剩下的误差对权重不敏感。本章四组模型的 <span class="math inline">\|u\|</span> 均值都在 0.60–0.61，说明权重确实没被学习改变。</p>
+<p><strong>终端代价 <span class="math inline">P</span></strong> 决定“时域末端值多少钱”。本章用 LQR 解出的 <span class="math inline">P</span>，特征值是 <span class="math inline">[4.26,4.26,62.06,62.06]</span>；学习得到的 <span class="math inline">P_\theta</span> 特征值是 <span class="math inline">[5.67,6.04,65.79,65.97]</span>，量级一致但比例不同（图 80-7）。用零终端代价时 RMSE 6.73 cm，用 LQR 时 3.08 cm，用学习值时 3.07 cm——<strong>终端代价从“没有”到“有个大概”的收益很大，从“大概”到“精确”的收益很小</strong>。这条经验能省掉很多调参时间：先随便给一个正定矩阵，再考虑要不要学。</p>
+<h3 id="两个不是参数的量">80.7.4 两个不是参数的量</h3>
+<p>有两件事经常被当成参数调，其实不该调：</p>
+<p><strong>数据覆盖范围。</strong> 它决定了模型在哪里可信，不是一个可以“调优”的数。本章覆盖 <span class="math inline">[-2,2]^2</span>，参考轨迹的半径是 1.2，留了 0.8 的余量。若参考会走到 3 m，就必须补数据，而不是调核宽去外推。</p>
+<p><strong>残差饱和 <span class="math inline">f_{max}</span>。</strong> 它是安全措施，不是精度参数。取值太小会削掉真实的残差峰值，太大就失去保护作用。合理值取训练集残差最大幅值的 1.5 倍：本章的最大幅值是 2.66，<span class="math inline">f_{max}</span> 因此约 4.0。注意这个阈值高于 <span class="math inline">u_{max}=3</span>，意思是它只在模型外推出荒谬值时生效，正常工况下从不触发——这正是安全阀该有的状态。若你把 <span class="math inline">f_{max}</span> 压到 3.0 以下，它就开始削真实峰值，闭环误差反而上升。</p>
+<h3 id="参数之间会互相抵消">80.7.5 参数之间会互相抵消</h3>
+<p>最后一件事必须说清楚：学习器侧与 MPC 侧的参数不是独立的，改一边可以用另一边补回来，这会让人误以为某个参数“没用”。</p>
+<p>最典型的例子是 <span class="math inline">Q/R</span> 与残差模型。名义模型的稳态误差 7.19 cm 主要来自阻尼，如果把位置权重从 10 加到 100，误差也会降——但代价是输入抖动、饱和占比上升。加了残差模型之后，同样的误差可以用小得多的权重达到。所以“权重调到多少合适”这个问题，在没有确定模型之前没有答案。</p>
+<p>第二个例子是 <span class="math inline">N</span> 与 <span class="math inline">P</span>。缩短 <span class="math inline">N</span> 会让 MPC 短视，但把 <span class="math inline">P</span> 调大能部分补偿；反过来，<span class="math inline">P</span> 给得不合适时，加长 <span class="math inline">N</span> 也能掩盖。这意味着调参不能一个一个来，必须成组地动：先固定 <span class="math inline">N</span> 与 <span class="math inline">P</span>，调 <span class="math inline">Q/R</span> 到响应满意；再固定 <span class="math inline">Q/R</span>，调 <span class="math inline">N</span> 与 <span class="math inline">P</span> 到末端不发散；最后才动学习器。顺序颠倒会让你在三个参数之间来回打转。</p>
+<h3 id="敏感性排序哪些旋钮真的有用">80.7.6 敏感性排序：哪些旋钮真的有用</h3>
+<p>把本章所有实验放在一起，可以给出一张“投入产出表”。它回答的是调参开始前最该问的问题：<strong>我现在应该动哪个旋钮？</strong></p>
+<p>先看误差维度。以名义模型、<span class="math inline">N=15</span> 的 7.19 cm 为起点：</p>
+<ul>
+<li>换 RBF 残差（<span class="math inline">N=15</span>）：7.19→3.98，降 45%；</li>
+<li>换 GP 残差（<span class="math inline">N=15</span>）：7.19→1.71，降 76%；</li>
+<li>换终端代价（RBF、<span class="math inline">N=6</span> 下，零→LQR）：6.73→3.08，降 54%；</li>
+<li>缩短时域（RBF，<span class="math inline">N=15\to6</span>）：3.98→3.08，降 23%；</li>
+<li>换热启动：误差不变，0%。</li>
+</ul>
+<p>再看时间维度，以冷启动单次 QP 的 3.40 ms 为起点：</p>
+<ul>
+<li>换热启动（平移或学习初值）：3.40→1.63 或 1.54，降 52%–55%；</li>
+<li>换预测模型（名义→GP）：31.44→31.23 ms，不到 1%；</li>
+<li>缩短时域：问题规模线性下降，是唯一同时动两边的旋钮。</li>
+</ul>
+<p>两个维度的排序几乎相反。这是本章最有用的一条工程结论：<strong>影响精度的旋钮几乎不影响耗时，影响耗时的旋钮几乎不影响精度</strong>。它意味着你可以分别优化两个指标，而不必在两者之间做痛苦的折中——唯一的例外是 <span class="math inline">N</span>。</p>
+<p><span class="math inline">N</span> 的特殊性值得单独强调。模型不准时，缩短 <span class="math inline">N</span> 既降误差又降耗时（表 80-6 第 3 轮）；模型准了之后，缩短 <span class="math inline">N</span> 开始牺牲精度（第 5 轮把 <span class="math inline">N</span> 恢复到 15 才降到 1.71）。所以 <span class="math inline">N</span> 的最优值不是常数，它随模型精度移动：<strong>模型越好，时域可以越长</strong>。这给出一条实践规则：每次换学习器之后，都要重新扫一遍 <span class="math inline">N</span>，不要沿用上一版的设置。</p>
+<p>把成本也放进这张表，优先级就清楚了：</p>
+<ul>
+<li><strong>终端代价</strong>是性价比最高的一步——一次性离线算 120 个 QP，几分钟算力，换来 54% 的误差下降，且不增加任何在线计算。若你只做一件事，做这个。</li>
+<li><strong>换模型</strong>收益最大（76%）但成本也最高：采数据、训练、离线验收、闭环验收，任何一环出问题都要回头。它应当排在终端代价之后。</li>
+<li><strong>热启动</strong>是唯一能在不改精度的前提下砍掉一半耗时的手段，代价是几十行代码。若你的系统实时性吃紧，这是第一件该做的事。</li>
+<li><strong>时域</strong>改一个参数就能试，成本最低，但它依赖模型质量，结论不稳定，适合作为最后的微调。</li>
+</ul>
+<p>这张表也解释了为什么很多工程报告里“调了三个月没有进展”：他们一直在动 <span class="math inline">Q/R</span>——而 <span class="math inline">Q/R</span> 在本章的四组实验里几乎没有被改动，因为残差模型消掉系统性偏差之后，权重的作用被大幅削弱（§80.7.5）。<strong>先动结构与模型，最后才动权重</strong>，这是本章所有实验共同指向的顺序。</p>
+<h3 id="单位一个会让权重失效的坑">80.7.7 单位：一个会让权重失效的坑</h3>
+<p><span class="math inline">Q=\mathrm{diag}(10,10,1,1)</span> 这组数看着平常，但它隐含了一个前提：位置用米、速度用米每秒。若把位置改成厘米，同样的矩阵会让位置项的数值放大 <span class="math inline">10^4</span> 倍，等效于把位置权重从 10 提到 <span class="math inline">10^5</span>。闭环立刻变得极激进，而这与“算法”毫无关系。</p>
+<p>权重是<strong>有量纲</strong>的。<span class="math inline">Q</span> 的对角元单位是“代价/状态单位的平方”，<span class="math inline">R</span> 的对角元是“代价/输入单位的平方”，两者之比才有意义。所以一套调好的 <span class="math inline">Q/R</span> 只在它被调出来的那套单位下有效，换单位必须重调——这条在跨团队协作时最容易出事：算法组用米，控制组用毫米，合并代码后谁也不知道为什么抖。</p>
+<p>稳妥的做法是<strong>先归一化再加权</strong>。取每个状态的特征尺度 <span class="math inline">L_i</span>（位置取工作空间半径，速度取最大速度），令 <span class="math inline">\tilde x_i=x_i/L_i</span>，然后对 <span class="math inline">\tilde x</span> 给权重。本章的 <span class="math inline">L</span> 取值恰好是 1 m 与 1 m/s，所以 <span class="math inline">Q</span> 看起来像“随手给的”，实际上是“每 1 m 与每 1 m/s 的代价比是 10:1”。这个解释比“我试出来 10 比较好”有用得多，也解释了为什么速度权重取 1 而不是 10：在归一化坐标里，速度误差 1 单位本来就比位置误差 1 单位更“便宜”，因为速度靠反馈能快速纠正。</p>
+<p>输入侧同理。<span class="math inline">R=0.1I</span> 隐含输入单位是 m/s²，<span class="math inline">u_{max}=3</span> 也是 m/s²。若你的执行器是力矩，中间隔着一个质量矩阵，<span class="math inline">R</span> 必须按力矩换算，否则“省力”与“跟踪紧”的权衡关系整个变了。</p>
+<p>残差侧还有一处单位问题。§80.7.4 的 <span class="math inline">f_{max}=4.0</span> 与 <span class="math inline">u_{max}=3</span> 是直接比较的，这只有在两者同单位时才成立；本章都是加速度，所以可以直接比。若残差模型输出的是力，而约束加在加速度上，必须乘 <span class="math inline">1/m</span> 后再比，否则安全阀要么永不触发、要么一直触发。</p>
+<p>最后是阈值。表 80-7 里“一步预测误差 ≤0.35 m/s²”与“跟踪误差 ≤2 cm”混用了两种单位，这是有意的——前者是模型量，后者是任务量，工程上本来就该分开看。但写进代码时必须显式换算：监控模块拿到的若是毫米，比较前要先除 1000。这类错误不会报错，只会让告警阈值悄悄偏移三个数量级。</p>
+<h2 id="调参方法与经验">80.8 调参方法与经验</h2>
+<p>上一节讲每个参数“是什么”，这一节讲“怎么调、调到什么时候停”。所有数字都来自本章的四组实验：数据量扫描（图 80-9）、终端代价对比（图 80-7、图 80-10）、热启动对比（图 80-8）。</p>
+<h3 id="调参顺序先模型后控制器最后初值">80.8.1 调参顺序：先模型，后控制器，最后初值</h3>
+<p>顺序错了会白费功夫。正确顺序是：</p>
+<ol type="1">
+<li><strong>先把学习器调到“离线误差不再明显下降”</strong>，判据是验证集的一步误差与多步误差都进入平台；</li>
+<li><strong>再调 MPC 的 <span class="math inline">N</span>、<span class="math inline">Q/R</span>、<span class="math inline">P</span></strong>，判据是闭环误差与输入平滑度；</li>
+<li><strong>最后调热启动</strong>，判据是求解时间，不影响误差。</li>
+</ol>
+<p>反过来做的典型错误是：先用名义模型把 <span class="math inline">Q/R</span> 调到误差最小，再回头加残差模型，结果发现原来的权重过大，闭环开始抖动。原因是名义模型的误差是系统性的，大权重能压住；残差模型消掉了系统性偏差，同样的权重就变成了过激。</p>
+<h3 id="学习器用数据量扫描找平台">80.8.2 学习器：用数据量扫描找平台</h3>
+<p>数据量扫描的做法是固定超参、只加样本，画误差-样本数曲线（图 80-9）。本章的结果是：</p>
+<p>表 80-4　一步残差误差随样本数的变化（单位 m/s²）</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">样本数</th>
+<th style="text-align: left;">20</th>
+<th style="text-align: left;">40</th>
+<th style="text-align: left;">80</th>
+<th style="text-align: left;">160</th>
+<th style="text-align: left;">320</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">RBF</td>
+<td style="text-align: left;">1.010</td>
+<td style="text-align: left;">0.886</td>
+<td style="text-align: left;">0.810</td>
+<td style="text-align: left;">0.653</td>
+<td style="text-align: left;">0.659</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">GP</td>
+<td style="text-align: left;">0.821</td>
+<td style="text-align: left;">0.794</td>
+<td style="text-align: left;">0.548</td>
+<td style="text-align: left;">0.409</td>
+<td style="text-align: left;">0.295</td>
+</tr>
+</tbody>
+</table>
+<p>两条曲线的形状完全不同，这正是选型的依据。RBF 在 160 个样本后进入平台（0.653→0.659，反而略升，是训练集不同带来的波动），说明容量已经饱和——这一档的中心数已经顶到 48 的上限，再加样本只能把同样 48 个中心拟合得更准；GP 一路下降，从 160 到 320 降了 28%，说明它的有效参数量随样本增长。</p>
+<figure>
+<img src="figs/ch080/fig_080_09_learning_curve.svg" alt="图 80-9　RBF 与 GP 的一步误差随样本数的变化（横轴对数）" /><figcaption aria-hidden="true">图 80-9　RBF 与 GP 的一步误差随样本数的变化（横轴对数）</figcaption>
+</figure>
+<p>看到这条曲线的平台，调参就结束了——继续加数据只会浪费时间。若平台高度仍不满足精度要求（本章 GP 的 0.295 相对残差 RMS 1.195 是 25%），才需要加中心数或换核。</p>
+<h3 id="终端代价先看特征值再看闭环误差">80.8.3 终端代价：先看特征值，再看闭环误差</h3>
+<p>终端代价的调参不能只比一个 RMSE，否则会掩盖问题。本章做了两件事：</p>
+<p><strong>第一，比特征值（图 80-7）。</strong> LQR 的 <span class="math inline">P</span> 特征值是 <span class="math inline">[4.26,4.26,62.06,62.06]</span>，学习得到的 <span class="math inline">P_\theta</span> 是 <span class="math inline">[5.67,6.04,65.79,65.97]</span>。前一对对应位置通道，后一对对应速度通道。两组数的比例不同：学习值的速度通道权重相对更高，意思是“末端更看重把速度收住”。这个差异与残差的存在一致——残差会持续给速度加扰动，末端多压一点速度是合理的。</p>
+<figure>
+<img src="figs/ch080/fig_080_07_terminal_eig.svg" alt="图 80-7　三组终端代价矩阵的特征值（LQR、近域拟合、远域拟合，纵轴对数）" /><figcaption aria-hidden="true">图 80-7　三组终端代价矩阵的特征值（LQR、近域拟合、远域拟合，纵轴对数）</figcaption>
+</figure>
+<p><strong>第二，比闭环误差（图 80-10）。</strong> 零终端代价、LQR、学习值三组的 RMSE 是 6.73、3.08、3.07 cm，最大误差是 8.30、4.44、4.39 cm。<strong>从零到 LQR 的收益是 3.65 cm，从 LQR 到学习值的收益是 0.01 cm</strong>。这条对比说明：终端代价的主要作用是“提供一个正确的量级”，而不是“精确匹配”。</p>
+<figure>
+<img src="figs/ch080/fig_080_10_terminal_effect.svg" alt="图 80-10　三种终端代价下的跟踪误差历程" /><figcaption aria-hidden="true">图 80-10　三种终端代价下的跟踪误差历程</figcaption>
+</figure>
+<p>图 80-7 里三组特征值的排序完全一致，但每一组内部速度通道都比位置通道高一个数量级以上（LQR 是 62.06 对 4.26，约 15 倍）。这说明位置误差 1 cm 与速度误差 1 cm/s 对代价的贡献本来就不该同量级。这也解释了为什么“随便给一个单位阵当 <span class="math inline">P</span>”通常效果不好：它把两个通道当成了一样重要。远域拟合（第三组）的整体量级明显高于前两组，原因是在 2.5 m 的采样范围里输入饱和频繁出现，代价-to-go 被约束抬高，二次型只能用一个更大的 <span class="math inline">P</span> 去追，拟合误差因此升到 141.1%。</p>
+<p>所以调参策略应当是：先给一个量级正确的 <span class="math inline">P</span>（用 LQR 或简单地按 <span class="math inline">Q</span> 的量级构造），确认闭环误差降下来；只有当你要榨最后的几个百分点、且离线算力充裕时，才值得做 §80.2.5 的拟合。本章 141.1% 的远域误差也提醒：拟合的适用范围必须与训练采样范围一致，超出范围后二次型装不下带约束的价值函数。</p>
+<h3 id="热启动先量迭代数再决定要不要学">80.8.4 热启动：先量迭代数，再决定要不要学</h3>
+<p>热启动的调参就是比较三种策略的迭代数与耗时，结果见表 80-5 与图 80-8：</p>
+<p>表 80-5　三种热启动策略的求解代价（单次 QP，<span class="math inline">N=10</span>）</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">策略</th>
+<th style="text-align: left;">迭代数</th>
+<th style="text-align: left;">耗时/ms</th>
+<th style="text-align: left;">相对冷启动</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">冷启动</td>
+<td style="text-align: left;">50</td>
+<td style="text-align: left;">3.40</td>
+<td style="text-align: left;">—</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">上一解平移</td>
+<td style="text-align: left;">25</td>
+<td style="text-align: left;">1.63</td>
+<td style="text-align: left;">省 52%</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">学习初值</td>
+<td style="text-align: left;">25</td>
+<td style="text-align: left;">1.54</td>
+<td style="text-align: left;">省 55%</td>
+</tr>
+</tbody>
+</table>
+<figure>
+<img src="figs/ch080/fig_080_08_warmstart.svg" alt="图 80-8　三种热启动策略的中位耗时（左）与中位迭代数（右）" /><figcaption aria-hidden="true">图 80-8　三种热启动策略的中位耗时（左）与中位迭代数（右）</figcaption>
+</figure>
+<p>收益比按</p>
+<p><span class="math display">
+r=1-\frac{T_{warm}}{T_{cold}}
+\tag{80-27}
+</span></p>
+<p>计算。表的第三列说明：<strong>平移已经拿到了大部分收益，学习初值只多省 3 个百分点</strong>。这与线性策略的拟合误差 0.325 m/s²（相对 <span class="math inline">u_{max}</span> 约 11%）是对应的——初值再好，也只能把迭代数从 25 再往下压一点，因为 OSQP 的收敛速度由问题的条件数决定，初值只影响起点。</p>
+<p>由此得出一条实用的判断：<strong>若平移已经把耗时压到预算的 50% 以下，就不要做学习初值</strong>。它的实现与维护成本（要存训练集、要重训、要版本对齐）远高于那 3 个百分点。只有当平移后仍然超时，或者你的求解器对初值特别敏感（例如内点法），才值得上。</p>
+<h3 id="一张调参记录该记什么">80.8.5 一张调参记录该记什么</h3>
+<p>调参过程本身要留记录，否则两周后无法复现。记录至少包含五列：轮次、动作、闭环 RMSE、最大误差、结论（保留/回退）。本章的五轮可以写成这样：</p>
+<p>表 80-6　五轮调参的记录（闭环为圆周跟踪，12 s）</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">轮次</th>
+<th style="text-align: left;">动作</th>
+<th style="text-align: left;">RMSE/cm</th>
+<th style="text-align: left;">最大误差/cm</th>
+<th style="text-align: left;">结论</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">1</td>
+<td style="text-align: left;">名义模型，<span class="math inline">N=15</span>，LQR 终端代价</td>
+<td style="text-align: left;">7.19</td>
+<td style="text-align: left;">7.85</td>
+<td style="text-align: left;">基线</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">2</td>
+<td style="text-align: left;">加 RBF 残差，<span class="math inline">N=15</span></td>
+<td style="text-align: left;">3.98</td>
+<td style="text-align: left;">5.18</td>
+<td style="text-align: left;">保留</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">3</td>
+<td style="text-align: left;">RBF 残差，<span class="math inline">N=6</span></td>
+<td style="text-align: left;">3.08</td>
+<td style="text-align: left;">4.44</td>
+<td style="text-align: left;">保留，时域缩短</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">4</td>
+<td style="text-align: left;">RBF 残差，<span class="math inline">N=6</span>，零终端代价</td>
+<td style="text-align: left;">6.73</td>
+<td style="text-align: left;">8.30</td>
+<td style="text-align: left;">回退</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">5</td>
+<td style="text-align: left;">GP 残差，<span class="math inline">N=15</span></td>
+<td style="text-align: left;">1.71</td>
+<td style="text-align: left;">2.48</td>
+<td style="text-align: left;">最终配置</td>
+</tr>
+</tbody>
+</table>
+<p>第 3 轮是这张表里最反直觉的一行：把时域从 15 缩到 6，误差从 3.98 降到 3.08。原因不是“短时域更好”，而是 RBF 的 20 步预测误差有 46.95 cm（表 80-2），长时域的后半段给出的信息基本不可信，MPC 被这些错误信息拖累了。缩短时域等于把不可信的那一段切掉。这条经验可以推广成一句话：<strong>模型越不准，越不要给它长时域</strong>。</p>
+<p>第 4 轮验证了这条经验的另一面：短时域必须配终端代价。去掉 <span class="math inline">P</span> 之后，误差从 3.08 跳回 6.73，几乎退到基线水平——短时域没有终端代价，就是纯粹的短视控制。</p>
+<p>第 5 轮换成 GP 并把时域恢复到 15，误差降到 1.71。这说明第 3 轮的“短时域优势”是 RBF 的局限，不是普遍规律：模型足够准时，长时域重新变得有价值。</p>
+<p>这张表还暴露出一个记录上的坑：<strong>基准漂移</strong>。若把第 2 轮的 3.98 与第 3 轮的 3.08 直接比较，会得出“改时域比换模型更有效”的错误结论——两次的动作不同、时域不同，本来就不是同一件事。避免办法是记录时把“时域、终端代价、模型”三个字段都写进动作列，缺一个就没法比。</p>
+<h3 id="什么时候停手">80.8.6 什么时候停手</h3>
+<p>停手的判据不是“误差够小”，而是“再改一个参数，收益低于噪声”。本章的具体判据是：</p>
+<ul>
+<li>学习器：验证误差的相对改善低于 5%，或数据量扫描进入平台；</li>
+<li>控制器：闭环 RMSE 的变化小于 0.2 cm（约 10%），或 P95 耗时变化小于 5 ms；</li>
+<li>热启动：收益低于 10%（式 80-27 的 <span class="math inline">r</span> 增量）。</li>
+</ul>
+<p>三条都满足就停。继续调下去，你量到的是随机种子与求解器抖动的差别，不是方法的改进。</p>
+<p>停手之后还有一件必须做的事：<strong>把当前配置冻结成基线，并写下一个可复现的最小记录</strong>。记录至少包括五个数：数据版本与种子、模型超参、<span class="math inline">N</span> 与 <span class="math inline">Q/R</span>、终端代价来源（LQR / 拟合 / 零）、三张验收图对应的 RMSE 与 P95。少一项，两周后你就无法判断新结果“变好”是因为改动有效，还是因为基线漂了。</p>
+<p>冻结基线还有一个好处：它把“改进”变成可比较的量。本章表 80-6 的五轮之所以能读出结论，靠的就是第 1 轮的 7.19 cm 一直没动。若每一轮都顺手微调一下权重，五轮之后就再也说不清是哪一处起的作用了。</p>
+<h3 id="五轮之外三类不报错的失败">80.8.7 五轮之外：三类不报错的失败</h3>
+<p>表 80-6 记的是“改了参数、看了结果”的正常轮次。真正耗时间的是另一类问题：程序不报错、指标看起来还行、但结论是错的。下面三类是这条技术路线上最常见的，它们都不改变代码结构，只改变“你以为你在学什么”。</p>
+<p><strong>第一类：标签污染。</strong> 式 (80-17) 要求用<strong>实际施加</strong>的控制与<strong>实际</strong>时间差。工程上最常见的两个偷懒是：用指令值代替实际值，用标称 <span class="math inline">T_s</span> 代替时间戳之差。前者在执行器有饱和、死区或一阶滞后时引入 <span class="math inline">\Delta u/T_s</span> 的偏差，后者在采样有 1%–2% 抖动时引入与速度成正比的伪残差。两种污染的后果一样：残差里多出一项与状态强相关的成分，学习器会把它当成真实的物理场，拟合得很平滑、验证误差也好看。症状是闭环在指令大幅变化时出现漂移，而小幅机动时一切正常。诊断办法很简单：把训练集的残差对 <span class="math inline">\|u\|</span> 和 <span class="math inline">\|v\|</span> 各画一张散点图，若呈现明显的线性趋势，说明标签里混进了与它们相关的项，先回去查采集链路，别急着换模型。</p>
+<p><strong>第二类：验证集泄漏。</strong> 按点随机划分训练/验证，会让验证集里充满训练点的相邻样本，验证误差系统性偏乐观。这类失败最阴险的地方是它会“奖励”错误的模型：容量越大的模型越容易记住邻居，验证误差降得越快，于是你选了一个只会插值的模型。症状是离线一步误差很好、闭环却差一个量级。诊断办法是按轨迹重新划分后再看一次误差，若指标明显变差，说明之前一直在自欺。本章的算例是独立同分布采样，免疫这一问题；这也是仿真结论不能直接搬到真实系统的原因之一。</p>
+<p><strong>第三类：把初值当控制器。</strong> 式 (80-15) 的线性策略拟合误差是 0.325 m/s²，相对 <span class="math inline">u_{max}</span> 约 11%。作为初值，这 11% 会被 QP 的后续迭代修掉；但若图省事直接输出它，11% 就成了稳态误差，而且完全没有约束处理、没有预测、没有反馈修正。症状是闭环能跑、误差恒定在 5–8 cm、对 <span class="math inline">Q/R</span> 完全不敏感——因为控制器里根本没有 <span class="math inline">Q/R</span>。诊断办法是把这条策略单独闭环跑一次，与 MPC 的输出逐点对比；若两者的差异在 10% 量级而闭环误差差了一个量级，说明你把“加速收敛的技巧”当成了“控制律”。</p>
+<p>三类的共同点值得单独说：它们都让<strong>离线指标变好</strong>，所以靠看损失曲线永远发现不了。唯一可靠的防线是闭环验收（§80.3.5 的三张图）与“改动前后各跑一次基线”的纪律。表 80-6 里第 1 轮基线之所以必须存在，就是为了给后面每一轮一个不会骗人的参照。</p>
+<h2 id="优化与改进">80.9 优化与改进</h2>
+<p>本章的做法是最小可用版本，还留了几处明确的缺口。这一节按“收益/成本”排序，把值得做的改进列出来，并给出每一条的验收判据——没有判据的改进等于没做。</p>
+<h3 id="补全离散残差公式">80.9.1 补全离散残差公式</h3>
+<p>这是 §80.4.1 指出的缺口，也是最便宜的一条。把</p>
+<p><span class="math display">
+d_k=\begin{bmatrix}\frac12T_s^2\hat f_r(\hat x_k)\\T_s\hat f_r(\hat x_k)\end{bmatrix}
+\tag{80-28}
+</span></p>
+<p>代替式 (80-11) 的 <span class="math inline">[0;T_s\hat f_r]</span>，位置通道立刻补上 0.6 cm 的固定滞后。改动只有一行代码，不需要重训模型。</p>
+<p>验收判据：表 80-2 的第一步行误差应当从 0.28 cm 降到 0.1 cm 以下；闭环 RMSE 的改善在 0.3–0.6 cm 之间（因为这项是固定偏差，不能全消）。若改完误差没动，说明你的 <span class="math inline">T_s</span> 太小、这一项本来就可以忽略，那就不必改。</p>
+<h3 id="两遍法迭代到不动点">80.9.2 两遍法迭代到不动点</h3>
+<p>两遍法的隐含假设是“第一遍轨迹与第二遍足够接近”。本章的相对误差约 10%，可以接受；若残差场变化更剧烈（经过窄峰、饱和边界），10% 会变成 50% 以上。改法是再迭代一遍：</p>
+<p><span class="math display">
+\hat x^{(j+1)}=\mathrm{Pred}(\hat x^{(j)},\,u^{(j)}),\qquad u^{(j+1)}=\mathrm{MPC}(\hat x^{(j+1)})
+\tag{80-29}
+</span></p>
+<p>直到 <span class="math inline">\|u^{(j+1)}-u^{(j)}\|\le\varepsilon_u</span> 或达到迭代上限。收敛速度取决于残差场的 Lipschitz 常数：Lipschitz 小于 1 时线性收敛，大于 1 时可能振荡。本章的残差场由阻尼与三角函数构成，Lipschitz 常数在 1 附近，所以第三遍的收益已经很小——这也是本章停在两遍的原因。</p>
+<p>验收判据：第三遍与第二遍的首步控制差小于 <span class="math inline">0.05u_{max}</span>（本章约 0.15 m/s²）。若超过，说明该继续迭代或者改用路线甲（连续模型 + 数值积分）。</p>
+<h3 id="主动采样用方差决定下一个点">80.9.3 主动采样：用方差决定下一个点</h3>
+<p>本章的数据是均匀随机采的，200 个点铺在 <span class="math inline">[-2,2]^4</span> 的四维盒子里，平均每个维度只有约 3.8 个分度。均匀采样简单，但浪费——残差在大部分区域很平滑，少数区域（速度大、阻尼非线性强）才需要密采样。</p>
+<p>GP 的方差正好给出“哪里稀”：下一个采样点取</p>
+<p><span class="math display">
+x_{next}=\arg\max_{x\in\mathcal X}\ \sigma(x)
+\tag{80-30}
+</span></p>
+<p>再做一点约束（离已采点至少 <span class="math inline">0.1</span> m、在安全范围内）。这条准则叫“最大不确定性采样”，实现只需要在候选网格上算一次方差，成本很低。</p>
+<p>预期收益：在同样 200 个点的预算下，把 GP 的 20 步预测误差从 16.06 cm 再压 20%–30%。本章没有实测这一条，因此把它列为“可做但未验证”，验收判据是同样样本数下的一步误差下降是否超过 15%。若没有明显下降，说明残差场已经足够平滑，均匀采样就够了。</p>
+<h3 id="提升阶数与输入交叉项">80.9.4 提升阶数与输入交叉项</h3>
+<p>Koopman 在本章表现最差（5.19 cm），原因有两个：二次提升装不下 <span class="math inline">|v|v</span>；提升坐标里没有 <span class="math inline">u</span> 的交叉项，而残差虽然是状态函数，控制的作用会通过状态间接影响下一步的提升量。改法是把三次项（<span class="math inline">p_x^3</span>、<span class="math inline">v_x^2v_y</span> 等）以及 <span class="math inline">u</span> 与状态的交叉项加进去，维数从 15 升到 30 左右。</p>
+<p>代价是拟合参数翻倍、需要更多数据、MPC 的 QP 规模也跟着涨（提升维数就是状态维数）。验收判据：在同样的 400 个训练样本下，20 步预测误差能否降到 RBF 的水平（46.95 cm）以下。若降不下去，说明问题不在阶数，而在 <span class="math inline">|v|v</span> 这种非多项式项，应当放弃 Koopman 路线。</p>
+<h3 id="在线更新滑动窗与递推最小二乘">80.9.5 在线更新：滑动窗与递推最小二乘</h3>
+<p>本章的模型是离线训练、在线固定的。真实系统会漂移（负载变化、磨损、温度），固定模型的效果会随时间衰减。改法是滑动窗更新：</p>
+<p><span class="math display">
+W_{k+1}=W_k+\eta\,\phi(x_k)\left(y_k-\phi(x_k)^{\mathsf T}W_k\right)
+\tag{80-31}
+</span></p>
+<p>这是 RBF 输出层的递推最小二乘（RLS）形式，<span class="math inline">\eta</span> 是步长。它只更新权重，不动中心，因此计算量是 <span class="math inline">O(k)</span> 而不是 <span class="math inline">O(k^2)</span>，可以在控制周期内完成。</p>
+<p>三个必须注意的点：第一，更新要在安全层之前，否则学到的残差会把系统推向约束边界；第二，要有遗忘因子，否则旧数据会拖住模型；第三，要有更新幅度上限，防止一次异常样本把权重带偏。验收判据是“漂移前后的一步误差都能保持在初始水平的 1.5 倍以内”。</p>
+<h3 id="不确定性进入约束">80.9.6 不确定性进入约束</h3>
+<p>GP 的方差除了用来判断数据稀疏，还可以直接收紧约束。把盒约束改成</p>
+<p><span class="math display">
+|u_k|\le u_{max}-\beta\sigma(x_k)
+\tag{80-32}
+</span></p>
+<p>意思是“模型越不确定的地方，越留出控制余量”。这条改动的收益不在精度，而在鲁棒性：它让闭环在数据边缘也不会因为模型误差而饱和。</p>
+<p>代价是控制权限的浪费。本章的覆盖率是 100%（方差偏保守），若直接套用式 (80-32)，在数据边缘会损失约 20% 的控制权限。所以这条要配合 §80.4.2 的方差校准一起做，先把 <span class="math inline">\beta</span> 调到覆盖率 95% 附近，再进约束。</p>
+<h3 id="该做哪一条">80.9.7 该做哪一条</h3>
+<p>六条改进的性价比差别很大。若只能做一条，做 §80.9.1（一行代码，0.3–0.6 cm）；若能做两条，加 §80.9.5（在线更新，解决漂移）；其余四条的收益都依赖具体系统，需要先量出瓶颈再决定。判断瓶颈的方法很简单：把闭环误差与表 80-3 对比，若你的误差显著高于 1.71 cm，先查数据覆盖与标签对齐，而不是急着上这些改进。</p>
+<p>这六条还可以按性质分成三类，优先级按类别排，而不是按收益排。<strong>第一类是“修正已知缺陷”</strong>，只有 §80.9.1——它不是优化，是修 bug，不做的话后面所有对比都建立在错误的基线上。<strong>第二类是“提高上限”</strong>，§80.9.2 与 §80.9.4，它们让模型或求解更准，但收益取决于你离上限还有多远。<strong>第三类是“应对变化”</strong>，§80.9.3、§80.9.5、§80.9.6，它们不改善当前工况的精度，只在数据会增长、系统会漂移、或需要鲁棒性时才有价值。若你的任务是一次性标定、工况稳定，第三类一条都不用做。</p>
+<p>做改进之前必须先留一条基线。本章的对比里，误差差异小于 0.2 cm 就已经落在种子与求解器抖动的量级内（§80.6.7），而 §80.9.1 的预期收益是 0.3–0.6 cm——两者只差两三倍。没有基线、只跑一次就宣布“改进了”，得到的很可能是噪声。正确做法是：同一配置连跑三次取中位数，改一项，再连跑三次，差异超过两倍抖动才算数。</p>
+<p>最后一句话给“什么时候不该做改进”：若你的闭环误差已经低于任务要求的二分之一，这些改进的收益会被工况波动淹没。此时该做的是加监控、补数据覆盖、把边界条件测清楚，而不是继续压那最后 1 cm。</p>
+<h2 id="工程落地">80.10 工程落地</h2>
+<p>把一个学习模块塞进已经能跑的 MPC，风险不在算法，而在“什么时候可以信它”。这一节给一套可执行的落地流程：先影子、再灰度、再接管；每一级都有明确的进入与退出条件。</p>
+<h3 id="上线前的三级验证">80.10.1 上线前的三级验证</h3>
+<p><strong>第一级：离线精度。</strong> 用留出的测试集算一步误差与多步误差（表 80-2）。判据是 <span class="math inline">N</span> 步误差不超过名义模型的一半。这一级不过，后面都不用谈。</p>
+<p><strong>第二级：影子模式。</strong> 学习增强的 MPC 与原有的名义 MPC 并行运行，但只有名义 MPC 的输出接到执行器；学习版的输出只记录、不执行。跑够至少 10 倍于训练时长的时间，比较两条误差曲线。判据是学习版在 95% 的时间里误差更低，且从未出现单步误差超过名义版 3 倍的情况。</p>
+<p><strong>第三级：限幅接管。</strong> 学习版接管执行器，但输出经过一个硬限幅：<span class="math inline">|u|\le u_{max}</span>，且与名义版输出的差不超过 <span class="math inline">\delta_u</span>。<span class="math inline">\delta_u</span> 从 <span class="math inline">0.1u_{max}</span> 起步，逐步放宽。这一级的作用是拦住“模型突然给出荒谬值”的情况，同时不影响正常工况。</p>
+<p>三级都过，才算可上线。跳过影子模式直接接管，是这类项目最常见的翻车方式——离线误差很好看，闭环却在某个没见过的状态上突然发散。</p>
+<h3 id="影子模式该记什么">80.10.2 影子模式该记什么</h3>
+<p>影子模式的价值取决于记录得够不够细。至少要记四组：</p>
+<ol type="1">
+<li><strong>状态与控制</strong>：<span class="math inline">x_k</span>、<span class="math inline">u_k^{nom}</span>、<span class="math inline">u_k^{learn}</span>，用于事后重放；</li>
+<li><strong>残差预测</strong>：<span class="math inline">\hat f_r(x_k)</span> 与两步之后反推的真实残差，用于在线监控模型偏差；</li>
+<li><strong>求解信息</strong>：迭代数、状态（<code>optimal</code> / <code>optimal_inaccurate</code> / <code>infeasible</code>）、耗时；</li>
+<li><strong>触发标记</strong>：是否饱和、是否超出数据覆盖范围、是否被限幅拦截。</li>
+</ol>
+<p>第 2 组是最容易被忽略但最有用的：它让你在不改变控制的前提下，持续量出模型在新数据上的真实误差。本章的 0.310 m/s² 就是这么量出来的（离线测试集），在线版本只是把测试集换成实时数据。</p>
+<h3 id="在线更新的门禁">80.10.3 在线更新的门禁</h3>
+<p>在线更新不是“每个周期都学”，而是一条带门禁的流水线：</p>
+<p><strong>数据门禁</strong>：新样本要通过三道检查——时间戳对齐（<span class="math inline">\Delta t</span> 与 <span class="math inline">T_s</span> 的偏差小于 1%）、状态在覆盖范围内、残差幅值不超过 <span class="math inline">f_{max}</span>。任一不过就丢弃，不进入训练集。</p>
+<p><strong>漂移检测</strong>：用滑动窗内的预测误差与基线误差做比值：</p>
+<p><span class="math display">
+\rho_k=\frac{\mathrm{RMS}_{win}(f_r-\hat f_r)}{\mathrm{RMS}_{base}(f_r-\hat f_r)}
+\tag{80-33}
+</span></p>
+<p><span class="math inline">\rho_k&gt;1.5</span> 持续 100 个周期，判为漂移，触发重训；<span class="math inline">1.2&lt;\rho_k\le1.5</span> 只记录告警，不动模型。</p>
+<p><strong>灰度</strong>：重训后的模型先在影子模式跑 1 小时，误差不劣于旧模型才允许替换。替换用双缓冲：新模型加载到备用槽，验证通过后原子切换，旧模型保留一个版本用于回滚。</p>
+<p>这三道门禁把“在线学习”变成了“在线监控 + 离线重训 + 灰度替换”，看起来保守，但它把不可控的在线过程变成了可控的发布过程。对多数工业系统，这个保守是值得的。</p>
+<h3 id="三层安全防线">80.10.4 三层安全防线</h3>
+<p>学习模块的失效模式是“输出荒谬值”，防线要针对这一点设计，而不是针对“精度不够”：</p>
+<p><strong>第一层：输出饱和。</strong> <span class="math inline">|\hat f_r|\le f_{max}</span>（§80.7.4）。这一层在模型内部，成本为零，拦住的是数值爆炸。</p>
+<p><strong>第二层：约束层。</strong> MPC 的盒约束保证 <span class="math inline">|u|\le u_{max}</span>，与模型无关；若有硬状态约束，串第 79 章的 CBF-QP。这一层拦住的是“预测错了但控制还在范围内”。</p>
+<p><strong>第三层：看门狗。</strong> 监控求解状态与耗时：求解器返回 <code>infeasible</code>、或耗时超过 <span class="math inline">0.8T_s</span>、或连续 3 个周期误差单调上升，就切回名义模型并报警。切回动作必须是自动的，不能等人。</p>
+<p>三层的关系是递进的：第一层管模型，第二层管控制，第三层管系统。任何一层单独都不够——只有饱和没有约束，模型可能持续给出边界值；只有约束没有看门狗，模型可能在约束内持续给错方向。</p>
+<h3 id="监控指标与阈值">80.10.5 监控指标与阈值</h3>
+<p>上线后要盯的量不多，但每个都要有阈值和动作（表 80-7）。</p>
+<p>表 80-7　学习增强 MPC 的在线监控指标</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">指标</th>
+<th style="text-align: left;">正常范围</th>
+<th style="text-align: left;">告警阈值</th>
+<th style="text-align: left;">动作</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">一步预测误差</td>
+<td style="text-align: left;">≤0.35 m/s²</td>
+<td style="text-align: left;">&gt;0.6 持续 100 周期</td>
+<td style="text-align: left;">记录，准备重训</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">闭环跟踪误差</td>
+<td style="text-align: left;">≤2 cm</td>
+<td style="text-align: left;">&gt;4 cm 持续 50 周期</td>
+<td style="text-align: left;">告警，查数据覆盖</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">求解耗时 P95</td>
+<td style="text-align: left;">≤50 ms</td>
+<td style="text-align: left;">&gt;80 ms</td>
+<td style="text-align: left;">降级：缩短 <span class="math inline">N</span> 或切名义</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">饱和占比</td>
+<td style="text-align: left;">&lt;1%</td>
+<td style="text-align: left;">&gt;10%</td>
+<td style="text-align: left;">查权重与残差饱和</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">求解状态异常</td>
+<td style="text-align: left;">0 次</td>
+<td style="text-align: left;">任意一次 <code>infeasible</code></td>
+<td style="text-align: left;">立即切名义并报警</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">外推触发次数</td>
+<td style="text-align: left;">0</td>
+<td style="text-align: left;">&gt;0</td>
+<td style="text-align: left;">记录状态，补数据</td>
+</tr>
+</tbody>
+</table>
+<p>阈值不是拍脑袋定的，而是从本章的实测推出来的：一步误差的正常上限 0.35 对应 GP 的 0.310 加 10% 余量；跟踪误差上限 2 cm 对应 GP 的 1.71 cm；耗时上限 50 ms 对应 P95 的 46.67 ms。换系统要重新推一遍，方法是“正常值 × 1.2–1.5”。</p>
+<h3 id="版本与回滚">80.10.6 版本与回滚</h3>
+<p>学习模块比传统控制器多两个版本维度：代码版本与模型版本。两者必须绑定——模型文件里要写入训练数据的哈希、超参、训练时间，控制器启动时校验。否则出现“换了模型忘了改配置”的问题时，你无法从日志判断当时用的是哪一版。</p>
+<p>回滚要能在 1 个控制周期内完成：模型常驻内存两份（当前与上一版），回滚只是一次指针交换。不要设计成“重新加载文件”，那在实时系统里可能要几百毫秒。</p>
+<p>最后一条经验：<strong>每次模型更新都要留一条“关掉学习”的开关</strong>。这个开关不是为了日常使用，而是为了在出问题时能立刻把系统退回一个已知可用的状态。开关的存在本身也会改变设计——你会更愿意把学习模块做成可插拔的，而这恰好是第 80.1 节说的“插件”结构的工程价值。</p>
+<h3 id="从-cvxpy-到嵌入式移植时要动的四处">80.10.7 从 cvxpy 到嵌入式：移植时要动的四处</h3>
+<p>本章的仿真跑在 Python 上，中位耗时 31 ms。这个数字对 <span class="math inline">T_s=100</span> ms 够用，但它几乎全部花在建模与求解器接口上，而不是花在物理计算上。要在嵌入式上做到 10 ms 以内，必须知道这 31 ms 是怎么构成的。</p>
+<p>先看问题规模。<span class="math inline">N=15</span>、状态 4 维、输入 2 维，决策变量是 <span class="math inline">z\in\mathbb R^{4\times16}</span> 与 <span class="math inline">u\in\mathbb R^{2\times15}</span>，共 <span class="math inline">64+30=94</span> 个；等式约束 64 条（每一步的动力学），不等式 60 条（每步两个输入的上下界）。这是一个不到一百个变量、一百多条约束的稀疏 QP，结构极为规整——真正求解只需要几百微秒。剩下的时间在别处。</p>
+<p><strong>第一处是建模开销。</strong> cvxpy 每次 <code>solve</code> 都要把符号表达式重新 canonicalize 成标准形式，这部分与问题规模关系不大，但每次都要付。解决办法是把 <code>Problem</code> 与 <code>Parameter</code> 建在循环外，循环内只给 <code>Parameter</code> 赋新值再 <code>solve</code>。前提是问题满足 DPP（disciplined parametrized programming）规则：参数只能以仿射方式进入约束与目标。本章的写法（每次重建 Problem）是清晰优先，不是性能优先；移植时必须改。</p>
+<p><strong>第二处是求解器接口。</strong> 即使问题已经 canonicalize，Python 到 C 的调用、数据的反复打包、结果的字典构造都要花时间。直接调 OSQP 的 C 接口，把 <span class="math inline">P</span>、<span class="math inline">A</span> 的稀疏结构在初始化时固定，每周期只更新 <span class="math inline">q</span> 与上下界，可以省掉绝大部分开销。</p>
+<p><strong>第三处是结构。</strong> 这个 QP 的 <span class="math inline">P</span>、<span class="math inline">A</span> 矩阵每周期完全不变，变的只有初值约束的右端项与参考轨迹。这意味着可以在初始化时做一次分解，后续只做回代；也可以用专门针对最优控制结构的求解器（如 HPIPM、acados），它们利用“链式”稀疏性，把复杂度从一般稀疏 QP 降到正比于 <span class="math inline">N</span>。代价是失去 cvxpy 的表达自由度：换一种约束，就要重新生成代码。</p>
+<p><strong>第四处是数值类型。</strong> OSQP 用双精度，嵌入式平台若只有单精度 FPU，需要评估 24 位尾数是否够。判据是：把仿真改成 <code>float32</code> 跑一遍，若闭环 RMSE 变化小于 1%，单精度可用；若出现求解失败或迭代数暴涨，说明问题的条件数不允许降精度——此时应当先做变量缩放（把位置、速度、输入都归一到 1 的量级），再试一次。定点化不建议作为第一步，ADMM 类算法对缩放敏感，定点实现的调参成本常被低估。</p>
+<p>这四处的收益不叠加，而是递进的：先解决建模开销（往往占一半以上），再看接口与结构；前两处没做完就去做代码生成，量到的加速比会失真。动手之前先量一次分解——在 <code>solve</code> 前后各加一个计时点，把“建模 / 求解 / 结果打包”三段分开，再决定改哪一处。本章没有做这个分解，因为 31 ms 对 100 ms 的预算够用；但移植时这是第一件该做的事。</p>
+<p>移植后的验收清单只有四条，但每条都必须过：</p>
+<ul>
+<li>同一组 <span class="math inline">(x_0,\text{ref})</span> 在 PC 与目标机上的首步输出差异小于 <span class="math inline">10^{-6}</span>（不是“差不多”，是逐位可比的量级）；</li>
+<li>迭代数分布与 PC 上一致，若目标机上迭代数系统性偏高，多半是缩放或容差没对齐；</li>
+<li>P95 耗时低于 <span class="math inline">T_s</span> 的 50%，给抖动留一倍余量；</li>
+<li>超时路径可用：人为把预算压到 P95 的 80%，确认系统按预期降级（用上一周期的解或切名义模型），而不是直接输出零。</li>
+</ul>
+<p>最后一条最容易被跳过。绝大多数“嵌入式上跑崩”的事故不是算得慢，而是算得慢之后没有定义行为——求解器返回一个未收敛的解，代码照单全收，闭环立刻发散。</p>
+<h3 id="状态估计一个绕不开的前置环节">80.10.8 状态估计：一个绕不开的前置环节</h3>
+<p>本章从头到尾假设 <span class="math inline">x</span> 全可测。真实系统通常只有位置可测，速度要靠估计，而残差模型恰恰以速度为输入——这一步没处理好，后面所有精度都会被它吃掉。</p>
+<p>先看直接差分的代价。速度由相邻两拍位置差分得到，噪声被放大 <span class="math inline">\sqrt2/T_s</span> 倍：位置噪声 1 mm、<span class="math inline">T_s=0.1</span> s 时，速度噪声约 14 mm/s。这个量级听着不大，但它进入残差标签后会再被放大一次——标签本身就是速度的差分，等效噪声是 <span class="math inline">2\sigma_p/T_s^2=0.2</span> m/s²，与本章的残差 RMS（1.195）相比占 17%。也就是说，用原始差分做标签，学习器有近两成的“残差”其实是量测噪声的差分。</p>
+<p>卡尔曼滤波能改善，但改善的是<strong>滤波</strong>而不是<strong>平滑</strong>。离线采数据时应当用 RTS 平滑：它用到整段数据的前向与后向信息，速度估计的方差比滤波低一个量级。这一点常被忽略——很多人拿在线滤波器的输出当训练标签，等于主动放弃了离线阶段本可以拿到的精度。</p>
+<p>第二个坑是估计误差的相关性。滤波器的速度误差在相邻时刻高度相关（它由同一个位置序列积分而来），而 §80.6.6 已经说明：相关性强的误差在闭环里累积得更厉害。所以“速度估计误差 14 mm/s”不能简单按白噪声折算成位置误差，实际影响更大。判断办法是看估计误差的自相关时间：若与闭环时间常数同量级，就不能当成噪声处理。</p>
+<p>第三个坑是结构。有人会把“速度估计误差”当成一个额外的状态扩进去，让残差模型顺带学它。这与 §80.2.7 的原则冲突：残差必须是状态的函数，估计误差不是状态。更稳妥的做法是让观测器与残差模型解耦——观测器用名义模型（不用学习模型），残差模型用平滑后的状态当输入。两者都用学习模型会形成回路，估计误差与模型误差互相“解释”，最后谁都收敛不了。</p>
+<p>什么时候该停下来先修观测器？一个可用的判据是：<strong>速度估计的标准差超过残差一步误差的 20%</strong>，就先别学残差。本章的一步误差是 0.310，对应阈值约 0.062 m/s；若你的速度估计误差到了这个量级，学到的模型里噪声与信号同量级，数据量扫描会呈现“加样本也不降”的平台，而你很可能误判成“模型容量不够”，去加中心数——那只会把噪声也拟合进去。</p>
+<h2 id="优缺点与适用边界">80.11 优缺点与适用边界</h2>
+<h3 id="优点">80.11.1 优点</h3>
+<p><strong>第一，收益直接且可量化。</strong> 本章的算例里，加一个残差网络把跟踪误差从 7.19 cm 压到 1.71 cm，权重、时域、约束全都没动。这种“只改一处、效果可归因”的特性，在工程上比“整体换一个控制器”更容易被接受，也更容易做 A/B 对比。</p>
+<p><strong>第二，结构不变，安全性仍可论证。</strong> 约束还是那些约束，第 58 章的递推可行性、第 79 章的 CBF 安全层都还能用。学习只改预测的精度，不改优化的形状。这一点与“用强化学习直接学策略”有本质区别：后者没有任何结构性的安全保证。</p>
+<p><strong>第三，可以用不确定性说话。</strong> GP 给出的方差能直接转成误差上界（式 80-20），进而进入约束（式 80-32）。这让“模型在哪里不可信”变成一个可以计算、可以告警的量，而不是靠人盯。</p>
+<p><strong>第四，可插拔、可回滚。</strong> 三处插入点（模型、终端代价、初值）彼此独立，任何一处出问题都可以单独关掉。本章的实测里，关掉终端代价的代价是 3.65 cm，关掉初值只损失 0.09 ms——每个开关的代价都能提前量出来。</p>
+<p><strong>第五，数据成本低。</strong> 本章用 200 个点就跑出了 1.71 cm。相比之下，训练一个端到端策略通常需要 <span class="math inline">10^5</span> 量级的交互。残差比原函数更平滑、幅值更小，这是样本效率高的根本原因。</p>
+<h3 id="缺点">80.11.2 缺点</h3>
+<p><strong>第一，依赖数据覆盖，外推没有保证。</strong> 这是最硬的限制。模型只在其训练分布内可信，一旦参考轨迹走出覆盖范围，误差可能比名义模型还大。本章的 141.1% 远域误差就是一个提醒：连终端代价这种低维拟合都会在范围外失效，残差网络的失效只会更突然。</p>
+<p><strong>第二，标签构造容易出错。</strong> 式 (80-17) 的三个条件（实际控制、时间对齐、无未记录延迟）任缺一个，残差里就混进常值偏置，而这个偏置会被学成“模型的一部分”。这类错误在离线指标上往往看不出来（因为偏置是稳定的），只在长时间运行后表现为缓慢漂移。</p>
+<p><strong>第三，稳定性结论变弱。</strong> 从渐近稳定退到 ISS（式 80-25），意味着误差只能收敛到一个正比于学习误差的邻域，不能到零。对精度要求极高的场合（例如微米级定位），这个残余可能不可接受。</p>
+<p><strong>第四，调试链路变长。</strong> 出问题时，可能的原因从“控制器参数”扩展到“数据、标签、模型、接口”四层。本章 §80.3.2 与 §80.5.5 列的那些坑，都是这条长链路的具体表现。</p>
+<p><strong>第五，计算与维护成本不为零。</strong> 两遍法让 QP 求解翻倍，模型版本管理引入新的运维负担。本章的耗时数据说明这部分成本可以被 QP 淹没，但那是因为 <span class="math inline">N</span> 只有 15；<span class="math inline">N</span> 上百时，两遍法的代价就会显现。</p>
+<p>这五条里，第一与第二条是结构性的，靠工程手段只能缓解、不能消除；第三与第五条是可以用判据量化的，上线前就能算清楚；第四条纯粹是组织成本，取决于团队有没有把数据、模型、控制三块放在同一份记录里。认清哪一条是自己的主要矛盾，比笼统地说“这套方法有局限”更有用。</p>
+<h3 id="什么时候该用">80.11.3 什么时候该用</h3>
+<p>判断该不该用，看三条同时成立与否：</p>
+<ol type="1">
+<li><strong>有可重复的残差。</strong> 同一状态下残差符号一致、幅值稳定。若残差主要是随机噪声，学习没有意义——你学到的是噪声的均值，而均值接近零。</li>
+<li><strong>残差相对控制权限不可忽略。</strong> 本章的判据是 1.195/3≈40%；低于 5% 时收益会被其他误差淹没（§80.3.1）。</li>
+<li><strong>能采到覆盖工作空间的数据。</strong> 不需要均匀覆盖，但参考轨迹周围要有足够密的样本。若系统只能在小范围内运行、且无法主动激励，学习模型的价值有限。</li>
+</ol>
+<p>三条里缺一条，都应当先解决缺的那条，而不是硬上学习。</p>
+<h3 id="什么时候不该用">80.11.4 什么时候不该用</h3>
+<p><strong>第一，模型误差主要来自未建模的动态而非静态非线性。</strong> 例如执行器滞后、传感器滤波、结构振动。这些是“状态不够”而不是“函数不准”，学一个静态映射补不上。此时该做的是扩状态或辨识传递函数，而不是加残差网络。</p>
+<p><strong>第二，安全约束极硬且无法验证。</strong> 若系统一旦越界就是灾难性后果，而你又无法给出学习误差的界，那么任何学习模块都不该进控制回路。可以做影子模式，但不该接管。</p>
+<p><strong>第三，已有更便宜的方案能达到要求。</strong> 前馈补偿、增益调度、积分作用，这些传统手段在不少场合比学习更简单。第 44 章的 PID 加积分项消稳态误差，本质也是“补上模型不知道的常值部分”；只有在残差是状态相关的时候，学习才比积分有优势。</p>
+<p><strong>第四，参考轨迹本身就是离线已知的。</strong> 若轨迹完全可预知，直接把参考的前馈项算出来（迭代学习控制）比在线学模型更省事。第 47 章的 Smith 预估器也是同一个思路：用已知的结构补偿已知的滞后，不需要学习。</p>
+<h3 id="与相邻方法的边界">80.11.5 与相邻方法的边界</h3>
+<p>把这一章放回全书的坐标里，四类方法的边界可以这样划：</p>
+<ul>
+<li><strong>PID（第 44 章）</strong>：不需要模型，靠误差反馈消偏差。适合残差小、带宽要求不高的场合。它的积分项能消常值残差，但对状态相关的残差无能为力——本章的名义 MPC 误差 7.19 cm 就是这类残差，PID 加上去也只能压一部分。</li>
+<li><strong>Smith 预估器（第 47 章）</strong>：需要已知的滞后模型，用结构补偿延迟。它与学习不冲突，可以叠加：滞后用 Smith 补，非线性用残差补。</li>
+<li><strong>MPC（第 58 章）</strong>：需要模型，能处理约束与多变量。本章是它的增强，不是替代。</li>
+<li><strong>安全控制（第 79 章）</strong>：不需要精确模型，只需要约束的几何信息。它是本章的兜底层，两者串联时，学习负责“更好”，CBF 负责“不出事”。</li>
+</ul>
+<h3 id="与另外四类会学习的控制的区别">80.11.6 与另外四类“会学习的控制”的区别</h3>
+<p>“学习”这个词在控制里被用在至少五种不同的东西上，它们的数据需求、失效模式、验证方法都不一样。把本章与其中四种摆在一起，边界才清楚。</p>
+<p><strong>迭代学习控制（ILC）。</strong> ILC 沿<strong>迭代轴</strong>学：同一条轨迹重复做，每次用上次的误差修正前馈，几次之后误差收敛。它不需要模型，也不需要覆盖状态空间，只需要轨迹可重复、每次初始状态一致。本章沿<strong>状态空间</strong>学：一次标定，之后任意轨迹都能用。判据很直接——任务是不是固定轨迹的重复？机械臂拾放、数控加工是，那 ILC 更省事，因为它把“这条轨迹上该怎么修”直接记住，不需要泛化。若轨迹会变、或同一条轨迹只走一次，ILC 就没有迭代的机会，此时才轮到本章。两者可以叠加：ILC 管轨迹内的重复成分，残差模型管跨轨迹的状态相关成分。</p>
+<p><strong>自适应控制。</strong> 自适应假设<strong>模型结构已知、参数未知</strong>，在线估那几个参数。本章假设<strong>结构未知</strong>，用一个非参数模型去逼近整个残差。若你能写出残差的形式——例如已知是二次阻尼、只有一个阻尼系数未知——那么递推最小二乘估一个标量就够了，样本效率比 48 个中心高得多，而且有完整的稳定性理论。判据是：能不能写出残差的参数化形式？能，先用自适应；不能，或者写出来有十几项，再用本章。风险也不同：自适应怕持续激励不足导致参数漂移，本章怕数据覆盖不足导致外推。</p>
+<p><strong>增益调度。</strong> 增益调度把工作空间切成若干区，每区一个线性控制器，按当前工作点插值或切换。它本质上是“用多个线性模型覆盖非线性”，本章是“用一个非线性修正项覆盖非线性”。差别在切换：增益调度在区间边界有切换瞬态，需要驻留时间或插值来保证稳定；残差模型是连续的，没有切换问题，但要求残差在空间上光滑。若非线性弱、工作点只有两三个，增益调度更简单、更容易验证——它的每一区都是一个线性系统，第 58 章的工具直接可用。</p>
+<p><strong>强化学习策略。</strong> 端到端学 <span class="math inline">u=\pi(x)</span>，不显式持有模型，也不显式处理约束。它的样本效率比本章低两到三个数量级（本章 200 个点，策略学习通常要 <span class="math inline">10^5</span> 量级的交互），而且安全性只能靠约束投影或屏蔽层事后补。它的优势在另一类问题上：目标函数本身难写、或者最优行为高度依赖长程规划。本章适合“目标清楚、模型差一点”的任务；策略学习适合“模型清楚、目标说不清”的任务。</p>
+<p>五种方法的差别可以按“学什么”一句话划分：ILC 学轨迹修正，自适应学参数，增益调度学工作区划分，强化学习学策略，本章学模型残差。<strong>学模型残差的样本效率最高</strong>，因为它把“控制怎么算”整个交给 MPC，只让学习补最小的一块。代价是它的上限也被 MPC 的结构限制住了——MPC 想不到的解，残差模型再好也给不出来。</p>
+<h3 id="从-4-维到-12-维哪些结论会变">80.11.7 从 4 维到 12 维：哪些结论会变</h3>
+<p>本章的状态是 4 维，这个规模让很多做法显得轻松：200 个点铺满工作空间，48 个中心够用，GP 求逆一眨眼。真实的机电系统常常是 8–12 维（多关节、多轴、含执行器状态），这时有三条结论会变，一条不会。</p>
+<p><strong>第一条会变的是数据预算。</strong> 按 §80.3.7 的分格计数，覆盖度随维数指数增长：4 维是 <span class="math inline">4^4=256</span> 格，8 维是 65536 格，12 维是 <span class="math inline">1.6\times10^7</span> 格。按每格 5 个样本算，12 维需要八千万个点——这个数字本身就宣告了“均匀覆盖”在高维不可行。所以高维系统必须换一种覆盖定义：<strong>沿任务轨迹的管状覆盖</strong>。只要求参考轨迹周围 <span class="math inline">\pm0.5</span> m 的管内有数据，管内的点数随轨迹长度线性增长，不随维数指数增长。代价是模型只在管内有依据，换任务就要补数据——这不是缺陷，而是高维下的唯一选择。</p>
+<p><strong>第二条会变的是计算量，但变得不多。</strong> RBF 的核计算随输入维数线性增长（48 个中心乘 <span class="math inline">d</span> 维），GP 与维数无关（只看样本数），QP 的变量数是 <span class="math inline">n(N+1)+2N</span>：<span class="math inline">n=12</span>、<span class="math inline">N=15</span> 时是 222 个，仍在几百量级，OSQP 可以处理。真正变慢的是预测矩阵的构造与稀疏结构的维护，量级上不会颠覆 §80.6.4 的结论——瓶颈仍在 QP。</p>
+<p><strong>第三条会变的是终端集。</strong> 椭球在高维下“体积集中在赤道附近”，直觉上的半径与实际的可行域差得很远；同时 <span class="math inline">\lambda_{max}(P)</span> 由最快的通道主导，§80.5.6 的膨胀估计会更保守。实践中的表现是：高维系统的终端集比低维系统“看起来小得多”，递归可行性的余量要留得更宽。</p>
+<p><strong>不会变的是稳定性结论的形式。</strong> ISS 仍然是 ISS，式 (80-25) 的结构不变，只是 <span class="math inline">\gamma</span> 随维数增大——同样的残差误差在 12 维系统里造成的跟踪偏差更大，因为误差有更多方向可以累加。这意味着高维系统对模型精度的要求更高，而不是更低。</p>
+<p>若你的系统超过 8 维，最有效的办法不是换更强的学习器，而是<strong>按物理结构分块</strong>。车辆模型里横向残差主要依赖 <span class="math inline">(v_y,r)</span>、纵向残差主要依赖 <span class="math inline">(v_x,\text{驱动})</span>，把 12 维问题拆成四个 4 维子问题，每个子问题只学与自己相关的状态子集，总样本需求从 <span class="math inline">4^{12}</span> 降到 <span class="math inline">4\times4^4</span>。代价是要先做一遍物理分析，判断哪些状态之间真的耦合——但这一步的收益，比在 12 维空间里多采十倍数据大得多。</p>
+<p>一句话总结这一章的位置：<strong>它不改变控制的骨架，只让骨架上的肌肉更准。</strong> 判断要不要用它，问三个问题——残差可重复吗、幅值够大吗、数据够覆盖吗。三个都答“是”，再动手。</p>
+<h2 id="python-仿真代码">80.12 Python 仿真代码</h2>
+<p>本章的两个脚本可以直接运行：<code>code/ch080_sim.py</code> 产出全部数字，<code>code/ch080_figs.py</code> 产出全部插图。前者约 580 行，后者约 350 行，依赖只有 <code>numpy</code>、<code>scipy</code>、<code>cvxpy</code>（OSQP 随 cvxpy 一起装）。</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode powershell"><code class="sourceCode powershell"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>D<span class="op">:</span>\Anaconda3\envs\py311\python<span class="op">.</span><span class="fu">exe</span> code<span class="op">/</span>ch080_sim<span class="op">.</span><span class="fu">py</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>D<span class="op">:</span>\Anaconda3\envs\py311\python<span class="op">.</span><span class="fu">exe</span> code<span class="op">/</span>ch080_figs<span class="op">.</span><span class="fu">py</span></span></code></pre></div>
+<h3 id="文件结构与函数对应">80.12.1 文件结构与函数对应</h3>
+<p>脚本按“真实对象 → 模型容器 → 求解器 → 学习器 → 五个实验”分层，每一层只依赖上一层（表 80-8）。</p>
+<p>表 80-8　<code>ch080_sim.py</code> 的函数与正文小节的对应</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">函数</th>
+<th style="text-align: left;">作用</th>
+<th style="text-align: left;">对应小节</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><code>residual_accel</code></td>
+<td style="text-align: left;">真实残差（阻尼 + 力场）</td>
+<td style="text-align: left;">§80.1.1</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>true_step</code></td>
+<td style="text-align: left;">RK4 积分真实对象</td>
+<td style="text-align: left;">§80.4.1</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><code>nominal_model</code></td>
+<td style="text-align: left;">双积分器的 <span class="math inline">A</span>、<span class="math inline">B</span></td>
+<td style="text-align: left;">§80.3.1</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>lqr_gain</code></td>
+<td style="text-align: left;">解 DARE 得 <span class="math inline">P</span> 与 <span class="math inline">K</span></td>
+<td style="text-align: left;">§80.2.5</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><code>solve_mpc</code></td>
+<td style="text-align: left;">线性 MPC，可注入残差序列</td>
+<td style="text-align: left;">§80.2.4</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>solve_residual_mpc</code></td>
+<td style="text-align: left;">两遍法</td>
+<td style="text-align: left;">§80.2.4、§80.5.5</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><code>RBFModel</code></td>
+<td style="text-align: left;">固定中心 + 岭回归</td>
+<td style="text-align: left;">§80.2.2、§80.5.4</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>GPModel</code></td>
+<td style="text-align: left;">平方指数核 + 白噪声</td>
+<td style="text-align: left;">§80.2.2、§80.4.2</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><code>lift_poly</code>、<code>fit_koopman</code></td>
+<td style="text-align: left;">15 维二次提升 + EDMD</td>
+<td style="text-align: left;">§80.2.3</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>experiment_prediction</code></td>
+<td style="text-align: left;">一步/多步误差、覆盖率</td>
+<td style="text-align: left;">§80.3.4</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><code>experiment_closed_loop</code></td>
+<td style="text-align: left;">四组闭环对比</td>
+<td style="text-align: left;">§80.6.3</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>experiment_terminal</code></td>
+<td style="text-align: left;">终端代价拟合</td>
+<td style="text-align: left;">§80.2.5、§80.8.3</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><code>experiment_warmstart</code></td>
+<td style="text-align: left;">三种热启动</td>
+<td style="text-align: left;">§80.8.4</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>experiment_curve</code></td>
+<td style="text-align: left;">数据量学习曲线</td>
+<td style="text-align: left;">§80.8.2</td>
+</tr>
+</tbody>
+</table>
+<p>这张表也是阅读顺序的建议：想复现某个数字，先找到对应的函数，再往上追它依赖的模型与参数。</p>
+<h3 id="真实对象与残差">80.12.2 真实对象与残差</h3>
+<p>真实对象的定义只有三行，但它决定了整章的数字：</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> residual_accel(p, v):</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">&quot;&quot;&quot;未建模加速度：二次阻尼 + 位置相关的力场（名义模型完全不知道）。&quot;&quot;&quot;</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    px, py <span class="op">=</span> <span class="bu">float</span>(p[<span class="dv">0</span>]), <span class="bu">float</span>(p[<span class="dv">1</span>])</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    sp <span class="op">=</span> np.linalg.norm(v)</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    ax <span class="op">=</span> <span class="op">-</span>CFG[<span class="st">&quot;drag&quot;</span>] <span class="op">*</span> sp <span class="op">*</span> <span class="bu">float</span>(v[<span class="dv">0</span>]) <span class="op">+</span> CFG[<span class="st">&quot;field&quot;</span>] <span class="op">*</span> np.sin(<span class="fl">1.4</span> <span class="op">*</span> px) <span class="op">*</span> np.cos(<span class="fl">1.1</span> <span class="op">*</span> py)</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    ay <span class="op">=</span> <span class="op">-</span>CFG[<span class="st">&quot;drag&quot;</span>] <span class="op">*</span> sp <span class="op">*</span> <span class="bu">float</span>(v[<span class="dv">1</span>]) <span class="op">+</span> CFG[<span class="st">&quot;field&quot;</span>] <span class="op">*</span> np.cos(<span class="fl">1.1</span> <span class="op">*</span> px) <span class="op">*</span> np.sin(<span class="fl">1.4</span> <span class="op">*</span> py)</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> np.array([ax, ay])</span></code></pre></div>
+<p>积分用 RK4，而不是欧拉：</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> true_step(x, u, dt):</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">&quot;&quot;&quot;RK4 积分真实对象：p&#39;=v, v&#39;=u+residual。&quot;&quot;&quot;</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> f(s):</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>        p, v <span class="op">=</span> s[:<span class="dv">2</span>], s[<span class="dv">2</span>:]</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> np.concatenate([v, np.asarray(u, <span class="bu">float</span>) <span class="op">+</span> residual_accel(p, v)])</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    k1 <span class="op">=</span> f(x)</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>    k2 <span class="op">=</span> f(x <span class="op">+</span> <span class="fl">0.5</span> <span class="op">*</span> dt <span class="op">*</span> k1)</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>    k3 <span class="op">=</span> f(x <span class="op">+</span> <span class="fl">0.5</span> <span class="op">*</span> dt <span class="op">*</span> k2)</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>    k4 <span class="op">=</span> f(x <span class="op">+</span> dt <span class="op">*</span> k3)</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> x <span class="op">+</span> dt <span class="op">/</span> <span class="fl">6.0</span> <span class="op">*</span> (k1 <span class="op">+</span> <span class="dv">2</span> <span class="op">*</span> k2 <span class="op">+</span> <span class="dv">2</span> <span class="op">*</span> k3 <span class="op">+</span> k4)</span></code></pre></div>
+<p>这里用 RK4 有两个理由。第一，如果把真实对象也写成离散递推，残差标签里就会混进积分误差，你无法区分“模型不准”和“积分不准”。第二，RK4 的局部误差是 <span class="math inline">O(T_s^5)</span>，在 <span class="math inline">T_s=0.1</span> 时远小于残差本身，可以当作“真值”使用。</p>
+<p>参数集中在一个字典里：</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>CFG <span class="op">=</span> <span class="bu">dict</span>(ts<span class="op">=</span><span class="fl">0.1</span>, T<span class="op">=</span><span class="fl">12.0</span>, u_max<span class="op">=</span><span class="fl">3.0</span>, n_h<span class="op">=</span><span class="dv">15</span>,</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>           drag<span class="op">=</span><span class="fl">0.35</span>, field<span class="op">=</span><span class="fl">0.60</span>, ref_r<span class="op">=</span><span class="fl">1.2</span>, ref_w<span class="op">=</span><span class="fl">0.6</span>, seed<span class="op">=</span><span class="dv">20261020</span>)</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>Q_STAGE <span class="op">=</span> np.diag([<span class="fl">10.0</span>, <span class="fl">10.0</span>, <span class="fl">1.0</span>, <span class="fl">1.0</span>])</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>R_STAGE <span class="op">=</span> np.eye(<span class="dv">2</span>) <span class="op">*</span> <span class="fl">0.1</span></span></code></pre></div>
+<p>把参数集中在一个地方，是为了让“换一个系统”只需要改这一块。书里的每个数字都能追溯到这些值。</p>
+<h3 id="残差网络20-行的核心">80.12.3 残差网络：20 行的核心</h3>
+<p>RBF 模型的全部实现如下，没有隐藏层、没有反向传播：</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> RBFModel:</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">&quot;&quot;&quot;固定中心的 RBF 网络，输出层用线性最小二乘（岭回归）解析求解。&quot;&quot;&quot;</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>, X, Y, k<span class="op">=</span><span class="dv">48</span>, sigma<span class="op">=</span><span class="fl">0.7</span>, ridge<span class="op">=</span><span class="fl">1e-6</span>, seed<span class="op">=</span><span class="dv">0</span>):</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.mu <span class="op">=</span> X.mean(axis<span class="op">=</span><span class="dv">0</span>)</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.sd <span class="op">=</span> X.std(axis<span class="op">=</span><span class="dv">0</span>) <span class="op">+</span> <span class="fl">1e-9</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>        Xn <span class="op">=</span> (X <span class="op">-</span> <span class="va">self</span>.mu) <span class="op">/</span> <span class="va">self</span>.sd</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>        rng <span class="op">=</span> np.random.default_rng(seed)</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>        idx <span class="op">=</span> rng.choice(<span class="bu">len</span>(Xn), size<span class="op">=</span><span class="bu">min</span>(k, <span class="bu">len</span>(Xn)), replace<span class="op">=</span><span class="va">False</span>)</span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.C <span class="op">=</span> Xn[idx]</span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.sigma <span class="op">=</span> sigma</span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>        Phi <span class="op">=</span> <span class="va">self</span>._phi(Xn)</span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.W <span class="op">=</span> np.linalg.solve(Phi.T <span class="op">@</span> Phi <span class="op">+</span> ridge <span class="op">*</span> np.eye(Phi.shape[<span class="dv">1</span>]), Phi.T <span class="op">@</span> Y)</span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.name <span class="op">=</span> <span class="st">&quot;RBF&quot;</span></span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> _phi(<span class="va">self</span>, Xn):</span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>        d2 <span class="op">=</span> ((Xn[:, <span class="va">None</span>, :] <span class="op">-</span> <span class="va">self</span>.C[<span class="va">None</span>, :, :]) <span class="op">**</span> <span class="dv">2</span>).<span class="bu">sum</span>(axis<span class="op">=</span><span class="dv">2</span>)</span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> np.exp(<span class="op">-</span><span class="fl">0.5</span> <span class="op">*</span> d2 <span class="op">/</span> <span class="va">self</span>.sigma <span class="op">**</span> <span class="dv">2</span>)</span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> predict(<span class="va">self</span>, X):</span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a>        Xn <span class="op">=</span> (np.atleast_2d(X) <span class="op">-</span> <span class="va">self</span>.mu) <span class="op">/</span> <span class="va">self</span>.sd</span>
+<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="va">self</span>._phi(Xn) <span class="op">@</span> <span class="va">self</span>.W</span></code></pre></div>
+<p>三个细节值得注意。第一，输入先做均值方差归一化，否则位置（米）与速度（米每秒）的量纲差异会让核宽失去意义。第二，中心从训练样本里随机挑，不训练——这是“固定中心”的含义。第三，权重用 <code>solve</code> 而不是 <code>lstsq</code>，因为加了岭项之后矩阵正定，解唯一。</p>
+<p>GP 的实现同样短，核心是算一次 <span class="math inline">K^{-1}</span>：</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>K <span class="op">=</span> <span class="va">self</span>._k(<span class="va">self</span>.Xn, <span class="va">self</span>.Xn) <span class="op">+</span> (sn <span class="op">**</span> <span class="dv">2</span> <span class="op">+</span> ridge) <span class="op">*</span> np.eye(<span class="bu">len</span>(X))</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="va">self</span>.Kinv <span class="op">=</span> np.linalg.inv(K)</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="va">self</span>.alpha <span class="op">=</span> <span class="va">self</span>.Kinv <span class="op">@</span> Y</span></code></pre></div>
+<p>预测时，均值是 <span class="math inline">k(x)^{\mathsf T}\alpha</span>，方差是 <span class="math inline">k(x,x)-k(x)^{\mathsf T}K^{-1}k(x)</span>。样本量到 200 时，这是一次 <span class="math inline">200\times200</span> 的求逆，离线一次即可。</p>
+<h3 id="把残差注入-mpc">80.12.4 把残差注入 MPC</h3>
+<p><code>solve_mpc</code> 的关键是第 129 行：残差只加到速度通道。</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> k <span class="kw">in</span> <span class="bu">range</span>(N):</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>    c <span class="op">=</span> np.zeros(n)</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> res_seq <span class="kw">is</span> <span class="kw">not</span> <span class="va">None</span>:</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>        c[<span class="dv">2</span>:<span class="dv">4</span>] <span class="op">+=</span> CFG[<span class="st">&quot;ts&quot;</span>] <span class="op">*</span> res_seq[:, k]      <span class="co"># 残差只作用在速度通道</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>    cons <span class="op">+=</span> [z[:, k <span class="op">+</span> <span class="dv">1</span>] <span class="op">==</span> model.A <span class="op">@</span> z[:, k] <span class="op">+</span> model.B <span class="op">@</span> u[:, k] <span class="op">+</span> c]</span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>    cost <span class="op">+=</span> cp.quad_form(z[model.idx4, k] <span class="op">-</span> refs[k], Q_STAGE) <span class="op">+</span> cp.quad_form(u[:, k], R_STAGE)</span></code></pre></div>
+<p><code>solve_residual_mpc</code> 就是两遍法，只有五行：</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> solve_residual_mpc(x0, refs, P_term, model, res_fn):</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">&quot;&quot;&quot;两遍法：先按名义模型求解，再在预测状态上算残差、修正一次。&quot;&quot;&quot;</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>    u0, info <span class="op">=</span> solve_mpc(model, x0, refs, P_term)</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>    Xp <span class="op">=</span> predict_states(model, x0, info[<span class="st">&quot;u&quot;</span>])</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>    r <span class="op">=</span> np.stack([res_fn(Xp[k, :<span class="dv">2</span>], Xp[k, <span class="dv">2</span>:]) <span class="cf">for</span> k <span class="kw">in</span> <span class="bu">range</span>(Xp.shape[<span class="dv">0</span>] <span class="op">-</span> <span class="dv">1</span>)], axis<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>    u0, info <span class="op">=</span> solve_mpc(model, x0, refs, P_term, res_seq<span class="op">=</span>r, u_warm<span class="op">=</span>info[<span class="st">&quot;u&quot;</span>])</span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> u0, info</span></code></pre></div>
+<p>第二遍把第一遍的解作为热启动传进去，这是耗时能接受的关键（§80.5.5）。</p>
+<h3 id="热启动的三种模式">80.12.5 热启动的三种模式</h3>
+<p>热启动实验用 cvxpy 的 <code>Parameter</code> 复用同一个问题，避免重复建模的开销：</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> mode <span class="op">==</span> <span class="st">&quot;cold&quot;</span>:</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>    u.value <span class="op">=</span> np.zeros((<span class="dv">2</span>, n_h))</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="cf">elif</span> mode <span class="op">==</span> <span class="st">&quot;shift&quot;</span>:</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>    u.value <span class="op">=</span> np.hstack([prev[:, <span class="dv">1</span>:], prev[:, <span class="op">-</span><span class="dv">1</span>:]])</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="cf">else</span>:</span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>    u.value <span class="op">=</span> np.tile((W.T <span class="op">@</span> np.r_[x <span class="op">-</span> refs[<span class="dv">0</span>], <span class="fl">1.0</span>])[:, <span class="va">None</span>], (<span class="dv">1</span>, n_h))</span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>prob.solve(solver<span class="op">=</span>cp.OSQP, warm_start<span class="op">=</span>(mode <span class="op">!=</span> <span class="st">&quot;cold&quot;</span>), verbose<span class="op">=</span><span class="va">False</span>,</span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>           eps_abs<span class="op">=</span><span class="fl">1e-6</span>, eps_rel<span class="op">=</span><span class="fl">1e-6</span>, max_iter<span class="op">=</span><span class="dv">8000</span>)</span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a><span class="cf">return</span> np.clip(u.value, <span class="op">-</span>CFG[<span class="st">&quot;u_max&quot;</span>], CFG[<span class="st">&quot;u_max&quot;</span>]), prob.solver_stats.num_iters</span></code></pre></div>
+<p>迭代数直接读 <code>prob.solver_stats.num_iters</code>，这是 OSQP 自己统计的，比在外面数循环可靠。学习型初值 <span class="math inline">W</span> 用 120 个样本拟合，标签是每个样本点的 MPC 最优首步。</p>
+<h3 id="指标定义">80.12.6 指标定义</h3>
+<p>四个指标的算法必须写清楚，否则不同人跑出的数不可比：</p>
+<ul>
+<li><strong>稳态 RMSE</strong>：只统计 <span class="math inline">t\ge3</span> s 的段，跳过起步过渡；位置误差取欧氏范数，再对时间求均方根。</li>
+<li><strong>最大误差</strong>：同一段内的最大值，用来说明最坏情况。</li>
+<li><strong>饱和占比</strong>：<span class="math inline">|u_i|\ge u_{max}-10^{-6}</span> 的样本比例。本章四组都是 0%，说明约束没被激活。</li>
+<li><strong>P95 耗时</strong>：每步记录一次求解时间，取 95 分位。用分位数而不是均值，是因为少数慢步会把均值拉偏。</li>
+</ul>
+<p>这四条定义写在 <code>simulate_closed_loop</code> 的返回字典里，画图脚本直接取用，保证正文、图、表三处一致。</p>
+<h3 id="运行输出">80.12.7 运行输出</h3>
+<p><code>main()</code> 按五组实验依次打印，输出应当与正文的数字逐项吻合：</p>
+<pre class="text"><code>== 残差学习与预测精度 ==
+  一步 RMSE / (m/s^2)：名义 1.195  RBF 0.624  GP 0.310  Koopman 0.445
+  第  1 步位置 RMSE / cm：nominal 0.28  rbf 0.28  gp 0.28  koopman 0.18
+  第  5 步位置 RMSE / cm：nominal 6.31  rbf 3.41  gp 1.26  koopman 4.68
+  第 10 步位置 RMSE / cm：nominal 22.79  rbf 13.55  gp 4.21  koopman 18.99
+  第 20 步位置 RMSE / cm：nominal 75.47  rbf 46.95  gp 16.06  koopman 72.48
+  GP 的 95% 区间覆盖率：100%
+
+== 闭环跟踪（圆周参考，N=15）==
+  控制器      稳态RMSE/cm  最大误差/cm   |u|均值   饱和占比   中位耗时/ms  P95/ms
+  nominal         7.19        7.85     0.603      0.0%       31.44    46.67
+  ...</code></pre>
+<p>全流程约 70 秒，主要时间花在 480 次 QP 求解上（四组 × 120 周期）。若只想看某组结果，可以单独调 <code>experiment_closed_loop</code> 里的循环，把 <code>kind</code> 列表改成一项。</p>
+<h3 id="移植到你的系统要改什么">80.12.8 移植到你的系统要改什么</h3>
+<p>五个地方需要动，其余可以照搬：</p>
+<ol type="1">
+<li><strong><code>residual_accel</code></strong>：换成你的真实对象。若没有解析式，用实测数据代替，此时 <code>true_step</code> 也换成插值或查表。</li>
+<li><strong><code>nominal_model</code></strong>：换成你的名义模型。注意列写精确离散（§80.5.1），不要用 <span class="math inline">I+A_cT_s</span> 凑。</li>
+<li><strong><code>CFG</code></strong>：<span class="math inline">T_s</span>、<span class="math inline">N</span>、<span class="math inline">u_{max}</span>、<span class="math inline">Q</span>、<span class="math inline">R</span> 按 §80.5.2 的三条约束重夹一遍。</li>
+<li><strong><code>sample_residual</code></strong>：换成你的采样逻辑。若是实测数据，重点检查时间对齐（§80.3.2）。</li>
+<li><strong><code>reference</code></strong>：换成你的参考轨迹，注意 <code>refs</code> 要给出 <span class="math inline">N+1</span> 个点，最后一个是终端参考。</li>
+</ol>
+<p>改完之后，先跑 <code>experiment_prediction</code> 看多步误差，再看 <code>experiment_closed_loop</code>。跳过第一步直接跑闭环，是移植时最常见的顺序错误——离线预测不过关，闭环一定不过关，但你会以为是控制器的问题。</p>
+<h3 id="两个脚本的分工">80.12.9 两个脚本的分工</h3>
+<p><code>ch080_sim.py</code> 只算数、不画图；<code>ch080_figs.py</code> 只画图、不算数（它调用前者的函数并缓存结果）。这样分工的好处是：改一个参数只需要重跑一次仿真，十张图会跟着更新；而调试某一张图的样式时，不需要重跑 70 秒的仿真。</p>
+<p>缓存用模块级字典实现：</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>PRED <span class="op">=</span> sim.experiment_prediction()</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>CL <span class="op">=</span> sim.experiment_closed_loop(PRED)</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>_CACHE: <span class="bu">dict</span> <span class="op">=</span> {}</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> terminal():</span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="st">&quot;te&quot;</span> <span class="kw">not</span> <span class="kw">in</span> _CACHE:</span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>        _CACHE[<span class="st">&quot;te&quot;</span>] <span class="op">=</span> sim.experiment_terminal(PRED)</span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> _CACHE[<span class="st">&quot;te&quot;</span>]</span></code></pre></div>
+<p>注意 <code>experiment_closed_loop</code> 依赖 <code>experiment_prediction</code> 的输出（学好的模型），因此它必须在模块加载时就算完。这也是 <code>ch080_figs.py</code> 启动较慢（约 70 秒）的原因，不是画图慢。</p>
+<h3 id="读代码时最该看的五行">80.12.10 读代码时最该看的五行</h3>
+<p>五百多行代码里，真正决定结果对不对的只有五处。其余是循环、打印与画图，写错了会报错或者看得出来；这五处写错了不报错，只是结果悄悄偏掉。</p>
+<p><strong>第一处：<span class="math inline">B_r</span> 的结构。</strong> <code>B_r</code> 必须是 <span class="math inline">[0;T_sI]</span>，只作用于速度。若写成 <span class="math inline">[\frac12T_s^2I;T_sI]</span>，残差就会被算两次——一次通过速度，一次直接进位置——闭环误差会以“补偿过度”的形式表现出来，而且看起来像振荡，很容易被误诊成权重过大。</p>
+<p><strong>第二处：标签里的减号与 <span class="math inline">T_s</span>。</strong> <code>r = (v_next - v) / dt - u</code> 这一行，符号错一个就是“学到的残差反号”，闭环误差翻倍；<code>dt</code> 用标称值而不是实际时间戳之差，就会混进 §80.5.7 那类与速度成正比的假残差。这两点在前面的正文里反复说过，因为它们是整章最高频的错误来源。</p>
+<p><strong>第三处：归一化与核宽的单位。</strong> <code>RBFModel</code> 里先用 <code>mu</code>、<code>sd</code> 把输入归一化，再用 <code>sigma=0.7</code> 算核。若把归一化删掉而保留 <code>sigma=0.7</code>，核宽就变成了“0.7 米”的物理量，与中心间距的关系完全变了，模型会退化成近似线性。这一处最隐蔽，因为代码能跑、误差也只是“变差一点”。</p>
+<p><strong>第四处：残差序列的长度与下标。</strong> <code>predict_states</code> 返回 <span class="math inline">N+1</span> 个状态，残差序列只需要前 <span class="math inline">N</span> 个区间。写成 <code>range(Xp.shape[0])</code> 会多算一步并导致形状不匹配；写成 <code>range(N-1)</code> 会少算一步，末尾那一步没有残差补偿。两种错误都不会崩，只会让第二遍的预测在末端悄悄偏掉。加一句 <code>assert r.shape == (2, N)</code> 就能拦住。</p>
+<p><strong>第五处：热启动是否真的生效。</strong> 在 cvxpy 里给 <code>u.value</code> 赋值只是把初值写进了变量，真正让它起作用的是 <code>solve(..., warm_start=True)</code>。这个参数在多数版本里默认开启，但显式写出来更稳妥——尤其是当你从别处抄来一段带 <code>warm_start=False</code> 的代码时，初值会被静默忽略。判断办法很直接：跑一次带热启动、一次不带，比较 <code>num_iters</code>；若两者相同，说明热启动没生效。</p>
+<p>最后给一个能一次性验证预测器的测试，值得在移植时先做：<strong>把学习器换成真实残差函数</strong>（仿真里 <code>residual_accel</code> 是已知的），再跑 20 步开环预测。若实现完全正确，误差应当降到数值精度；若误差停在 0.6 cm 左右，说明漏了式 (80-11) 的那一项——这正是 §80.4.1 指出的公式缺口，本书的代码确实会在这个测试里暴露它。一个能暴露已知缺陷的测试，比十个全部通过的测试更有价值。</p>
+<p>建议的调试顺序也该按这五处排：先验预测器（真实残差测试），再验标签（残差散点），再验归一化（换一组输入量级看输出是否合理），最后才动热启动。前两步错了，后面所有的调参都是在错误的地基上做装修。</p>
+
+<nav class="footnav"><a href="ch079.html">← 上一章</a><a href="index.html">返回目录</a><a href="ch081.html">下一章 →</a></nav>
+</body>
+</html>

@@ -1,0 +1,1304 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="zh-CN" xml:lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>第 56 章　卡尔曼滤波与LQG控制 · 控制大综合</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    span.underline{text-decoration: underline;}
+    div.column{display: inline-block; vertical-align: top; width: 50%;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    ul.task-list{list-style: none;}
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+  <link rel="stylesheet" href="assets/book.css" />
+  <script src="assets/katex/katex.min.js"></script>
+  <script>document.addEventListener("DOMContentLoaded", function () {
+   var mathElements = document.getElementsByClassName("math");
+   var macros = [];
+   for (var i = 0; i < mathElements.length; i++) {
+    var texText = mathElements[i].firstChild;
+    if (mathElements[i].tagName == "SPAN") {
+     katex.render(texText.data, mathElements[i], {
+      displayMode: mathElements[i].classList.contains('display'),
+      throwOnError: false,
+      macros: macros,
+      fleqn: false
+     });
+  }}});
+  </script>
+  <link rel="stylesheet" href="assets/katex/katex.min.css" />
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+  <link rel="stylesheet" href="assets/site.css" />
+</head>
+<body>
+<nav class="topnav"><a class="home" href="index.html">目录</a><span class="pos">056 / 115</span><span class="pager"><a href="ch055.html">上一章</a><a href="ch057.html">下一章</a></span></nav>
+
+<nav id="TOC" role="doc-toc">
+<ul>
+<li><a href="#第56章-卡尔曼滤波与lqg控制">第56章 卡尔曼滤波与LQG控制</a>
+<ul>
+<li><a href="#动机与直观理解">56.1 动机与直观理解</a></li>
+<li><a href="#数学原理">56.2 数学原理</a></li>
+<li><a href="#设计步骤">56.3 设计步骤</a></li>
+<li><a href="#连续情形">56.4 连续情形</a></li>
+<li><a href="#离散情形">56.5 离散情形</a></li>
+<li><a href="#稳定性与性能">56.6 稳定性与性能</a></li>
+<li><a href="#参数意义与作用">56.7 参数意义与作用</a></li>
+<li><a href="#调参方法与经验">56.8 调参方法与经验</a></li>
+<li><a href="#优化与改进">56.9 优化与改进</a></li>
+<li><a href="#工程落地">56.10 工程落地</a></li>
+<li><a href="#优缺点与适用边界">56.11 优缺点与适用边界</a></li>
+<li><a href="#python-仿真代码">56.12 Python 仿真代码</a></li>
+</ul></li>
+</ul>
+</nav>
+<h1 id="第56章-卡尔曼滤波与lqg控制">第56章 卡尔曼滤波与LQG控制</h1>
+<h2 id="动机与直观理解">56.1 动机与直观理解</h2>
+<h3 id="第55章留下的缺口k-要完整状态而完整状态拿不到">56.1.1 第55章留下的缺口：<span class="math inline">K</span> 要完整状态，而完整状态拿不到</h3>
+<p>第55章解出的 <span class="math inline">K=[0.236068,\;0.236068]</span> 有一个从不被强调的前提：每一拍都能读到完整的 <span class="math inline">x=[\,\text{位移},\ \text{速度}\,]^{\mathsf T}</span>。位移好办，拉一根线、贴一片应变片、装一个激光位移计都能拿到；速度难办。测速机要额外装，差分要额外算，而差分是把噪声往死里放大的一步——<span class="math inline">T_s</span> 越小，放大越狠，因为 <span class="math inline">(x_1[k]-x_1[k-1])/T_s</span> 里两个量测噪声相减后除以一个很小的数。工程上常见的情形是：位移测得挺准，速度只能靠猜。</p>
+<p>第54章已经给了一个出路：Luenberger 观测器。用 <span class="math inline">u</span> 驱动一个对象的复制品，再拿 <span class="math inline">y-\hat y</span> 去纠正它，把观测器的极点摆到左边去就收敛了。那套办法在本章的对象上工作得很好，代价是把“极点摆在哪”这件事又交回给了设计者的手感。第54章是这么做的：想要快，就把观测器极点放到 <span class="math inline">-10,-10</span>；想要稳，就放到 <span class="math inline">-4,-6</span>。为什么是这两个数？没有理由，只有经验。</p>
+<p>本章要做的，是把这只手从设计者身上拿开。既然速度测不到、噪声又客观存在，那么“该多信量测、该多信模型”这件事就不该由人拍脑袋，而应该由噪声的统计特性算出来。这就是卡尔曼滤波的全部主张：<strong>给噪声一个方差，滤波器自己算出最优的权重。</strong> 权重算出来是几就是几，不需要摆极点，也不需要在复平面上画圈。</p>
+<h3 id="三个假设一条递推">56.1.2 三个假设，一条递推</h3>
+<p>卡尔曼滤波的推导要用到三个假设，缺一个就不再是最优的，但往往还能用——这一点在 §56.9 会反复出现。</p>
+<p>第一，对象是线性的。本章沿用第54、55章的 mass-spring-damper：<span class="math inline">m=1</span>、<span class="math inline">k=2</span>、<span class="math inline">c=3</span>，于是</p>
+<p><span class="math display">
+\dot x=Ax+Bu+w,\qquad y=Cx+v,\qquad
+A=\begin{bmatrix}0&amp;1\\-2&amp;-3\end{bmatrix},\quad B=\begin{bmatrix}0\\1\end{bmatrix},\quad C=\begin{bmatrix}1&amp;0\end{bmatrix}
+\tag{56-1}
+</span></p>
+<p>第二，<span class="math inline">w</span> 与 <span class="math inline">v</span> 是零均值高斯白噪声，且互不相关。连续时间下它们的强度写成</p>
+<p><span class="math display">
+\mathbb{E}\big[w(t)w^{\mathsf T}(\tau)\big]=W\,\delta(t-\tau),\qquad
+\mathbb{E}\big[v(t)v(\tau)\big]=V\,\delta(t-\tau)
+\tag{56-2}
+</span></p>
+<p><span class="math inline">W</span> 是 <span class="math inline">2\times2</span> 半正定阵，<span class="math inline">V</span> 是标量（单路量测）。注意 <span class="math inline">W</span> 的量纲不是“方差”，而是“方差除以时间”，因为它乘的是一个冲激。这一点在 §56.5 会把离散实现坑得很惨：连续强度与每拍方差之间差一个 <span class="math inline">1/T_s</span>。</p>
+<p>第三，初始状态 <span class="math inline">x_0</span> 是高斯的，均值 <span class="math inline">\hat x_0</span>、协方差 <span class="math inline">P_0</span> 已知。这条假设听起来最苛刻，实际上最不重要——报告 2 把 <span class="math inline">P_0</span> 从 <span class="math inline">10^{-6}I</span> 一路加到 <span class="math inline">10^{6}I</span>，十二个数量级的初值差，稳态协方差的迹全部收敛到 <span class="math inline">0.322950</span>，收敛步数只从 33 步变成 64 步。初值只影响开头几十拍，不影响结局。</p>
+<p>在这三个假设下，卡尔曼滤波给出的不是“一个还行的估计”，而是在所有只用 <span class="math inline">y(0),\dots,y(t)</span> 的估计器里，均方误差最小的那一个。这个“最优”是有严格证明的，证明的路子有两条：一条从正交投影出发（新息必须与已有信息正交），一条从贝叶斯公式出发（高斯乘高斯还是高斯）。§56.2 走第二条，因为它的中间结果——协方差递推——正是工程上要用的东西。</p>
+<h3 id="直观两道方差的加权平均">56.1.3 直观：两道方差的加权平均</h3>
+<p>抛开矩阵，先看一个标量问题。设先验估计的方差是 <span class="math inline">P^-</span>，量测的方差是 <span class="math inline">V</span>，两者独立。把估计写成先验与量测的线性组合 <span class="math inline">\hat x^+=\hat x^-+L(y-\hat x^-)</span>，让后验方差最小，解出来是</p>
+<p><span class="math display">
+L=\frac{P^-}{P^-+V},\qquad \frac{1}{P^+}=\frac{1}{P^-}+\frac{1}{V}
+\tag{56-3}
+</span></p>
+<p>报告 17 把这四个数摆在一起：<span class="math inline">P^-=1</span>、<span class="math inline">V=0.1</span> 时 <span class="math inline">L=0.9091</span>、<span class="math inline">P^+=0.0909</span>，后验方差掉了 <span class="math inline">90.9\%</span>；<span class="math inline">P^-=1</span>、<span class="math inline">V=10</span> 时 <span class="math inline">L=0.0909</span>、<span class="math inline">P^+=0.9091</span>，只掉 <span class="math inline">9.1\%</span>；<span class="math inline">P^-=4</span>、<span class="math inline">V=1</span> 时 <span class="math inline">L=0.8000</span>；<span class="math inline">P^-=0.25</span>、<span class="math inline">V=1</span> 时 <span class="math inline">L=0.2000</span>。四个数讲的是同一件事：<strong>增益就是信任的分配比例，而这个比例只由两道方差的相对大小决定。</strong></p>
+<p>第二式更值得记住。它说后验的“精度”（方差的倒数）等于先验精度加量测精度——两道独立信息合并，精度直接相加。矩阵情形下这条恒等式叫信息滤波，滤波器以 <span class="math inline">P^{-1}</span> 为状态递推，在量测极准（<span class="math inline">V\to0</span>）时数值上比协方差形式稳。所有“调 <span class="math inline">Q</span>、调 <span class="math inline">R</span>”的操作，本质上都是在拨 <span class="math inline">P^-</span> 与 <span class="math inline">V</span> 的比值：把 <span class="math inline">V</span> 调小，等于告诉滤波器“传感器很准”，<span class="math inline">L</span> 就往 1 走；把 <span class="math inline">W</span> 调大，等于告诉滤波器“模型很烂”，<span class="math inline">P^-</span> 被推大，<span class="math inline">L</span> 也往 1 走。两条路殊途同归，但含义完全不同——这一点 §56.7 会用两组扫描把它分开。</p>
+<h3 id="lqg两个最优拼成一个闭环">56.1.4 LQG：两个最优拼成一个闭环</h3>
+<p>有了卡尔曼滤波，闭环就搭起来了：滤波器由 <span class="math inline">u</span> 与 <span class="math inline">y</span> 算出 <span class="math inline">\hat x</span>，控制器拿 <span class="math inline">\hat x</span> 当状态算出 <span class="math inline">u=-K\hat x</span>。这个结构叫 LQG（Linear Quadratic Gaussian），图 56-1 是它的信号流。</p>
+<figure>
+<img src="figs/ch056/fig_056_01_structure.svg" alt="图 56-1　LQG 闭环结构：K 管响应，L 管噪声" /><figcaption aria-hidden="true">图 56-1　LQG 闭环结构：K 管响应，L 管噪声</figcaption>
+</figure>
+<p>图里有一条容易看漏的线：<span class="math inline">u</span> 同时进入对象和滤波器。这不是为了好看，而是滤波器的预测步必须知道控制器刚才做了什么——如果滤波器不知道 <span class="math inline">u</span>，它就无法预测下一拍状态该往哪走，只能干等量测。所以 LQG 的滤波器是“有输入的观测器”，不是单纯的信号平滑器。</p>
+<p>结构上最漂亮的结论是分离原理：把 <span class="math inline">K</span> 与 <span class="math inline">L</span> 分开设计，一个解 LQR 的 Riccati 方程、一个解对偶的 Riccati 方程，拼起来的四阶闭环极点恰好是两组二阶极点的并集。报告 7 实测：状态反馈极点是 <span class="math inline">-2.236068</span> 与 <span class="math inline">-1.000000</span>，观测器的极点是一对共轭复根 <span class="math inline">-1.8360\pm0.6090\mathrm{j}</span>，LQG 的四个极点就是这两组数的并集，与并集的差 <span class="math inline">2.442\times10^{-15}</span>——纯浮点噪声。这条结论让人松了一口气：不必解四阶方程，两个二阶问题分头做就行。</p>
+<p>但同一份报告还有一句话要记住：分离原理只保证极点，不保证裕度。第55章报告 11 已经看到，LQR 单独闭环有 <span class="math inline">60^\circ</span> 相位裕度，接上观测器之后可以掉到没有穿越。极点好看，裕度未必好看，这个坑在 §56.6 会量化。</p>
+<h3 id="先把代价看清噪声把末值顶在-1.6-m">56.1.5 先把代价看清：噪声把末值顶在 1.6 m</h3>
+<p>在推公式之前，先跑一遍看看 LQG 到底得到什么。报告 8 用 <span class="math inline">T_s=0.02</span> s、<span class="math inline">x_0=[1,\;0]^{\mathsf T}</span>、<span class="math inline">\hat x_0=0</span>，<span class="math inline">K</span> 与 <span class="math inline">L</span> 都取标称权重，三种工况的数字是：</p>
+<p><span class="math display">
+\begin{array}{c|cccc}
+\text{工况} &amp; \text{峰值}|u| &amp; \mathrm{RMS}(u) &amp; 2\%\ \text{调节} &amp; \text{末值}|x_1|\\
+\hline
+\text{状态反馈，无过程噪声} &amp; 0.2361 &amp; 0.0208 &amp; 4.520\ \mathrm{s} &amp; 1.72\times10^{-13}\\
+\text{LQG，估计从零起} &amp; 0.4132 &amp; 0.1155 &amp; \text{无} &amp; 1.6097\\
+\text{LQG，初值恰好已知} &amp; 0.4132 &amp; 0.1166 &amp; \text{无} &amp; 1.6097
+\end{array}
+\tag{56-4}
+</span></p>
+<p>第一行是理想情形：状态全知、没有过程噪声，位移在 <span class="math inline">4.520</span> s 进 <span class="math inline">2\%</span> 带，末值压到 <span class="math inline">1.72\times10^{-13}</span>，控制量峰值恰好是 <span class="math inline">K</span> 的第一个分量 <span class="math inline">0.2361</span>。这一行与第55章的数字对得上，说明代码口径没错。</p>
+<p>第二行一加噪声，性质就变了。位移再也不落 <span class="math inline">2\%</span>，末值停在 <span class="math inline">1.6097</span>，控制量峰值涨到 <span class="math inline">0.4132</span>、RMS 从 <span class="math inline">0.0208</span> 涨到 <span class="math inline">0.1155</span>。这不是控制器失效——闭环在 <span class="math inline">W=I</span> 下的位移稳态标准差算出来是 <span class="math inline">0.9732</span>，与实跑末值 <span class="math inline">1.6097</span> 同一量级。所谓“末值不归零”，就是这团被闭环不断放大的噪声撑着的：控制器每一次都用带噪的 <span class="math inline">\hat x</span> 去算 <span class="math inline">u</span>，噪声从 <span class="math inline">u</span> 进对象，再从 <span class="math inline">y</span> 回滤波器，绕一圈又变成 <span class="math inline">u</span> 的一部分。</p>
+<p>第三行更值得注意。把 <span class="math inline">\hat x_0</span> 设成真值 <span class="math inline">[1,\;0]^{\mathsf T}</span>，也就是白送滤波器一个完美的初值，末值仍是 <span class="math inline">1.6097</span>，RMS 只从 <span class="math inline">0.1155</span> 变成 <span class="math inline">0.1166</span>。初值信息几十拍就被噪声冲掉了，这与报告 2 的结论一致。工程含义是：<strong>别在初值上花功夫，把功夫花在 <span class="math inline">W</span>、<span class="math inline">V</span> 上。</strong></p>
+<h3 id="差分的代价一次手算就够">56.1.6 差分的代价：一次手算就够</h3>
+<p>有人会问：速度不就是位移的导数吗，差分一下不就行了，何必上滤波器？这个问题的答案可以手算出来，不需要仿真。</p>
+<p>设量测 <span class="math inline">y_k=x_1(kT_s)+v_k</span>，<span class="math inline">v_k</span> 方差为 <span class="math inline">V</span>，前后两拍独立。用后向差分估速度：</p>
+<p><span class="math display">
+\hat x_2(k)=\frac{y_k-y_{k-1}}{T_s}
+</span></p>
+<p>分子是两个独立噪声相减，方差是 <span class="math inline">2V</span>；除以 <span class="math inline">T_s</span> 后方差变成</p>
+<p><span class="math display">
+\mathrm{Var}\big[\hat x_2\big]=\frac{2V}{T_s^2}
+</span></p>
+<p>代入本章的 <span class="math inline">V=1</span>、<span class="math inline">T_s=0.02</span> s，方差是 <span class="math inline">2/0.0004=5000</span>，标准差 <span class="math inline">70.71</span>。也就是说，位移测得再准，差分出来的速度也带着 <span class="math inline">\pm70</span> m/s 量级的噪声。而本章对象的位移在 <span class="math inline">1</span> m 量级、时间常数 <span class="math inline">1</span> s 上下，真实速度也就 <span class="math inline">1</span> m/s 量级。信噪比是 <span class="math inline">1/70</span>，这个“速度”完全没法用。</p>
+<p>滤波器的速度估计标准差是 <span class="math inline">\sqrt{0.336955}=0.580478</span>。两者相差</p>
+<p><span class="math display">
+\frac{70.71}{0.580478}\approx121.8
+</span></p>
+<p>倍。同一个量测序列，同样的噪声，一个误差 <span class="math inline">70</span>，一个误差 <span class="math inline">0.58</span>。差距不是“卡尔曼更聪明”，而是差分把噪声放大了 <span class="math inline">1/T_s</span> 倍，而卡尔曼用模型把噪声“积掉”了——速度是位移的积分关系，滤波器知道这件事，差分不知道。</p>
+<p>想救差分，只有两条路。第一条是把 <span class="math inline">T_s</span> 加粗：<span class="math inline">T_s=0.1</span> s 时标准差降到 <span class="math inline">14.14</span>，<span class="math inline">T_s=1</span> s 时降到 <span class="math inline">1.41</span>，但采样这么慢，闭环带宽连 <span class="math inline">1</span> rad/s 都保不住。第二条是加低通：先滤再差分，传递函数变成 <span class="math inline">s/(1+\tau s)</span>，在低频近似微分、高频衰减。代价是相位滞后，<span class="math inline">\tau</span> 越大滞后越多，闭环裕度又被吃掉。两条路都撞在同一个墙上：<strong>微分是病态的，任何实现都要拿带宽换噪声，而卡尔曼把这个兑换做到了最优。</strong></p>
+<p>这也解释了为什么第54章的观测器要专门设一个“速度状态”：它不是在做微分，而是在用对象方程 <span class="math inline">\dot x_1=x_2</span> 把速度“推”出来，再用位移量测去校正。推动作不放大噪声，校正动作才受噪声限制。卡尔曼做的事与观测器一样，只是把“推”与“校正”的比例算到了最优。</p>
+<h3 id="本章主线与读法约定">56.1.7 本章主线与读法约定</h3>
+<p>本章按“是什么—怎么算—怎么用—怎么坏”的顺序走，五条主线对应后面的节：</p>
+<p>第一，最优性从哪来。§56.2 从贝叶斯递推与正交投影两条路推到同一个 Riccati 方程，并说明它与 LQR 的对偶关系——报告 1 实测对偶 CARE 的残差 <span class="math inline">1.971\times10^{-15}</span>，<span class="math inline">L</span> 与对偶 LQR 增益的差是 <span class="math inline">0</span>。</p>
+<p>第二，怎么实现。§56.3 给七步流程，§56.4 讲连续形式与稳态解，§56.5 讲离散形式。离散这一节是本章最容易踩坑的地方：报告 6 显示，把连续量测噪声直接搬进离散滤波器，<span class="math inline">L_d/T_s</span> 会从 <span class="math inline">1.6148</span> 一路涨到 <span class="math inline">31.2148</span>（<span class="math inline">T_s</span> 从 0.2 s 降到 1 ms），根本不收敛；按密度折算成 <span class="math inline">V_d=V/T_s</span> 之后，同一列数字从 <span class="math inline">0.6273</span> 收到 <span class="math inline">0.6717</span>，连续解是 <span class="math inline">0.671963</span>。</p>
+<p>第三，性能与稳定。§56.6 给分离原理、稳态协方差、采样周期的量化影响，以及 LQG 的裕度损失。</p>
+<p>第四，参数与调法。§56.7 用三组扫描把 <span class="math inline">W</span>、<span class="math inline">V</span> 的作用分开，§56.8 给新息白性检验、协方差匹配与失配诊断——报告 10 会说明，模型错一倍时位移误差几乎不动，速度误差才放大，而 E[NIS] 全在 <span class="math inline">0.99</span>，对参数失配近乎失明。</p>
+<p>第五，怎么改进与落地。§56.9 讲 EKF、UKF、Joseph 形式、RTS 平滑与自适应；§56.10 讲现场估噪声、定点实现、丢包处理；§56.11 收边界。</p>
+<p>本章所有数字来自 <code>code/ch056_sim.py</code> 的二十三组报告，正文引用时标出报告编号；十一张图全部由 <code>code/ch056_figs.py</code> 生成。对象参数与第54、55章完全一致，初值统一取 <span class="math inline">x_0=[1,\;0]^{\mathsf T}</span>，标称权重 <span class="math inline">Q=I</span>、<span class="math inline">R=1</span>、<span class="math inline">W=I</span>、<span class="math inline">V=1</span>，这一组给出的两个增益是</p>
+<p><span class="math display">
+K=[0.236068,\;0.236068],\qquad L=[0.671963,\;-0.274233]^{\mathsf T}
+\tag{56-5}
+</span></p>
+<p>后一个数是本章的主角。它的第一个分量 <span class="math inline">0.671963</span> 大于 1，看着不像“增益”，其实很正常：<span class="math inline">L</span> 乘的是新息（单位是位移），加到的却是状态（第一个分量是位移、第二个是速度），两个分量量纲不同，数值自然不可比。观测器的极点是一对共轭复根 <span class="math inline">-1.8360\pm0.6090\mathrm{j}</span>，虚部只有 <span class="math inline">0.609</span>，阻尼比 <span class="math inline">0.949</span>，几乎贴着实轴，所以打印时只取实部会显示成两个相同的 <span class="math inline">-1.835982</span>——报告 1 就是这么打印的，看起来像重根，实际不是。完整的极点要到 §56.4 的扫描表里才看得见。稳态协方差的迹是 <span class="math inline">1.008918</span>、行列式是 <span class="math inline">0.151218</span>——这几个数在后面的扫描里会反复出现，作为“标称点”的参照。</p>
+<h2 id="数学原理">56.2 数学原理</h2>
+<h3 id="一拍里的五个方程">56.2.1 一拍里的五个方程</h3>
+<p>先把离散情形写出来，因为它才是代码里真正跑的东西。设第 <span class="math inline">k</span> 拍的量测更新之前，我们手里有一个先验估计 <span class="math inline">\hat x^-_k</span> 与它的协方差 <span class="math inline">P^-_k</span>；量测 <span class="math inline">y_k=Cx_k+v_k</span> 到了，要把它并进去，得到后验 <span class="math inline">\hat x^+_k</span>、<span class="math inline">P^+_k</span>。</p>
+<p>贝叶斯公式说后验正比于先验乘似然。两个高斯相乘还是高斯，把指数上的二次型配平方，得到的信息形式是</p>
+<p><span class="math display">
+(P^+_k)^{-1}=(P^-_k)^{-1}+C^{\mathsf T}V^{-1}C,\qquad
+\hat x^+_k=P^+_k\Big[(P^-_k)^{-1}\hat x^-_k+C^{\mathsf T}V^{-1}y_k\Big]
+\tag{56-6}
+</span></p>
+<p>这两式与标量情形 (56-3) 完全同构：精度相加，均值按精度加权。但工程上没人直接这么算，因为要求两次逆。用矩阵求逆引理把它翻成协方差形式，得到的就是教科书上的四个方程：</p>
+<p><span class="math display">
+S_k=CP^-_kC^{\mathsf T}+V,\qquad L_k=P^-_kC^{\mathsf T}S_k^{-1}
+\tag{56-7}
+</span></p>
+<p><span class="math display">
+\hat x^+_k=\hat x^-_k+L_k\big(y_k-C\hat x^-_k\big),\qquad
+P^+_k=(I-L_kC)P^-_k
+\tag{56-8}
+</span></p>
+<p><span class="math inline">S_k</span> 是新息的协方差，<span class="math inline">y_k-C\hat x^-_k</span> 是新息本身。注意 <span class="math inline">S_k</span> 是标量（单路量测），所以 <span class="math inline">S_k^{-1}</span> 就是除法，<span class="math inline">L_k</span> 是一个 <span class="math inline">2\times1</span> 向量。这四式加上时间更新</p>
+<p><span class="math display">
+\hat x^-_{k+1}=A_d\hat x^+_k+B_du_k,\qquad
+P^-_{k+1}=A_dP^+_kA_d^{\mathsf T}+W_d
+\tag{56-9}
+</span></p>
+<p>构成完整的一拍。五个方程、一次标量除法、两次矩阵乘，计算量小到可以塞进任何一块单片机。这就是卡尔曼滤波在 1960 年代就能上阿波罗导航计算机的原因。</p>
+<p>值得指出的是 (56-8) 第二式的一个性质：<span class="math inline">I-LC</span> 不对称。<span class="math inline">L</span> 是 <span class="math inline">2\times1</span>、<span class="math inline">C</span> 是 <span class="math inline">1\times2</span>，乘积是 <span class="math inline">2\times2</span> 的秩一矩阵，减去它之后剩下的矩阵一般不对称。这在数学上无所谓（<span class="math inline">P^+</span> 理论上仍对称），在浮点里就是误差的来源——§56.9 的 Joseph 形式正是为了消掉这个不对称。</p>
+<h3 id="为什么这个-l-是最优的配方法">56.2.2 为什么这个 <span class="math inline">L</span> 是最优的：配方法</h3>
+<p>(56-7) 与 (56-8) 里的 <span class="math inline">L</span> 不是猜的，是把后验协方差的迹对 <span class="math inline">L</span> 求极小解出来的。设 <span class="math inline">L</span> 是任意 <span class="math inline">2\times1</span> 向量，估计写成 <span class="math inline">\hat x^+=\hat x^-+L(y-C\hat x^-)</span>，误差是</p>
+<p><span class="math display">
+e^+=\hat x^+-x=(I-LC)e^-+Lv
+\tag{56-10}
+</span></p>
+<p>两边取外积再取期望，交叉项因 <span class="math inline">e^-</span> 与 <span class="math inline">v</span> 不相关而消失：</p>
+<p><span class="math display">
+P^+=(I-LC)P^-(I-LC)^{\mathsf T}+LVL^{\mathsf T}
+\tag{56-11}
+</span></p>
+<p>这个式子的结构很清楚：第一项是“没被量测纠正掉的那部分先验误差”，第二项是“量测噪声经过增益灌进来的那部分”。<span class="math inline">L</span> 小，第二项小、第一项大；<span class="math inline">L</span> 大，反过来。把 (56-11) 展开成 <span class="math inline">L</span> 的二次型：</p>
+<p><span class="math display">
+P^+=P^--LC P^--P^-C^{\mathsf T}L^{\mathsf T}+L\big(CP^-C^{\mathsf T}+V\big)L^{\mathsf T}
+\tag{56-12}
+</span></p>
+<p>中间那个括号正是 <span class="math inline">S</span>。对 <span class="math inline">L</span> 求导并令其为零，得 <span class="math inline">L S=P^-C^{\mathsf T}</span>，即 <span class="math inline">L=P^-C^{\mathsf T}S^{-1}</span>——这就是 (56-7) 第二式。把它代回去，二次型配方成</p>
+<p><span class="math display">
+P^+=P^--P^-C^{\mathsf T}S^{-1}CP^-=(I-LC)P^-
+\tag{56-13}
+</span></p>
+<p>后验协方差一定不大于先验：<span class="math inline">P^+\preceq P^-</span>，量测只会带来信息，不会带来损失。这句话在标量情形就是 <span class="math inline">P^+\le P^-</span>，与报告 17 的“降幅”那一列对应。</p>
+<p>这里有一个容易误解的地方。<span class="math inline">L</span> 让 <span class="math inline">\mathrm{tr}(P^+)</span> 最小，但它并不让 <span class="math inline">\mathrm{tr}(P^+)</span> 变成零——量测噪声 <span class="math inline">V</span> 堵在那里，再好的增益也压不穿。报告 16 给了一个具体数字：两路传感器融合后 <span class="math inline">\sqrt{\Sigma_{11}}=0.795644</span>，比单路的 <span class="math inline">0.819734</span> 只好 <span class="math inline">2.9\%</span>。原因是过程噪声 <span class="math inline">W</span> 在中间托底：每一拍都有新的不确定度灌进来，滤波器只能把它压到某个平衡点，不可能压到零。</p>
+<h3 id="协方差不看量测值只看模型">56.2.3 协方差不看量测值，只看模型</h3>
+<p>(56-8) 与 (56-9) 里有一个非常特殊的性质：<strong>协方差递推里没有 <span class="math inline">y</span>，也没有 <span class="math inline">\hat x</span>。</strong> <span class="math inline">P^-</span>、<span class="math inline">P^+</span>、<span class="math inline">L</span> 只由 <span class="math inline">A_d</span>、<span class="math inline">C</span>、<span class="math inline">W_d</span>、<span class="math inline">V</span> 决定，与实测数据无关。这意味着三件事。</p>
+<p>第一，增益序列可以离线算好，存成表，在线只做乘加。飞行器的导航滤波器常这么干，因为在线算 Riccati 递推要开方、要除法，定点机上很贵。</p>
+<p>第二，收敛性与初值 <span class="math inline">P_0</span> 无关，只与“系统是否可检测、是否可 stabilizable”有关。报告 2 把 <span class="math inline">P_0</span> 从 <span class="math inline">10^{-6}I</span> 扫到 <span class="math inline">10^{6}I</span>，稳态迹全部是 <span class="math inline">0.322950</span>，收敛步数 33 到 64。这条性质叫“滤波器的指数遗忘”，它保证了冷启动不会留下永久偏差。</p>
+<p>第三，滤波器“自评的协方差”与“实际的误差”是两回事。<span class="math inline">P</span> 只在模型与噪声假设全对时才等于真实的均方误差。报告 10 会看到，模型刚度错一倍时，滤波器自评的新息方差仍是 <span class="math inline">1.0681</span>，E[NIS] 仍是 <span class="math inline">0.99</span>，可速度误差已经从 <span class="math inline">0.4201</span> 涨到 <span class="math inline">0.6030</span>。<span class="math inline">P</span> 是滤波器对自己的信心，不是客观精度。</p>
+<h3 id="稳态一个代数-riccati-方程">56.2.4 稳态：一个代数 Riccati 方程</h3>
+<p>时间趋于无穷时 <span class="math inline">P^-_k</span> 收敛到一个常数阵 <span class="math inline">\Sigma</span>，把它代进 (56-9) 与 (56-13) 的复合式，得到离散代数 Riccati 方程（DARE）。连续时间下的对应物更简洁：</p>
+<p><span class="math display">
+A\Sigma+\Sigma A^{\mathsf T}-\Sigma C^{\mathsf T}V^{-1}C\Sigma+W=0,
+\qquad L=\Sigma C^{\mathsf T}V^{-1}
+\tag{56-14}
+</span></p>
+<p>报告 1 解出的是</p>
+<p><span class="math display">
+\Sigma=\begin{bmatrix}0.671963&amp;-0.274233\\-0.274233&amp;0.336955\end{bmatrix},
+\qquad L=\begin{bmatrix}0.671963\\-0.274233\end{bmatrix}
+\tag{56-15}
+</span></p>
+<p>代回 (56-14) 的残差是 <span class="math inline">1.971\times10^{-15}</span>，机器精度。<span class="math inline">\Sigma</span> 的迹是 <span class="math inline">1.008918</span>、行列式是 <span class="math inline">0.151218</span>，两个特征值都是正的，半正定性没问题。观测器的极点是一对共轭复根 <span class="math inline">-1.8360\pm0.6090\mathrm{j}</span>，虚部 <span class="math inline">0.609</span> 相对实部不到三分之一，阻尼比 <span class="math inline">0.949</span>，衰减快、几乎不振荡。这一点在 <span class="math inline">V</span> 与 <span class="math inline">W</span> 的扫描里会变（§56.7）：<span class="math inline">V=0.001</span> 时裂成一快一慢两个实根，<span class="math inline">V=100</span> 时又并回两个实根，只有中间几档才是复根。</p>
+<p>(56-14) 与 LQR 的 CARE 长得几乎一样，这不是巧合。把 <span class="math inline">A</span> 换成 <span class="math inline">A^{\mathsf T}</span>、<span class="math inline">C^{\mathsf T}</span> 换成 <span class="math inline">B</span>、<span class="math inline">W</span> 换成 <span class="math inline">Q</span>、<span class="math inline">V</span> 换成 <span class="math inline">R</span>，两式逐项对应。这个对应关系有个名字，叫对偶性。</p>
+<h3 id="对偶一套代码解两个问题">56.2.5 对偶：一套代码解两个问题</h3>
+<p>把两个 Riccati 方程并排写：</p>
+<p><span class="math display">
+\begin{array}{ll}
+\text{LQR：} &amp; A^{\mathsf T}P+PA-PBR^{-1}B^{\mathsf T}P+Q=0,\quad K=R^{-1}B^{\mathsf T}P\\[2pt]
+\text{KF：} &amp; A\Sigma+\Sigma A^{\mathsf T}-\Sigma C^{\mathsf T}V^{-1}C\Sigma+W=0,\quad L=\Sigma C^{\mathsf T}V^{-1}
+\end{array}
+\tag{56-16}
+</span></p>
+<p>只要把 <span class="math inline">(A,B,Q,R)</span> 替换成 <span class="math inline">(A^{\mathsf T},C^{\mathsf T},W,V)</span>，第一个方程就变成第二个，<span class="math inline">K^{\mathsf T}</span> 变成 <span class="math inline">L</span>。报告 1 直接验证了这一点：用对偶参数调 LQR 求解器，得到的增益与 <span class="math inline">L</span> 的转置之差的打印值是 <span class="math inline">0.000\times10^{0}</span>，一位不差。</p>
+<p>这条对偶性的实用价值在于：<strong>只需要一个好用的 Riccati 求解器，就能同时做控制器和滤波器。</strong> 本章的代码就是这么写的——<code>lqr_gain</code> 一个函数，<code>kf_ss</code> 只是把矩阵转置一下再调它。第57章讲 <span class="math inline">H_2</span> 与 <span class="math inline">H_\infty</span> 时，同一个套路还会再出现一次。理论价值则在于：LQR 的所有结论（稳定性、增益裕度、单调性）都能“转置”成滤波器的结论，包括哪些结论在什么条件下才成立。</p>
+<h3 id="分离原理为什么成立">56.2.6 分离原理为什么成立</h3>
+<p>分离原理的证明只需要一个式子。设真实闭环的代价是</p>
+<p><span class="math display">
+J=\mathbb{E}\int_0^\infty\big(x^{\mathsf T}Qx+u^{\mathsf T}Ru\big)\,dt,
+\qquad u=-K\hat x
+\tag{56-17}
+</span></p>
+<p>把 <span class="math inline">x=\hat x+e</span> 代进去，展开成三项：<span class="math inline">\hat x</span> 的项、<span class="math inline">e</span> 的项、交叉项 <span class="math inline">2\hat x^{\mathsf T}Qe</span>。交叉项的期望是零，因为卡尔曼滤波的估计误差与估计本身正交——这正是 §56.2.2 里“新息与已有信息正交”的另一面。于是</p>
+<p><span class="math display">
+J=\mathbb{E}\int_0^\infty\big(\hat x^{\mathsf T}Q\hat x+u^{\mathsf T}Ru\big)\,dt
++\mathbb{E}\int_0^\infty e^{\mathsf T}Qe\,dt
+\tag{56-18}
+</span></p>
+<p>第一项只含 <span class="math inline">K</span>（因为 <span class="math inline">\hat x</span> 由 <span class="math inline">K</span> 驱动），第二项只含 <span class="math inline">L</span>（因为 <span class="math inline">e</span> 的协方差由滤波器决定）。两项可以分别最小化，互不干涉。这就是分离原理的全部内容，也叫确定性等价：<strong>把估计值当成真值去设计控制器，得到的就是随机意义下的最优控制器。</strong></p>
+<p>分离原理有严格的适用条件，值得说清：代价必须是二次型，噪声必须是高斯，约束必须线性，而且没有对 <span class="math inline">u</span> 的幅值限制。四个条件破一个，分离原理就不再成立。执行器饱和是最常见的破法——饱和是非线性的，估计误差会通过饱和边界影响控制效果，此时“把估计当真值”可能让闭环失稳。第55章 §55.10 讨论过饱和下的退化，那里还只是状态全知的情形；加上估计误差之后会更糟。</p>
+<p>即使四个条件都满足，分离原理给的也只是“极点分开”。报告 7 的四个极点 <span class="math inline">-2.236068</span>、<span class="math inline">-1.8360\pm0.6090\mathrm{j}</span>、<span class="math inline">-1.000000</span> 与并集的差 <span class="math inline">2.442\times10^{-15}</span>，说明极点确实拼得严丝合缝。但极点不等于裕度，也不等于时域指标——§56.6 会用数字说明，同一个 LQG 闭环，状态反馈的 <span class="math inline">2\%</span> 调节是 <span class="math inline">4.520</span> s，接上滤波器后连 <span class="math inline">2\%</span> 都进不去。分离原理保证的是“最优”，不是“好用”。</p>
+<h3 id="几何视角新息为什么必须是白的">56.2.7 几何视角：新息为什么必须是白的</h3>
+<p>把估计问题放到内积空间里看，会得到一幅更清楚的图。定义内积 <span class="math inline">\langle a,b\rangle=\mathbb{E}[ab^{\mathsf T}]</span>，把“用前 <span class="math inline">k</span> 拍量测能张成的所有线性组合”记作 <span class="math inline">\mathcal{Y}_k</span>。最优估计就是 <span class="math inline">x_k</span> 在 <span class="math inline">\mathcal{Y}_k</span> 上的正交投影。</p>
+<p>投影有一个几何性质：残差与子空间正交。这里的残差就是估计误差 <span class="math inline">e_k=x_k-\hat x_k</span>，于是</p>
+<p><span class="math display">
+\mathbb{E}\big[e_k\,y_j^{\mathsf T}\big]=0,\qquad j\le k
+\tag{56-18a}
+</span></p>
+<p>这条正交性等价于“估计里再没有可被量测解释的部分了”，再多用一点量测也压不下去。</p>
+<p>新息是 <span class="math inline">\nu_k=y_k-C\hat x^-_k</span>，其中 <span class="math inline">\hat x^-_k</span> 只用到 <span class="math inline">k-1</span> 及以前的量测。对 <span class="math inline">j&lt;k</span>，</p>
+<p><span class="math display">
+\mathbb{E}\big[\nu_k\,y_j^{\mathsf T}\big]
+=C\,\mathbb{E}\big[e^-_k y_j^{\mathsf T}\big]=0
+\tag{56-18b}
+</span></p>
+<p>第一项里 <span class="math inline">\mathbb{E}[y_k y_j^{\mathsf T}]</span> 因为噪声独立也为零（<span class="math inline">j&lt;k</span>），第二项由 (56-18a) 为零。所以新息与全部历史量测正交，而新息序列本身又是“历史量测的线性组合减去预测”，于是它对自身过去也正交——<strong>白</strong>。这就是 §56.8 用自相关检验滤波器的理论依据：不是经验规则，是正交性的直接推论。</p>
+<p>同一件事换个说法：新息是量测里“真正新”的那部分，它不能被任何历史量测预测。滤波器每一拍做的就是把这部分新信息按 <span class="math inline">L</span> 的比例吸收进来。若新息还有相关性，说明上一拍有信息没被吸收干净，增益偏小；若新息方差比 <span class="math inline">S</span> 大，说明增益偏小或噪声模型偏小。</p>
+<p>正交性还有两个推论值得记住。</p>
+<p>第一，卡尔曼滤波在高斯假设下是<strong>最小均方误差</strong>估计，在非高斯假设下仍是最优<strong>线性</strong>估计（BLUE）。两者差别在于：非高斯时可能存在更好的非线性估计，但所有线性估计里卡尔曼最好。这解释了为什么噪声非高斯时滤波器仍然“能用”——它不是最优了，但没有更好的一阶替代。</p>
+<p>第二，分离原理里那个“交叉项为零”（§56.2.6）不是额外的假设，就是 (56-18a)。估计误差与估计本身正交，所以代价函数里的 <span class="math inline">2\hat x^{\mathsf T}Qe</span> 期望为零，<span class="math inline">K</span> 与 <span class="math inline">L</span> 才能分开优化。反过来，一旦正交性破了（比如模型失配、或者用了非最优的次优增益），交叉项不再为零，分离原理也就只剩“极点拼起来”这个弱形式。</p>
+<h3 id="为什么增益会收敛而不是一直变">56.2.8 为什么增益会收敛，而不是一直变</h3>
+<p>有人会担心：<span class="math inline">P^-_k</span> 每拍都在变，<span class="math inline">L_k</span> 也在变，这会不会导致增益一直在动、闭环行为不稳定？答案是不会，原因在 (56-9) 与 (56-13) 的结构：这是一个确定性递推，且是一个“压缩映射”。</p>
+<p>把两式复合，写成 <span class="math inline">P^-_{k+1}=f(P^-_k)</span>。可以证明 <span class="math inline">f</span> 在正定锥上单调（<span class="math inline">P\preceq Q\Rightarrow f(P)\preceq f(Q)</span>）且非扩张，于是从任何正定初值出发都收敛到唯一不动点，就是 DARE 的解。报告 2 的实测正是这个结论的数值版本：<span class="math inline">10^{-6}I</span> 与 <span class="math inline">10^{6}I</span> 两个极端初值，收敛步数 <span class="math inline">33</span> 与 <span class="math inline">64</span>，终点都是 <span class="math inline">0.322950</span>。</p>
+<p>收敛速度由观测器极点决定。本章观测器的实部是 <span class="math inline">-1.836</span>，离散化后模为 <span class="math inline">0.9640</span>，每拍把初值的影响乘 <span class="math inline">0.964</span>，二十拍衰减到 <span class="math inline">0.48</span>，六十拍衰减到 <span class="math inline">0.11</span>。这与报告 2 的 <span class="math inline">33</span> 到 <span class="math inline">64</span> 步对得上。若观测器做到 <span class="math inline">-50</span>，离散极点的模是 <span class="math inline">0.368</span>，十拍就衰减到 <span class="math inline">10^{-5}</span>，收敛更快；反之，若 <span class="math inline">V</span> 很大、观测器很慢，收敛可能要几百拍。</p>
+<p>工程含义：<strong>增益的“预热时间”由观测器带宽决定，不由初值决定。</strong> 若系统要求上电后 <span class="math inline">0.1</span> s 内就进入稳态，而观测器带宽只有 <span class="math inline">2</span> rad/s，那无论 <span class="math inline">P_0</span> 给多大都做不到。这时要么接受一段预热期（期间用固定增益或开环），要么把 <span class="math inline">V</span> 估小、把观测器做快。</p>
+<h3 id="信息形式把协方差取逆量测更新变成加法">56.2.9 信息形式：把协方差取逆，量测更新变成加法</h3>
+<p>标量算例（报告 17）里藏着一条恒等式：<span class="math inline">1/P^+=1/P^-+1/V</span>，后验精度等于先验精度加量测精度。把它写成矩阵，就得到另一种滤波器。令信息矩阵 <span class="math inline">Y=P^{-1}</span>、信息向量 <span class="math inline">\hat y=Y\hat x</span>，量测更新变成</p>
+<p><span class="math display">
+Y^+=Y^-+C^{\mathsf T}V^{-1}C,\qquad \hat y^+=\hat y^-+C^{\mathsf T}V^{-1}y
+\tag{56-18c}
+</span></p>
+<p>右边没有逆，只有加法。这在多传感器时特别顺手：两路量测各贡献一项 <span class="math inline">C_j^{\mathsf T}V_j^{-1}C_j</span>，加起来就是融合结果。报告 16 的数字可以当场验：两路 <span class="math inline">V=1</span> 与 <span class="math inline">V=4</span>，信息量 <span class="math inline">1+0.25=1.25</span>，等效噪声 <span class="math inline">1/1.25=0.8</span>——与报告里“折成一路、噪声 <span class="math inline">0.8</span>”那一行完全对上，融合后的 <span class="math inline">\sqrt{\Sigma_{11}}</span> 都是 <span class="math inline">0.795644</span>。§56.7 讲融合时会回到这一点。</p>
+<p>代价在预测步。协方差形式的预测是两次矩阵乘 <span class="math inline">A_dP^+A_d^{\mathsf T}+W_d</span>，信息形式要写成 <span class="math inline">Y^-=(A_dY^{+-1}A_d^{\mathsf T}+W_d)^{-1}</span>，多两次求逆。所以选型有一条简单判据：<strong>量测多、预测少（组合导航、静态参数辨识、多站定位）用信息形式；量测少、预测多（伺服、飞行控制）用协方差形式。</strong> 两者数学上等价，差别只在运算量压在哪一步。</p>
+<p>信息形式还有一个数值上的好处：初值“什么都不知道”对应 <span class="math inline">Y_0=0</span>，一个干净的全零矩阵；协方差形式只能用 <span class="math inline">P_0=10^6I</span> 这样的巨大数去近似无穷。报告 2 里 <span class="math inline">10^6I</span> 与 <span class="math inline">10^{-6}I</span> 的收敛步数差了将近一倍（<span class="math inline">64</span> 对 <span class="math inline">33</span>），根源就是这个“用大数表示无穷”的做法。</p>
+<h3 id="增益序列可以预先算成表">56.2.10 增益序列可以预先算成表</h3>
+<p>协方差递推与量测无关（§56.2.3），这条性质有一个很实用的推论：整条增益序列可以离线算好，在线只查表。</p>
+<p>报告 2 给出了表要多长：从 <span class="math inline">10^6I</span> 起步，<span class="math inline">64</span> 步收敛到稳态；从 <span class="math inline">10^{-6}I</span> 起步，<span class="math inline">33</span> 步。取 <span class="math inline">64</span> 步保守一点，再加几拍余量，存 <span class="math inline">80</span> 组 <span class="math inline">L</span>（每组两个数）就够了。<span class="math inline">T_s=0.02</span> s 时，<span class="math inline">64</span> 拍是 <span class="math inline">1.28</span> s——也就是说上电一秒多之后，增益就是常数了。</p>
+<p>这个做法在嵌入式里极常见，因为它把在线计算压到最小：预测两步乘加、更新两步乘加，没有矩阵求逆、没有 Riccati。代价是三条前提必须成立：对象是定常的、<span class="math inline">T_s</span> 不变、<span class="math inline">W</span> 与 <span class="math inline">V</span> 不随工况变。任何一条破了，表就不对。</p>
+<p>三条前提里最容易破的是第三条。工况变了（负载变、温度变），<span class="math inline">W</span> 实际会变；这时表里的增益偏保守或偏激进，而滤波器自己不知道。补救是“分段查表”：按工况把 <span class="math inline">W/V</span> 分成几档，每档一张表，用一个可测的工况量（转速、负载电流）去选表。这就是增益调度的雏形，第55章讨论 LQR 的调度时用的是同一套思路。</p>
+<p>还有一条边界：表里的增益只在“<span class="math inline">P</span> 已经收敛”的意义上最优；若 <span class="math inline">P_0</span> 与表里的初值不一致（比如重启时状态未知），前几拍的估计会偏，但闭环仍稳定——因为每一拍的 <span class="math inline">A_d-L_kC</span> 都是稳定的。这一点与“用错增益”完全不同，后者可能直接失稳。</p>
+<h2 id="设计步骤">56.3 设计步骤</h2>
+<h3 id="七步流程">56.3.1 七步流程</h3>
+<p>从对象方程到能上机的 LQG，中间有七步。这七步的顺序不能乱，尤其第二步与第三步，顺序反了会得到一套自洽但错误的增益。</p>
+<p><strong>第一步，写连续模型。</strong> 拿到 <span class="math inline">A</span>、<span class="math inline">B</span>、<span class="math inline">C</span>，并明确哪个状态可测。本章的 <span class="math inline">C=[1,\;0]</span> 表示只测位移。这一步还要给噪声定性：过程噪声从哪来（风、摩擦、未建模的高频模态），量测噪声从哪来（传感器本底、量化、传输）。来源决定 <span class="math inline">W</span> 与 <span class="math inline">V</span> 的量纲，量纲错了后面全错。</p>
+<p><strong>第二步，估噪声强度。</strong> <span class="math inline">V</span> 好估：传感器静止时采一段数据，算样本方差。<span class="math inline">W</span> 难估：它代表“模型没说清的部分”，只能靠试或靠新息反推（§56.8 的协方差匹配）。本章取 <span class="math inline">W=I</span>、<span class="math inline">V=1</span>，是一组无量纲化的标称值，不对应任何具体物理单位。</p>
+<p><strong>第三步，离散化。</strong> 由 <span class="math inline">A</span>、<span class="math inline">B</span> 算 <span class="math inline">A_d=e^{AT_s}</span>、<span class="math inline">B_d=\int_0^{T_s}e^{A\tau}B\,d\tau</span>；由 <span class="math inline">W</span> 算 <span class="math inline">W_d=\int_0^{T_s}e^{A\tau}We^{A^{\mathsf T}\tau}d\tau</span>；而 <span class="math inline">V_d</span> 要按密度折算成 <span class="math inline">V/T_s</span>。第三步是本章最容易出错的一步，报告 6 的教训在 §56.5 展开。一个粗略的判断：若 <span class="math inline">T_s</span> 比对象最快时间常数小一个数量级以上，<span class="math inline">A_d\approx I+AT_s</span>、<span class="math inline">B_d\approx BT_s</span>、<span class="math inline">W_d\approx WT_s</span> 就够用；否则必须用矩阵指数。</p>
+<p><strong>第四步，解 Riccati。</strong> 离散解 DARE，连续解 CARE (56-14)。解完必须验残差，量级应在 <span class="math inline">10^{-12}</span> 以下。报告 1 的残差是 <span class="math inline">1.971\times10^{-15}</span>。若残差大，多半是 <span class="math inline">W</span> 或 <span class="math inline">V</span> 让方程变得病态（例如 <span class="math inline">V</span> 小到 <span class="math inline">10^{-12}</span>），先把量纲统一再解。</p>
+<p><strong>第五步，检查可检测性。</strong> 滤波器能收敛的前提是“不能观的模态本身是稳定的”。本章对象开环极点 <span class="math inline">-1</span>、<span class="math inline">-2</span>，都稳定，所以即使 <span class="math inline">C</span> 只测位移，滤波器也一定收敛。若对象有右半平面极点且该模态不能观测，Riccati 方程无正定解，任何增益都救不回来。</p>
+<p><strong>第六步，配 LQR。</strong> 解另一个 Riccati 得 <span class="math inline">K</span>。注意这一步与滤波器完全独立，可以并行做，也可以先做。做完用分离原理验一遍极点：把 <span class="math inline">A-BK</span> 与 <span class="math inline">A-LC</span> 的特征值拼起来，应与四阶闭环的特征值一致（差在 <span class="math inline">10^{-12}</span> 量级）。</p>
+<p><strong>第七步，闭环联调。</strong> 这一步最容易忽略。滤波器与控制器各自最优，拼起来未必好用：报告 8 的状态反馈 <span class="math inline">2\%</span> 调节是 <span class="math inline">4.520</span> s，接上滤波器后位移再也不落 <span class="math inline">2\%</span>。联调要看三样东西：控制量峰值是否超执行器上限、估计误差是否与自评协方差同量级、新息是否白。三样都过，才算能上机。</p>
+<h3 id="一拍之内的循环">56.3.2 一拍之内的循环</h3>
+<p>图 56-2 把一拍之内的动作摊开。左上是先验，右上是量测更新，右下是后验，左下是预测。四个框转一圈就是一拍，箭头方向固定，不能省任何一步。</p>
+<figure>
+<img src="figs/ch056/fig_056_02_cycle.svg" alt="图 56-2　卡尔曼滤波的一拍：先验、更新、后验、预测" /><figcaption aria-hidden="true">图 56-2　卡尔曼滤波的一拍：先验、更新、后验、预测</figcaption>
+</figure>
+<p>图里有两个细节值得停一下。第一，量测 <span class="math inline">y</span> 只进入“量测更新”这一个框，不进入预测框；预测框的输入只有上一拍的后验与这一拍的控制量 <span class="math inline">u</span>。这意味着即使量测断了，滤波器仍能靠模型往前推——推得准不准另说，但不会停摆。这一点在 §56.10 讲丢包时会用到：丢一半量测，位移误差只从 <span class="math inline">0.3532</span> 涨到 <span class="math inline">0.4474</span>，多 <span class="math inline">27\%</span>，不是翻倍，原因就是预测步在托底。</p>
+<p>第二，“后验”与“预测”之间必须有一次矩阵乘 <span class="math inline">A_dP^+A_d^{\mathsf T}</span>。这一步在定点实现里是精度损失的主要来源，因为 <span class="math inline">A_d</span> 的元素可能大于 1（本章 <span class="math inline">A_d</span> 的最大元素约 <span class="math inline">0.98</span>，还好；若对象有快模态，<span class="math inline">A_d</span> 的元素会到几十），乘两次之后动态范围被拉得很开。</p>
+<h3 id="一个算例走完七步">56.3.3 一个算例走完七步</h3>
+<p>把标称参数代进七步，看每一环给出什么。</p>
+<p>第一步：<span class="math inline">A=\begin{bmatrix}0&amp;1\\-2&amp;-3\end{bmatrix}</span>，<span class="math inline">B=[0,\;1]^{\mathsf T}</span>，<span class="math inline">C=[1,\;0]</span>。开环极点 <span class="math inline">-1</span>、<span class="math inline">-2</span>，阻尼比约 <span class="math inline">0.53</span>，欠阻尼但稳定。</p>
+<p>第二步：<span class="math inline">W=I</span>、<span class="math inline">V=1</span>。这两个数的物理含义在 §56.7 会展开，此处只当作标称。</p>
+<p>第三步：<span class="math inline">T_s=0.02</span> s。<span class="math inline">A_d</span> 的两个特征值是 <span class="math inline">e^{-0.02}\approx0.980199</span> 与 <span class="math inline">e^{-0.04}\approx0.960789</span>，与连续极点对应。<span class="math inline">W_d</span> 由 (56-24) 的积分算出，量级约 <span class="math inline">0.02</span>——与 <span class="math inline">WT_s</span> 同阶，说明 <span class="math inline">T_s</span> 足够小。</p>
+<p>第四步：解 DARE，得稳态先验协方差，其迹是 <span class="math inline">0.322950</span>（报告 2 的稳态值）。这一步的连续版本给出 <span class="math inline">\mathrm{tr}(\Sigma)=1.008918</span>，两个数不同是因为一个是一拍的先验、一个是连续时间的稳态，口径不同，不必对齐。</p>
+<p>第五步：可检测性通过。观测器极点的模在离散域是 <span class="math inline">e^{-1.835982\times0.02}\approx0.9640</span>，在单位圆内。</p>
+<p>第六步：LQR 给出 <span class="math inline">K=[0.236068,\;0.236068]</span>，闭环极点 <span class="math inline">-2.236068</span>、<span class="math inline">-1.000000</span>。与第五步的观测器极点拼起来，就是 LQG 的四阶极点。</p>
+<p>第七步：闭环联调。这一步的数字在报告 8：峰值 <span class="math inline">|u|=0.4132</span>、RMS <span class="math inline">0.1155</span>、末值 <span class="math inline">1.6097</span>。如果执行器上限只有 <span class="math inline">0.3</span> N，这套参数就不能用，得把 <span class="math inline">R</span> 调大（让控制器更“省”，见第55章 §55.8 的 Bryson 规则）。</p>
+<h3 id="三张检查表">56.3.4 三张检查表</h3>
+<p>实际工程里，七步走完不等于对。下面三张表是我在项目里反复用的，能拦住大部分低级错误。</p>
+<p><strong>表一：量纲。</strong> <span class="math inline">W</span> 的单位是“状态平方每秒”，<span class="math inline">V</span> 的单位是“量测平方”，<span class="math inline">W_d</span> 的单位是“状态平方每拍”，<span class="math inline">V_d</span> 的单位是“量测平方每拍”。四个量的单位两两不同，混用一定出问题。检验办法：把 <span class="math inline">T_s</span> 改成一半，若 <span class="math inline">W_d</span> 与 <span class="math inline">V_d</span> 都跟着减半，量纲就是对的；若其中一个不变，说明它被当成了密度而不是每拍量。</p>
+<p><strong>表二：可检测性。</strong> 用 PBH 判据扫一遍：对每个不稳定特征值 <span class="math inline">\lambda</span>，检查 <span class="math inline">\begin{bmatrix}\lambda I-A\\C\end{bmatrix}</span> 是否满秩。本章对象没有不稳定极点，这一条自动过。若对象含积分器（比如位置控制里的电机），这一条必须逐项验。</p>
+<p><strong>表三：新息统计。</strong> 稳态后取一段新息，算 E[NIS] 与一阶自相关。假设全对时 E[NIS] 应接近 1、自相关接近 0。报告 9 的实测是 <span class="math inline">0.9773</span> 与 <span class="math inline">-0.0121</span>，符合。若 E[NIS] 远大于 1（如 <span class="math inline">16.68</span>），说明滤波器低估了不确定性；若远小于 1（如 <span class="math inline">0.271</span>），说明高估了。表三只能查“自洽”，查不出“模型对不对”——这一点 §56.8 会用报告 10 说明。</p>
+<h3 id="两个常见的口径错误">56.3.5 两个常见的口径错误</h3>
+<p>第一个错误是把连续 <span class="math inline">V</span> 直接搬进离散滤波器。报告 6 的数字很刺眼：<span class="math inline">T_s=0.2</span> s 时 <span class="math inline">L_d/T_s=1.6148</span>，<span class="math inline">T_s=0.001</span> s 时涨到 <span class="math inline">31.2148</span>。同一个物理问题，采样快一千倍，等效增益反而大二十倍，这不是数值问题，是口径问题。正确的做法是 <span class="math inline">V_d=V/T_s</span>，折算后 <span class="math inline">L_d/T_s</span> 从 <span class="math inline">0.6273</span> 收到 <span class="math inline">0.6717</span>，向连续解 <span class="math inline">0.671963</span> 靠拢。</p>
+<p>第二个错误是把 <span class="math inline">W</span> 当成“每拍方差”。连续白噪声的强度是谱密度，采样越密，每一拍分到的过程噪声越小，所以 <span class="math inline">W_d\approx WT_s</span> 而不是 <span class="math inline">W</span>。这两个折算方向相反：<span class="math inline">V</span> 要除以 <span class="math inline">T_s</span>，<span class="math inline">W</span> 要乘以 <span class="math inline">T_s</span>。记不住的时候想一件事——采样越快，量测越多（所以每拍的 <span class="math inline">V</span> 该变小），而两次采样之间对象漂移得越少（所以每拍的 <span class="math inline">W</span> 也该变小）。前者对应 <span class="math inline">V/T_s</span>，后者对应 <span class="math inline">WT_s</span>。</p>
+<p>报告 20 把全章的口径集中列了一遍，其中三行最要紧：<span class="math inline">u=-K\hat x</span> 与第55章同号；<span class="math inline">\hat x^+=\hat x^-+L(y-C\hat x^-)</span> 与第54章同号；<span class="math inline">\Sigma</span> 指稳态先验协方差，<span class="math inline">\Sigma^+</span> 指后验。口径不一致是跨章对比失败的头号原因，写代码之前先把这三行对齐。</p>
+<h3 id="无量纲化wi-到底意味着什么">56.3.6 无量纲化：<span class="math inline">W=I</span> 到底意味着什么</h3>
+<p>本章从头到尾用 <span class="math inline">W=I</span>、<span class="math inline">V=1</span>，这两个“1”不是偷懒，是做过无量纲化的结果。位移的单位是 m、速度是 m/s，两个状态量纲不同；连续噪声强度 <span class="math inline">W</span> 的单位是“状态平方每秒”，所以 <span class="math inline">W_{11}</span> 是 <span class="math inline">\mathrm{m^2/s}</span>、<span class="math inline">W_{22}</span> 是 <span class="math inline">\mathrm{m^2/s^3}</span>，本来就该是两个不同的数。</p>
+<p>取特征尺度：位移 <span class="math inline">1</span> m、速度 <span class="math inline">1</span> m/s、时间 <span class="math inline">1</span> s。代进去，<span class="math inline">W_{11}=1</span> 读作“位移在 <span class="math inline">1</span> s 内的随机漂移标准差约 <span class="math inline">1</span> m”，<span class="math inline">W_{22}=1</span> 读作“速度在 <span class="math inline">1</span> s 内被扰动改变约 <span class="math inline">1</span> m/s”。对照对象本身的参数（<span class="math inline">k=2</span>、<span class="math inline">c=3</span>），这是一台被扰得不轻的机器——过程噪声与恢复力同量级。这不是“标准值”，是“这台机器在这个尺度下的值”。</p>
+<p>无量纲化的好处可以直接用报告 5 的结论说明。改单位（比如把长度换成 mm）等于把 <span class="math inline">W</span> 与 <span class="math inline">V</span> 同时乘同一个 <span class="math inline">\beta=10^6</span>；报告 5 实测这种同乘不改变 <span class="math inline">L</span>、只把 <span class="math inline">\Sigma</span> 乘 <span class="math inline">\beta</span>（误差 <span class="math inline">4.44\times10^{-16}</span>）。所以<strong>换单位不改变闭环行为</strong>，这是物理上必须成立的，也顺带验证了代码没错。反过来说，<span class="math inline">L</span> 的数值必须带着单位读：<span class="math inline">0.671963</span> 这个“每秒”的增益换成 mm 制还是 <span class="math inline">0.671963</span>，但它作用的量已经是 mm 了。</p>
+<p>真正要小心的是“只改一个”。把速度单位换成 mm/s 而位移仍用 m，等于只给 <span class="math inline">W_{22}</span> 乘 <span class="math inline">10^6</span>，这时 <span class="math inline">L</span> 会变，闭环也会变——变的不是物理，是你的模型。§56.7 会把这条写成“单独缩放”的量化结论（两个指数和为 <span class="math inline">1</span>）。</p>
+<h3 id="反向验收从结果倒推设计是否自洽">56.3.7 反向验收：从结果倒推设计是否自洽</h3>
+<p>七步是正向的，工程上还需要一条反向的检查路径：手上只有结果（增益、极点、新息），能不能倒推出设计对不对。四条都做一遍，比正向再算一遍更有用。</p>
+<p>第一，<strong>从新息倒推 <span class="math inline">V</span></strong>。稳态新息的样本方差应该等于 <span class="math inline">C\Sigma^-C^{\mathsf T}+V</span>。报告 11 用这条反估：真实 <span class="math inline">V=2.00</span> 时反估 <span class="math inline">1.9751</span>（<span class="math inline">-1.2\%</span>），真实 <span class="math inline">V=4.00</span> 时反估 <span class="math inline">3.9917</span>（<span class="math inline">-0.2\%</span>）。若反估值与设定值差一个量级，说明 <span class="math inline">V</span> 设错了，或者 <span class="math inline">W</span> 把差额吸收了（报告 11 的注脚正是这句）。</p>
+<p>第二，<strong>从观测器极点倒推 <span class="math inline">W/V</span></strong>。报告 3 与报告 4 是同一张表的两半：<span class="math inline">V</span> 缩小 <span class="math inline">100</span> 倍与 <span class="math inline">W</span> 放大 <span class="math inline">100</span> 倍给出完全相同的 <span class="math inline">L=[9.975821,\;-0.241503]</span> 与完全相同的极点。所以看到一组极点，只能定出比值，定不出绝对值——绝对值要靠 <span class="math inline">\Sigma</span> 的大小去定（报告 4 里 <span class="math inline">W</span> 乘 <span class="math inline">100</span>，<span class="math inline">\sqrt{\Sigma_{11}}</span> 正好乘 <span class="math inline">10</span>）。</p>
+<p>第三，<strong>从闭环极点查配对</strong>。把 <span class="math inline">A-BK</span> 与 <span class="math inline">A-LC</span> 的极点拼起来，应当等于四阶闭环的极点（报告 7，差 <span class="math inline">2.442\times10^{-15}</span>）。对不上就是符号或转置错了，与参数无关。</p>
+<p>第四，<strong>从控制量峰值查 <span class="math inline">R</span></strong>。报告 8 的含噪峰值 <span class="math inline">0.4132</span> 是无噪声确定性峰值 <span class="math inline">0.2361</span> 的 <span class="math inline">1.75</span> 倍。如果执行器上限刚好卡在 <span class="math inline">0.24</span>，那设计在纸面上“最优”，一上电就饱和。这条检查必须在仿真里做，不能靠算——峰值是噪声与初值响应的叠加，解析式给不出来。</p>
+<h3 id="从需求反推权重三条约束一起看">56.3.8 从需求反推权重：三条约束一起看</h3>
+<p>正向的七步是“给定参数算结果”，实际项目常常反过来：给定指标，找参数。三条约束要一起满足。</p>
+<p><strong>第一条，观测器带宽。</strong> 需求通常是“估计要跟上对象最快的模态”。本章对象最快极点 <span class="math inline">2</span> rad/s，观测器至少要不慢于它。查报告 3 与报告 4 的表：<span class="math inline">W/V=1</span> 给最慢极点 <span class="math inline">1.836</span>，<span class="math inline">10</span> 给 <span class="math inline">2.97</span>，<span class="math inline">100</span> 给 <span class="math inline">3.26</span>。所以“观测器不慢于 <span class="math inline">2</span>”对应 <span class="math inline">W/V</span> 在 <span class="math inline">1</span> 附近，“快一倍”对应 <span class="math inline">10</span> 到 <span class="math inline">100</span>。这张表就是反查表，不用重新解方程。</p>
+<p><strong>第二条，噪声放大。</strong> 观测器快了，<span class="math inline">L</span> 就大，量测噪声被放大地灌进控制量。报告 8 的含噪控制量峰值 <span class="math inline">0.4132</span> 是在 <span class="math inline">W/V=1</span> 下测的；若把 <span class="math inline">W/V</span> 提到 <span class="math inline">100</span>，<span class="math inline">L_1</span> 从 <span class="math inline">0.672</span> 涨到 <span class="math inline">9.976</span>，可以预期控制量峰值也会成倍上升。所以在定 <span class="math inline">W/V</span> 之前，先把执行器行程与量测噪声摆在一起估一下：<span class="math inline">|L|\cdot\sqrt{V}</span> 大致就是噪声在控制量上的贡献，它不该超过行程的十分之一。</p>
+<p><strong>第三条，闭环响应。</strong> 这一条由 <span class="math inline">Q/R</span> 决定，与滤波器无关。本章 <span class="math inline">Q=I</span>、<span class="math inline">R=1</span> 给 <span class="math inline">2.236</span> 与 <span class="math inline">1.000</span>，<span class="math inline">2\%</span> 调节 <span class="math inline">4.520</span> s（无噪声）。若要求 <span class="math inline">2</span> s，得把 <span class="math inline">Q</span> 加大或 <span class="math inline">R</span> 减小，具体在报告的哪一档要看第55章的扫描。</p>
+<p>三条约束经常互相冲突：要快就要大增益，大增益就放大噪声，压噪声就得慢。工程上的做法是先满足第二条（硬件是硬的），再在剩下的空间里挑第一与第三条。冲突到无解时，说明该换传感器或换执行器了，不是算法能解决的。</p>
+<h3 id="五种工况的仿真验证清单">56.3.9 五种工况的仿真验证清单</h3>
+<p>一套参数算完，至少要跑五种工况，每种看一个特定的东西。这五种工况与本章的二十三组报告是对应的，可以直接照抄设置。</p>
+<p><strong>工况一，无噪声确定性响应。</strong> 关掉 <span class="math inline">W</span> 与 <span class="math inline">V</span>，初值 <span class="math inline">x_0=[1,0]</span>、<span class="math inline">\hat x_0=x_0</span>。看两件事：闭环极点是否与 <span class="math inline">A-BK</span> 一致，<span class="math inline">2\%</span> 调节时间是否为 <span class="math inline">4.520</span> s。这一条验的是 <span class="math inline">K</span> 与离散化，不涉及滤波器。</p>
+<p><strong>工况二，标称含噪。</strong> <span class="math inline">W=I</span>、<span class="math inline">V=1</span>、<span class="math inline">\hat x_0=0</span>，跑 <span class="math inline">30</span> s。看峰值 <span class="math inline">|u|=0.4132</span>、RMS<span class="math inline">(u)=0.1155</span>、末值 <span class="math inline">1.6097</span>、估计 RMS <span class="math inline">0.7084</span>。这一条验的是整体，也是“能不能上机”的主要依据。</p>
+<p><strong>工况三，初值错。</strong> <span class="math inline">P_0</span> 从 <span class="math inline">10^{-6}I</span> 扫到 <span class="math inline">10^{6}I</span>，看稳态是否都收到 <span class="math inline">0.322950</span>、收敛步数是否在 <span class="math inline">33</span> 到 <span class="math inline">64</span> 之间。这一条验的是递推实现的冷启动，若某个初值下不收敛，多半是数值问题（负方差、矩阵不正定）。</p>
+<p><strong>工况四，模型失配。</strong> 把真实刚度从 <span class="math inline">1.0</span> 扫到 <span class="math inline">4.0</span>（滤波器仍按 <span class="math inline">k=2</span> 建模），看速度误差是否在 <span class="math inline">k=2</span> 处最小（<span class="math inline">0.4201</span>）、两端是否升到 <span class="math inline">0.5522</span> 与 <span class="math inline">0.6030</span>。这一条验的是“没测的那个状态有多脆”。</p>
+<p><strong>工况五，丢包与延迟。</strong> 按 <span class="math inline">20\%</span>、<span class="math inline">50\%</span>、<span class="math inline">80\%</span> 三种丢包率各跑一遍，看位移误差是否落在 <span class="math inline">0.3794</span>、<span class="math inline">0.4474</span>、<span class="math inline">0.6037</span>。这一条验的是通信异常下的退化程度，也是决定“要不要做延迟补偿”的依据。</p>
+<p>五种都过，只能说“在这套仿真里能跑”。真实系统还要加两条本章覆盖不到的：执行器真实特性（死区、摩擦、带宽）与传感器真实特性（量化、温漂、安装偏差）。这两条只能上台上验。</p>
+<h2 id="连续情形">56.4 连续情形</h2>
+<h3 id="卡尔曼布西滤波器">56.4.1 卡尔曼—布西滤波器</h3>
+<p>连续时间下，滤波器的形式比离散更干净：没有“先验/后验”的分别，只有一个微分方程</p>
+<p><span class="math display">
+\dot{\hat x}=A\hat x+Bu+L\big(y-C\hat x\big),\qquad L=\Sigma V^{-1}C^{\mathsf T}
+\tag{56-19}
+</span></p>
+<p>这就是第54章 Luenberger 观测器的形状，区别只在 <span class="math inline">L</span> 不再由极点配置给出，而由 <span class="math inline">\Sigma</span> 算出。<span class="math inline">\Sigma</span> 满足 Riccati 微分方程</p>
+<p><span class="math display">
+\dot\Sigma=A\Sigma+\Sigma A^{\mathsf T}+W-\Sigma C^{\mathsf T}V^{-1}C\Sigma
+\tag{56-20}
+</span></p>
+<p>初始条件 <span class="math inline">\Sigma(0)=P_0</span>。(56-20) 在 <span class="math inline">t\to\infty</span> 时收敛到代数方程 (56-14) 的解，报告 1 的 <span class="math inline">\Sigma</span> 就是那个稳态：</p>
+<p><span class="math display">
+\Sigma=\begin{bmatrix}0.671963&amp;-0.274233\\-0.274233&amp;0.336955\end{bmatrix}
+\tag{56-21}
+</span></p>
+<p>这个矩阵的两个特征值是 <span class="math inline">0.8258</span> 与 <span class="math inline">0.1831</span>，都为正。它们决定误差椭圆的轴长：位移方向的标准差 <span class="math inline">\sqrt{0.671963}=0.819734</span>，速度方向是 <span class="math inline">\sqrt{0.336955}=0.580478</span>，两者的相关系数是 <span class="math inline">-0.274233/\sqrt{0.671963\times0.336955}=-0.5757</span>。也就是说，位移估高了的时候，速度多半估低了——这是对象本身的耦合（<span class="math inline">\dot x_1=x_2</span>）在协方差上的投影，不是滤波器的问题。</p>
+<h3 id="增益的量纲连续是-1s离散是无量纲">56.4.2 增益的量纲：连续是 1/s，离散是无量纲</h3>
+<p>一个容易被忽略的差别：连续增益 <span class="math inline">L</span> 的单位是 <span class="math inline">1/\mathrm{s}</span>，离散增益 <span class="math inline">L_d</span> 是无量纲的。原因在 (56-19)：<span class="math inline">\dot{\hat x}</span> 是“每秒的状态”，要把它拉向新息，<span class="math inline">L</span> 必须带 <span class="math inline">1/\mathrm{s}</span>。离散式 <span class="math inline">\hat x^+=\hat x^-+L_d(y-C\hat x^-)</span> 两边都是状态，<span class="math inline">L_d</span> 自然无量纲。</p>
+<p>这个差别解释了两件事。第一，为什么报告 6 要盯着 <span class="math inline">L_d/T_s</span> 看：只有把离散增益除以采样周期，才能与连续增益比。第二，为什么 <span class="math inline">T_s\to0</span> 时 <span class="math inline">L_d\to0</span>：一拍的修正量正比于 <span class="math inline">T_s</span>，所以增益本身必须趋于零，否则采样越密修正越猛，滤波器会过冲。报告 6 的折算列正是这个意思：<span class="math inline">L_d</span> 从 <span class="math inline">0.12546</span> 一路掉到 <span class="math inline">0.00067</span>，<span class="math inline">L_d/T_s</span> 却稳定在 <span class="math inline">0.63</span> 到 <span class="math inline">0.67</span> 之间。</p>
+<h3 id="协方差怎么从一大团收到一个椭圆">56.4.3 协方差怎么从一大团收到一个椭圆</h3>
+<p>图 56-3 画的是协方差椭圆从 <span class="math inline">P_0=10^4I</span> 收缩到稳态的过程。横轴是位移、纵轴是速度，每条线是二倍标准差椭圆，共画了四个时刻：起步、3 拍、25 拍、200 拍，最后是稳态（红色虚线）。</p>
+<figure>
+<img src="figs/ch056/fig_056_03_ellipse.svg" alt="图 56-3　协方差椭圆从 1e4 倍初值收缩到稳态" /><figcaption aria-hidden="true">图 56-3　协方差椭圆从 1e4 倍初值收缩到稳态</figcaption>
+</figure>
+<p>起步时椭圆极大，几乎盖住整个画面——<span class="math inline">P_0=10^4I</span> 意味着滤波器对初始状态一无所知，标准差 <span class="math inline">100</span>。3 拍之后缩了一大截，25 拍已经接近稳态，200 拍与稳态线基本重合。收缩的方向不是各向同性的：位移方向先被压下去（因为 <span class="math inline">y</span> 直接测位移），速度方向要慢一些（只能靠模型与位移的耦合推）。最终椭圆是斜的，斜率约 <span class="math inline">-0.576</span>，与上一小节的相关系数对应。</p>
+<p>这张图还说明了报告 2 的结论为什么成立：初值差十二个数量级，收敛的终点是同一个椭圆。滤波器有“遗忘”能力——每一拍都有 <span class="math inline">W_d</span> 灌进来，早期信息被不断稀释，所以 <span class="math inline">P_0</span> 的影响按几何级数衰减。衰减的快慢由观测器极点决定，本章实部是 <span class="math inline">-1.836</span>，时间常数约 <span class="math inline">0.545</span> s，二十几拍（<span class="math inline">T_s=0.02</span>）就衰减到可以忽略。</p>
+<h3 id="连续情形下极点的走向">56.4.4 连续情形下极点的走向</h3>
+<p>报告 3 扫了 <span class="math inline">V</span>，观测器极点的变化很值得看：</p>
+<p><span class="math display">
+\begin{array}{c|c}
+V &amp; \text{观测器极点}\\
+\hline
+0.001 &amp; -31.5428,\;-3.1709\\
+0.01 &amp; -9.7139,\;-3.2619\\
+0.1 &amp; -2.9747\pm1.1615\mathrm{j}\\
+1 &amp; -1.8360\pm0.6090\mathrm{j}\\
+10 &amp; -1.9431,\;-1.1508\\
+100 &amp; -1.9949,\;-1.0150
+\end{array}
+\tag{56-22}
+</span></p>
+<p>两端的形态完全不同。<span class="math inline">V=0.001</span>（传感器极准）时两个实极点分得很开：一个 <span class="math inline">-31.5</span>，一个 <span class="math inline">-3.2</span>。快的那个负责“抓住量测”，慢的那个负责“外推速度”，分工明确。<span class="math inline">V=1</span> 时两个极点合成一对共轭复根 <span class="math inline">-1.8360\pm0.6090\mathrm{j}</span>，阻尼比约 <span class="math inline">0.949</span>，几乎不振荡。<span class="math inline">V=100</span>（传感器很烂）时又并回两个实根，但都挤在 <span class="math inline">-1</span> 到 <span class="math inline">-2</span> 之间，因为此时滤波器几乎不信量测，观测器退化成了“模型的复制品”，极点接近开环的 <span class="math inline">-1</span> 与 <span class="math inline">-2</span>。</p>
+<p>这条走向有一个工程含义：<strong>观测器的最快极点由 <span class="math inline">V</span> 决定，而 <span class="math inline">V</span> 由传感器决定，不由你决定。</strong> 想把观测器做快，唯一的办法是把 <span class="math inline">V</span> 估小（换更好的传感器，或把滤波做好），而不是在复平面上摆极点。这一点与第54章的极点配置形成鲜明对照：那里你可以把极点放到 <span class="math inline">-100</span>，代价是量测噪声被放大一百倍；这里极点是“算出来的”，噪声放大与响应速度的兑换已经被 Riccati 方程自动做完了。</p>
+<h3 id="连续模型的两个隐含假设">56.4.5 连续模型的两个隐含假设</h3>
+<p>用 (56-19) 与 (56-20) 之前，要接受两个不太物理的假设。</p>
+<p>第一，白噪声的方差是无穷大。连续白噪声在任何有限带宽内的能量都有限，但总方差 <span class="math inline">\int\delta(0)dt</span> 发散。真实扰动总有带宽上限，把它近似成白噪声，等于假设“带宽远高于闭环带宽”。这个近似在闭环带宽的十倍以上通常没问题；若扰动本身就在闭环带宽附近（比如海浪对船、阵风对飞机），白噪声模型会低估低频能量，滤波器会过度自信。</p>
+<p>第二，量测是连续的。真实传感器有采样、有保持、有延迟。把离散量测塞进连续滤波器，等于假设“两拍之间量测不变”，这会引入一个等效的相位滞后 <span class="math inline">T_s/2</span>。<span class="math inline">T_s=0.02</span> s 时滞后 <span class="math inline">0.01</span> s，对带宽 <span class="math inline">2</span> rad/s 的闭环可以忽略；对带宽 <span class="math inline">100</span> rad/s 的闭环就是 <span class="math inline">57^\circ</span> 的相位损失，足以吃掉全部裕度。</p>
+<p>两个假设都指向同一件事：连续情形是“数学上的极限”，真正上机要落到离散。§56.5 就是把这两条假设拆开，换成可以实现的差分方程。</p>
+<h3 id="连续滤波器能不能直接积分实现">56.4.6 连续滤波器能不能直接积分实现</h3>
+<p>(56-19) 是一个微分方程，理论上可以直接用数值积分跑到控制板上。做法是把修正项按采样周期累加：</p>
+<p><span class="math display">
+\hat x^+=\hat x^-+L_c\,T_s\,(y-C\hat x^-)
+\tag{56-19a}
+</span></p>
+<p>也就是“每拍只修正 <span class="math inline">L_cT_s</span> 那么多”。这条式子的增益是 <span class="math inline">0.671963\times0.02=0.0134393</span>，与报告 6 折算列的 <span class="math inline">0.01335</span> 只差 <span class="math inline">0.66\%</span>；而如果按 <span class="math inline">V_d=V</span> 去解离散 Riccati，得到的是 <span class="math inline">0.13045</span>——整整大十倍。两组数字放在一起说明一件事：<strong>“连续增益乘采样周期”与“折算后的离散解”是同一件事的两种算法，而“直接搬 <span class="math inline">V</span>”不是。</strong></p>
+<p>既然如此，为什么还要解离散方程？因为 (56-22b) 只对一阶精度成立。它的误差是 <span class="math inline">O(T_s^2)</span>：<span class="math inline">T_s=0.02</span> 时 <span class="math inline">0.66\%</span> 可以接受，<span class="math inline">T_s=0.2</span> 时就涨到 <span class="math inline">7\%</span> 以上（报告 6 里 <span class="math inline">L_d/T_s=0.6273</span> 对 <span class="math inline">0.671963</span>，差 <span class="math inline">6.6\%</span>）。要压住误差就得减小步长，而减小步长意味着控制周期变短、计算量上升——不如一开始就解离散方程。</p>
+<p>另一条路是给 Riccati 微分方程 (56-20) 做离线积分，用四阶 Runge–Kutta 从 <span class="math inline">P_0</span> 积到稳态，得到的就是 <span class="math inline">\Sigma</span>。这条路只在“想画收敛过程”时才需要（图 56-3 的椭圆序列就是积分出来的）；稳态值直接解代数方程更快、更准。</p>
+<h3 id="为什么先算连续解它是采样无关的基准">56.4.7 为什么先算连续解：它是采样无关的基准</h3>
+<p>连续解的用处不是“直接用”，而是当基准。它不含 <span class="math inline">T_s</span>，所以是这套噪声假设下滤波器的物理上限：观测器能多快、稳态标准差多大、增益多大，都在这里定死。</p>
+<p>有了基准，采样周期的选法就有依据了：要求 <span class="math inline">T_s</span> 乘上最快的观测器极点不超过 <span class="math inline">0.1</span> 到 <span class="math inline">0.2</span>。本章最快极点 <span class="math inline">1.836</span> rad/s，<span class="math inline">T_s</span> 可以放到 <span class="math inline">0.05</span> 到 <span class="math inline">0.1</span> s；报告 15 的实测正好卡在这条线上——<span class="math inline">T_s=0.1</span> s 时 <span class="math inline">\mathrm{tr}(\Sigma_d)</span> 偏 <span class="math inline">2.7\%</span>、<span class="math inline">L_d/T_s</span> 偏 <span class="math inline">-3.3\%</span>，还可以用；<span class="math inline">T_s=0.3</span> s 时偏到 <span class="math inline">8.2\%</span> 与 <span class="math inline">-9.9\%</span>，已经开始明显吃亏。</p>
+<p>这条规则换到高带宽场合立刻变严。若设计要求观测器做到 <span class="math inline">-50</span>，<span class="math inline">T_s</span> 必须小于 <span class="math inline">0.002</span> 到 <span class="math inline">0.004</span> s，也就是 <span class="math inline">250</span> Hz 以上的采样率。很多“滤波器效果不好”的现场问题，根子不在 <span class="math inline">W</span>、<span class="math inline">V</span>，而在采样率撑不住观测器带宽：连续解算出来是好的，离散实现被 <span class="math inline">T_s</span> 拖垮了。</p>
+<h3 id="连续基准失效的两种情形">56.4.8 连续基准失效的两种情形</h3>
+<p>“连续解是采样无关的基准”这句话有前提，两种情形下它会骗人。</p>
+<p><strong>第一种，闭环带宽逼近采样频率。</strong> 连续模型假设量测连续；离散实现里两拍之间量测不变，等效相位滞后 <span class="math inline">T_s/2</span>，相位损失约 <span class="math inline">\omega T_s/2</span> 弧度。本章 <span class="math inline">\omega=2</span> rad/s、<span class="math inline">T_s=0.02</span> s，乘积是 <span class="math inline">0.04</span>，只有 <span class="math inline">1.1^\circ</span>，可以忽略；§56.4.5 算过 <span class="math inline">\omega=100</span> rad/s 时会吃掉 <span class="math inline">57^\circ</span>。所以基准只在 <span class="math inline">\omega T_s\ll1</span> 时有意义。</p>
+<p><strong>第二种，量测噪声不是白的。</strong> 连续模型假设 <span class="math inline">V</span> 是“每赫兹的方差”，且各频率上一样。真实传感器前面有抗混叠滤波，噪声带宽有限（比如 <span class="math inline">100</span> Hz）。若采样率远高于这个带宽，相邻样本高度相关，而 <span class="math inline">V_d=V/T_s</span> 仍然按“独立样本”折算——这会高估量测里的信息量，算出的 <span class="math inline">L</span> 偏大，滤波器过度自信。表现是新息偏小、E[NIS] 小于 <span class="math inline">1</span>，但误差并不小。</p>
+<p>两种情形的共同点是：连续解的“物理上限”是按理想假设算的，而实现离假设越远，基准越不可信。判断办法不是看公式，是看数据——E[NIS] 长期偏离 <span class="math inline">1</span>，就说明基准已经失效，得回到离散模型里重新算。</p>
+<h3 id="把观测器极点当地图读v-怎么改写带宽与阻尼">56.4.9 把观测器极点当地图读：<span class="math inline">V</span> 怎么改写带宽与阻尼</h3>
+<p>报告 3 的极点那一列，很多人扫一眼就过了。其实它把“传感器精度如何改变滤波器性格”全写出来了，只要按 <span class="math inline">V</span> 从小到大排一遍：</p>
+<p><span class="math display">
+\begin{array}{c|c|c}
+V &amp; \text{极点} &amp; \text{读法}\\
+\hline
+0.001 &amp; -31.5428,\;-3.1709 &amp; \text{一快一慢，实根}\\
+0.01 &amp; -9.7139,\;-3.2619 &amp; \text{仍在分开}\\
+0.1 &amp; -2.9747\pm1.1615\mathrm{j} &amp; \text{并成复根，}\zeta=0.932\\
+1 &amp; -1.8360\pm0.6090\mathrm{j} &amp; \zeta=0.949\\
+10 &amp; -1.9431,\;-1.1508 &amp; \text{又拆成实根}\\
+100 &amp; -1.9949,\;-1.0150 &amp; \text{贴近对象极点}
+\end{array}
+\tag{56-22a}
+</span></p>
+<p>三段的读法完全不同。低 <span class="math inline">V</span> 段（<span class="math inline">0.001</span> 到 <span class="math inline">0.01</span>）是一快一慢：快的 <span class="math inline">-31.5</span> 是“信量测”的产物，慢的 <span class="math inline">-3.2</span> 由对象与 <span class="math inline">W</span> 决定，几乎不随 <span class="math inline">V</span> 动。这一段里提高传感器精度只是在加快快极点，慢极点岿然不动，所以误差下降得并不快——报告 3 里 <span class="math inline">V</span> 从 <span class="math inline">0.01</span> 降到 <span class="math inline">0.001</span>，<span class="math inline">\sqrt{\Sigma_{11}}</span> 只从 <span class="math inline">0.315845</span> 降到 <span class="math inline">0.178083</span>。</p>
+<p>中段（<span class="math inline">V=0.1</span> 到 <span class="math inline">1</span>）两枝并成共轭复根，阻尼比 <span class="math inline">0.932</span> 与 <span class="math inline">0.949</span>。阻尼这么高，意味着几乎没有振荡：估计误差在收敛过程中不会来回摆。这是卡尔曼滤波与“随便配极点”的一个重要差别——手配极点很容易配出 <span class="math inline">\zeta=0.5</span> 的一对，阶跃响应有超调；卡尔曼按噪声比例算出来的复根，阻尼总在 <span class="math inline">0.9</span> 以上。</p>
+<p>高 <span class="math inline">V</span> 段（<span class="math inline">10</span> 到 <span class="math inline">100</span>）又拆回实根，而且位置越来越像对象自己的极点 <span class="math inline">-2</span> 与 <span class="math inline">-1</span>。<span class="math inline">V=100</span> 时是 <span class="math inline">-1.9949</span> 与 <span class="math inline">-1.0150</span>，误差不到 <span class="math inline">1.5\%</span>。这正对应 <span class="math inline">L\to0</span>：传感器不可信，滤波器就什么都不改，观测器的动态退回对象本身的动态。极限情形就是 <span class="math inline">V\to\infty</span>、<span class="math inline">L=0</span>、观测器极点等于对象极点。</p>
+<p>把这一段与 §56.11.9 并起来看，会得到一个很干净的对照：稳定对象的观测器可以“退化成对象本身”，不稳定对象不能——对象右半平面那枝必须被镜像到左半平面，退化就等于发散。所以“传感器差就少信它”这条经验，只在对象稳定时成立；判据是对象极点是否全在左半平面，而不是传感器有多差。</p>
+<h2 id="离散情形">56.5 离散情形</h2>
+<h3 id="零阶保持下的对象离散化">56.5.1 零阶保持下的对象离散化</h3>
+<p>数字控制器每 <span class="math inline">T_s</span> 秒算一次，两次计算之间 <span class="math inline">u</span> 保持不变。这叫零阶保持（ZOH）。在 ZOH 下，对象的精确离散化是</p>
+<p><span class="math display">
+A_d=e^{AT_s},\qquad B_d=\int_0^{T_s}e^{A\tau}B\,d\tau
+\tag{56-23}
+</span></p>
+<p>两个积分都能用矩阵指数块算出来：把 <span class="math inline">\begin{bmatrix}A&amp;B\\0&amp;0\end{bmatrix}</span> 取指数，右上块就是 <span class="math inline">B_d</span>，左上块就是 <span class="math inline">A_d</span>。本章代码里的 <code>zoh</code> 函数走的就是这条路，一次 <code>expm</code> 出两个矩阵，不需要数值积分。</p>
+<p><span class="math inline">T_s=0.02</span> s 时，<span class="math inline">A_d</span> 的两个特征值是 <span class="math inline">0.980199</span> 与 <span class="math inline">0.960789</span>，对应连续极点 <span class="math inline">-1</span> 与 <span class="math inline">-2</span>。<span class="math inline">B_d=[0.000196,\;0.019608]^{\mathsf T}</span>，第一个分量比第二个小两个数量级——这是“输入是力、力先改变速度、再改变位移”的物理事实在离散矩阵里的投影。这个差距在数值上有代价：<span class="math inline">B_d</span> 的两行差一百倍，定点实现时要么牺牲第一行的精度，要么让第二行溢出。</p>
+<h3 id="过程噪声连续谱密度怎么变成每拍方差">56.5.2 过程噪声：连续谱密度怎么变成每拍方差</h3>
+<p>过程噪声的折算比对象矩阵麻烦，因为它不能简单地把 <span class="math inline">W</span> 乘一个系数。正确公式是</p>
+<p><span class="math display">
+W_d=\int_0^{T_s}e^{A\tau}We^{A^{\mathsf T}\tau}\,d\tau
+\tag{56-24}
+</span></p>
+<p>被积函数是 <span class="math inline">e^{A\tau}W e^{A^{\mathsf T}\tau}</span>，<span class="math inline">A</span> 与 <span class="math inline">W</span> 一般不交换，所以不能写成 <span class="math inline">e^{AT_s}We^{A^{\mathsf T}T_s}</span>，也不能写成 <span class="math inline">WT_s</span>。前一种写法量级是 <span class="math inline">1</span> 而不是 <span class="math inline">T_s</span>，在 <span class="math inline">T_s=0.02</span> s 时会错五十倍；后一种写法在 <span class="math inline">T_s</span> 小时尚可，<span class="math inline">T_s</span> 一大就崩。</p>
+<p><span class="math inline">T_s=0.02</span> s 时，本章的 <span class="math inline">W_d</span> 数值上是</p>
+<p><span class="math display">
+W_d\approx\begin{bmatrix}1.9998\times10^{-2}&amp;-2.0366\times10^{-4}\\-2.0366\times10^{-4}&amp;1.8852\times10^{-2}\end{bmatrix}
+\tag{56-25}
+</span></p>
+<p>与 <span class="math inline">WT_s=0.02I</span> 相比，<span class="math inline">(1,1)</span> 元几乎一样（<span class="math inline">0.019998</span> 对 <span class="math inline">0.02</span>），<span class="math inline">(2,2)</span> 元低 <span class="math inline">5.7\%</span>，还多出一个小的负相关。这个差别可以用 <span class="math inline">e^{A\tau}\approx I+A\tau</span> 解释：<span class="math inline">W_d\approx WT_s+\big(AW+WA^{\mathsf T}\big)T_s^2/2</span>，第二项是 <span class="math inline">T_s^2</span> 阶的修正，它把速度方向的方差压低一点，同时造出负相关。<span class="math inline">T_s</span> 越小，这个修正越不重要。</p>
+<p><span class="math inline">T_s</span> 一大，<span class="math inline">WT_s</span> 就完全不能用了。同样算一遍：<span class="math inline">T_s=0.5</span> s 时 <span class="math inline">(2,2)</span> 元是 <span class="math inline">0.2022</span>，只有 <span class="math inline">WT_s</span> 对应元的 <span class="math inline">40\%</span>；<span class="math inline">T_s=1</span> s 时是 <span class="math inline">0.3242</span>，为 <span class="math inline">32\%</span>；<span class="math inline">T_s=3</span> s 时整迹只有 <span class="math inline">WT_s</span> 的一半。原因是 <span class="math inline">\tau</span> 一大，<span class="math inline">e^{A\tau}</span> 的衰减就显出来了，噪声在这一拍里已经被对象“消化”掉一部分，不可能全须全尾地留在协方差里。所以 (56-24) 的积分不是学究式的严谨，是必须算的一步。</p>
+<p>代码里的 <code>disc_noise</code> 用 401 点梯形积分算 (56-24)，精度足够。想更快可以用 Van Loan 块矩阵法，一次 <code>expm</code> 同时得到 <span class="math inline">A_d</span>、<span class="math inline">B_d</span> 与 <span class="math inline">W_d</span>，代价是要把一个 <span class="math inline">2n\times2n</span> 的矩阵取指数。</p>
+<h3 id="量测噪声必须除以采样周期">56.5.3 量测噪声：必须除以采样周期</h3>
+<p>量测噪声的折算方向与过程噪声相反：</p>
+<p><span class="math display">
+V_d=\frac{V}{T_s}
+\tag{56-26}
+</span></p>
+<p>理由很直接：<span class="math inline">V</span> 是连续量测的谱密度（单位 <span class="math inline">\text{量测}^2/\mathrm{Hz}</span>），而每一拍只取一个样本，样本方差等于谱密度除以采样率。采样越快，每秒拿到的独立样本越多，每个样本的方差反而越小。</p>
+<p>报告 6 把这件事故意做错了一遍，结果很难看。同一套连续参数 <span class="math inline">W=I</span>、<span class="math inline">V=1</span>，若把 <span class="math inline">V</span> 直接当 <span class="math inline">V_d</span> 用：</p>
+<p><span class="math display">
+\begin{array}{c|cc}
+T_s/\mathrm{s} &amp; L_d/T_s\ (\text{直接搬}) &amp; L_d/T_s\ (V_d=V/T_s)\\
+\hline
+0.2 &amp; 1.6148 &amp; 0.6273\\
+0.1 &amp; 2.5440 &amp; 0.6495\\
+0.05 &amp; 3.8766 &amp; 0.6607\\
+0.02 &amp; 6.5225 &amp; 0.6675\\
+0.01 &amp; 9.4906 &amp; 0.6697\\
+0.005 &amp; 13.6694 &amp; 0.6708\\
+0.001 &amp; 31.2148 &amp; 0.6717
+\end{array}
+\tag{56-27}
+</span></p>
+<p>左列随 <span class="math inline">T_s</span> 减小而发散，右列收敛到连续解 <span class="math inline">0.671963</span>。图 56-4 把两列画在一张对数图上，横轴是 <span class="math inline">T_s</span>（反向，左边是粗采样），纵轴是 <span class="math inline">L_d/T_s</span>。</p>
+<figure>
+<img src="figs/ch056/fig_056_04_discrete_limit.svg" alt="图 56-4　量测噪声折算与否：左列发散，右列收敛到连续解" /><figcaption aria-hidden="true">图 56-4　量测噪声折算与否：左列发散，右列收敛到连续解</figcaption>
+</figure>
+<p>这张图的读法是：黑线（折算）几乎水平，从 <span class="math inline">0.6273</span> 缓升到 <span class="math inline">0.6717</span>；红线（不折算）是一条斜率 <span class="math inline">-\tfrac12</span> 的直线，<span class="math inline">T_s</span> 每小十倍，纵轴涨 <span class="math inline">\sqrt{10}</span> 倍。为什么恰好是 <span class="math inline">\sqrt{10}</span>？因为 <span class="math inline">L\propto\sqrt{W/V}</span>，<span class="math inline">V</span> 少除了一个 <span class="math inline">T_s</span>，等效于 <span class="math inline">V</span> 大 <span class="math inline">1/T_s</span> 倍，于是 <span class="math inline">L</span> 大 <span class="math inline">\sqrt{T_s}</span> 倍，再除以 <span class="math inline">T_s</span> 就是 <span class="math inline">T_s^{-1/2}</span>。这条斜率是口径错误的“指纹”，看到它就知道折算漏了。</p>
+<h3 id="离散-riccati-方程与稳态">56.5.4 离散 Riccati 方程与稳态</h3>
+<p>把 (56-8) 与 (56-9) 复合，消掉 <span class="math inline">P^+</span>，得到先验形式的 DARE：</p>
+<p><span class="math display">
+P^-=A_dP^-A_d^{\mathsf T}+W_d-A_dP^-C^{\mathsf T}\big(CP^-C^{\mathsf T}+V_d\big)^{-1}CP^-A_d^{\mathsf T}
+\tag{56-28}
+</span></p>
+<p>它的稳态解就是每拍开始时的先验协方差。本章参数下，稳态 <span class="math inline">P^-</span> 的迹是 <span class="math inline">0.322950</span>（报告 2 的最后一行）。这个数与连续稳态的 <span class="math inline">1.008918</span> 不可直接比：连续 <span class="math inline">\Sigma</span> 是“某一时刻的估计误差方差”，离散 <span class="math inline">P^-</span> 是“一拍开始、还没用量测时的方差”，口径差一个量测更新。若要看同一口径，应该比 <span class="math inline">P^+</span> 的迹，它会比 <span class="math inline">0.322950</span> 再小一点。</p>
+<p>DARE 的求解有两条路。一条是迭代：从 <span class="math inline">P_0</span> 出发反复代入 (56-28)，直到相邻两次的差小于阈值。报告 2 显示这条迭代收敛很快，从 <span class="math inline">10^6I</span> 起步也只要 64 步。另一条是构造辛矩阵求特征向量，一次算出，不用迭代。工程上迭代足够，因为它可以离线做；只有在增益要在线自适应时才需要闭式解。</p>
+<h3 id="采样周期能放多粗">56.5.5 采样周期能放多粗</h3>
+<p>报告 15 把 <span class="math inline">T_s</span> 从 1 ms 一路加到 0.3 s，看离散解离连续解有多远：</p>
+<p><span class="math display">
+\begin{array}{c|cc}
+T_s/\mathrm{s} &amp; \mathrm{tr}(\Sigma_d)\ \text{相对连续解} &amp; L_d/T_s\ \text{相对连续解}\\
+\hline
+0.001 &amp; +0.0\% &amp; -0.0\%\\
+0.005 &amp; +0.1\% &amp; -0.2\%\\
+0.01 &amp; +0.3\% &amp; -0.3\%\\
+0.02 &amp; +0.5\% &amp; -0.7\%\\
+0.05 &amp; +1.3\% &amp; -1.7\%\\
+0.1 &amp; +2.7\% &amp; -3.3\%\\
+0.2 &amp; +5.4\% &amp; -6.6\%\\
+0.3 &amp; +8.2\% &amp; -9.9\%
+\end{array}
+\tag{56-29}
+</span></p>
+<p>两个偏差的方向都是固定的：协方差偏大、等效增益偏小。原因是采样越粗，一拍之内看不到量测，过程噪声只能靠模型外推，校正被推迟，于是滤波器“更不确定”、更不敢动。这个偏差不是随机的，是系统性的，所以不能靠平均消掉。</p>
+<p>工程上怎么定 <span class="math inline">T_s</span>？常用的判据是“采样频率是闭环带宽的 10 到 20 倍”。本章闭环最慢极点 <span class="math inline">-1.0</span>，带宽约 <span class="math inline">1</span> rad/s，<span class="math inline">T_s=0.02</span> s 对应 <span class="math inline">50</span> Hz，折算 <span class="math inline">314</span> rad/s，是带宽的三百倍，远远够。所以表里 <span class="math inline">T_s=0.02</span> 的偏差只有 <span class="math inline">0.5\%</span> 与 <span class="math inline">0.7\%</span>。</p>
+<p>反过来说，如果观测器做到 <span class="math inline">-50</span>（比如用了很好的传感器，<span class="math inline">V</span> 很小），带宽变成 <span class="math inline">50</span> rad/s，<span class="math inline">T_s=0.02</span> s 就只有 <span class="math inline">31</span> rad/s 的采样带宽，比闭环带宽还低，表里的偏差会迅速恶化。这时必须把 <span class="math inline">T_s</span> 压到 <span class="math inline">1</span> ms 量级。结论是：<strong><span class="math inline">T_s</span> 的上限由观测器带宽定，不由控制器带宽定</strong>，因为观测器通常比控制器快。</p>
+<h3 id="预测与更新的顺序">56.5.6 预测与更新的顺序</h3>
+<p>离散实现有两种写法：先预测后更新（predict-update），先更新后预测（update-predict）。两种写法在数学上等价，差一个下标，但在代码里混用会出大错。</p>
+<p>本章代码用 predict-update：进入一拍时手里是 <span class="math inline">\hat x^-_k</span>、<span class="math inline">P^-_k</span>，先用量测更新得 <span class="math inline">\hat x^+_k</span>、<span class="math inline">P^+_k</span>，再用 <span class="math inline">u_k</span> 预测下一拍。这样写的好处是控制量 <span class="math inline">u_k</span> 用的是 <span class="math inline">\hat x^+_k</span>，也就是“用过当前量测的估计”，因果性正确。</p>
+<p>若用 update-predict，控制量必须用上一拍的后验，否则会用到未来的量测。这个错误在仿真里不明显（因为真状态就在手边），在实机上会表现为“控制器比传感器快半拍”，轻则相位裕度损失，重则抖动。判断办法很简单：把代码里的量测序列整体延迟一拍，若闭环性能大变，说明顺序错了。</p>
+<p>还有一个细节：<span class="math inline">u_k</span> 进入预测时用的矩阵是 <span class="math inline">B_d</span>，不是 <span class="math inline">B</span>。这一点看着琐碎，实测影响不小——<span class="math inline">B_d</span> 的第二个分量是 <span class="math inline">0.019409</span>，而 <span class="math inline">BT_s=0.02</span>，差 <span class="math inline">3\%</span>；在长时预测里这 <span class="math inline">3\%</span> 会累积成可观的偏差。</p>
+<h3 id="三行换算连续量到离散量">56.5.7 三行换算：连续量到离散量</h3>
+<p>连续解与离散解之间有三条换算关系，记住这三条，跨章对数就不会错。</p>
+<p>第一行，<strong>增益乘周期</strong>。<span class="math inline">L_d\approx L_cT_s</span>。报告 6 里 <span class="math inline">T_s=0.02</span> s 的离散增益是 <span class="math inline">[0.01335,\;-0.00545]</span>，而 <span class="math inline">L_cT_s=[0.0134393,\;-0.0054847]</span>，两个分量分别低 <span class="math inline">0.66\%</span> 与 <span class="math inline">0.63\%</span>。偏差很小，而且总是负的——离散解比“连续增益乘周期”略小，因为一拍之内对象还在动，量测提供的修正被打了点折扣。</p>
+<p>第二行，<strong>噪声按密度折算</strong>。<span class="math inline">V_d=V/T_s</span>、<span class="math inline">W_d=\int_0^{T_s}e^{A\tau}We^{A^{\mathsf T}\tau}d\tau\approx WT_s</span>。这一条是量纲决定的，没有近似余地：<span class="math inline">V</span> 是“每赫兹的方差”，每秒采 <span class="math inline">1/T_s</span> 次，每拍分到的就是 <span class="math inline">V/T_s</span>。</p>
+<p>第三行，<strong>协方差不变</strong>。<span class="math inline">\Sigma_d\approx\Sigma_c</span>。报告 15 里 <span class="math inline">T_s=0.001</span> s 时 <span class="math inline">\mathrm{tr}(\Sigma_d)=1.009181</span> 对连续解 <span class="math inline">1.008918</span>，差 <span class="math inline">0.0\%</span>；<span class="math inline">T_s=0.02</span> s 差 <span class="math inline">0.5\%</span>；<span class="math inline">T_s=0.3</span> s 差 <span class="math inline">8.2\%</span>。离散协方差是“一拍开始时的先验”，量纲与连续稳态协方差一样，所以两者可以直接比——这一点与增益不同，增益必须先除以 <span class="math inline">T_s</span> 才能比。</p>
+<p>三行合起来看，是一幅很整齐的图：<strong>协方差不动，增益乘 <span class="math inline">T_s</span>，噪声按 <span class="math inline">T_s</span> 缩放</strong>。凡是在两张表之间对数，先问自己“这个量是协方差、增益、还是噪声强度”，答案决定要不要除 <span class="math inline">T_s</span>。第54、55 章的表混着看时，错得最多的就是这一条。</p>
+<h3 id="一次矩阵指数算三样van-loan-块">56.5.8 一次矩阵指数算三样：Van Loan 块</h3>
+<p>(56-23) 与 (56-24) 要算 <span class="math inline">A_d</span>、<span class="math inline">B_d</span>、<span class="math inline">W_d</span> 三个量。分开算要做一次矩阵指数、一次积分；合起来算只需要一次矩阵指数。做法是把 <span class="math inline">A</span>、<span class="math inline">W</span> 与 <span class="math inline">-A^{\mathsf T}</span> 拼成一个 <span class="math inline">2n\times2n</span> 的块矩阵取指数，再从块里取出 <span class="math inline">W_d</span>：</p>
+<p><span class="math display">
+W_d=F_{22}^{\mathsf T}F_{12},\qquad
+\begin{bmatrix}F_{11}&amp;F_{12}\\0&amp;F_{22}\end{bmatrix}
+=\exp\left(\begin{bmatrix}-A&amp;W\\0&amp;A^{\mathsf T}\end{bmatrix}T_s\right)
+\tag{56-26a}
+</span></p>
+<p>这几块的意义很清楚：<span class="math inline">F_{11}=e^{-AT_s}</span>、<span class="math inline">F_{22}=e^{A^{\mathsf T}T_s}</span>，右上块 <span class="math inline">F_{12}</span> 是“扰动进来又被 <span class="math inline">-A</span> 衰减”的那部分，左乘 <span class="math inline">F_{22}^{\mathsf T}=e^{AT_s}</span> 把两段衰减补齐，恰好凑成 <span class="math inline">\int_0^{T_s}e^{A\tau}We^{A^{\mathsf T}\tau}d\tau</span>。</p>
+<p>两条路子在本章的数据上给出同一个答案：积分法得到 <span class="math inline">W_d=\begin{bmatrix}0.0199983&amp;-0.00020367\\-0.00020367&amp;0.01885279\end{bmatrix}</span>，Van Loan 法打印到六位完全相同。选哪条只看两件事：矩阵阶数（<span class="math inline">n=2</span> 时两者都只要微秒级）与代码可读性（积分法一眼能看出在算什么，块指数法要解释半天）。</p>
+<p>还有一件事值得点出：<span class="math inline">W_d</span> 的 <span class="math inline">(2,2)</span> 元是 <span class="math inline">0.01885</span>，比 <span class="math inline">WT_s=0.02</span> 低 <span class="math inline">5.7\%</span>。这个差额不是数值误差，是 <span class="math inline">e^{A\tau}</span> 在 <span class="math inline">\tau\in[0,T_s]</span> 上的衰减——整整一拍里，速度受到的扰动有一部分已经被阻尼吃掉了。<span class="math inline">T_s</span> 越大，这部分越大（§56.5.2 量过：<span class="math inline">T_s=0.5</span> s 时低 <span class="math inline">60\%</span>）。所以 Van Loan 不是“更精确的写法”，是“唯一正确的写法”，<span class="math inline">WT_s</span> 只在 <span class="math inline">T_s</span> 很小时才是它的近似。</p>
+<h3 id="t_s-为什么不能无限小">56.5.9 <span class="math inline">T_s</span> 为什么不能无限小</h3>
+<p>既然 <span class="math inline">T_s</span> 越小、离散解越接近连续解（报告 15：<span class="math inline">T_s=1</span> ms 时偏差 <span class="math inline">0.0\%</span>），为什么不干脆取 <span class="math inline">1\,\mu\mathrm{s}</span>？</p>
+<p><strong>第一个限制是数值精度。</strong> <span class="math inline">L_d\approx L_cT_s</span>，<span class="math inline">T_s=10^{-6}</span> s 时 <span class="math inline">L_d\approx6.7\times10^{-7}</span>。单精度的机器精度是 <span class="math inline">1.2\times10^{-7}</span>，而状态量级约 <span class="math inline">1</span>，每次修正只相当于 <span class="math inline">5</span> 到 <span class="math inline">6</span> 个机器精度——只有两三位有效信息。<span class="math inline">T_s</span> 再小一个量级，修正量就淹没在舍入误差里，滤波器实际上是“只预测、不更新”。这不是理论问题，是单精度实现里真会遇到的墙：<span class="math inline">T_s</span> 的下限由“<span class="math inline">L_cT_s</span> 要远大于 <span class="math inline">\epsilon\cdot|x|</span>”决定。</p>
+<p><strong>第二个限制是量测噪声的相关性。</strong> <span class="math inline">V_d=V/T_s</span> 假设每一拍的量测噪声独立。若采样率超过模拟前端的噪声带宽两倍以上，相邻样本已经相关，这个假设就不成立（§56.4.8 的第二条）。继续减小 <span class="math inline">T_s</span> 不会带来新信息，只会让滤波器越来越自信。</p>
+<p><strong>第三个限制是算力与调度抖动。</strong> <span class="math inline">T_s=1\,\mu\mathrm{s}</span> 意味着 <span class="math inline">1</span> MHz 的中断频率，本章的计算量虽然只有 <span class="math inline">50</span> 次乘加，但中断开销、采样延迟、任务切换抖动都会变成主导误差。实际系统里，控制周期的抖动常常比 <span class="math inline">T_s</span> 本身还大。</p>
+<p>三条合起来给了一个经验区间：<span class="math inline">T_s\omega_o</span> 取 <span class="math inline">0.02</span> 到 <span class="math inline">0.2</span>。本章 <span class="math inline">T_s=0.02</span> s、<span class="math inline">\omega_o=1.836</span>，乘积 <span class="math inline">0.037</span>，落在区间下部——偏保守，换来的是对采样抖动与噪声相关性都不敏感。若想压成本（比如用更慢的 CPU），可以把 <span class="math inline">T_s</span> 放大到 <span class="math inline">0.1</span> s，代价是离散解偏离连续解 <span class="math inline">3\%</span> 左右（报告 15）。</p>
+<h2 id="稳定性与性能">56.6 稳定性与性能</h2>
+<h3 id="稳定性靠三层保证不是靠调参">56.6.1 稳定性靠三层保证，不是靠调参</h3>
+<p>LQG 闭环稳定，需要三件事同时成立，缺一不可。</p>
+<p>第一，对象可稳。<span class="math inline">(A,B)</span> 能控，或者至少不能控的模态本身稳定。本章 <span class="math inline">B=[0,\;1]^{\mathsf T}</span>、<span class="math inline">A</span> 可控，这一条过。</p>
+<p>第二，滤波器可收。<span class="math inline">(A,C)</span> 能观，或者不能观的模态本身稳定。本章 <span class="math inline">C=[1,\;0]</span>，二阶对象能观，过。</p>
+<p>第三，两个 Riccati 方程有正定解。前两条加上 <span class="math inline">W\succeq0</span>、<span class="math inline">V&gt;0</span>、<span class="math inline">Q\succeq0</span>、<span class="math inline">R&gt;0</span>，就保证了有解。这一条是纯代数的，验残差即可，报告 1 的 <span class="math inline">1.971\times10^{-15}</span> 就是证据。</p>
+<p>三条都过，闭环一定稳定，而且<strong>不需要事后检查</strong>。这一点与第54章的极点配置不同：那里摆完极点还要验算 <span class="math inline">A-BK</span> 与 <span class="math inline">A-LC</span> 的特征值，因为参数一多容易算错；这里稳定性是方程的解自带的性质，Riccati 方程解出来的增益天然把闭环推到左半平面。代价是“稳定”变成了一个很粗的保证——它只说极点在左边，不说多左、有没有振荡、裕度多少。</p>
+<h3 id="极点确实是拼起来的">56.6.2 极点确实是拼起来的</h3>
+<p>报告 7 把四阶闭环的极点直接算了出来：</p>
+<p><span class="math display">
+\begin{array}{ll}
+\text{状态反馈} &amp; -2.236068,\;-1.000000\\
+\text{观测器} &amp; -1.8360\pm0.6090\mathrm{j}\\
+\text{LQG 四阶} &amp; -2.236068,\;-1.8360\pm0.6090\mathrm{j},\;-1.000000
+\end{array}
+\tag{56-30}
+</span></p>
+<p>与并集的差 <span class="math inline">2.442\times10^{-15}</span>。这组数字可以直接用来做设计检查：算出 <span class="math inline">K</span> 与 <span class="math inline">L</span> 之后，把 <span class="math inline">A-BK</span> 与 <span class="math inline">A-LC</span> 的特征值拼起来，与四阶闭环的特征值对比。若对不上，多半是 <span class="math inline">L</span> 的符号反了（写成 <span class="math inline">\hat x^- - L(y-C\hat x^-)</span>），或者 <span class="math inline">C</span> 的转置漏了。这两个错误在代码里极常见，而极点检查一秒钟就能抓住。</p>
+<p>注意这里有一处容易被误读的地方：报告 7 打印极点时只取了实部，于是观测器那一对被印成两个相同的 <span class="math inline">-1.835982</span>，看着像重根。实际虚部是 <span class="math inline">0.609</span>，两个极点是分开的。凡是看极点表格，先确认打印的是复数还是实部——这一条在看第54章、第55章的极点表时同样适用。</p>
+<h3 id="时域指标噪声一进来指标就换了一套">56.6.3 时域指标：噪声一进来，指标就换了一套</h3>
+<p>图 56-5 是闭环的实测。左图是真实位移与估计位移，右图是控制量。<span class="math inline">T_s=0.02</span> s、<span class="math inline">W=I</span>、<span class="math inline">V=1</span>，跑了 <span class="math inline">30</span> s，只画前 <span class="math inline">10</span> s。</p>
+<figure>
+<img src="figs/ch056/fig_056_05_time.svg" alt="图 56-5　LQG 闭环的位移、估计与控制量（含过程噪声）" /><figcaption aria-hidden="true">图 56-5　LQG 闭环的位移、估计与控制量（含过程噪声）</figcaption>
+</figure>
+<p>左图有两条线，几乎重合：黑实线是真实位移，红虚线是估计位移。重合说明滤波器工作正常，估计误差远小于位移本身。但两条线都不回零——位移在 <span class="math inline">1</span> m 量级上下摆动，摆动的幅度由噪声决定。右图的控制量在 <span class="math inline">\pm0.4</span> N 之间抖动，点线标的是 <span class="math inline">\pm0.2361</span> N，也就是无噪声时的确定性峰值。含噪时的峰值 <span class="math inline">0.4132</span> 是它的 <span class="math inline">1.75</span> 倍。</p>
+<p>这一组数字的对照在报告 8：</p>
+<p><span class="math display">
+\begin{array}{c|cccc}
+\text{工况} &amp; \text{峰值}|u| &amp; \mathrm{RMS}(u) &amp; 2\%\ \text{调节} &amp; \text{末值}|x_1|\\
+\hline
+\text{状态反馈，无噪声} &amp; 0.2361 &amp; 0.0208 &amp; 4.520\ \mathrm{s} &amp; 1.72\times10^{-13}\\
+\text{LQG，含噪声} &amp; 0.4132 &amp; 0.1155 &amp; \text{无} &amp; 1.6097
+\end{array}
+\tag{56-31}
+</span></p>
+<p>“<span class="math inline">2\%</span> 调节”这一栏写“无”，不是算不出来，是<strong>永远达不到</strong>。噪声一直在把位移往外推，位移落进 <span class="math inline">2\%</span> 带之后马上又被推出来，所以按“最后一次离开 <span class="math inline">2\%</span> 带的时刻”定义，这个时刻不存在。工程上遇到这种情况要换指标：改用“位移的稳态标准差”或“<span class="math inline">95\%</span> 分位点”，而不是调节时间。</p>
+<h3 id="稳态标准差-0.9732-从哪来">56.6.4 稳态标准差 0.9732 从哪来</h3>
+<p>末值 <span class="math inline">1.6097</span> 看起来像一个具体的数，其实它是随机变量的一次实现，换一个随机种子就变。要判断滤波器与闭环是否正常，得看统计量。报告 8 用 Lyapunov 方程算了闭环在 <span class="math inline">W=I</span> 下的位移稳态标准差：</p>
+<p><span class="math display">
+0.9732
+\tag{56-32}
+</span></p>
+<p>算法是：把闭环写成 <span class="math inline">x_{k+1}=\Phi x_k+\Gamma \eta_k</span>，其中 <span class="math inline">\Phi</span> 是含 <span class="math inline">K</span>、<span class="math inline">L</span> 的四阶闭环矩阵，<span class="math inline">\eta</span> 是过程与量测噪声的联合向量，然后解离散 Lyapunov 方程 <span class="math inline">\Sigma_c=\Phi\Sigma_c\Phi^{\mathsf T}+\Gamma\Gamma^{\mathsf T}</span>，取位移分量的对角线开方。这个值与实跑末值 <span class="math inline">1.6097</span> 同一量级（<span class="math inline">1.65</span> 倍），说明实跑没有异常——单次实现的末值本来就会在标准差的一两倍内浮动。</p>
+<p>这个数还有一个用处：它给出了“噪声能把位移顶多高”的量级估计。若执行器行程只有 <span class="math inline">1</span> m，而稳态标准差是 <span class="math inline">0.97</span> m，那这套系统在 <span class="math inline">W=I</span> 的扰动下必然撞限位，不管控制器多好。解决办法只有两个：把 <span class="math inline">W</span> 降下来（隔振、改结构），或者把闭环带宽提上去（更快的 <span class="math inline">K</span>，但受执行器与采样限制）。这是 §56.10 要讨论的“性能上限由硬件定”。</p>
+<h3 id="裕度的损失分离原理不管这件事">56.6.5 裕度的损失：分离原理不管这件事</h3>
+<p>分离原理保证极点，不保证裕度。这一点在第55章已经埋了伏笔（报告 11 看到 LQR 单独闭环有 <span class="math inline">60^\circ</span> 相位裕度，接上观测器后掉到没有穿越），本章要把机制说清。</p>
+<p>LQR 的 <span class="math inline">60^\circ</span> 裕度来自一个恒等式：<span class="math inline">[I+K(\mathrm{j}\omega I-A)^{-1}B]</span> 的 Nyquist 轨迹落在某个圆外。这个恒等式要求反馈回路里只有 <span class="math inline">K</span> 与对象。接上观测器之后，回路里多了一个 <span class="math inline">L(sI-A+LC+LDK)^{-1}</span> 形状的环节，恒等式不再成立，裕度可以任意小。极端情形下，观测器把某个频率上的相位再转 <span class="math inline">-180^\circ</span>，闭环就进入条件稳定区。</p>
+<p>这不是理论上的杞人忧天。工程上的表现是：状态反馈单独跑很稳，一接滤波器就开始在某个频率上抖，抖的频率恰好是观测器的自然频率。诊断办法是把 <span class="math inline">L</span> 减半再跑，若抖动消失，就是裕度问题，不是对象问题。</p>
+<p>补救手段有三条：一是把观测器做快（<span class="math inline">V</span> 估小），让观测器的自然频率远离闭环带宽；二是回路传函恢复（LTR），在对象输入端注入试探噪声，把 LQR 的裕度“还”回来，代价是控制量变大；三是干脆用 <span class="math inline">H_\infty</span> 或 <span class="math inline">\mu</span> 综合，把裕度作为约束写进设计。前两条在 §56.9 展开，第三条是第57章的主题。</p>
+<h3 id="采样与丢包把性能拉低多少">56.6.6 采样与丢包把性能拉低多少</h3>
+<p>报告 15 与报告 19 分别给了两个方向的数字。</p>
+<p>采样周期：<span class="math inline">T_s</span> 从 1 ms 加到 20 ms，稳态协方差的迹只涨 <span class="math inline">0.5\%</span>、等效增益只掉 <span class="math inline">0.7\%</span>；加到 <span class="math inline">0.3</span> s 才涨 <span class="math inline">8.2\%</span>、掉 <span class="math inline">9.9\%</span>。本章的观测器最慢极点约 <span class="math inline">-1.0</span>，时间常数 <span class="math inline">1</span> s，<span class="math inline">T_s=0.02</span> s 是它的 <span class="math inline">1/50</span>，所以离散化误差很小。这个结论不能外推：若观测器做到 <span class="math inline">-50</span>，同样的 <span class="math inline">T_s</span> 就只快 <span class="math inline">2.5</span> 倍，误差会大一个数量级。</p>
+<p>丢包：报告 19 用 20 000 拍跑，丢包率 <span class="math inline">0</span>、<span class="math inline">0.2</span>、<span class="math inline">0.5</span>、<span class="math inline">0.8</span> 对应位移误差 RMS <span class="math inline">0.3532</span>、<span class="math inline">0.3794</span>、<span class="math inline">0.4474</span>、<span class="math inline">0.6037</span>。丢一半才多 <span class="math inline">27\%</span>，丢八成多 <span class="math inline">71\%</span>。原因在本章对象本身稳定：丢几拍等于把采样周期临时拉长，模型外推能顶住；若对象是开环不稳定的（比如倒立摆），丢一拍就可能发散，这时必须用 §56.10 的补偿手段。</p>
+<p>速度误差比位移误差更抗丢包：<span class="math inline">0.4072</span> 到 <span class="math inline">0.4781</span>，只涨 <span class="math inline">17\%</span>。这与报告 10 的结论一致——速度本来就是靠模型推的，量测只是旁证，少几次旁证影响不大。位移是直接测的，少一次量测就少一次校正，所以对丢包更敏感。</p>
+<p>报告 19 还有一句定性结论值得抄下来：延迟一拍比丢包更麻烦。丢包是“少一次校正”，延迟是“用旧信息校正新状态”，后者会让滤波器系统性滞后，等效于把量测噪声放大数倍。工程上宁可丢包，不可延迟；实在要延迟，必须在滤波器里显式建模延迟（把延迟拍数作为增广状态）。</p>
+<h3 id="观测器带宽与控制器带宽怎么配">56.6.7 观测器带宽与控制器带宽怎么配</h3>
+<p>经验上有一条“观测器要比闭环快二到五倍”的说法。本章的标称参数恰好违反它：控制器极点是 <span class="math inline">-2.236</span> 与 <span class="math inline">-1.000</span>，观测器是 <span class="math inline">-1.836\pm0.609\mathrm{j}</span>，最慢的那个还比控制器的快极点慢。这不是设计失误，是 Riccati 方程在 <span class="math inline">W/V=1</span> 下算出来的结果——滤波器认为模型与量测一样可信，于是不愿意把增益开大。</p>
+<p>后果可以直接看到：报告 8 里估计误差 RMS 是 <span class="math inline">0.7084</span>，而闭环位移的稳态标准差是 <span class="math inline">0.9732</span>，两者同量级，说明估计并没有比信号本身干净多少。图 56-5 左图两条线几乎重合，但那是画在 <span class="math inline">1</span> m 的纵轴尺度上；放大十倍就能看到估计在噪声里“追”。</p>
+<p>要加快观测器，唯一的旋钮是 <span class="math inline">W/V</span>。报告 3 与报告 4 给出同一组数：把 <span class="math inline">W/V</span> 从 <span class="math inline">1</span> 提到 <span class="math inline">100</span>，观测器极点从 <span class="math inline">-1.836\pm0.609\mathrm{j}</span> 变成 <span class="math inline">-9.71</span> 与 <span class="math inline">-3.26</span>——最快的那个快了 <span class="math inline">5.3</span> 倍，最慢的只快 <span class="math inline">1.8</span> 倍。极点是“一快一慢”分开的，快的那个负责抓量测，慢的那个仍然受对象本身限制。</p>
+<p>代价写在同一张表里：<span class="math inline">\sqrt{\Sigma_{11}}</span> 从 <span class="math inline">0.8197</span> 涨到 <span class="math inline">3.1585</span>（<span class="math inline">3.9</span> 倍），<span class="math inline">L_1</span> 从 <span class="math inline">0.672</span> 涨到 <span class="math inline">9.976</span>（<span class="math inline">14.9</span> 倍）。也就是说，<strong>观测器快 <span class="math inline">5</span> 倍，估计标准差差 <span class="math inline">4</span> 倍，增益大 <span class="math inline">15</span> 倍</strong>。增益大十五倍意味着量测噪声被放大十五倍灌进控制量，执行器会立刻叫苦。这就是“观测器不能随便做快”的定量版本。</p>
+<p>工程上的折中是：把观测器带宽定在闭环带宽的 <span class="math inline">2</span> 到 <span class="math inline">3</span> 倍，然后回来看 <span class="math inline">|L|\cdot\sqrt{V}</span> 是否超过执行器行程的十分之一。超了就退回去，宁可让估计慢一点。本章标称点（<span class="math inline">1</span> 倍）偏保守，实际项目里常见的取值落在 <span class="math inline">W/V=10</span> 到 <span class="math inline">100</span> 之间，对应观测器比控制器快 <span class="math inline">2</span> 到 <span class="math inline">5</span> 倍。</p>
+<h3 id="执行器饱和分离原理失效的第一现场">56.6.8 执行器饱和：分离原理失效的第一现场</h3>
+<p>§56.2.6 列过分离原理的四个条件，其中“没有幅值约束”最容易被忽略，因为它在仿真里几乎不出现，一上机就出现。</p>
+<p>报告 8 的数字已经把风险标出来了：无噪声时控制量峰值 <span class="math inline">0.2361</span>，含噪时 <span class="math inline">0.4132</span>，是前者的 <span class="math inline">1.75</span> 倍。如果执行器上限刚好按“无噪声峰值再留一点余量”选成 <span class="math inline">0.3</span>，那么含噪运行时会周期性饱和。饱和的瞬间闭环等于开环：<span class="math inline">u</span> 被钉在边界上，对象按自己的动力学走，估计误差只能靠量测慢慢拉回来。更麻烦的是，饱和期间滤波器如果仍按“指令 <span class="math inline">u</span>”预测，它会以为对象被推得比实际更远，估计值系统性偏大——这是一个正反馈。</p>
+<p>所以有一条硬规矩：<strong>进滤波器的 <span class="math inline">u</span> 必须是实际施加的值，不是控制器算出来的值。</strong> 在代码里就是把限幅放在算完 <span class="math inline">u</span> 之后、送进执行器之前，并且用限幅后的值参与下一拍预测。§56.12 给出的 C 片段就是按这个顺序写的：先算 <span class="math inline">u</span>，再夹到 <span class="math inline">\pm U_{\max}</span>，最后才把 <span class="math inline">u</span> 交给预测步。</p>
+<p>补救有两条。一条是把 <span class="math inline">R</span> 调大，让 LQR 自己就“省”——第55章 §55.8 的 Bryson 规则给的是量级估计，真正要压峰值还得靠仿真试。另一条是软化参考：把阶跃指令过一个一阶滤波再送进闭环，峰值随之下降，代价是响应变慢。两条都比“加大执行器”便宜，也都比“上电后再调”安全。</p>
+<h3 id="噪声从量测走到控制量一条可以手算的链">56.6.9 噪声从量测走到控制量：一条可以手算的链</h3>
+<p>闭环里噪声的路径是固定的：量测噪声 <span class="math inline">\to</span> 新息 <span class="math inline">\to</span> 估计误差 <span class="math inline">\to</span> 控制量。这条链的前三段由滤波器决定，最后一段由 <span class="math inline">K</span> 决定。整条链的增益可以手算出来。</p>
+<p>稳态下新息的方差是 <span class="math inline">S=C\Sigma^-C^{\mathsf T}+V</span>，估计误差里由量测噪声贡献的那部分，经过 <span class="math inline">K</span> 之后落到控制量上的系数是 <span class="math inline">KL</span>。本章 <span class="math inline">K=[0.236068,\;0.236068]</span>、<span class="math inline">L=[0.671963,\;-0.274233]</span>，所以</p>
+<p><span class="math display">
+KL=0.236068\times(0.671963-0.274233)=0.0939
+\tag{56-32a}
+</span></p>
+<p>也就是说，一个标准差为 <span class="math inline">\sqrt{V}=1</span> 的量测噪声，会在控制量上留下约 <span class="math inline">0.0939</span> 的标准差。报告 8 实测的 RMS<span class="math inline">(u)=0.1155</span>，扣掉过程噪声贡献后与这个数同量级，量级判断是对的。</p>
+<p>这条式子有三个用处。第一，它解释了为什么“控制量抖”不能全怪控制器：<span class="math inline">KL</span> 里 <span class="math inline">L</span> 是滤波器的责任、<span class="math inline">K</span> 是控制器的责任，两者相乘。想把抖动减半，可以减半 <span class="math inline">K</span>（响应变慢）或减半 <span class="math inline">L</span>（估计变钝），也可以换一个更安静的传感器——但换传感器未必管用，下一段会算。第二，它给出了峰值的估计：报告 8 里峰值 <span class="math inline">0.4132</span> 是 RMS 的 <span class="math inline">3.58</span> 倍，接近高斯过程的 <span class="math inline">3</span> 到 <span class="math inline">4</span> 倍经验值，所以按 <span class="math inline">4\times KL\sqrt{V}</span> 估执行器行程是合理的。第三，它说明 <span class="math inline">W</span> 与 <span class="math inline">V</span> 的调整会同时改变 <span class="math inline">L</span> 与 <span class="math inline">S</span>，不能只看新息变大就以为控制量会变小——报告 4 里 <span class="math inline">W</span> 涨十倍，<span class="math inline">L_1</span> 涨到 <span class="math inline">4.4</span> 倍，控制量跟着涨。</p>
+<p>不过“换传感器”这条要打个折。<span class="math inline">u</span> 的噪声是 <span class="math inline">K</span> 乘上估计误差，而估计误差里由量测噪声贡献的那部分正比于 <span class="math inline">L\sqrt{V}</span>；<span class="math inline">L</span> 自己会随 <span class="math inline">V</span> 变，所以不能简单地认为“<span class="math inline">V</span> 减半、控制噪声减半”。把报告 3 的 <span class="math inline">L_1</span> 乘上 <span class="math inline">\sqrt{V}</span> 算一遍：</p>
+<p><span class="math display">
+\begin{array}{c|ccccc}
+V &amp; 0.001 &amp; 0.01 &amp; 0.1 &amp; 1 &amp; 100\\
+\hline
+L_1\sqrt{V} &amp; 1.0029 &amp; 0.9976 &amp; 0.9327 &amp; 0.6720 &amp; 0.0993
+\end{array}
+\tag{56-32b}
+</span></p>
+<p><span class="math inline">V</span> 跨了五个数量级，<span class="math inline">L_1\sqrt{V}</span> 只从 <span class="math inline">1.0029</span> 掉到 <span class="math inline">0.0993</span>，正好一个数量级。更反直觉的是低 <span class="math inline">V</span> 段：<span class="math inline">V</span> 从 <span class="math inline">0.1</span> 降到 <span class="math inline">0.001</span>（一百倍），<span class="math inline">L_1\sqrt{V}</span> 几乎不动，卡在 <span class="math inline">1.0</span> 附近。原因是传感器越准，滤波器越敢跟，<span class="math inline">L_1</span> 涨得比 <span class="math inline">\sqrt{V}</span> 掉得还快，两者相乘恰好抵消。<strong>控制量噪声的下限由“滤波器敢不敢跟”决定，不由传感器有多准决定。</strong> 想让执行器少抖，靠换传感器基本没用，得从 <span class="math inline">K</span> 或机构阻尼上想办法。</p>
+<p><strong>这条链也是“为什么 LQG 的实际表现常不如预期”的一部分答案。</strong> 设计时看的是极点与协方差，运行时感受到的是 <span class="math inline">KL\sqrt{V}</span>。极点好看而 <span class="math inline">KL</span> 大的系统，噪声一进来就露馅。</p>
+<h2 id="参数意义与作用">56.7 参数意义与作用</h2>
+<h3 id="量测噪声-v它决定观测器能多快">56.7.1 量测噪声 <span class="math inline">V</span>：它决定观测器能多快</h3>
+<p>报告 3 把 <span class="math inline">V</span> 从 <span class="math inline">10^{-3}</span> 扫到 <span class="math inline">10^{2}</span>，<span class="math inline">W=I</span> 固定：</p>
+<p><span class="math display">
+\begin{array}{c|ccc}
+V &amp; L &amp; \sqrt{\Sigma_{11}} &amp; \text{观测器极点}\\
+\hline
+0.001 &amp; [31.713686,\;2.878940] &amp; 0.178083 &amp; -31.5428,\;-3.1709\\
+0.01 &amp; [9.975821,\;-0.241503] &amp; 0.315845 &amp; -9.7139,\;-3.2619\\
+0.1 &amp; [2.949460,\;-0.650342] &amp; 0.543089 &amp; -2.9747\pm1.1615\mathrm{j}\\
+1 &amp; [0.671963,\;-0.274233] &amp; 0.819734 &amp; -1.8360\pm0.6090\mathrm{j}\\
+10 &amp; [0.093887,\;-0.045593] &amp; 0.968952 &amp; -1.9431,\;-1.1508\\
+100 &amp; [0.009932,\;-0.004951] &amp; 0.996600 &amp; -1.9949,\;-1.0150
+\end{array}
+\tag{56-33}
+</span></p>
+<p>图 56-6 把左三列画成曲线：左子图是增益绝对值随 <span class="math inline">V</span> 的变化（双对数），右子图是极点位置。</p>
+<figure>
+<img src="figs/ch056/fig_056_06_V_sweep.svg" alt="图 56-6　量测噪声 V 的扫描：增益与观测器极点" /><figcaption aria-hidden="true">图 56-6　量测噪声 V 的扫描：增益与观测器极点</figcaption>
+</figure>
+<p>三个观察。</p>
+<p>第一，<span class="math inline">V</span> 每小十倍，<span class="math inline">L_1</span> 大约涨三倍多。不是严格的 <span class="math inline">\sqrt{10}=3.16</span>，因为对象有两个模态，指数不是干净的 <span class="math inline">1/2</span>。<span class="math inline">V</span> 从 <span class="math inline">10^{-3}</span> 涨到 <span class="math inline">10^{2}</span>，跨五个数量级，<span class="math inline">L_1</span> 从 <span class="math inline">31.71</span> 掉到 <span class="math inline">0.00993</span>，掉了三个半数量级（约 <span class="math inline">10^{3.5}</span>）。</p>
+<p>第二，<span class="math inline">\sqrt{\Sigma_{11}}</span> 随 <span class="math inline">V</span> 增大而增大，从 <span class="math inline">0.178</span> 涨到 <span class="math inline">0.997</span>。这符合直觉：传感器越差，估计越不确定。但它<strong>不会超过 <span class="math inline">1</span></strong>——<span class="math inline">V\to\infty</span> 时滤波器完全不信量测，<span class="math inline">\Sigma</span> 退化成开环对象在 <span class="math inline">W=I</span> 下的稳态协方差，位移标准差刚好接近 <span class="math inline">1</span>。这个上界与 <span class="math inline">W</span> 有关，<span class="math inline">W</span> 大上界就大。</p>
+<p>第三，极点形态在 <span class="math inline">V=0.1</span> 与 <span class="math inline">1</span> 之间是共轭复根，两端是实根。<span class="math inline">V</span> 很小时两个实根分得很开（<span class="math inline">-31.5</span> 与 <span class="math inline">-3.2</span>），<span class="math inline">V</span> 很大时挤在一起（<span class="math inline">-1.99</span> 与 <span class="math inline">-1.01</span>）。中间那段复根是“量测与模型势均力敌”的区域，此时滤波器既想跟量测又想跟模型，两个愿望打架，产生振荡。工程上如果看到观测器输出有低频振荡，先查 <span class="math inline">V</span> 是不是落在复根区。</p>
+<h3 id="过程噪声-w它决定滤波器多不信模型">56.7.2 过程噪声 <span class="math inline">W</span>：它决定滤波器多不信模型</h3>
+<p>报告 4 把 <span class="math inline">W</span> 从 <span class="math inline">10^{-3}</span> 扫到 <span class="math inline">10^{2}</span>，<span class="math inline">V=1</span> 固定：</p>
+<p><span class="math display">
+\begin{array}{c|ccc}
+W\ \text{的倍数} &amp; L &amp; \sqrt{\Sigma_{11}} &amp; \text{观测器极点}\\
+\hline
+0.001 &amp; [0.000999,\;-0.000500] &amp; 0.031612 &amp; -1.9995,\;-1.0015\\
+0.01 &amp; [0.009932,\;-0.004951] &amp; 0.099660 &amp; -1.9949,\;-1.0150\\
+0.1 &amp; [0.093887,\;-0.045593] &amp; 0.306410 &amp; -1.9431,\;-1.1508\\
+1 &amp; [0.671963,\;-0.274233] &amp; 0.819734 &amp; -1.8360\pm0.6090\mathrm{j}\\
+10 &amp; [2.949460,\;-0.650342] &amp; 1.717399 &amp; -2.9747\pm1.1615\mathrm{j}\\
+100 &amp; [9.975821,\;-0.241503] &amp; 3.158452 &amp; -9.7139,\;-3.2619
+\end{array}
+\tag{56-34}
+</span></p>
+<figure>
+<img src="figs/ch056/fig_056_07_W_sweep.svg" alt="图 56-7　过程噪声 W 的扫描：增益、协方差与最慢极点" /><figcaption aria-hidden="true">图 56-7　过程噪声 W 的扫描：增益、协方差与最慢极点</figcaption>
+</figure>
+<p>这张表与上一张几乎是一个镜像——把两行对调，数字基本能对上。原因是对偶性：<span class="math inline">L</span> 的公式里 <span class="math inline">W</span> 与 <span class="math inline">V</span> 处在“分子/分母”的对称位置，<span class="math inline">W</span> 涨十倍与 <span class="math inline">V</span> 跌十倍，效果高度相似。但两者不是完全等价，差别在两个地方。</p>
+<p>第一，指数不同。<span class="math inline">W</span> 涨 <span class="math inline">10^{5}</span> 倍，<span class="math inline">\sqrt{\Sigma_{11}}</span> 涨 <span class="math inline">100</span> 倍，指数约 <span class="math inline">0.4</span>；而 <span class="math inline">V</span> 那边是 <span class="math inline">0.25</span>（准确说是 <span class="math inline">\Sigma_{11}</span> 对 <span class="math inline">V</span> 的指数）。这两个指数之和为 <span class="math inline">1</span>，下一小节解释。</p>
+<p>第二，<span class="math inline">L_2</span> 的符号会翻。<span class="math inline">W=0.01</span> 时 <span class="math inline">L_2=-0.004951</span>，<span class="math inline">W=1</span> 时 <span class="math inline">-0.274233</span>，<span class="math inline">W=100</span> 时变成 <span class="math inline">-0.241503</span>（仍负），但中间 <span class="math inline">W=10</span> 是 <span class="math inline">-0.650342</span>；而在报告 6 的折算列里，<span class="math inline">L_2</span> 在 <span class="math inline">T_s=0.005</span> 时是正的 <span class="math inline">+0.00135</span>。也就是说，<strong>第二个增益分量的符号不是固定的</strong>，它由 <span class="math inline">\Sigma_{12}</span> 的符号决定，而 <span class="math inline">\Sigma_{12}</span> 由对象耦合与噪声比例共同决定。</p>
+<p>这一点在工程上很重要。很多人写代码时会想当然地认为“位移估高了，速度也该往下修”，于是把 <span class="math inline">L_2</span> 写成与 <span class="math inline">L_1</span> 同号。本章标称参数下两者反号（<span class="math inline">0.672</span> 与 <span class="math inline">-0.274</span>），若强行同号，观测器立刻失稳。这不是理论推导能替代的，必须让 Riccati 方程自己定符号。</p>
+<h3 id="同比例缩放一个精确的结论">56.7.3 同比例缩放：一个精确的结论</h3>
+<p>把 <span class="math inline">(W,V)</span> 同时乘 <span class="math inline">\beta</span>，会发生什么？报告 5 给出答案：</p>
+<p><span class="math display">
+\begin{array}{c|ccc}
+\beta &amp; L &amp; \mathrm{trace}(\Sigma) &amp; \|L-L_0\|\\
+\hline
+0.01 &amp; [0.671963,\;-0.274233] &amp; 0.010089 &amp; 4.44\times10^{-16}\\
+0.1 &amp; [0.671963,\;-0.274233] &amp; 0.100892 &amp; 2.78\times10^{-16}\\
+1 &amp; [0.671963,\;-0.274233] &amp; 1.008918 &amp; 0\\
+10 &amp; [0.671963,\;-0.274233] &amp; 10.089178 &amp; 2.22\times10^{-16}\\
+100 &amp; [0.671963,\;-0.274233] &amp; 100.891784 &amp; 1.55\times10^{-15}
+\end{array}
+\tag{56-35}
+</span></p>
+<p><span class="math inline">L</span> 一丝不变，<span class="math inline">\Sigma</span> 恰好乘 <span class="math inline">\beta</span>，误差在 <span class="math inline">10^{-15}</span> 量级。图 56-8 左子图画的是 <span class="math inline">\mathrm{trace}(\Sigma)/(\beta\,\mathrm{trace}\Sigma_0)</span>，五个点全部落在 <span class="math inline">1</span> 上，一条水平线。</p>
+<p>这不是数值巧合，是方程的结构决定的。(56-14) 里若把 <span class="math inline">\Sigma</span> 换成 <span class="math inline">\beta\Sigma</span>、<span class="math inline">W</span> 换成 <span class="math inline">\beta W</span>、<span class="math inline">V</span> 换成 <span class="math inline">\beta V</span>，每一项都乘 <span class="math inline">\beta</span>，方程仍然成立；而 <span class="math inline">L=\Sigma C^{\mathsf T}V^{-1}</span> 里 <span class="math inline">\beta</span> 上下抵消。<strong>所以真正有意义的只有比值 <span class="math inline">W/V</span>，两个矩阵一共只提供“一个”自由度。</strong> 这与第55章 LQR 的“<span class="math inline">Q</span> 与 <span class="math inline">R</span> 同乘一个数，<span class="math inline">K</span> 不变”完全同构，也是对偶性的又一个表现。</p>
+<p>工程含义：不要把 <span class="math inline">W</span> 与 <span class="math inline">V</span> 当成两个独立的旋钮。它们只有一个旋钮有用，另一个是标度。现场调试时，正确做法是先用量测数据把 <span class="math inline">V</span> 定死（传感器手册或静止采样），再只调 <span class="math inline">W</span>；若两个一起调，等于在一个二维平面上沿射线走，白费功夫。</p>
+<h3 id="单独缩放两个指数和为-1">56.7.4 单独缩放：两个指数和为 1</h3>
+<p>只动一个会怎样？报告 5 分别拟合：</p>
+<p><span class="math display">
+\log\Sigma_{11}\ \text{对}\ \log W\ \text{的斜率}=0.750,\qquad
+\log\Sigma_{11}\ \text{对}\ \log V\ \text{的斜率}=0.250
+\tag{56-36}
+</span></p>
+<p>两个斜率之和恰好是 <span class="math inline">1.000</span>。图 56-8 右子图把两条线画在一起，黑线扫 <span class="math inline">W</span>、红虚线扫 <span class="math inline">V</span>，灰点线是斜率 <span class="math inline">0.75</span> 的参考线。</p>
+<figure>
+<img src="figs/ch056/fig_056_08_scaling.svg" alt="图 56-8　同比例缩放精确齐次（左）与单独缩放的指数分配（右）" /><figcaption aria-hidden="true">图 56-8　同比例缩放精确齐次（左）与单独缩放的指数分配（右）</figcaption>
+</figure>
+<p>和恒为 1 是欧拉定理的直接推论：<span class="math inline">\Sigma</span> 对 <span class="math inline">(W,V)</span> 是一次齐次的，即 <span class="math inline">\Sigma(\beta W,\beta V)=\beta\Sigma(W,V)</span>，两边对 <span class="math inline">\beta</span> 求导再令 <span class="math inline">\beta=1</span>，就得到两个偏导（在对数坐标下就是两个斜率）之和为 <span class="math inline">1</span>。具体怎么分配 <span class="math inline">0.75</span> 与 <span class="math inline">0.25</span>，由对象结构（<span class="math inline">A</span>、<span class="math inline">C</span>）决定，与噪声大小无关。</p>
+<p>这里有一个值得警惕的细节。若只看端点比值，<span class="math inline">W</span> 从 <span class="math inline">0.001</span> 到 <span class="math inline">100</span> 时 <span class="math inline">\Sigma_{11}</span> 从 <span class="math inline">0.000999</span> 到 <span class="math inline">9.9758</span>（按 <span class="math inline">L_1=\Sigma_{11}/V</span> 反推），比值取对数除以跨度为 <span class="math inline">\log(9.9758/0.000999)/\log(10^5)=4.0/5=0.80</span>；而全区间最小二乘拟合给 <span class="math inline">0.750</span>。两个数不一致，说明 <span class="math inline">\Sigma_{11}</span> 不是 <span class="math inline">W</span> 的严格幂函数——它只是“局部看起来像幂函数”。教科书里常写的 <span class="math inline">\Sigma_{11}\propto\sqrt{WV}</span>（指数各 <span class="math inline">0.5</span>）只在 <span class="math inline">A</span> 的影响可以忽略时成立，本章对象不满足这个条件。</p>
+<h3 id="qr-与-wv两组旋钮两种后果">56.7.5 <span class="math inline">Q/R</span> 与 <span class="math inline">W/V</span>：两组旋钮，两种后果</h3>
+<p>到这里可以把两组权重放在一起对照。<span class="math inline">Q/R</span> 进 LQR，决定“要多快、肯花多大力”；<span class="math inline">W/V</span> 进滤波器，决定“信模型还是信量测”。改前者只动 <span class="math inline">K</span>，改后者只动 <span class="math inline">L</span>，互不干涉（分离原理）。但闭环的表现是两者的乘积，所以调参时必须清楚自己在动哪一组。</p>
+<p>一个实用的判断：如果闭环响应慢，但噪声不敏感，问题在 <span class="math inline">K</span>，去调 <span class="math inline">Q/R</span>；如果闭环响应够快，但输出抖、控制量毛刺大，问题在 <span class="math inline">L</span>，去调 <span class="math inline">W/V</span>；如果两者都差，先调 <span class="math inline">L</span>——因为估计不准时，再好的 <span class="math inline">K</span> 也是在错误的靶子上使劲。</p>
+<p>报告 20 把两个增益并排印出来：<span class="math inline">K=[0.236068,\;0.236068]</span> 与 <span class="math inline">L=[0.671963,\;-0.274233]</span>，并写了一句“改 <span class="math inline">Q/R</span> 只动 <span class="math inline">K</span>，改 <span class="math inline">W/V</span> 只动 <span class="math inline">L</span>，这是分离原理给的自由”。这句话是本章最实用的一句，也是最容易被误用的一句——它说的是“可以分开设计”，不是“分开最优就等于整体最优”。后者是第57章的起点。</p>
+<h3 id="多路融合与信任分配">56.7.6 多路融合与信任分配</h3>
+<p>最后看两个小结论，它们在工程上天天用到。</p>
+<p>多路融合：报告 16 用两路传感器测同一个位移，噪声分别是 <span class="math inline">V=1</span> 与 <span class="math inline">V=4</span>。单独用第一路，<span class="math inline">\sqrt{\Sigma_{11}}=0.819734</span>；单独用第二路，<span class="math inline">0.931642</span>；两路一起用，<span class="math inline">0.795644</span>。而“把两路折成一路、等效噪声 <span class="math inline">1/(1/1+1/4)=0.8</span>”算出来也是 <span class="math inline">0.795644</span>——小数点后六位一模一样。融合增益矩阵的两列之比是 <span class="math inline">4:1</span>（<span class="math inline">0.633049</span> 对 <span class="math inline">0.158262</span>，<span class="math inline">-0.249531</span> 对 <span class="math inline">-0.062383</span>），严格按 <span class="math inline">1/V</span> 分配权重。所以“多传感器融合就是方差取倒数相加”这个直觉是对的，前提是各路噪声独立。</p>
+<p>信任分配：报告 17 的标量表在 §56.1.3 已经用过，这里补一句它的工程解释。<span class="math inline">L=P^-/(P^-+V)</span> 说明滤波器从不“完全相信”任何一方：即使 <span class="math inline">V=0.1</span>、<span class="math inline">P^-=1</span>，<span class="math inline">L</span> 也只到 <span class="math inline">0.9091</span>，仍有 <span class="math inline">9\%</span> 留给模型。这个保留是有意的——万一传感器卡死（输出常数），滤波器还能靠模型慢慢纠正。反过来说，若 <span class="math inline">L</span> 真的到了 <span class="math inline">1</span>，一次传感器故障就会让估计彻底跑飞。这一点在 §56.10 讲故障诊断时会再用到。</p>
+<h3 id="只有比值决定形状wv-平面上的两把尺子">56.7.7 只有比值决定形状：<span class="math inline">(W,V)</span> 平面上的两把尺子</h3>
+<p>报告 3 与报告 4 是同一张表的两半，把它们并排看能得到一条很实用的结论。报告 3 里 <span class="math inline">V=0.01</span>（<span class="math inline">W=1</span>）给出 <span class="math inline">L=[9.975821,\;-0.241503]</span>、极点 <span class="math inline">-9.71</span> 与 <span class="math inline">-3.26</span>；报告 4 里 <span class="math inline">W=100</span>（<span class="math inline">V=1</span>）给出的数字一模一样。两处的 <span class="math inline">W/V</span> 都是 <span class="math inline">100</span>，别的地方都不同，结果却完全相同。</p>
+<p>这说明 <span class="math inline">(W,V)</span> 两个参数里只有两个独立方向。<strong>第一个方向是比值</strong>，它决定增益、决定观测器极点、决定闭环的形状；<strong>第二个方向是绝对尺度</strong>，它决定 <span class="math inline">\Sigma</span> 有多大、控制量有多响。第二个方向的效果也在报告里：<span class="math inline">W</span> 从 <span class="math inline">0.01</span> 涨到 <span class="math inline">100</span>（一万倍），<span class="math inline">\sqrt{\Sigma_{11}}</span> 从 <span class="math inline">0.315845</span> 涨到 <span class="math inline">3.158452</span>，正好乘 <span class="math inline">10</span>，也就是协方差涨了 <span class="math inline">100</span> 倍。注意这不是线性——单改 <span class="math inline">W</span> 时 <span class="math inline">\Sigma_{11}</span> 的指数是 <span class="math inline">0.75</span> 而不是 <span class="math inline">1</span>，只有 <span class="math inline">(W,V)</span> 同乘一个数时才严格线性（报告 5）。这一点下一小节会给一个标量算例解释。</p>
+<p>工程含义很直接：调参时不要同时转两个旋钮。先用物理知识把 <span class="math inline">V</span> 的绝对尺度定下来（传感器手册上的噪声密度，或静置采样的方差），这一步定的是“尺子”；然后用 <span class="math inline">W/V</span> 去调速度，这一步定的是“形状”。反过来做——先猜一个 <span class="math inline">W</span>、再反复改 <span class="math inline">V</span> 去凑效果——也能凑出好看的曲线，但 <span class="math inline">V</span> 已经不是你传感器的真实噪声，下一次换传感器就得重调，而且协方差的绝对值再也对不上实测。</p>
+<h3 id="指数-0.75-从哪来一个标量算例">56.7.8 指数 0.75 从哪来：一个标量算例</h3>
+<p>报告 5 给出两个指数：<span class="math inline">\log\Sigma_{11}</span> 对 <span class="math inline">\log W</span> 是 <span class="math inline">0.750</span>，对 <span class="math inline">\log V</span> 是 <span class="math inline">0.250</span>，和为 <span class="math inline">1</span>。和为 <span class="math inline">1</span> 是齐次性（欧拉定理）保证的，但“为什么是 <span class="math inline">0.75</span> 与 <span class="math inline">0.25</span> 而不是 <span class="math inline">0.5</span> 与 <span class="math inline">0.5</span>”要另找解释。</p>
+<p>拿一个标量对象算：<span class="math inline">\dot x=-ax+w</span>，<span class="math inline">y=x+v</span>。它的 CARE 是 <span class="math inline">0=-2a\sigma^2+W-\sigma^4/V</span>，解出</p>
+<p><span class="math display">
+\sigma^2=\sqrt{a^2V^2+WV}-aV
+\tag{56-36a}
+</span></p>
+<p><span class="math inline">a=0</span>（纯积分器）时 <span class="math inline">\sigma^2=\sqrt{WV}</span>，两个指数都是 <span class="math inline">0.5</span>——这就是教科书里常引的“标准差正比于 <span class="math inline">\sqrt{WV}</span>”。<span class="math inline">a=1</span>、<span class="math inline">W=V=1</span> 时 <span class="math inline">\sigma^2=\sqrt2-1=0.4142</span>，对它求弹性：对 <span class="math inline">W</span> 是 <span class="math inline">0.8536</span>，对 <span class="math inline">V</span> 是 <span class="math inline">0.1464</span>，和仍是 <span class="math inline">1</span>，但分配完全偏向 <span class="math inline">W</span>。</p>
+<p>原因是 <span class="math inline">a</span> 这一项：对象自己会把误差“拉回来”，拉得越狠，量测的作用就越被削弱，于是 <span class="math inline">W</span> 的权重上升、<span class="math inline">V</span> 的权重下降。本章是二阶对象、两个极点 <span class="math inline">-1</span> 与 <span class="math inline">-2</span>，稳定项比标量算例更强一点，指数落在 <span class="math inline">0.75</span> 与 <span class="math inline">0.25</span>，比 <span class="math inline">0.5/0.5</span> 更靠近“对象主导”的一端。</p>
+<p>这条算例还顺带说明了一件事：两个旋钮的效率不一样。报告 4 里 <span class="math inline">W</span> 从 <span class="math inline">1</span> 涨到 <span class="math inline">100</span>，<span class="math inline">\Sigma_{11}</span> 从 <span class="math inline">0.6720</span> 涨到 <span class="math inline">9.9758</span>（<span class="math inline">14.8</span> 倍），标准差只涨 <span class="math inline">3.85</span> 倍；报告 3 里 <span class="math inline">V</span> 从 <span class="math inline">1</span> 降到 <span class="math inline">0.01</span>，<span class="math inline">\Sigma_{11}</span> 降到 <span class="math inline">0.0998</span>（<span class="math inline">0.148</span> 倍），标准差降到 <span class="math inline">0.385</span> 倍。同样是“一百倍”的改动，改 <span class="math inline">V</span> 把标准差压到三分之一多一点，改 <span class="math inline">W</span> 只是把它抬高到四倍。想提高稳态精度，先动 <span class="math inline">V</span>——这是“先定 <span class="math inline">V</span>、再调 <span class="math inline">W</span>”的另一条理由。</p>
+<h2 id="调参方法与经验">56.8 调参方法与经验</h2>
+<h3 id="顺序先定-v再调-w最后动-qr">56.8.1 顺序：先定 <span class="math inline">V</span>，再调 <span class="math inline">W</span>，最后动 <span class="math inline">Q/R</span></h3>
+<p>调参最忌讳四只手同时上。按下面的顺序走，每一步只动一个量，出问题能定位。</p>
+<p><strong>第一步，把 <span class="math inline">V</span> 钉死。</strong> 传感器静止时采 <span class="math inline">10</span> 秒数据，算样本方差；这只给出“传感器本底”，不含对象振动带来的“视在噪声”。更可靠的办法是用报告 11 的协方差匹配：先随便给一个 <span class="math inline">V</span>，跑一段，拿实测新息方差去解 <span class="math inline">V</span>。若反估结果与手册差三倍以上，说明模型或 <span class="math inline">W</span> 有问题，先别继续。</p>
+<p><strong>第二步，用 <span class="math inline">\mathrm{E}[\mathrm{NIS}]</span> 校 <span class="math inline">W</span>。</strong> 假设全对时 <span class="math inline">\mathrm{E}[\mathrm{NIS}]\approx1</span>。若明显大于 <span class="math inline">1</span>，说明滤波器低估了不确定性，把 <span class="math inline">W</span> 调大；若明显小于 <span class="math inline">1</span>，把 <span class="math inline">W</span> 调小。注意这一步有个陷阱，见 §56.8.5：<span class="math inline">W</span> 偏小时 <span class="math inline">\mathrm{E}[\mathrm{NIS}]</span> 可能仍是 <span class="math inline">1</span>，查不出来。</p>
+<p><strong>第三步，配 <span class="math inline">Q/R</span>。</strong> 此时滤波器已经可信，把 <span class="math inline">\hat x</span> 当真值，按第55章的流程调 <span class="math inline">Q/R</span>。调完再看闭环：若控制量峰值超限，把 <span class="math inline">R</span> 调大；若响应太慢，把 <span class="math inline">Q</span> 的第一个对角元调大。</p>
+<p><strong>第四步，定 <span class="math inline">T_s</span>。</strong> 前面三步都在连续域或“足够细”的离散域做，最后按 §56.5.5 的判据把 <span class="math inline">T_s</span> 压到观测器带宽的 <span class="math inline">1/10</span> 以内。若压不下去（CPU 算不过来），回头把观测器做慢（<span class="math inline">V</span> 估大），这是唯一的妥协方向。</p>
+<h3 id="新息白性唯一能在现场做的自检">56.8.2 新息白性：唯一能在现场做的自检</h3>
+<p>新息 <span class="math inline">\nu_k=y_k-C\hat x^-_k</span> 是滤波器“没预料到的那部分量测”。假设全对时它应该是白噪声，且归一化后的平方和（NIS）均值为 <span class="math inline">1</span>：</p>
+<p><span class="math display">
+\mathrm{NIS}_k=\nu_k^{\mathsf T}S_k^{-1}\nu_k,\qquad \mathbb{E}[\mathrm{NIS}_k]=1
+\tag{56-37}
+</span></p>
+<p>报告 9 跑了 20 000 拍，四种工况的结果是：</p>
+<p><span class="math display">
+\begin{array}{c|ccccc}
+\text{工况} &amp; \mathrm{E}[\mathrm{NIS}] &amp; \rho_1 &amp; \rho_2 &amp; \rho_3 &amp; \rho_5\\
+\hline
+\text{假设全对} &amp; 0.9773 &amp; -0.0121 &amp; 0.0022 &amp; 0.0036 &amp; -0.0073\\
+V\ \text{低估 25 倍} &amp; 16.6758 &amp; -0.2471 &amp; -0.1132 &amp; -0.0548 &amp; -0.0245\\
+V\ \text{高估 4 倍} &amp; 0.2710 &amp; 0.0807 &amp; 0.0876 &amp; 0.0831 &amp; 0.0627\\
+W\ \text{低估 100 倍} &amp; 0.9780 &amp; -0.0102 &amp; 0.0032 &amp; 0.0027 &amp; -0.0085
+\end{array}
+\tag{56-38}
+</span></p>
+<p>图 56-9 左子图把归一化新息画成时间序列，右子图是自相关。</p>
+<figure>
+<img src="figs/ch056/fig_056_09_innovation.svg" alt="图 56-9　新息白性检验：假设正确时是白噪声，V 低估时留下明显相关" /><figcaption aria-hidden="true">图 56-9　新息白性检验：假设正确时是白噪声，V 低估时留下明显相关</figcaption>
+</figure>
+<p>读法有两条。第一看 <span class="math inline">\mathrm{E}[\mathrm{NIS}]</span>：偏离 <span class="math inline">1</span> 越远越糟。<span class="math inline">V</span> 低估 <span class="math inline">25</span> 倍时它涨到 <span class="math inline">16.68</span>——滤波器以为自己很准，实际新息比它预期的大四倍，平方之后就是十六倍。<span class="math inline">V</span> 高估 <span class="math inline">4</span> 倍时它掉到 <span class="math inline">0.271</span>，滤波器过度谨慎。第二看一阶自相关 <span class="math inline">\rho_1</span>：假设全对时是 <span class="math inline">-0.0121</span>，噪声本底；<span class="math inline">V</span> 低估时是 <span class="math inline">-0.2471</span>，出现明显的负相关（这一拍新息大，下一拍就小，因为滤波器过度反应后又被拉回）。这两条一起看，<span class="math inline">V</span> 的问题几乎藏不住。</p>
+<p>图 56-9 左图还做了一个视觉处理：把 <span class="math inline">V</span> 低估那条曲线整体上移 <span class="math inline">4</span>，否则两条线叠在一起看不清。上移之后的曲线明显“更毛”，高频成分更多，这是过度反应的特征。</p>
+<h3 id="协方差匹配从新息反估-v">56.8.3 协方差匹配：从新息反估 <span class="math inline">V</span></h3>
+<p>如果 <span class="math inline">\mathrm{E}[\mathrm{NIS}]</span> 不对，怎么把 <span class="math inline">V</span> 调对？报告 11 给了一个只用新息的办法。滤波器一律按 <span class="math inline">V=1</span> 设计，真实 <span class="math inline">V</span> 取 <span class="math inline">0.25</span>、<span class="math inline">1</span>、<span class="math inline">2</span>、<span class="math inline">4</span>：</p>
+<p><span class="math display">
+\begin{array}{c|cccc}
+\text{真实}\ V &amp; \text{新息样本方差} &amp; \text{反估}\ V &amp; \text{相对误差} &amp; \mathrm{E}[\mathrm{NIS}]\\
+\hline
+0.25 &amp; 0.3485 &amp; 0.2649 &amp; 6.0\% &amp; 0.3031\\
+1.00 &amp; 1.1331 &amp; 0.9841 &amp; -1.6\% &amp; 0.9853\\
+2.00 &amp; 2.1783 &amp; 1.9751 &amp; -1.2\% &amp; 1.8941\\
+4.00 &amp; 4.2678 &amp; 3.9917 &amp; -0.2\% &amp; 3.7111
+\end{array}
+\tag{56-39}
+</span></p>
+<p>反估的逻辑只有一句：让滤波器自评的新息方差等于实测的新息方差，解出 <span class="math inline">V</span>。<span class="math inline">V=0.25</span> 时误差最大（<span class="math inline">6.0\%</span>），因为此时滤波器按 <span class="math inline">V=1</span> 设计，过度保守，新息里混入了更多模型误差；<span class="math inline">V\ge1</span> 之后误差都在 <span class="math inline">2\%</span> 以内。</p>
+<p>这个方法的价值在于不需要真值。现场只有 <span class="math inline">y</span> 与 <span class="math inline">u</span>，没有 <span class="math inline">x</span>，照样能把 <span class="math inline">V</span> 估出来。代价是它假设 <span class="math inline">W</span> 与模型是对的——若 <span class="math inline">W</span> 错了，反估出来的 <span class="math inline">V</span> 会把 <span class="math inline">W</span> 的差额吸收进去，得到一个“自洽但错误”的组合。所以顺序必须是先粗估 <span class="math inline">W</span>、再反估 <span class="math inline">V</span>、再回头校 <span class="math inline">W</span>，两三轮才收敛。</p>
+<h3 id="模型失配位移被钉住速度才是放大器">56.8.4 模型失配：位移被钉住，速度才是放大器</h3>
+<p>报告 10 干了一件坏事：滤波器仍按 <span class="math inline">k=2</span> 建模，真实对象的刚度在 <span class="math inline">1</span> 到 <span class="math inline">4</span> 之间变。结果很反直觉：</p>
+<p><span class="math display">
+\begin{array}{c|cccc}
+\text{真实}\ k &amp; \text{位移误差 RMS} &amp; \text{速度误差 RMS} &amp; \text{新息 RMS} &amp; \mathrm{E}[\mathrm{NIS}]\\
+\hline
+1.00 &amp; 0.3882 &amp; 0.5522 &amp; 1.0703 &amp; 0.9960\\
+1.50 &amp; 0.3850 &amp; 0.4397 &amp; 1.0687 &amp; 0.9931\\
+2.00 &amp; 0.3838 &amp; 0.4201 &amp; 1.0681 &amp; 0.9919\\
+2.50 &amp; 0.3834 &amp; 0.4474 &amp; 1.0678 &amp; 0.9915\\
+3.00 &amp; 0.3834 &amp; 0.4945 &amp; 1.0678 &amp; 0.9914\\
+4.00 &amp; 0.3841 &amp; 0.6030 &amp; 1.0680 &amp; 0.9917
+\end{array}
+\tag{56-40}
+</span></p>
+<p>位移误差几乎不动：<span class="math inline">0.3834</span> 到 <span class="math inline">0.3882</span>，刚度错一倍只涨 <span class="math inline">1\%</span>。这符合直觉——位移是直接测的，误差被量测噪声钉在 <span class="math inline">0.38</span> 附近，模型错了量测会拉回来。速度误差就不一样：<span class="math inline">k=2</span> 时 <span class="math inline">0.4201</span>，<span class="math inline">k=1</span> 涨到 <span class="math inline">0.5522</span>（<span class="math inline">+31\%</span>），<span class="math inline">k=4</span> 涨到 <span class="math inline">0.6030</span>（<span class="math inline">+44\%</span>），而且最小值恰好落在标称点。<strong>未测分量才是失配的放大器。</strong></p>
+<p>最刺眼的是最后两列：新息 RMS 从 <span class="math inline">1.0678</span> 到 <span class="math inline">1.0703</span>，<span class="math inline">\mathrm{E}[\mathrm{NIS}]</span> 从 <span class="math inline">0.9914</span> 到 <span class="math inline">0.9960</span>。滤波器完全没察觉模型错了。原因在于单位置量测下，<span class="math inline">W</span> 的标度与 <span class="math inline">L</span> 的标度可以互相补偿：模型偏硬，等效于过程噪声偏小，滤波器自动把增益调小一点，新息统计仍然自洽。所以“新息白”只证明滤波器与量测一致，不证明模型对。</p>
+<p>图 56-10 左子图画了这两条误差曲线，横轴是真实刚度，竖线标标称点。</p>
+<figure>
+<img src="figs/ch056/fig_056_10_mismatch.svg" alt="图 56-10　模型失配：位移误差被量测钉住，速度误差才是放大器" /><figcaption aria-hidden="true">图 56-10　模型失配：位移误差被量测钉住，速度误差才是放大器</figcaption>
+</figure>
+<h3 id="一个迟钝而不是发散的案例">56.8.5 一个“迟钝”而不是“发散”的案例</h3>
+<p>模型失配最危险的形态不是误差大，而是滤波器不知道自己错了。报告 10 又做了一个更极端的实验：滤波器把 <span class="math inline">W</span> 低估 <span class="math inline">1000</span> 倍（坚信自己），同时真实刚度偏 <span class="math inline">50\%</span>：</p>
+<p><span class="math display">
+\begin{array}{c|cccc}
+\text{真实}\ k &amp; \text{前半段误差} &amp; \text{后半段误差} &amp; \text{末段/首段} &amp; \mathrm{E}[\mathrm{NIS}]\\
+\hline
+2.00 &amp; 0.9287 &amp; 0.8560 &amp; 0.922 &amp; 1.8397\\
+3.00 &amp; 0.8141 &amp; 0.7475 &amp; 0.918 &amp; 1.6190
+\end{array}
+\tag{56-41}
+</span></p>
+<p>误差常驻在 <span class="math inline">0.75</span> 到 <span class="math inline">0.93</span>，比标称情形的 <span class="math inline">0.38</span> 大一倍多。但它<strong>没有随时间爬升</strong>——末段/首段是 <span class="math inline">0.92</span>，还略有下降。所以这不是发散，是“迟钝”：滤波器对自己的模型太自信，量测拉不动它，误差停在一个偏大的平台上。</p>
+<p>真正的信号在 <span class="math inline">\mathrm{E}[\mathrm{NIS}]</span>：<span class="math inline">1.84</span> 与 <span class="math inline">1.62</span>，明显大于 <span class="math inline">1</span>。滤波器自评的方差远小于实际新息，这条线索比误差本身更早暴露问题。图 56-10 右子图画了位移误差的滑动 RMS，两条线（模型匹配与刚度偏 <span class="math inline">50\%</span>）在整个 <span class="math inline">200</span> s 里都是平的，看不出趋势，只有幅度差一倍。</p>
+<p>这个案例给的教训是：<strong>不要等误差爬升才去查模型。</strong> 误差不爬升可能只是“还没爬”，而 NIS 已经报警了。工程上应该把 <span class="math inline">\mathrm{E}[\mathrm{NIS}]</span> 做成在线监控量，超过 <span class="math inline">1.3</span> 就报警，超过 <span class="math inline">2</span> 就降级（切到备用模型或直接开环）。</p>
+<h3 id="调参速查表">56.8.6 调参速查表</h3>
+<p>把本章的数字压成一张表，方便现场对照：</p>
+<p><span class="math display">
+\begin{array}{c|c|c}
+\text{现象} &amp; \text{最可能的参数} &amp; \text{动作}\\
+\hline
+\text{控制量毛刺大、输出抖} &amp; L\ \text{太大} &amp; V\ \text{调大或}\ W\ \text{调小}\\
+\text{响应慢、跟不上设定} &amp; K\ \text{太小} &amp; Q\ \text{调大或}\ R\ \text{调小}\\
+\mathrm{E}[\mathrm{NIS}]&gt;1.5 &amp; V\ \text{低估或}\ W\ \text{低估} &amp; \text{先反估}\ V,\ \text{再校}\ W\\
+\mathrm{E}[\mathrm{NIS}]&lt;0.5 &amp; V\ \text{高估} &amp; V\ \text{调小}\\
+\text{速度误差大、位移正常} &amp; \text{模型刚度错} &amp; \text{辨识}\ k,\ \text{或增大}\ W\\
+\text{某频率持续抖动} &amp; \text{观测器裕度不足} &amp; L\ \text{减半试，或做 LTR}\\
+\text{换}\ T_s\ \text{后性能突变} &amp; \text{噪声折算错} &amp; \text{查}\ V_d=V/T_s
+\end{array}
+\tag{56-42}
+</span></p>
+<p>这张表里最容易被忽略的是最后一行。<span class="math inline">T_s</span> 一改，<span class="math inline">W_d</span> 与 <span class="math inline">V_d</span> 都要重算，只改 <span class="math inline">A_d</span>、<span class="math inline">B_d</span> 而忘了噪声，等于换了个滤波器。报告 6 的 <span class="math inline">31.2148</span> 就是这么来的——参数没变，只是采样周期从 <span class="math inline">0.2</span> s 变成 <span class="math inline">1</span> ms，而 <span class="math inline">V</span> 没跟着折算。</p>
+<h3 id="两段式粗调看极点精调看新息">56.8.7 两段式：粗调看极点，精调看新息</h3>
+<p>调参分两段，两段用的工具完全不同，混着用会来回打转。</p>
+<p><strong>第一段是粗调，看极点。</strong> 用 <span class="math inline">W/V</span> 把观测器极点挪到目标带宽：报告 3 与报告 4 的表可以直接当查表用，<span class="math inline">W/V=1</span> 给 <span class="math inline">-1.836\pm0.609\mathrm{j}</span>，<span class="math inline">100</span> 给 <span class="math inline">-9.71</span> 与 <span class="math inline">-3.26</span>，<span class="math inline">0.01</span> 给 <span class="math inline">-1.99</span> 与 <span class="math inline">-1.02</span>。用 <span class="math inline">Q/R</span> 把闭环极点挪到目标响应：这一段的工具在第55章，本章 <span class="math inline">Q=I</span>、<span class="math inline">R=1</span> 给出 <span class="math inline">-2.236</span> 与 <span class="math inline">-1.000</span>。粗调的目标是“能跑”——不振荡、不饱和、响应时间符合要求。这一段不需要任何实测数据，纯计算。</p>
+<p><strong>第二段是精调，看新息。</strong> 拿现场的稳态新息算 E[NIS] 与自相关（报告 9 的方法），用协方差匹配反估 <span class="math inline">V</span>（报告 11 的方法）。这一段的目标是“真”——滤波器的自评与实际一致。它的前提是模型结构对了：报告 10 已经证明，模型参数错了，新息照样白，E[NIS] 照样 <span class="math inline">0.99</span>。所以精调只能修噪声强度，修不了模型。</p>
+<p>两段的顺序不能颠倒。先精调会遇到一个尴尬局面：<span class="math inline">V</span> 反估出来是 <span class="math inline">1.97</span>，你把它填进去，<span class="math inline">L</span> 变了，观测器极点跟着变，于是“能跑”又变成“不能跑”。粗调在前，等于先把舞台搭好，精调只微调灯光。</p>
+<h3 id="几十秒数据能定出什么样本量与判据">56.8.8 几十秒数据能定出什么：样本量与判据</h3>
+<p>新息检验的判据要带样本量，否则会把噪声当信号。</p>
+<p>E[NIS] 的统计标准差约 <span class="math inline">\sqrt{2/N}</span>（单路量测时 NIS 服从自由度 <span class="math inline">1</span> 的卡方分布，方差是 <span class="math inline">2</span>）。报告 9 用 <span class="math inline">N=20000</span>，标准差约 <span class="math inline">0.010</span>，实测 <span class="math inline">0.9773</span> 距离 <span class="math inline">1</span> 有 <span class="math inline">2.3</span> 个标准差——正常范围内的偏低。而 <span class="math inline">V</span> 低估 <span class="math inline">25</span> 倍那一行，E[NIS]<span class="math inline">=16.68</span>，是 <span class="math inline">1600</span> 个标准差之外，一眼就能判。</p>
+<p>一阶自相关的标准差约 <span class="math inline">1/\sqrt{N}</span>，<span class="math inline">N=20000</span> 时是 <span class="math inline">0.0071</span>。报告 9 假设全对时 <span class="math inline">\rho_1=-0.0121</span>（<span class="math inline">1.7</span> 个标准差），<span class="math inline">V</span> 低估 <span class="math inline">25</span> 倍时 <span class="math inline">\rho_1=-0.2471</span>（<span class="math inline">35</span> 个标准差）。两者一个在噪声本底里，一个远远在外，判据很清楚。</p>
+<p>反估 <span class="math inline">V</span> 的精度也按这个规律走。报告 11 在 <span class="math inline">N=20000</span> 下反估误差是 <span class="math inline">-1.6\%</span> 到 <span class="math inline">6.0\%</span>，与 <span class="math inline">\sqrt{2/N}=1\%</span> 同量级。若现场只能采到 <span class="math inline">2000</span> 拍（<span class="math inline">T_s=0.02</span> s 时 <span class="math inline">40</span> s），误差会到 <span class="math inline">3\%</span> 左右；<span class="math inline">200</span> 拍就只有 <span class="math inline">10\%</span> 的分辨率，只够发现“差一个量级”的错误，不够精调。</p>
+<p>最后一条要记住：<strong>样本量解决不了结构问题。</strong> 报告 9 里 <span class="math inline">W</span> 低估 <span class="math inline">100</span> 倍，<span class="math inline">N=20000</span> 的 E[NIS] 仍是 <span class="math inline">0.978</span>、自相关仍是本底——再采十倍数据也一样，因为单路量测下 <span class="math inline">W</span> 的标度几乎被增益吸收了。想查 <span class="math inline">W</span>，得靠别的信息：多路量测、已知激励下的响应对比，或者干脆做参数辨识。</p>
+<h3 id="一次调参记录四步四个判据">56.8.9 一次调参记录：四步、四个判据</h3>
+<p>把前面几节拼成一次完整的调参过程。假设手上有对象的 <span class="math inline">A</span>、<span class="math inline">B</span>、<span class="math inline">C</span>，传感器手册给了一个模糊的 <span class="math inline">V</span>，没有 <span class="math inline">W</span>。</p>
+<p><strong>第一步，先按手册值起手。</strong> 取 <span class="math inline">V=1</span>、<span class="math inline">W=I</span>，跑 <span class="math inline">60</span> s，记录新息。算出来 E[NIS]<span class="math inline">=1.84</span>（与报告 10 里“W 低估一千倍”那一组同量级）。判据是“均值偏离 <span class="math inline">1</span> 超过 <span class="math inline">3\sqrt{2/N}</span>”，这里 <span class="math inline">N=3000</span>，门限约 <span class="math inline">0.077</span>，<span class="math inline">1.84</span> 远超——说明滤波器自评的方差偏小。</p>
+<p><strong>第二步，反估 <span class="math inline">V</span>。</strong> 用协方差匹配：让 <span class="math inline">C\Sigma^-C^{\mathsf T}+V</span> 等于实测新息方差，解出 <span class="math inline">V</span>。报告 11 的做法与此相同，<span class="math inline">N=20000</span> 时误差在 <span class="math inline">-1.6\%</span> 到 <span class="math inline">6.0\%</span>；<span class="math inline">N=3000</span> 时按 <span class="math inline">\sqrt{2/N}</span> 估，误差约 <span class="math inline">2.6\%</span>，够用。假设反估出 <span class="math inline">V=1.97</span>，填回去，重新跑，E[NIS] 落到 <span class="math inline">0.9853</span>（报告 11 的那一行）——判据通过，噪声标度对了。</p>
+<p><strong>第三步，看响应是否够快。</strong> 前两步只保证“自洽”，不保证“好用”。此时观测器极点在 <span class="math inline">W/V\approx0.5</span> 处，比标称还慢一点。若工艺要求估计跟上 <span class="math inline">5</span> rad/s 的扰动，就把 <span class="math inline">W</span> 提到 <span class="math inline">V</span> 的 <span class="math inline">10</span> 到 <span class="math inline">100</span> 倍，极点移到 <span class="math inline">-2.97</span> 或 <span class="math inline">-3.26</span> 附近（报告 3、4 的表）。提完之后回到第二步再验一次 NIS——<span class="math inline">W</span> 变了，<span class="math inline">S</span> 也变了，E[NIS] 会跟着动，通常需要一两轮才收敛。</p>
+<p><strong>第四步，验模型。</strong> 如果第三步之后速度误差仍然大（比如超过位移误差的一半），别再动 <span class="math inline">W</span> 与 <span class="math inline">V</span> 了。报告 10 已经说明：位移误差被量测钉在 <span class="math inline">0.38</span>，速度误差才是失配的放大器，而 E[NIS] 对参数失配几乎失明（<span class="math inline">0.99</span> 看不出任何异常）。这时候该做的是辨识刚度、阻尼，或者把没测的那个状态用第二路传感器补上。</p>
+<p>四步的顺序是：查自洽、定标度、调速度、验模型。四步里只有第三步是“调”，其余三步都是“查”。经验上，绝大部分调参失败不是调得不够，而是跳过了一次查。</p>
+<h3 id="从噪声密度到-v一次单位换算">56.8.10 从噪声密度到 <span class="math inline">V</span>：一次单位换算</h3>
+<p>传感器手册给的通常不是“方差”，而是噪声密度，单位是 <span class="math inline">\mu\mathrm{g}/\sqrt{\mathrm{Hz}}</span> 或 <span class="math inline">\mathrm{mV}/\sqrt{\mathrm{Hz}}</span>。换算成 <span class="math inline">V</span> 只要一步：<span class="math inline">V=n^2B</span>，<span class="math inline">n</span> 是噪声密度，<span class="math inline">B</span> 是模拟前端的单边噪声带宽。</p>
+<p>举个数：加速度计噪声密度 <span class="math inline">10\ \mu\mathrm{g}/\sqrt{\mathrm{Hz}}</span>，抗混叠滤波带宽 <span class="math inline">100</span> Hz，则有效值 <span class="math inline">10\times\sqrt{100}=100\ \mu\mathrm{g}=9.81\times10^{-4}\ \mathrm{m/s^2}</span>，<span class="math inline">V=9.62\times10^{-7}</span>。这个数比本章用的 <span class="math inline">V=1</span> 小了六个数量级——因为本章的 <span class="math inline">V=1</span> 是“位移单位取 m、时间单位取 s”下的标称值，等价于标准差 <span class="math inline">1</span> m 的位移噪声，比任何真实传感器都大得多。这也解释了报告 8 里估计误差 RMS 高达 <span class="math inline">0.7084</span>：噪声是人为放大的，为的是让各种效应在图上看得见。</p>
+<p>换算出来之后，<span class="math inline">V_d=V/T_s</span> 就有了物理意义。<span class="math inline">T_s=0.01</span> s 时 <span class="math inline">V_d=9.62\times10^{-5}</span>，即每拍的位移噪声标准差约 <span class="math inline">9.8\times10^{-3}</span> m/s²——注意这是加速度噪声，若状态单位是位置，还要乘上传递函数的增益。</p>
+<p>这条换算还有一个副产品：它告诉你采样率取多少合适。噪声带宽 <span class="math inline">B</span> 定了，采样率取 <span class="math inline">2B</span> 到 <span class="math inline">5B</span> 就够了；再高，相邻样本开始相关，<span class="math inline">V_d=V/T_s</span> 会高估信息量（§56.4.8）。<strong>采样率的合理上限由模拟带宽决定，不由 CPU 决定。</strong></p>
+<h3 id="一页诊断表">56.8.11 一页诊断表</h3>
+<p>调参到后面，问题往往不是“怎么调”，而是“现在是什么毛病”。下表把常见现象对应到病因与处置，每一行都指向本章的一组报告。</p>
+<p><span class="math display">
+\begin{array}{c|c|c}
+\text{现象} &amp; \text{病因} &amp; \text{处置}\\
+\hline
+\mathrm{E}[\mathrm{NIS}]\gg1,\ \rho_1&lt;0 &amp; V\ \text{低估} &amp; \text{协方差匹配反估}\ V\\
+\mathrm{E}[\mathrm{NIS}]\ll1,\ \rho_1&gt;0 &amp; V\ \text{高估} &amp; \text{减小}\ V\\
+\mathrm{E}[\mathrm{NIS}]\approx1,\ \text{未测状态误差大} &amp; \text{模型失配} &amp; \text{辨识参数或加传感器}\\
+\text{误差逐段爬升} &amp; \text{发散前兆} &amp; \text{查可检测性与对称性}\\
+\text{控制量周期性打满} &amp; \text{饱和} &amp; \text{加大}\ R\ \text{或软启动}\\
+\text{估计明显滞后量测} &amp; \text{观测器太慢} &amp; \text{提高}\ W/V\\
+\text{换}\ T_s\ \text{后性能突变} &amp; \text{口径错} &amp; V_d=V/T_s,\ W_d\ \text{用积分}
+\end{array}
+\tag{56-42a}
+</span></p>
+<p>表的用法是“对号入座”，但要注意两行容易混：第一行与第四行都可能表现为“误差越来越大”。区别在时间尺度：第一行是稳态偏大但平稳，第四行是每拍都在涨。前者调 <span class="math inline">V</span>，后者查数值（§56.9.3 的 Joseph 形式、定点标度）。</p>
+<p>第三行是最容易被忽略的：所有统计量都正常，误差却大。报告 10 的位移误差 <span class="math inline">0.38</span>、E[NIS]<span class="math inline">0.99</span> 就是这一行——模型错了，而滤波器自己不知道。遇到这一行，唯一有效的办法是拿独立数据做交叉验证，别再盯着新息看。</p>
+<h2 id="优化与改进">56.9 优化与改进</h2>
+<h3 id="非线性量测ekf-把雅可比搬进来">56.9.1 非线性量测：EKF 把雅可比搬进来</h3>
+<p>本章对象是线性的，量测也是线性的。真实系统很少这么干净——位移传感器可能带三次非线性，雷达测距是平方根，视觉是透视投影。这时要么线性化，要么换滤波器。</p>
+<p>EKF 走第一条路：在当前估计处把 <span class="math inline">h(x)</span> 展开到一阶，用雅可比 <span class="math inline">H=\partial h/\partial x</span> 代替常数 <span class="math inline">C</span>，其余步骤照抄线性卡尔曼。报告 12 用一个三次量测做实验：</p>
+<p><span class="math display">
+h(x_1)=x_1+c_3x_1^3,\qquad H=\big[1+3c_3x_1^2,\;0\big]
+\tag{56-43}
+</span></p>
+<p><span class="math inline">c_3</span> 衡量非线性强度。滤波器分两种：一种偷懒，固定用 <span class="math inline">H=[1,\;0]</span>（相当于假装没有三次项）；一种每拍按当前估计重算 <span class="math inline">H</span>。两者的位移误差 RMS 是：</p>
+<p><span class="math display">
+\begin{array}{c|ccc}
+c_3 &amp; \text{固定}\ H &amp; \text{EKF} &amp; \text{误差比}\\
+\hline
+0.1 &amp; 0.4423 &amp; 0.3152 &amp; 1.40\\
+0.5 &amp; 1.6609 &amp; 0.2601 &amp; 6.39\\
+1.5 &amp; 5.0092 &amp; 0.2109 &amp; 23.75\\
+3.0 &amp; 10.0625 &amp; 0.1793 &amp; 56.14
+\end{array}
+\tag{56-44}
+</span></p>
+<figure>
+<img src="figs/ch056/fig_056_11_ekf.svg" alt="图 56-11　非线性量测下固定线性化与 EKF 的对比" /><figcaption aria-hidden="true">图 56-11　非线性量测下固定线性化与 EKF 的对比</figcaption>
+</figure>
+<p>两个现象值得说。</p>
+<p>第一，固定 <span class="math inline">H</span> 不是“慢慢变差”，是<strong>过某个摆幅就整段崩</strong>。<span class="math inline">c_3=0.1</span> 时只差 <span class="math inline">40\%</span>，<span class="math inline">c_3=0.5</span> 就差 <span class="math inline">6.4</span> 倍，<span class="math inline">c_3=1.5</span> 差 <span class="math inline">23.8</span> 倍，<span class="math inline">c_3=3.0</span> 差 <span class="math inline">56</span> 倍。原因在正反馈：真实增益是 <span class="math inline">1+3c_3x_1^2</span>，摆幅越大增益越大；滤波器却按常数 <span class="math inline">1</span> 分配权重，估计被大摆幅踢偏一次，下一次新息更大，再踢得更偏。图 56-11 左子图是双对数纵轴，红线（固定 <span class="math inline">H</span>）是直线上升，黑线（EKF）反而缓降。</p>
+<p>第二，EKF 的误差随 <span class="math inline">c_3</span> 增大而<strong>变小</strong>（<span class="math inline">0.3152</span> 降到 <span class="math inline">0.1793</span>）。这不合直觉，但有解释：量测曲线越陡，同样的量测噪声里含的状态信息越多，等效信噪比提高。这是非线性送的红利，不是 EKF 的功劳。图 56-11 右子图能看到，<span class="math inline">c_3=1.5</span> 时 EKF 的估计紧紧咬住量测的包络，而固定 <span class="math inline">H</span> 的估计被甩到 <span class="math inline">\pm15</span> 之外。</p>
+<h3 id="ukf不写雅可比用-sigma-点">56.9.2 UKF：不写雅可比，用 sigma 点</h3>
+<p>EKF 的麻烦在于雅可比。<span class="math inline">h</span> 有分段、有不可导点、有高维时，雅可比难写还容易错。UKF 换一条路：不线性化函数，而是取 <span class="math inline">2n+1</span> 个 sigma 点，让它们过一遍真函数，再用加权统计还原均值与协方差。</p>
+<p>报告 13 用 50 次蒙特卡洛比了三种做法（每段 2000 拍）：</p>
+<p><span class="math display">
+\begin{array}{c|ccc}
+c_3 &amp; \text{固定}\ H &amp; \text{EKF} &amp; \text{UKF}\\
+\hline
+1.5 &amp; 4.9529 &amp; 0.2131 &amp; 0.2085\\
+5.0 &amp; 16.6078 &amp; 0.1590 &amp; 0.1519\\
+10.0 &amp; 33.2683 &amp; 0.1325 &amp; 0.1248
+\end{array}
+\tag{56-45}
+</span></p>
+<p>UKF 比 EKF 好 <span class="math inline">2.2\%</span>、<span class="math inline">4.5\%</span>、<span class="math inline">5.8\%</span>——优势随非线性变强而变大，但始终停在个位数百分比，不会出现数量级的差距。这与理论预期一致：两者都是二阶精度，差别只在三阶以上的项。</p>
+<p>所以选 UKF 的判据不是“非线性强”，而是“雅可比难写或不连续”。若 <span class="math inline">h</span> 是光滑的解析式，EKF 更便宜（每拍一次矩阵乘），没理由换。若 <span class="math inline">h</span> 里有查表、有饱和、有开关，雅可比根本写不出来，UKF 的 <span class="math inline">2n+1</span> 次函数求值反而简单。本章对象 <span class="math inline">n=2</span>，UKF 每拍算 <span class="math inline">5</span> 次 <span class="math inline">h</span>，代价可以忽略；若 <span class="math inline">n=20</span>，就是 <span class="math inline">41</span> 次，这时要算清楚 CPU 余量。</p>
+<h3 id="数值稳定joseph-形式值不值">56.9.3 数值稳定：Joseph 形式值不值</h3>
+<p>(56-8) 第二式 <span class="math inline">P^+=(I-LC)P^-</span> 在数学上没问题，在浮点里有问题：<span class="math inline">I-LC</span> 不对称，每乘一次就制造一点不对称；<span class="math inline">P</span> 应该对称正定，实际会慢慢失去对称性，极端时失去正定性，滤波器发散。</p>
+<p>Joseph 形式换一个写法：</p>
+<p><span class="math display">
+P^+=(I-LC)P^-(I-LC)^{\mathsf T}+LVL^{\mathsf T}
+\tag{56-46}
+</span></p>
+<p>两项各自对称半正定，加起来必然对称半正定，舍入误差只能在“正”的方向上加。报告 14 从 <span class="math inline">P_0=10^6I</span> 起步跑 5000 步，每拍做完整的量测更新与时间更新：</p>
+<p><span class="math display">
+\begin{array}{c|ccc}
+\text{精度} &amp; \text{形式} &amp; \text{最大不对称量} &amp; \text{末态迹}\\
+\hline
+\text{双精度} &amp; \text{标准} &amp; 3.638\times10^{-12} &amp; 0.322950\\
+\text{双精度} &amp; \text{Joseph} &amp; 3.638\times10^{-12} &amp; 0.322950\\
+\text{单精度} &amp; \text{标准} &amp; 8.087\times10^{-4} &amp; 0.322950\\
+\text{单精度} &amp; \text{Joseph} &amp; 1.907\times10^{-6} &amp; 0.322950
+\end{array}
+\tag{56-47}
+</span></p>
+<p>双精度下两者分不出高下，都是 <span class="math inline">3.6\times10^{-12}</span>；换到单精度，标准式的不对称跳到 <span class="math inline">8.1\times10^{-4}</span>，Joseph 只有 <span class="math inline">1.9\times10^{-6}</span>，差 <span class="math inline">400</span> 倍。最小特征值两者都停在 <span class="math inline">0.145</span>，末态迹都回到 <span class="math inline">0.322950</span>——<strong>这 5000 步里没有真的发散</strong>。</p>
+<p>所以“标准式必崩”这句话言过其实。诚实地说：标准式在双精度、良态问题上够用；在单精度、定点、或 <span class="math inline">V</span> 极小（<span class="math inline">S</span> 病态）时，Joseph 的 <span class="math inline">400</span> 倍余量就是生与死。工程上的做法是：只要算力允许，一律用 Joseph；算力紧时至少每 <span class="math inline">100</span> 拍强制对称化一次（<span class="math inline">P\leftarrow(P+P^{\mathsf T})/2</span>）。</p>
+<h3 id="自适应让滤波器自己估噪声">56.9.4 自适应：让滤波器自己估噪声</h3>
+<p><span class="math inline">W</span> 与 <span class="math inline">V</span> 都是猜的，猜错了性能就掉。自适应滤波的思路是让滤波器边跑边估。报告 11 的协方差匹配是最简单的一种：</p>
+<p><span class="math display">
+\hat V_k=\frac{1}{M}\sum_{i=k-M+1}^{k}\big(\nu_i^2-\mathrm{tr}(CP^-_iC^{\mathsf T})\big)
+\tag{56-48}
+</span></p>
+<p>用一段滑动窗口内的新息平方减去模型预测的部分，剩下的就是量测噪声。<span class="math inline">M</span> 取 <span class="math inline">50</span> 到 <span class="math inline">200</span> 拍，太短噪声大，太长跟不上变化。同理可以反估 <span class="math inline">W</span>：把新息协方差的超出部分归给过程噪声。</p>
+<p>另一类做法是“渐消记忆”：每拍把 <span class="math inline">P^-</span> 乘一个略大于 <span class="math inline">1</span> 的因子 <span class="math inline">\lambda^{-1}</span>（<span class="math inline">\lambda</span> 取 <span class="math inline">0.95</span> 到 <span class="math inline">0.99</span>），强迫滤波器保持一点“不自信”。这在模型缓慢漂移时特别有效——它等价于人为放大 <span class="math inline">W</span>，但不需要知道 <span class="math inline">W</span> 是多少。代价是稳态精度略降，因为滤波器永远保留一点噪声。</p>
+<p>自适应有一个陷阱：<span class="math inline">W</span> 与 <span class="math inline">V</span> 只有一个自由度（§56.7.3），同时估两个必然不唯一。工程上的做法是固定 <span class="math inline">V</span>（传感器手册）、只估 <span class="math inline">W</span>，或者反过来。两个都估，会得到一组“自洽但漂移”的参数，跑几小时后可能跑到荒谬的值。</p>
+<h3 id="rts-平滑事后能省多少">56.9.5 RTS 平滑：事后能省多少</h3>
+<p>滤波器只用当前及以前的量测，这是因果约束。若数据是离线的（整段轨迹复盘、参数辨识、事故分析），可以用 RTS 平滑，把未来的量测也用上。算法是从最后一拍往回递推：</p>
+<p><span class="math display">
+\hat x^s_k=\hat x^+_k+G_k\big(\hat x^s_{k+1}-A_d\hat x^+_k\big),\qquad
+G_k=P^+_kA_d^{\mathsf T}(P^-_{k+1})^{-1}
+\tag{56-49}
+</span></p>
+<p>报告 18 的结果是：滤波的位移误差 RMS <span class="math inline">0.3662</span>，平滑后 <span class="math inline">0.2705</span>，压掉 <span class="math inline">26.1\%</span>；同一时刻（中段）的协方差迹从 <span class="math inline">0.3033</span> 降到 <span class="math inline">0.2425</span>。四分之一多一点，不算多，因为本章的过程噪声不小，未来量测能提供的信息有限。若 <span class="math inline">W</span> 很小、模型很准，平滑的收益会大得多。</p>
+<p>平滑对实时控制没有帮助——控制只能用当前之前的信息。它的用处是离线分析：看某次抖动到底是量测坏了还是模型错了，平滑后的轨迹能把两者分开。代价是要存下每一拍的 <span class="math inline">P^+</span>、<span class="math inline">P^-</span> 与 <span class="math inline">\hat x^+</span>，内存是滤波的 <span class="math inline">3</span> 倍。</p>
+<h3 id="ltr把裕度还回来">56.9.6 LTR：把裕度“还”回来</h3>
+<p>§56.6.5 说过，LQG 会吃掉 LQR 的裕度。LTR（Loop Transfer Recovery）是补救办法：在对象输入端注入强度为 <span class="math inline">W_{\mathrm{ltr}}=qBB^{\mathsf T}</span> 的虚拟过程噪声，把 <span class="math inline">q</span> 调大，滤波器的 <span class="math inline">L</span> 会越来越大，闭环传函逐渐逼近“只有 <span class="math inline">K</span> 没有 <span class="math inline">L</span>”的情形，LQR 的 <span class="math inline">60^\circ</span> 裕度就回来了。</p>
+<p>代价有两个。第一，<span class="math inline">L</span> 变大意味着量测噪声被放大，控制量毛刺变大，执行器磨损加快。第二，<span class="math inline">q\to\infty</span> 时 <span class="math inline">L</span> 趋于无穷，数值上不可实现，只能取有限值，裕度也就只能恢复一部分。工程上的折中是取 <span class="math inline">q</span> 使恢复后的相位裕度到 <span class="math inline">40^\circ</span> 左右，留 <span class="math inline">20^\circ</span> 给未建模动态。</p>
+<p>LTR 有一个前提：对象是最小相位的。若对象有右半平面零点，恢复过程会把零点的不稳定也一起放大，越恢复越糟。这时只能走第三条路——<span class="math inline">H_\infty</span> 或 <span class="math inline">\mu</span> 综合，把裕度直接写成约束。那是第57章的内容。</p>
+<h3 id="平方根滤波直接传播-p-的因子">56.9.7 平方根滤波：直接传播 <span class="math inline">P</span> 的因子</h3>
+<p>报告 14 比较的是“标准式”与“Joseph 形式”，两者传播的都是协方差矩阵本身。还有第三条路：不传播 <span class="math inline">P</span>，传播它的 Cholesky 因子 <span class="math inline">S</span>（<span class="math inline">P=SS^{\mathsf T}</span>），每拍用正交变换把先验阵列化成三角阵。</p>
+<p>好处是结构性的。<span class="math inline">P</span> 的条件数是 <span class="math inline">\kappa</span>，<span class="math inline">S</span> 的条件数是 <span class="math inline">\sqrt{\kappa}</span>——同样一个病态问题，平方根形式少用一半的指数范围。定点或单精度实现里，这一半往往就是“能跑”与“溢出”的分界。更关键的是，<span class="math inline">SS^{\mathsf T}</span> 永远半正定，不管舍入怎么错，滤波器都不可能算出负方差；而标准式与 Joseph 形式都只是“尽量”保持对称正定，极端情况下仍会跑出负特征值。</p>
+<p>代价是运算量：一次量测更新要做 <span class="math inline">O(n^3)</span> 的正交化（Householder 或 Givens），大约是标准式的两倍。<span class="math inline">n=2</span> 时无所谓，<span class="math inline">n=20</span> 的组合导航里就要算清楚预算。</p>
+<p>选型可以按一句话定：<strong>双精度、<span class="math inline">n</span> 小、开发期，用 Joseph 形式图省事；单精度或定点、<span class="math inline">n</span> 大、要长期无人值守，用平方根形式。</strong> 报告 14 的单精度对比（<span class="math inline">8.087\times10^{-4}</span> 对 <span class="math inline">1.907\times10^{-6}</span>）说明 Joseph 已经很能打，平方根形式是在它之上再留一层余量。</p>
+<h3 id="抗差把过大的新息夹住">56.9.8 抗差：把过大的新息夹住</h3>
+<p>前面所有讨论都假设噪声是高斯的。现场最常见的偏离不是非高斯，而是偶尔的野值：传感器被撞一下、通信校验漏了一位、A/D 被电机干扰打了一个尖峰。一个 <span class="math inline">10\sigma</span> 的野值足以让估计跳出去，而它可能几十秒才来一次。</p>
+<p>最简单的抗差做法是新息限幅：算完新息后，若 <span class="math inline">|\nu_k|&gt;k\sqrt{S_k}</span>，就把它夹到 <span class="math inline">k\sqrt{S_k}</span> 再乘增益。<span class="math inline">k</span> 取 <span class="math inline">3</span> 时，高斯假设下被误夹的概率是 <span class="math inline">0.27\%</span>（<span class="math inline">\chi^2_1&gt;9</span> 的尾概率），对正常数据几乎没有损失；而野值的影响被压到 <span class="math inline">3\sigma</span> 的水平。</p>
+<p>更讲究一点用 Huber 权：小新息原样通过，大新息按 <span class="math inline">k\sigma/|\nu|</span> 的比例缩小。它与限幅的区别在于连续——限幅在门限处有一个折角，闭环里可能激出小极限环；Huber 权是光滑的。工程上两者差别不大，代码量也差不多，选哪个看团队习惯。</p>
+<p>比抗差更重要的是分清“野值”与“模型错了”。野值是孤立的、一次性的，限幅就够；模型错了是持续的、有规律的，这时限幅只会掩盖问题——报告 10 里 W 低估一千倍造成的误差常驻 <span class="math inline">0.75</span> 到 <span class="math inline">0.93</span>，如果配上限幅，误差会被压回去一段时间，看起来“正常”了，实际越走越偏。诊断的办法还是看 NIS 的长期均值：<span class="math inline">1.84</span> 与 <span class="math inline">1.62</span> 这种持续大于 <span class="math inline">1</span> 的读数，说明是结构问题，不是野值。</p>
+<h3 id="ekf-的三处实现细节">56.9.9 EKF 的三处实现细节</h3>
+<p>EKF 的公式只有几行，但实现里有三处反复出错的细节，每一处都能让滤波器“看起来在跑、实际在错”。</p>
+<p><strong>第一，线性化点。</strong> 雅可比必须在当前拍的先验估计 <span class="math inline">\hat x^-</span> 处求，而且每拍重算。报告 12 里“固定 <span class="math inline">H</span>”那一列就是反例：它只在标称点线性化一次，之后一直用同一个 <span class="math inline">H</span>。<span class="math inline">c_3=0.1</span> 时误差还只有 <span class="math inline">0.4423</span>，<span class="math inline">c_3=3.0</span> 时涨到 <span class="math inline">10.0625</span>——因为真实增益是 <span class="math inline">1+3c_3x_1^2</span>，摆幅一大，常数 <span class="math inline">H</span> 就完全不对了。</p>
+<p><strong>第二，更新用哪个点。</strong> 状态更新与协方差更新必须用同一个线性化点。常见错误是先算 <span class="math inline">\hat x^+</span>、再用 <span class="math inline">\hat x^+</span> 求 <span class="math inline">H</span> 去更新 <span class="math inline">P</span>，这等于“用后验线性化”，在没有迭代的情况下会引入偏差。正确做法是先算 <span class="math inline">H(\hat x^-)</span>、<span class="math inline">L=P^-H^{\mathsf T}S^{-1}</span>，然后同时更新 <span class="math inline">\hat x</span> 与 <span class="math inline">P</span>。若确实想用后验点，那就老老实实做迭代 EKF：更新完在 <span class="math inline">\hat x^+</span> 处重算 <span class="math inline">H</span>，再更新一次，重复两三拍。</p>
+<p><strong>第三，角度的绕圈。</strong> 只要状态里有角度，新息就必须归一化到 <span class="math inline">(-\pi,\pi]</span>。<span class="math inline">179^\circ</span> 与 <span class="math inline">-179^\circ</span> 的真实差是 <span class="math inline">2^\circ</span>，直接相减得 <span class="math inline">358^\circ</span>，滤波器会以为出了大故障，用最大增益猛拉一下，把估计甩到反方向。这个 bug 在陀螺、罗盘、机械臂关节上极常见，而且只在跨越 <span class="math inline">\pm180^\circ</span> 的瞬间出现，测试时很容易漏掉。</p>
+<p>三条都不是数学问题，是工程细节。它们的共同点是：错了以后滤波器仍然收敛、仍然给出“合理”的曲线，只是误差比应该的大几倍。所以 EKF 上线前一定要有一组“已知真值”的对比数据，否则查不出来。</p>
+<h3 id="增益查表插值误差值不值一档内存">56.9.10 增益查表：插值误差值不值一档内存</h3>
+<p>§56.2.10 说增益序列可以预先算成表。真这么做时，第一个问题是：表要多密？</p>
+<p>报告 23 做的就是这个实验：在 <span class="math inline">\log V</span> 上等间隔取点，<span class="math inline">V</span> 从 <span class="math inline">0.01</span> 扫到 <span class="math inline">100</span>，相邻点之间对 <span class="math inline">L</span> 的两个分量做线性插值，再与精确解比：</p>
+<p><span class="math display">
+\begin{array}{c|c|c}
+\text{表长} &amp; \text{最大相对误差} &amp; \text{平均相对误差}\\
+\hline
+9 &amp; 17.0\% &amp; 6.9\%\\
+17 &amp; 4.6\% &amp; 1.7\%\\
+33 &amp; 1.45\% &amp; 0.43\%
+\end{array}
+\tag{56-55}
+</span></p>
+<p>表长 <span class="math inline">9</span> 就是“每十倍两个点”，看着已经不少，实际误差到 <span class="math inline">17\%</span>——在 <span class="math inline">V</span> 接近上界 <span class="math inline">100</span> 的那一段（<span class="math inline">V=60</span> 处 <span class="math inline">16.9\%</span>）。原因是 <span class="math inline">L</span> 随 <span class="math inline">V</span> 的衰减不是直线，越到高 <span class="math inline">V</span> 越弯，等距插值在弯曲处必然偏低。每十倍四个点（表长 <span class="math inline">17</span>）把最大误差压到 <span class="math inline">4.6\%</span>，八个点（表长 <span class="math inline">33</span>）压到 <span class="math inline">1.45\%</span>。三张表的内存分别是 <span class="math inline">9\times2</span>、<span class="math inline">17\times2</span>、<span class="math inline">33\times2</span> 个浮点数，都是几百字节的量级。</p>
+<p>这里有个更省的办法：不要在 <span class="math inline">L</span> 上插值，在 <span class="math inline">\log L</span> 上插值。报告 5 量过 <span class="math inline">\Sigma_{11}\propto V^{0.25}</span>，而 <span class="math inline">L_1=\Sigma_{11}/V\propto V^{-0.75}</span>，所以 <span class="math inline">\log L_1</span> 对 <span class="math inline">\log V</span> 整体接近一条斜率 <span class="math inline">-0.75</span> 的直线（逐段斜率在 <span class="math inline">-0.53</span> 到 <span class="math inline">-0.98</span> 之间摆动）；同样 <span class="math inline">9</span> 个点，<span class="math inline">\log</span>-<span class="math inline">\log</span> 插值的相对误差只有 <span class="math inline">0.2\%</span> 到 <span class="math inline">0.5\%</span>（报告 23）。麻烦在 <span class="math inline">L_2</span> 会变号（报告 4 里 <span class="math inline">W</span> 扫描时翻过两次），对数插值遇到零点和负值就失效，得用“带符号的对数”或分段处理。所以工程上的取舍是：<strong><span class="math inline">L</span> 全为正时用 <span class="math inline">\log</span>-<span class="math inline">\log</span> 插值，九个点就够；有变号分量时退回线性插值，表长加倍。</strong> 前者省内存，后者省心。</p>
+<p>第二个问题是：什么时候可以查表，什么时候必须在线算？判据是 <span class="math inline">L</span> 是否已经收敛。报告 2 说从 <span class="math inline">P_0=10^{6}I</span> 出发要 <span class="math inline">64</span> 步收敛，这 <span class="math inline">64</span> 步内 <span class="math inline">L</span> 在变，查表会用一个“将来的”增益，开头几十拍的瞬态就不对了。做法是前 <span class="math inline">100</span> 拍在线算（或存一段启动表），收敛后切成稳态表。若工况会让 <span class="math inline">W</span>、<span class="math inline">V</span> 缓慢漂移（温度、磨损），表还要按工况分段，段与段之间做增益淡入，否则切换瞬间控制量会跳。</p>
+<h2 id="工程落地">56.10 工程落地</h2>
+<h3 id="噪声方差的现场估法">56.10.1 噪声方差的现场估法</h3>
+<p>理论上的 <span class="math inline">V</span> 是“量测噪声的方差”，现场拿到的往往是“含对象振动的方差”。两者差很多，直接用手册值会把滤波器调得过保守。</p>
+<p>一个可操作的流程是三步。第一步，设备断电或锁定，采 <span class="math inline">30</span> 秒 <span class="math inline">y</span>，算样本方差 <span class="math inline">V_0</span>——这是纯传感器噪声。第二步，设备正常运行，采 <span class="math inline">30</span> 秒 <span class="math inline">y</span> 与 <span class="math inline">u</span>，用报告 11 的协方差匹配反估 <span class="math inline">V_1</span>。第三步，若 <span class="math inline">V_1</span> 比 <span class="math inline">V_0</span> 大很多（比如十倍），说明“视在噪声”主要来自未建模的振动，不该全算进 <span class="math inline">V</span>，而应该分一部分给 <span class="math inline">W</span>。</p>
+<p>怎么分？看新息的频谱。若新息在某个频率上有尖峰，那是未建模的模态，应该把 <span class="math inline">W</span> 在那个方向上加大（<span class="math inline">W</span> 可以不是单位阵，哪个状态抖就把对应的对角元加大）；若新息是宽带的，那是传感器噪声，归 <span class="math inline">V</span>。这一步需要一点频谱分析的工具，但比盲调有效得多。</p>
+<h3 id="定点实现的三条规矩">56.10.2 定点实现的三条规矩</h3>
+<p>单片机上的卡尔曼滤波常用定点或单精度，这时数值问题会放大。三条规矩能挡住大部分坑。</p>
+<p>第一，状态与协方差用不同的标度。状态是物理量，量级可能从 <span class="math inline">10^{-3}</span> 到 <span class="math inline">10^{3}</span>；协方差是平方量，量级跨得更开。若用同一套定点标度，协方差的小分量会被截断成零，滤波器失去方向性。做法是给 <span class="math inline">P</span> 单独定标，或者干脆用浮点（现在的 Cortex-M4F 以上都有 FPU，没必要省这点）。</p>
+<p>第二，用 Joseph 形式，并且每拍强制对称化。报告 14 的 <span class="math inline">400</span> 倍差距在单精度下是实打实的，而对称化只多两次加法。</p>
+<p>第三，除法改成乘倒数，但倒数要限幅。<span class="math inline">S=CP^-C^{\mathsf T}+V</span> 可能很小（<span class="math inline">V</span> 小、<span class="math inline">P^-</span> 小），倒数会溢出。工程上给 <span class="math inline">S</span> 设一个下限（比如 <span class="math inline">10^{-6}</span>），超过就把 <span class="math inline">L</span> 截断，相当于“这一拍不更新”。</p>
+<h3 id="丢包延迟与乱序">56.10.3 丢包、延迟与乱序</h3>
+<p>报告 19 的数字在 §56.6.6 已经给过：丢一半量测，位移误差从 <span class="math inline">0.3532</span> 涨到 <span class="math inline">0.4474</span>，多 <span class="math inline">27\%</span>。这个结果对稳定对象成立，对不稳定对象完全不成立，所以先判断对象类型再决定策略。</p>
+<p>对稳定对象，最简单的策略是“没有新量测就不更新”，只做预测步。代码上就是判断量测时间戳，若与上一拍相同就跳过更新。这样做的代价是协方差每拍都涨（因为没有量测收缩），跑久了滤波器会变得过度保守；解决办法是给 <span class="math inline">P</span> 设上限，或者每 <span class="math inline">N</span> 拍强制注入一次量测。</p>
+<p>对不稳定对象，必须在丢包时切换策略：要么保持上一次控制量（零阶保持），要么用模型预测值硬顶，要么直接切到安全模式（断电、抱闸）。三种都行，但不能“什么都不做”——不稳定对象不会等你。</p>
+<p>延迟比丢包麻烦。若延迟固定为 <span class="math inline">d</span> 拍，正确做法是把状态增广成 <span class="math inline">[x_k,\;x_{k-1},\dots,x_{k-d}]</span>，量测对应的是延迟后的那个分量。若延迟随机，只能用“延迟补偿”：用当前估计往前推 <span class="math inline">d</span> 拍，推的时候把 <span class="math inline">P</span> 也往前推，推完再更新。后者的精度差一些，但实现简单。</p>
+<p>乱序指量测到达的顺序与时间戳不一致。这在以太网、CAN 总线上常见。处理办法是按时间戳排序后再送进滤波器，不要按到达顺序。若乱序严重到无法排序，说明通信层有问题，先去修通信，不要指望滤波器能救。</p>
+<h3 id="故障检测nis-门限与卡死判据">56.10.4 故障检测：NIS 门限与卡死判据</h3>
+<p>滤波器自带的两个量可以直接做故障检测：新息与 NIS。</p>
+<p>NIS 门限：单路量测下 NIS 服从 <span class="math inline">\chi^2_1</span> 分布，<span class="math inline">99\%</span> 分位点是 <span class="math inline">6.63</span>。连续 <span class="math inline">3</span> 拍超过这个值，就认为量测异常。这个判据很灵敏，报告 9 里 <span class="math inline">V</span> 低估 <span class="math inline">25</span> 倍时 NIS 均值 <span class="math inline">16.68</span>，一拍就能抓。</p>
+<p>卡死判据：若连续 <span class="math inline">N</span> 拍新息的绝对值都小于某个阈值（比如 <span class="math inline">0.01</span> 倍量程），而控制量在变，说明传感器输出卡住了。这时应该把 <span class="math inline">V</span> 临时调到极大（等于不信这个传感器），让滤波器靠模型跑，同时报警。</p>
+<p>两个判据都要防误报。设备启动、切换工况、大扰动时 NIS 会短暂超标，所以要用“连续 <span class="math inline">N</span> 拍”而不是“单拍”。<span class="math inline">N</span> 取 <span class="math inline">3</span> 到 <span class="math inline">5</span>，配合一个短时间的滞回，基本够用。</p>
+<h3 id="初始化与重启">56.10.5 初始化与重启</h3>
+<p>冷启动时 <span class="math inline">P_0</span> 该给多大？报告 2 的答案是“给大点没坏处”：从 <span class="math inline">10^{-6}I</span> 到 <span class="math inline">10^{6}I</span>，稳态都是 <span class="math inline">0.322950</span>，收敛步数只从 <span class="math inline">33</span> 变到 <span class="math inline">64</span>。所以工程上直接给 <span class="math inline">P_0=10^{4}I</span> 或更大，让滤波器自己收。</p>
+<p>但 <span class="math inline">P_0</span> 大有一个副作用：前几拍增益接近 <span class="math inline">1</span>，估计几乎完全跟着量测走。若第一拍量测恰好有野值，估计会被拉飞。解决办法是前几拍做“野值门限”——新息超过 <span class="math inline">5\sigma</span> 就丢弃，等滤波器稳定后再放宽。</p>
+<p>重启（比如故障恢复后）要处理“无扰切换”。若控制器一直在跑，而滤波器重启，<span class="math inline">\hat x</span> 会从零开始，控制量会跳变。做法是重启时用当前控制量反推一个初值，或者让控制器在滤波器收敛前保持上一拍输出（bumpless transfer）。这一点在第44章 PID 的无扰切换里也讨论过，思路一样。</p>
+<h3 id="计算量与调度">56.10.6 计算量与调度</h3>
+<p>本章 <span class="math inline">n=2</span>、<span class="math inline">m=1</span>，一次完整的预测加更新大约是 <span class="math inline">50</span> 次浮点乘加。<span class="math inline">T_s=0.02</span> s 时占用不到 <span class="math inline">1\%</span> 的 CPU，随便什么芯片都够。</p>
+<p>规模上去就不一样了。<span class="math inline">n=20</span>、<span class="math inline">m=5</span> 时，一次更新是 <span class="math inline">O(n^2m+n^3)</span>，约 <span class="math inline">10^{4}</span> 次运算；若 <span class="math inline">T_s=1</span> ms，每秒 <span class="math inline">10^{7}</span> 次运算，需要 <span class="math inline">100</span> MHz 以上的 FPU。这时要做三件事：把 <span class="math inline">A_d</span> 的稀疏性用上（很多状态之间没有耦合）、把增益预先算成表（若 <span class="math inline">P</span> 收敛就不在线解 Riccati）、把更新与预测分到不同优先级的中断里（预测可以慢，更新必须准时）。</p>
+<p>调度上有一个常见错误：把滤波器放在低优先级任务里，控制放在高优先级。结果是控制用了旧的 <span class="math inline">\hat x</span>，等效于引入延迟。正确做法是“采样—滤波—控制”在同一次中断里顺序执行，或者用双缓冲保证控制拿到的永远是最新估计。</p>
+<h3 id="定点标度从-p_0-到稳态要多少位">56.10.7 定点标度：从 <span class="math inline">P_0</span> 到稳态要多少位</h3>
+<p>§56.10.2 说“给 <span class="math inline">P</span> 单独定标”，具体要多少位，可以算出来。</p>
+<p>本章的协方差跨度是：起步 <span class="math inline">P_0=10^6</span>（若按 <span class="math inline">10^4I</span> 则 <span class="math inline">10^4</span>），稳态最小特征值 <span class="math inline">0.1831</span>。取 <span class="math inline">\log_2</span>：<span class="math inline">10^6\approx2^{19.9}</span>，<span class="math inline">0.1831\approx2^{-2.45}</span>。要用定点表示这两个极值，整数部分需要 <span class="math inline">20</span> 位，小数部分至少要 <span class="math inline">10</span> 位才能分辨 <span class="math inline">10^{-3}</span> 量级的变化——合计 <span class="math inline">30</span> 位。32 位有符号整数只有 <span class="math inline">31</span> 位有效，<span class="math inline">Q20.10</span> 刚好卡进去，一点余量都没有。</p>
+<p>这就是为什么“定点实现卡尔曼”在工程上总是出事。三条出路：一是分阶段换标度，前 <span class="math inline">100</span> 拍用 <span class="math inline">Q20.10</span>、之后切到 <span class="math inline">Q10.20</span>，切换点靠拍数或迹的阈值判定；二是把 <span class="math inline">P</span> 归一化——每拍除以稳态迹 <span class="math inline">0.322950</span>，用无量纲的 <span class="math inline">P</span> 递推，出结果再乘回去；三是直接上浮点。Cortex-M4F 之后 FPU 基本普及，本章 <span class="math inline">n=2</span> 的计算量在 <span class="math inline">72</span> MHz 上不到 <span class="math inline">20</span> 微秒，实在没有理由为省这点算力去啃定点。</p>
+<p>若必须定点，还有一条硬规矩：每拍强制对称化并检查最小特征值。做法是把 <span class="math inline">P</span> 写成 <span class="math inline">(P+P^{\mathsf T})/2</span>，再对 <span class="math inline">\det(P)</span> 设一个下限（本章稳态行列式 <span class="math inline">0.151218</span>，可以取下限 <span class="math inline">10^{-4}</span>）。一旦触发下限，说明这一拍已经不可信，应该跳过更新或者复位滤波器，而不是硬算下去。</p>
+<h3 id="标定四步激励记录反估回归">56.10.8 标定四步：激励、记录、反估、回归</h3>
+<p>现场的噪声参数不是“读手册”能得到的，要走一遍标定。四步，每步都有明确的产出。</p>
+<p><strong>第一步，设计激励。</strong> 目标是让对象在“有代表性的工作范围”里动起来，同时不触发饱和与非线性。阶跃适合看响应，伪随机或扫频适合看频段。幅值的选择有个窍门：如果怀疑有非线性（报告 12 那种），必须用大摆幅激励，否则永远测不出来；但大摆幅又要确认执行器没饱和，否则记录到的是“限幅后的对象”。</p>
+<p><strong>第二步，记录。</strong> 至少要存四列：时间戳、量测 <span class="math inline">y</span>、指令 <span class="math inline">u</span>、实际施加 <span class="math inline">u</span>。第四列常被漏掉，而它正是 §56.6.8 那条规矩的依据。采样必须等间隔；若用事件触发，先把时间轴重采样成等间隔，否则所有统计量都会偏。</p>
+<p><strong>第三步，反估。</strong> 分两段用：静置段（设备不动）算 <span class="math inline">V</span>，因为此时 <span class="math inline">y</span> 的波动只有传感器噪声；运行段算 <span class="math inline">W</span>，用报告 11 的协方差匹配，或者用“已知激励下的响应对比”。若只有一路量测，<span class="math inline">W</span> 的可辨识性很差（报告 9 里 <span class="math inline">W</span> 低估 <span class="math inline">100</span> 倍仍然白），这时宁可保守取大一点，让滤波器多信量测。</p>
+<p><strong>第四步，回归验证。</strong> 把反估出的 <span class="math inline">(W,V)</span> 代回滤波器，用同一段数据重跑，比较三样：E[NIS] 是否接近 <span class="math inline">1</span>、新息自相关是否在本底、状态误差 RMS 是否与 <span class="math inline">\sqrt{\Sigma_{11}}</span> 同量级。三样都过，标定结束；有一样不过，回到第三步看是哪一段数据的问题。</p>
+<p>四步里最容易被跳过的是第四步。跳过它的后果是：参数看起来很合理，一上机就发现滤波器“太自信”或“太迟钝”，然后又回到盲调。</p>
+<h3 id="延迟与降采样把会不会出事量成数字">56.10.9 延迟与降采样：把“会不会出事”量成数字</h3>
+<p>§56.10.3 讲了丢包、延迟、乱序各自怎么处理，但没回答一个更实际的问题：延迟几拍才算严重？量测少采几拍会不会毁掉性能？这两个问题可以用本章的闭环仿真直接量出来。</p>
+<p>报告 21 的做法是拿标称的 <span class="math inline">K</span>、<span class="math inline">L</span>（<span class="math inline">T_s=0.02</span> s，跑 <span class="math inline">1500</span> 拍，取后半段统计，<span class="math inline">20</span> 组随机种子平均），只改量测的用法：延迟 <span class="math inline">d</span> 拍时用 <span class="math inline">d</span> 拍之前那个 <span class="math inline">y</span> 去算新息，其余照常。结果如下。</p>
+<p><span class="math display">
+\begin{array}{c|c|c|c}
+\text{延迟/拍} &amp; \text{位移 RMS} &amp; \text{速度 RMS} &amp; \text{相对无延迟}\\
+\hline
+0 &amp; 0.719205 &amp; 0.546682 &amp; 1.0000\\
+1 &amp; 0.734021 &amp; 0.540427 &amp; 1.0206\\
+2 &amp; 0.747318 &amp; 0.535221 &amp; 1.0391\\
+5 &amp; 0.786359 &amp; 0.522279 &amp; 1.0934\\
+10 &amp; 0.849236 &amp; 0.513546 &amp; 1.1808
+\end{array}
+\tag{56-51}
+</span></p>
+<p>延迟 <span class="math inline">2</span> 拍（<span class="math inline">0.04</span> s）多 <span class="math inline">3.9\%</span>，延迟 <span class="math inline">10</span> 拍（<span class="math inline">0.2</span> s）多 <span class="math inline">18.1\%</span>。这几行数字几乎落在一条直线上，可以用一条粗规则概括：</p>
+<p><span class="math display">
+\frac{\Delta\mathrm{RMS}}{\mathrm{RMS}_0}\approx\frac{1}{2}\omega_o\tau_d
+\tag{56-52}
+</span></p>
+<p>其中 <span class="math inline">\omega_o=1.836</span> 是观测器最快的极点模，<span class="math inline">\tau_d=dT_s</span>。代进去核一遍：<span class="math inline">d=2</span> 时右端 <span class="math inline">0.0367</span>，实测 <span class="math inline">0.0391</span>；<span class="math inline">d=5</span> 时 <span class="math inline">0.0918</span> 对 <span class="math inline">0.0934</span>；<span class="math inline">d=10</span> 时 <span class="math inline">0.1836</span> 对 <span class="math inline">0.1808</span>，三处偏差都在 <span class="math inline">5\%</span> 以内。这条规则的价值在于它给出了一个可用的界：若要求延迟带来的误差增量不超过 <span class="math inline">10\%</span>，就要求 <span class="math inline">\omega_o\tau_d\le0.2</span>。本章 <span class="math inline">\omega_o=1.836</span>，也就是 <span class="math inline">\tau_d\le0.11</span> s；采样周期 <span class="math inline">0.02</span> s，允许延迟五拍半。</p>
+<p>注意速度那一列是往下走的：<span class="math inline">0.546682</span> 降到 <span class="math inline">0.513546</span>，少了 <span class="math inline">6\%</span>。这不是笔误。迟到的量测与新息之间已经隔了几拍，等效于对新息做了一次低通，速度估计反而更平；位移估计则被“过时的位置”拖住，误差变大。一个变好、一个变坏，总量（迹）基本不变——<strong>延迟不会凭空制造误差，它只是把误差从速度挪到位置</strong>。这条对判断故障很有用：若现场发现速度估计异常平滑而位置总是慢半拍，先查时间戳，不要先调 <span class="math inline">W</span>。</p>
+<p>再看降采样。同样条件下，每 <span class="math inline">2</span>、<span class="math inline">4</span>、<span class="math inline">8</span> 拍才更新一次，其余拍只做预测：位移 RMS 依次是 <span class="math inline">0.724064</span>、<span class="math inline">0.730109</span>、<span class="math inline">0.746018</span>，相对每拍更新只多 <span class="math inline">0.68\%</span>、<span class="math inline">1.52\%</span>、<span class="math inline">3.73\%</span>。八倍的量测间隔只换来 <span class="math inline">3.7\%</span> 的误差增长，原因是这个对象的预测很准——<span class="math inline">A</span> 已知、<span class="math inline">W</span> 也对，预测一步的误差本来就小。</p>
+<p>两件事放在一起，得到一条容易被忽略的结论：<strong>少采不可怕，晚到才可怕。</strong> 少采的损失靠模型补，晚到的损失没有东西能补，因为模型推不出“还没发生的量测”。所以工程上优先保证时间戳对齐，其次才是提高采样率。传感器再快，若它和控制器各跑各的时钟，累积几个毫秒的相位差就等于凭空加了几拍延迟。</p>
+<p>多速率系统还要多一条规矩：控制器与滤波器不要各用各的周期。若控制 <span class="math inline">T_s=0.02</span> s、量测 <span class="math inline">0.04</span> s，正确做法是滤波器仍在 <span class="math inline">0.02</span> s 的节拍上跑，偶数拍更新、奇数拍只预测；而不是让滤波器跟着量测跑到 <span class="math inline">0.04</span> s，再把结果零阶保持给控制器。后者的等效延迟是 <span class="math inline">0.02</span> 到 <span class="math inline">0.04</span> s，按 (56-52) 就是 <span class="math inline">2\%</span> 到 <span class="math inline">4\%</span> 的额外误差，白送的。</p>
+<h2 id="优缺点与适用边界">56.11 优缺点与适用边界</h2>
+<h3 id="四条优点">56.11.1 四条优点</h3>
+<p><strong>第一，它是真正“最优”的，不是“看起来合理”的。</strong> 在所有线性、无偏、只用过去量测的估计器里，卡尔曼滤波的均方误差最小，这个结论有严格证明，不依赖参数整定。第54章的极点配置也给了一个“能用”的观测器，但它不最优，而且“多快算合适”要靠手感。卡尔曼把这件事交给噪声统计。</p>
+<p><strong>第二，它把两个互相冲突的愿望显式地兑换。</strong> 信模型还是信量测，在极点配置里是一个模糊的定性判断；在卡尔曼里是 <span class="math inline">W/V</span> 一个比值。比值定了，增益就定了，性能也就定了，中间没有黑箱。</p>
+<p><strong>第三，协方差递推与量测无关，可以离线算。</strong> 报告 2 显示收敛只花 <span class="math inline">33</span> 到 <span class="math inline">64</span> 步，稳态与初值无关；这意味着增益序列可以预先算成表，在线只做乘加。这对算力紧张的嵌入式系统很关键。</p>
+<p><strong>第四，它与 LQR 对偶，一套代码两用。</strong> 报告 1 的对偶残差 <span class="math inline">1.971\times10^{-15}</span>、增益差 <span class="math inline">0</span>，说明两个问题在数学上是同一个。学一次 Riccati，控制器与滤波器都能写。</p>
+<h3 id="六条缺点">56.11.2 六条缺点</h3>
+<p><strong>第一，它信模型。</strong> 模型错了，滤波器不会报警，只会“自信地错”。报告 10 的刚度错一倍，位移误差只涨 <span class="math inline">1\%</span>、<span class="math inline">\mathrm{E}[\mathrm{NIS}]</span> 仍是 <span class="math inline">0.99</span>，从统计量上完全看不出来。这是卡尔曼滤波最大的软肋，也是 §56.9 那些改进手段存在的理由。</p>
+<p><strong>第二，它假设高斯。</strong> 高斯假设下“均值+协方差”就是全部信息；若噪声是重尾的（有野值），卡尔曼会被野值拉飞。工程上的补救是加野值门限，或者换粒子滤波——后者计算量高两个数量级。</p>
+<p><strong>第三，它假设线性。</strong> 非线性要靠 EKF/UKF 近似，而近似会失效。报告 12 里固定线性化在 <span class="math inline">c_3=3.0</span> 时误差 <span class="math inline">10.0625</span>，是 EKF 的 <span class="math inline">56</span> 倍，这不是“稍微差一点”，是整段崩。</p>
+<p><strong>第四，它不管约束。</strong> 卡尔曼给的 <span class="math inline">\hat x</span> 可能超出物理范围（比如位移超过行程、速度超过极限），LQG 给的控制量也可能超执行器上限。约束必须外挂（饱和、抗饱和、或者换 MPC，见第58章）。</p>
+<p><strong>第五，分离原理只保极点，不保裕度。</strong> §56.6.5 已经说过，LQG 的相位裕度可以掉到没有穿越。要根据裕度设计，得走 LTR 或 <span class="math inline">H_\infty</span>（第57章）。</p>
+<p><strong>第六，参数仍然要人给。</strong> <span class="math inline">W</span>、<span class="math inline">V</span> 不是从对象方程推出来的，是估的、试的、反推的。§56.8 给了一套流程，但流程本身也要经验。所谓“卡尔曼不需要调参”是误解——它只是把“摆极点”换成了“估噪声”，难度没消失，只是换了形态。</p>
+<h3 id="与相邻方法的分工">56.11.3 与相邻方法的分工</h3>
+<p>PID（第44章、第106章）不需要模型，一条回路三个参数，调起来快。它的短板是“看不见内部状态”，对多变量、强耦合、有约束的场合力不从心。本章的 LQG 在这些场合有优势，代价是要模型、要噪声统计、要算矩阵。</p>
+<p>MPC（第58章、第80章）把约束显式写进优化，处理饱和、速率限制、多变量协调比 LQG 强。它的代价是每拍要在线解一个优化问题，算力需求高一两个数量级。选择的分界大致是：约束是“偶尔碰到”还是“经常起作用”。偶尔碰到，LQG 加饱和就够了；经常起作用，上 MPC。</p>
+<p>Smith 预估器（第47章、第107章）专治纯滞后，LQG 对纯滞后没有特别办法（只能把延迟增广进状态）。若对象的主导困难是滞后，先看 Smith；若主导困难是噪声与多变量耦合，先看 LQG。</p>
+<p>第57章的 <span class="math inline">H_\infty</span> 与 <span class="math inline">\mu</span> 综合，处理的是“模型不确定但有界”的情形。LQG 假设噪声统计已知，<span class="math inline">H_\infty</span> 假设扰动有界但分布未知，两者是互补的视角：前者赌“平均表现”，后者赌“最坏情况”。</p>
+<h3 id="什么时候不该用">56.11.4 什么时候不该用</h3>
+<p>有四种情形，用了反而更糟。</p>
+<p>第一，模型完全不可信。比如对象是强非线性、时变的，或者根本没做过辨识。这时卡尔曼的“最优”是建立在错误模型上的最优，不如直接用 PID 加滤波。</p>
+<p>第二，量测极少且不可靠。只有一路开关量、或者传感器经常卡死，滤波器的校正项基本失效，<span class="math inline">\hat x</span> 会退化成“模型外推”，误差随时间线性增长。这时应该先解决传感，而不是换算法。</p>
+<p>第三，算力或开发周期不允许。卡尔曼要矩阵库、要 Riccati 求解器、要调试工具，一套下来不是一周的事。若项目只有两个月、团队没做过状态空间，PID 是更稳的选择。</p>
+<p>第四，安全关键且无法验证。滤波器失效的模式很隐蔽（估计慢慢偏、协方差自洽），不像饱和那样一眼可见。若没有在线监控（NIS、残差、冗余比对），不建议把它放在唯一的安全回路上。</p>
+<h3 id="一张选择表">56.11.5 一张选择表</h3>
+<p><span class="math display">
+\begin{array}{c|c|c}
+\text{情形} &amp; \text{首选} &amp; \text{理由}\\
+\hline
+\text{单回路、模型粗、要求不高} &amp; \mathrm{PID} &amp; \text{无需模型，调试快}\\
+\text{多变量、状态不可全测} &amp; \mathrm{LQG} &amp; \text{估计与反馈一体}\\
+\text{约束经常起作用} &amp; \mathrm{MPC} &amp; \text{约束显式入优化}\\
+\text{主导困难是纯滞后} &amp; \mathrm{Smith} &amp; \text{专门补偿滞后}\\
+\text{模型不确定但有界} &amp; H_\infty/\mu &amp; \text{按最坏情况设计}\\
+\text{非线性强、量测非线性} &amp; \mathrm{EKF/UKF} &amp; \text{局部线性化或 sigma 点}
+\end{array}
+\tag{56-50}
+</span></p>
+<p>这张表不是绝对的。实际系统往往是组合：LQG 做基础回路，外面套一层 MPC 处理约束，再用 <span class="math inline">H_\infty</span> 验一遍鲁棒性。本章给的是其中一块积木，知道它的形状与边界，才知道该往哪儿放。</p>
+<h3 id="与滑模粒子滤波的分工">56.11.6 与滑模、粒子滤波的分工</h3>
+<p>除了第54章的 Luenberger 观测器，还有两类常见的替代品，分工很清楚。</p>
+<p><strong>滑模观测器</strong>假设“扰动有界但不知分布”。它的做法是用一个开关项把估计误差强行压到一个滑模面上，有限时间收敛，对模型误差不敏感。代价是开关项带来的抖振，以及“误差上界”要靠经验给。卡尔曼给的是统计意义下的最优与协方差；滑模给的是确定性意义下的上界。若你的验收标准是“误差不超过 <span class="math inline">x</span> mm”，滑模的话更直接；若标准是“平均误差最小”，卡尔曼更合适。</p>
+<p><strong>粒子滤波</strong>假设后验可能是多峰的。卡尔曼只维护均值与协方差，遇到双峰分布（比如机器人在两个相似位置之间“犹豫”）就会把一个峰抹平，给出一个谁都不像的均值。粒子滤波用几百到几千个样本表示整个分布，能处理多峰、强非线性、非高斯。代价是计算量高两到三个数量级，而且样本退化、重采样这些工程问题不比调参省心。报告 12 的三次非线性虽然让固定线性化崩了，但 EKF 处理得很好（误差 <span class="math inline">0.1793</span> 到 <span class="math inline">0.3152</span>），远没到需要粒子滤波的程度——<strong>非线性强度不是选粒子滤波的理由，多峰才是。</strong></p>
+<p>三者的判据可以压成一句话：噪声统计可信、后验近似单峰，用卡尔曼；不确定但有确定界、要求有限时间收敛，用滑模；后验多峰或强非线性，才考虑粒子滤波。</p>
+<h3 id="三个场景的选型实例">56.11.7 三个场景的选型实例</h3>
+<p>把上面的判据放到三个具体场合，看它怎么落地。</p>
+<p><strong>伺服位置环。</strong> <span class="math inline">n=2</span>（位置、速度），只测位置，<span class="math inline">T_s</span> 在 <span class="math inline">1</span> 到 <span class="math inline">10</span> ms。这就是本章的原型：连续解先算，<span class="math inline">W/V</span> 按“观测器比闭环快两倍”取，<span class="math inline">T_s</span> 满足 <span class="math inline">T_s\omega_o\le0.2</span>。滤波器用定常增益（稳态 <span class="math inline">L</span> 存成常数），在线只做两行乘加。这时 LQG 的收益主要在“速度不用差分”——§56.1.6 算过，差分的噪声是滤波器的 <span class="math inline">121.8</span> 倍。</p>
+<p><strong>无人机姿态环。</strong> <span class="math inline">n=6</span> 到 <span class="math inline">9</span>，陀螺与加速度计都在，<span class="math inline">T_s</span> 在 <span class="math inline">1</span> 到 <span class="math inline">4</span> ms。量测多、预测快，用协方差形式；因为姿态含角度，必须做新息绕圈（§56.9.9）。这个场合的难点不是算法，是量测模型（加速度计测的是比力，不是姿态），以及振动带来的高频噪声——后者要靠低通滤波或增大 <span class="math inline">V</span> 处理，不能靠增大 <span class="math inline">W</span>。</p>
+<p><strong>组合导航。</strong> <span class="math inline">n=15</span> 左右（位置、速度、姿态、零偏），量测来自 GNSS、里程计、视觉，更新频率参差且经常丢包。这里量测多、预测也快，但量测的“到达”是事件驱动的，用信息形式（§56.2.9）更自然：每来一路量测就加一项信息，没来的不加。丢包、乱序、延迟全在“什么时候加哪一项”里处理，比在协方差形式里改代码干净。</p>
+<p>三个场景的共同点是：<strong>结构选对了，调参才有意义。</strong> 选错结构（比如在组合导航里用协方差形式硬扛异步量测），调参只能把问题掩盖一部分。</p>
+<h3 id="一个退化情形全部状态可测时-lqg-就是-lqr">56.11.8 一个退化情形：全部状态可测时 LQG 就是 LQR</h3>
+<p>最后看一眼边界。若 <span class="math inline">C=I</span>（所有状态都能测），且量测很准（<span class="math inline">V\to0</span>），滤波器会退化成“直通”：<span class="math inline">L\to I</span>、<span class="math inline">\hat x\to y</span>，LQG 就变成了第55章的 LQR。</p>
+<p>报告 8 的第一行就是这个退化情形：用真状态反馈、不加过程噪声，峰值 <span class="math inline">|u|=0.2361</span>、RMS<span class="math inline">(u)=0.0208</span>、<span class="math inline">2\%</span> 调节 <span class="math inline">4.520</span> s，末值压到 <span class="math inline">1.72\times10^{-13}</span>。这一行与第55章的 LQR 数字逐位相同，因为它算的就是 LQR。</p>
+<p>这个退化有两层意义。第一层是验算：如果你的 LQG 在“全状态可测 + 无噪声”下跑不出 LQR 的结果，说明代码里某处多了或少了东西（最常见的是 <span class="math inline">B</span> 的维度或预测/更新的顺序）。第二层是理解：LQG 相对 LQR 多付出的全部代价，都可以归到“状态不可测”这一件事上——报告 8 里末值从 <span class="math inline">1.72\times10^{-13}</span> 变成 <span class="math inline">1.6097</span>，就是这个代价的量化。</p>
+<h3 id="对象不稳定时余地小在哪里">56.11.9 对象不稳定时，余地小在哪里</h3>
+<p>本章的对象是稳定的（极点 <span class="math inline">-1</span>、<span class="math inline">-2</span>），所以“传感器差一点就少信它一点”这条经验一直成立：报告 3 里 <span class="math inline">V</span> 从 <span class="math inline">0.001</span> 涨到 <span class="math inline">100</span>，<span class="math inline">L_1</span> 从 <span class="math inline">31.71</span> 一路掉到 <span class="math inline">0.009932</span>，几乎可以任意小。换成不稳定对象，这条经验就断了。</p>
+<p>把刚度 <span class="math inline">k</span> 从 <span class="math inline">2</span> 改成 <span class="math inline">-2</span>（负刚度弹簧），其余不变：<span class="math inline">A=\begin{bmatrix}0&amp;1\\2&amp;-3\end{bmatrix}</span>，极点是 <span class="math inline">+0.561553</span> 与 <span class="math inline">-3.561553</span>，右边那枝必须靠反馈压住。同样的 <span class="math inline">Q=I</span>、<span class="math inline">R=1</span> 下，LQR 给出 <span class="math inline">K=[4.236068,\;1.297922]</span>，比标称的 <span class="math inline">0.236068</span> 大了一个数量级；闭环极点是 <span class="math inline">-0.605599</span> 与 <span class="math inline">-3.692323</span>。</p>
+<p>报告 22 把 <span class="math inline">V</span> 从 <span class="math inline">0.01</span> 扫到 <span class="math inline">10^{6}</span>：</p>
+<p><span class="math display">
+\begin{array}{c|c|c}
+V &amp; L &amp; \text{观测器极点}\\
+\hline
+0.01 &amp; [10.280509,\;2.844432] &amp; -10.1626,\;-3.1179\\
+1 &amp; [1.635010,\;0.836628] &amp; -3.5939,\;-1.0411\\
+100 &amp; [1.130338,\;0.633832] &amp; -3.5619,\;-0.5685\\
+10^{6} &amp; [1.123106,\;0.630683] &amp; -3.5616,\;-0.5616
+\end{array}
+\tag{56-53}
+</span></p>
+<p>前三行还符合直觉：传感器越差，增益越小。但第四行露了底——<span class="math inline">V</span> 再涨四个数量级，<span class="math inline">L</span> 一位都不再动，停在 <span class="math inline">[1.123106,\;0.630683]</span>，慢极点停在 <span class="math inline">-0.5616</span>。这个数不是巧合，它正好是对象那个不稳定极点 <span class="math inline">+0.561553</span> 关于虚轴的镜像；另一个极点 <span class="math inline">-3.5616</span> 则原地不动。写成极限：</p>
+<p><span class="math display">
+\lim_{V\to\infty}\mathrm{eig}(A-LC)=\{-0.561553,\;-3.561553\}
+\tag{56-54}
+</span></p>
+<p>也就是说，<strong>不稳定对象给观测器设了一个带宽下限</strong>：最慢的那枝极点最多只能慢到“把不稳定极点镜像过来”的位置，再慢就发散。稳定对象没有这个约束，<span class="math inline">V\to\infty</span> 时 <span class="math inline">L\to0</span>，滤波器可以彻底躺平；不稳定对象不行，躺平就等于放弃。</p>
+<p>这条结论在工程上有三个直接后果。第一，传感器再差也得用，误差大是小事，丢失量测是大事——所以 §56.10.3 说“不稳定对象丢包时必须切策略”，现在可以给出定量理由：稳定对象丢一半量测误差涨 <span class="math inline">27\%</span>，不稳定对象丢的量测若让等效 <span class="math inline">V</span> 趋于无穷，慢极点就顶在 <span class="math inline">-0.56</span> 上，任何额外的延迟都会把它推进右半平面。第二，算力预算不能省在滤波器上，<span class="math inline">n=2</span> 时无所谓，<span class="math inline">n=10</span> 且有不稳定模态时，更新必须准时。第三，若确实只能拿到很差的数据，宁可加一路传感器把 <span class="math inline">V</span> 压下来，也不要去调 <span class="math inline">W</span>——<span class="math inline">W</span> 只影响快慢，改不了那个镜像下限。</p>
+<p>把 <span class="math inline">K</span> 与 <span class="math inline">L</span> 并起来，这个不稳定对象的 LQG 闭环极点是 <span class="math inline">-0.605599</span>、<span class="math inline">-3.692323</span>、<span class="math inline">-1.041115</span>、<span class="math inline">-3.593895</span>。四枝全在左半平面，分离原理照常成立；但最小阻尼的那一枝是 <span class="math inline">-0.6056</span>，比标称对象的 <span class="math inline">-1.0000</span> 慢，说明“不稳定”这件事已经从对象搬到了闭环上，裕度比第55章那个例子紧得多。</p>
+<p>这一节只改了一个符号（<span class="math inline">k</span> 由 <span class="math inline">2</span> 变 <span class="math inline">-2</span>），结论却与本章其余各节相反。所以拿到一个新对象，第一件事不是调 <span class="math inline">W</span>、<span class="math inline">V</span>，而是看它的极点有没有落在右半平面——那决定了后面所有经验是否还适用。</p>
+<h2 id="python-仿真代码">56.12 Python 仿真代码</h2>
+<h3 id="两个文件的分工">56.12.1 两个文件的分工</h3>
+<p>本章的数字来自两个文件：<code>code/ch056_sim.py</code> 产出二十三组报告，<code>code/ch056_figs.py</code> 产出十一张插图。前者只依赖 NumPy 与 SciPy，所有结果 <code>print</code> 到终端；后者不读缓存，全部通过 <code>import ch056_sim as cs</code> 重算。这样安排的目的是让正文里每个数都能在终端输出里逐字找到，而图上的曲线与正文的数字必然是同一份计算的产物。</p>
+<p><code>ch056_figs.py</code> 里 9 张数据图走 <code>plot_styles.save()</code>（同时导出 SVG 与 PDF），2 张框图走 <code>block_styles</code> 与 <code>flow_styles</code>。图内中文用纯文本、公式单独写 <code>$...$</code>，两者不混进同一字符串——这条规矩在 matplotlib 里是硬约束，混排会触发缺字形警告，中文变成方框。</p>
+<h3 id="四个核心函数">56.12.2 四个核心函数</h3>
+<p>控制器的求解器与第55章完全相同，一行没改：</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> lqr_gain(Am, Bm, Q, R):</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">&quot;&quot;&quot;连续 LQR：返回 (K, P)。&quot;&quot;&quot;</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    P <span class="op">=</span> solve_continuous_are(Am, Bm, Q, np.array([[R]]))</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    K <span class="op">=</span> np.linalg.solve(np.array([[R]]), Bm.T <span class="op">@</span> P).flatten()</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> K, P</span></code></pre></div>
+<p>滤波器的稳态解只有三行，全部借对偶性：</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> kf_ss(Am, Cm, W, V):</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">&quot;&quot;&quot;连续 Kalman 稳态解：返回 (L, Sigma)。</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="co">    Sigma 解对偶 CARE：A Sigma + Sigma A&#39; - Sigma C&#39; V^-1 C Sigma + W = 0</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="co">    &quot;&quot;&quot;</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    Sig <span class="op">=</span> solve_continuous_are(Am.T, Cm.T, W, np.array([[V]]))</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    L <span class="op">=</span> Sig <span class="op">@</span> Cm.T <span class="op">/</span> V</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> L, Sig</span></code></pre></div>
+<p>注意 <code>Am.T</code> 与 <code>Cm.T</code> 的位置：把 <span class="math inline">A</span> 转置、把 <span class="math inline">C</span> 转置后，<code>solve_continuous_are</code> 解的正是滤波器的 Riccati 方程。这一行是本章代码里最省事的一行，也是最容易写错的一行——写成 <code>solve_continuous_are(Am, Cm, ...)</code> 也能跑出结果，但那个结果对应的是另一个问题，极点会在右半平面。</p>
+<p>离散化用块矩阵指数，一次算出 <span class="math inline">A_d</span> 与 <span class="math inline">B_d</span>：</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> zoh(Am, Bm, Ts):</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">&quot;&quot;&quot;零阶保持离散化。&quot;&quot;&quot;</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    n <span class="op">=</span> Am.shape[<span class="dv">0</span>]</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    big <span class="op">=</span> np.zeros((n <span class="op">+</span> <span class="dv">1</span>, n <span class="op">+</span> <span class="dv">1</span>))</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    big[:n, :n] <span class="op">=</span> Am</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    big[:n, n:] <span class="op">=</span> Bm</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>    E <span class="op">=</span> expm(big <span class="op">*</span> Ts)</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> E[:n, :n], E[:n, n:]</span></code></pre></div>
+<p>过程噪声的离散协方差单独一个函数，梯形积分：</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> disc_noise(Am, W, Ts, n<span class="op">=</span><span class="dv">401</span>):</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">&quot;&quot;&quot;过程噪声的离散协方差：int_0^Ts e^{At} W e^{A&#39;t} dt。&quot;&quot;&quot;</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    tau <span class="op">=</span> np.linspace(<span class="fl">0.0</span>, Ts, n)</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    vals <span class="op">=</span> np.array([expm(Am <span class="op">*</span> t) <span class="op">@</span> W <span class="op">@</span> expm(Am.T <span class="op">*</span> t) <span class="cf">for</span> t <span class="kw">in</span> tau])</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> np.trapezoid(vals, tau, axis<span class="op">=</span><span class="dv">0</span>)</span></code></pre></div>
+<p>401 点是折中：再少会让 <span class="math inline">W_d</span> 的 <span class="math inline">(1,1)</span> 元误差到 <span class="math inline">1\%</span>，再多收益不明显。<span class="math inline">T_s</span> 很大时（比如 <span class="math inline">3</span> s）应加密到 <span class="math inline">2001</span> 点，因为被积函数在 <span class="math inline">\tau</span> 上的变化更快。</p>
+<p>离散稳态解把三件事串起来，并且明确规定：传进来的 <code>V</code> 已经是 <span class="math inline">V_d=V/T_s</span>。</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> dkf_ss(Am, Cm, W, V, Ts):</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">&quot;&quot;&quot;离散 Kalman 稳态解：返回 (L, Sigma_prior, A_d)。&quot;&quot;&quot;</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    Ad <span class="op">=</span> expm(Am <span class="op">*</span> Ts)</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    Wd <span class="op">=</span> disc_noise(Am, W, Ts)</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    Sig <span class="op">=</span> solve_discrete_are(Ad.T, Cm.T, Wd, np.array([[V]]))</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>    S <span class="op">=</span> Cm <span class="op">@</span> Sig <span class="op">@</span> Cm.T <span class="op">+</span> V</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>    L <span class="op">=</span> Sig <span class="op">@</span> Cm.T <span class="op">@</span> np.linalg.inv(S)</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> L, Sig, Ad</span></code></pre></div>
+<h3 id="闭环仿真三个开关">56.12.3 闭环仿真：三个开关</h3>
+<p><code>simulate_lqg</code> 是报告 8 的唯一来源，它有三个开关，分别控制“是否用真状态”、“是否加过程噪声”、“是否用真初值”。</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> simulate_lqg(Ts, N, x0, xh0, Km, Lm, V, seed<span class="op">=</span><span class="dv">1</span>, ideal<span class="op">=</span><span class="va">False</span>, W<span class="op">=</span><span class="va">None</span>):</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>    rng <span class="op">=</span> np.random.default_rng(seed)</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    Ad, Bd <span class="op">=</span> zoh(A, B, Ts)</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>    Bd <span class="op">=</span> Bd.reshape(<span class="op">-</span><span class="dv">1</span>)</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> W <span class="kw">is</span> <span class="va">None</span>:</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>        root <span class="op">=</span> np.zeros((<span class="dv">2</span>, <span class="dv">2</span>))          <span class="co"># 无过程噪声</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">else</span>:</span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>        Wd <span class="op">=</span> disc_noise(A, W, Ts)</span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>        root <span class="op">=</span> np.linalg.cholesky(Wd <span class="op">+</span> <span class="fl">1e-15</span> <span class="op">*</span> np.eye(<span class="dv">2</span>))</span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>    ...</span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> k <span class="kw">in</span> <span class="bu">range</span>(N):</span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>        u <span class="op">=</span> <span class="bu">float</span>(<span class="op">-</span>(Km <span class="op">@</span> (x <span class="cf">if</span> ideal <span class="cf">else</span> xh)))</span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>        y <span class="op">=</span> <span class="bu">float</span>((C <span class="op">@</span> x)[<span class="dv">0</span>]) <span class="op">+</span> rng.normal(<span class="fl">0.0</span>, np.sqrt(V))</span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>        inn <span class="op">=</span> y <span class="op">-</span> <span class="bu">float</span>((C <span class="op">@</span> xh)[<span class="dv">0</span>])</span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="kw">not</span> ideal:</span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>            xh <span class="op">=</span> xh <span class="op">+</span> (Lm <span class="op">@</span> np.array([[inn]])).flatten()</span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a>        x <span class="op">=</span> Ad <span class="op">@</span> x <span class="op">+</span> Bd <span class="op">*</span> u <span class="op">+</span> root <span class="op">@</span> rng.normal(<span class="fl">0.0</span>, <span class="fl">1.0</span>, <span class="dv">2</span>)</span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a>        xh <span class="op">=</span> Ad <span class="op">@</span> xh <span class="op">+</span> Bd <span class="op">*</span> u</span></code></pre></div>
+<p>三个细节值得说。第一，<span class="math inline">u</span> 在“理想”分支用真状态 <span class="math inline">x</span>，在 LQG 分支用 <span class="math inline">\hat x</span>，这是两种工况唯一的区别，其他代码完全一样——这样对比才公平。第二，<code>W=None</code> 时 <code>root</code> 是零矩阵，过程噪声整条路被掐断，用来跑“无噪声基准”。第三，<span class="math inline">\hat x</span> 的更新在 <span class="math inline">x</span> 之前，用的是当前拍的 <span class="math inline">y</span>，因果性正确；若把顺序反过来，控制量会用到未来的量测。</p>
+<p><code>cholesky</code> 后面加了 <span class="math inline">10^{-15}I</span>，是为了防止 <span class="math inline">W_d</span> 因数值误差出现极小负特征值。这个补偿在 <span class="math inline">T_s</span> 很小时必要，否则 <code>cholesky</code> 会报“矩阵不是正定”。</p>
+<h3 id="三处容易写错的地方">56.12.4 三处容易写错的地方</h3>
+<p><strong>第一，<span class="math inline">B</span> 的维度。</strong> <code>B @ K</code> 在 <code>K</code> 是一维数组时会广播错。代码里统一写成 <code>B @ K.reshape(1, -1)</code>，得到 <span class="math inline">2\times2</span> 的闭环矩阵；仿真循环里则先把 <code>Bd</code> 展平，再用 <code>Bd * u</code> 做标量乘。两种写法不能混。</p>
+<p><strong>第二，<span class="math inline">V</span> 的口径。</strong> <code>dkf_ss</code> 的 <code>V</code> 参数是<strong>每拍方差</strong>，不是连续谱密度。报告 6 的第一组故意传错（传 <span class="math inline">1</span> 而不是 <span class="math inline">1/T_s</span>），才得到 <span class="math inline">L_d/T_s</span> 从 <span class="math inline">1.6148</span> 涨到 <span class="math inline">31.2148</span> 的发散列。这个参数名应该叫 <code>Vd</code> 更清楚，保留 <code>V</code> 是为了与公式对齐。</p>
+<p><strong>第三，初始协方差的传播。</strong> 滤波器起步时 <code>P</code> 是 <span class="math inline">P_0</span>，每拍要先做量测更新（用 <span class="math inline">P^-</span>），再做时间更新（得下一拍的 <span class="math inline">P^-</span>）。若把两步写反，<span class="math inline">P</span> 会收敛到错误的稳态（差一个量测更新），极点看起来正常，增益却偏大。检查办法是看稳态迹是否等于 <code>dkf_ss</code> 给出的 <code>Sigma</code>。</p>
+<h3 id="复现与移植">56.12.5 复现与移植</h3>
+<p>在项目根目录依次执行</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="st">&quot;D:\Anaconda3\envs\py311\python.exe&quot;</span> code/ch056_sim.py</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="st">&quot;D:\Anaconda3\envs\py311\python.exe&quot;</span> code/ch056_figs.py</span></code></pre></div>
+<p>第一条约 40 秒，打印二十三组报告；第二条约 15 秒，在 <code>figs/ch056/</code> 下生成 22 个文件（11 张 SVG、11 张 PDF）。</p>
+<p>移植到嵌入式时，只需要三样东西：<code>K</code> 的两个常数、<code>L</code> 的两个常数、一个限幅。在线代码是</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co">/* 预测：先算到临时变量，避免用被覆盖的旧值 */</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>xn<span class="op">[</span><span class="dv">0</span><span class="op">]</span> <span class="op">=</span> Ad<span class="op">[</span><span class="dv">0</span><span class="op">][</span><span class="dv">0</span><span class="op">]*</span>xh<span class="op">[</span><span class="dv">0</span><span class="op">]</span> <span class="op">+</span> Ad<span class="op">[</span><span class="dv">0</span><span class="op">][</span><span class="dv">1</span><span class="op">]*</span>xh<span class="op">[</span><span class="dv">1</span><span class="op">]</span> <span class="op">+</span> Bd<span class="op">[</span><span class="dv">0</span><span class="op">]*</span>u<span class="op">;</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>xn<span class="op">[</span><span class="dv">1</span><span class="op">]</span> <span class="op">=</span> Ad<span class="op">[</span><span class="dv">1</span><span class="op">][</span><span class="dv">0</span><span class="op">]*</span>xh<span class="op">[</span><span class="dv">0</span><span class="op">]</span> <span class="op">+</span> Ad<span class="op">[</span><span class="dv">1</span><span class="op">][</span><span class="dv">1</span><span class="op">]*</span>xh<span class="op">[</span><span class="dv">1</span><span class="op">]</span> <span class="op">+</span> Bd<span class="op">[</span><span class="dv">1</span><span class="op">]*</span>u<span class="op">;</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>xh<span class="op">[</span><span class="dv">0</span><span class="op">]</span> <span class="op">=</span> xn<span class="op">[</span><span class="dv">0</span><span class="op">];</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>xh<span class="op">[</span><span class="dv">1</span><span class="op">]</span> <span class="op">=</span> xn<span class="op">[</span><span class="dv">1</span><span class="op">];</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a><span class="co">/* 更新 */</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>innov <span class="op">=</span> y <span class="op">-</span> xh<span class="op">[</span><span class="dv">0</span><span class="op">];</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>xh<span class="op">[</span><span class="dv">0</span><span class="op">]</span> <span class="op">+=</span> L<span class="op">[</span><span class="dv">0</span><span class="op">]*</span>innov<span class="op">;</span></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>xh<span class="op">[</span><span class="dv">1</span><span class="op">]</span> <span class="op">+=</span> L<span class="op">[</span><span class="dv">1</span><span class="op">]*</span>innov<span class="op">;</span></span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>u <span class="op">=</span> <span class="op">-(</span>K<span class="op">[</span><span class="dv">0</span><span class="op">]*</span>xh<span class="op">[</span><span class="dv">0</span><span class="op">]</span> <span class="op">+</span> K<span class="op">[</span><span class="dv">1</span><span class="op">]*</span>xh<span class="op">[</span><span class="dv">1</span><span class="op">]);</span></span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="op">(</span>u <span class="op">&gt;</span>  UMAX<span class="op">)</span> u <span class="op">=</span>  UMAX<span class="op">;</span></span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="op">(</span>u <span class="op">&lt;</span> <span class="op">-</span>UMAX<span class="op">)</span> u <span class="op">=</span> <span class="op">-</span>UMAX<span class="op">;</span></span></code></pre></div>
+<p>这里有一个隐藏的坑：若不引入 <code>xn</code> 而直接写 <code>xh[0] = ...</code>，第二行预测就会用到已经被改过的 <code>xh[0]</code>，结果悄悄算错。这个错误在仿真里不会出现（用的是 NumPy 的向量运算），在 C 里是每天都会发生的经典 bug，写完必须用一组已知数据手算核对。</p>
+<p>Riccati 方程不需要在目标机上解。真正需要在线重解的只有两种情况：对象参数随工况变（用增益调度，离线算好几张表），或者要在线调权重。前者是常规做法，后者通常不值得——一张 <span class="math inline">2\times2</span> 的表只占几十字节，而在线解 DARE 要几千行代码。</p>
+<h3 id="从仿真到产品六步移植顺序">56.12.6 从仿真到产品：六步移植顺序</h3>
+<p>仿真跑通不等于能上机。按下面的顺序走，每一步都有一个可判定的通过条件。</p>
+<p><strong>第一步，换模型。</strong> 把 <code>ch056_sim.py</code> 里的 <span class="math inline">A</span>、<span class="math inline">B</span>、<span class="math inline">C</span> 换成自己的，<span class="math inline">W</span>、<span class="math inline">V</span> 按 §56.10 的方法估。跑报告 1 与报告 7：对偶残差应在 <span class="math inline">10^{-12}</span> 以下，极点并集差也应在同一量级。</p>
+<p><strong>第二步，定采样周期。</strong> 用连续解的最快极点算 <span class="math inline">T_s\omega_o</span>，要求不超过 <span class="math inline">0.2</span>。跑报告 15 的扫描，确认 <span class="math inline">T_s</span> 处的 <span class="math inline">\mathrm{tr}(\Sigma_d)</span> 与 <span class="math inline">L_d/T_s</span> 偏离连续解都在 <span class="math inline">1\%</span> 以内。</p>
+<p><strong>第三步，出常数表。</strong> 把 <span class="math inline">K</span>、<span class="math inline">L</span> 与 <span class="math inline">A_d</span>、<span class="math inline">B_d</span> 打印到 <span class="math inline">17</span> 位有效数字。少打几位，定点或单精度下的闭环会与仿真差出可观的量——尤其 <span class="math inline">A_d</span> 的元素接近 <span class="math inline">1</span> 时。</p>
+<p><strong>第四步，写 C 并回放比对。</strong> 这是最关键的一步。用 Python 生成一段 <span class="math inline">y</span> 与 <span class="math inline">u</span> 序列（存成文本），喂给 C 实现，把 C 输出的 <span class="math inline">\hat x</span> 与 Python 的输出逐拍比较。判据是最大绝对误差小于 <span class="math inline">10^{-9}</span>（双精度）或 <span class="math inline">10^{-6}</span>（单精度）。§56.12.5 里那个 <code>xn</code> 的别名 bug，只有在回放比对里才会暴露——在仿真里 NumPy 的向量运算替你把旧值保住了。</p>
+<p><strong>第五步，半实物。</strong> 控制器接真实传感器与执行器，但对象用仿真模型（或者机械上锁）。这一段的目的是抓“接口问题”：量纲（mm 还是 m）、符号（正方向）、时间戳对齐、限幅位置。判据是 C 的估计与仿真模型的真值误差与仿真一致。</p>
+<p><strong>第六步，闭环小增益起步。</strong> 先把 <span class="math inline">K</span> 乘 <span class="math inline">0.3</span> 上机，确认不振荡、不饱和，再逐步加到额定。每一步都看三样：控制量峰值、新息 NIS、估计与量测的差。任何一样异常就退回上一步。</p>
+<p>六步里最容易被压缩掉的是第四、第五步，而这两步恰恰是唯一能抓住实现级错误的环节。仿真再漂亮，也证明不了 C 代码写对了。</p>
+<h3 id="拿这两个脚本改自己的题">56.12.7 拿这两个脚本改自己的题</h3>
+<p>本章的两个脚本是当模板写的，改自己的题只需要动三处。</p>
+<p><strong>第一处，对象。</strong> <code>ch056_sim.py</code> 顶部的 <code>A</code>、<code>B</code>、<code>C</code> 三行换成你的模型。若是二阶机械系统，<span class="math inline">A=\begin{bmatrix}0&amp;1\\-k/m&amp;-c/m\end{bmatrix}</span>，改 <span class="math inline">k</span>、<span class="math inline">c</span>、<span class="math inline">m</span> 即可。若对象有纯积分（<span class="math inline">k=0</span>），开环极点变成 <span class="math inline">0</span> 与 <span class="math inline">-c/m</span>，可检测性仍然成立（位移可测、速度由积分关系可观），但闭环极点会有一个靠近原点，<span class="math inline">2\%</span> 调节时间变长。</p>
+<p><strong>第二处，噪声。</strong> <code>W</code> 与 <code>V</code> 换成按 §56.10.1 估出的值。<span class="math inline">W</span> 允许不是单位阵：哪个状态抖得厉害就把对应对角元加大。若你的量测不止一路，把 <span class="math inline">C</span> 改成矩阵、<span class="math inline">V</span> 改成矩阵，<code>kf_ss</code> 与 <code>run_kf</code> 都不用改——矩阵形式在代码里是通用的。</p>
+<p><strong>第三处，图与报告。</strong> 报告里的打印格式是按 <span class="math inline">2</span> 状态写的，状态维数变了要调格式串；图里的 <code>fig_03_ellipse</code> 只对二阶有意义（协方差椭圆），高维要换成特征值谱或者几个主要方向的投影。</p>
+<p>改完之后跑三个自检：报告 1 验对偶残差，报告 2 验初值无关，报告 7 验极点拼接。三个都过，说明模型替换没有破坏代码的数学结构，可以开始调参了。</p>
+<p>有一条边界要说明：本章的 <span class="math inline">W</span> 与 <span class="math inline">V</span> 都假设互相独立、且与状态无关。若你的过程噪声与量测噪声相关（比如量测里含控制量的直接耦合），或者噪声强度随工况变（比如风速随速度变），本章的代码只能给一个近似，严格做法要么扩状态、要么用相关噪声的滤波方程。这两种都超出本章范围，遇到时需要另找资料。</p>
+<h3 id="八条断言把验收变成可执行的检查">56.12.8 八条断言：把验收变成可执行的检查</h3>
+<p>“看起来对”不是验收标准。下面八条都能写成一句断言，跑不出绿就别往下走。每条后面括号里是本章的实测值，用来当量级参考，不是硬门限。</p>
+<p><strong>第一条，对偶残差。</strong> 把 <span class="math inline">L</span> 代进对偶 CARE，残差应小于 <span class="math inline">10^{-10}</span>（本章 <span class="math inline">1.971\times10^{-15}</span>）。这一条抓的是“<span class="math inline">A</span>、<span class="math inline">C</span> 有没有转置错”。</p>
+<p><strong>第二条，对偶增益差。</strong> 用 <span class="math inline">(A^{\mathsf T},C^{\mathsf T},W,V)</span> 跑 LQR，得到的 <span class="math inline">K</span> 应与 <span class="math inline">L^{\mathsf T}</span> 逐位相同（本章差 <span class="math inline">0</span>）。第一条过而第二条不过，说明求解器返回的 <span class="math inline">P</span> 没有对称化。</p>
+<p><strong>第三条，极点并集。</strong> LQG 四阶极点应等于 <span class="math inline">K</span> 闭环极点与 <span class="math inline">L</span> 观测器极点的并集，误差在同一量级（本章 <span class="math inline">2.442\times10^{-15}</span>）。这一条抓的是“分离原理有没有被代码破坏”，比如误把 <span class="math inline">L</span> 用在了 <span class="math inline">A_d</span> 而不是 <span class="math inline">A</span> 上。</p>
+<p><strong>第四条，协方差合法。</strong> <span class="math inline">\Sigma</span> 对称、正定，行列式为正（本章迹 <span class="math inline">1.008918</span>、行列式 <span class="math inline">0.151218</span>）。若行列式变成负数，说明某一拍更新把 <span class="math inline">P</span> 算坏了，先查有没有用 <code>inv</code> 而不是 <code>solve</code>。</p>
+<p><strong>第五条，标度不变。</strong> <span class="math inline">(W,V)</span> 同乘 <span class="math inline">\beta</span> 后 <span class="math inline">L</span> 不变（本章最大差 <span class="math inline">4.44\times10^{-16}</span>），<span class="math inline">\Sigma</span> 恰好乘 <span class="math inline">\beta</span>。这条最便宜，却最能抓“量纲混用”——若你的代码里 <span class="math inline">V</span> 忘了折算 <span class="math inline">T_s</span>，这一条立刻红。</p>
+<p><strong>第六条，初值无关。</strong> <span class="math inline">P_0</span> 从 <span class="math inline">10^{-6}I</span> 到 <span class="math inline">10^{6}I</span>，稳态迹应一致到六位（本章都是 <span class="math inline">0.322950</span>），收敛步数在几十拍量级（<span class="math inline">33</span> 到 <span class="math inline">64</span>）。若稳态随 <span class="math inline">P_0</span> 变，说明递推里混进了与 <span class="math inline">P_0</span> 有关的常数项。</p>
+<p><strong>第七条，新息自洽。</strong> 稳态段的 E[NIS] 在 <span class="math inline">0.9</span> 到 <span class="math inline">1.1</span> 之间，一阶自相关 <span class="math inline">|\rho_1|&lt;2/\sqrt{N}</span>。本章假设全对时 <span class="math inline">N=20000</span>、E[NIS]<span class="math inline">=0.9773</span>、<span class="math inline">\rho_1=-0.0121</span>，门限 <span class="math inline">2/\sqrt{N}\approx0.0141</span>，刚好在界内；<span class="math inline">V</span> 低估 <span class="math inline">25</span> 倍时 <span class="math inline">\rho_1</span> 掉到 <span class="math inline">-0.2471</span>，一眼可见。前六条都是代数检查，只有这一条在检验“噪声假设是否成立”。</p>
+<p><strong>第八条，退化对照。</strong> 把 <span class="math inline">C</span> 换成 <span class="math inline">I</span>、<span class="math inline">V</span> 取极小、<span class="math inline">W</span> 取零，输出应与第55章的 LQR 逐位一致（本章末值 <span class="math inline">1.72\times10^{-13}</span>）。这一条抓的是“预测与更新的顺序”——顺序反了，退化情形照样收敛，但数字对不上。</p>
+<p>八条里前六条是纯代数，不需要数据，几毫秒就能跑完，应该在每次改代码后自动跑；后两条需要一段仿真数据，放在提交前跑。这样分工的好处是：真正的数值 bug 在几毫秒内暴露，而统计性质的偏差不会被误判成代码错误。</p>
+<p>还要提醒一句：八条全绿只说明“这套线性的、高斯的世界里自洽”，不说明模型对。§56.8.4 那个刚度错一倍的例子，八条断言一条都不会红，因为滤波器从头到尾都很“自信”。所以真正的验收还得加一条不属于代码的检查：拿一段独立工况的数据，把估计误差与真值（或高精度参考）比一次。代码能证明自己没写错，数据才能证明模型没错。</p>
+
+<nav class="footnav"><a href="ch055.html">← 上一章</a><a href="index.html">返回目录</a><a href="ch057.html">下一章 →</a></nav>
+</body>
+</html>

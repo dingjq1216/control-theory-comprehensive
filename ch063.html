@@ -1,0 +1,1840 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="zh-CN" xml:lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>第 63 章　鲁棒控制进阶 · 控制大综合</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    span.underline{text-decoration: underline;}
+    div.column{display: inline-block; vertical-align: top; width: 50%;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    ul.task-list{list-style: none;}
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+  <link rel="stylesheet" href="assets/book.css" />
+  <script src="assets/katex/katex.min.js"></script>
+  <script>document.addEventListener("DOMContentLoaded", function () {
+   var mathElements = document.getElementsByClassName("math");
+   var macros = [];
+   for (var i = 0; i < mathElements.length; i++) {
+    var texText = mathElements[i].firstChild;
+    if (mathElements[i].tagName == "SPAN") {
+     katex.render(texText.data, mathElements[i], {
+      displayMode: mathElements[i].classList.contains('display'),
+      throwOnError: false,
+      macros: macros,
+      fleqn: false
+     });
+  }}});
+  </script>
+  <link rel="stylesheet" href="assets/katex/katex.min.css" />
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+  <link rel="stylesheet" href="assets/site.css" />
+</head>
+<body>
+<nav class="topnav"><a class="home" href="index.html">目录</a><span class="pos">063 / 115</span><span class="pager"><a href="ch062.html">上一章</a><a href="ch064.html">下一章</a></span></nav>
+
+<nav id="TOC" role="doc-toc">
+<ul>
+<li><a href="#第-63-章-鲁棒控制进阶">第 63 章 鲁棒控制进阶</a>
+<ul>
+<li><a href="#动机与直观理解">63.1 动机与直观理解</a></li>
+<li><a href="#数学原理">63.2 数学原理</a></li>
+<li><a href="#设计步骤">63.3 设计步骤</a></li>
+<li><a href="#连续情形">63.4 连续情形</a></li>
+<li><a href="#离散情形">63.5 离散情形</a></li>
+<li><a href="#稳定性与性能">63.6 稳定性与性能</a></li>
+<li><a href="#参数意义与作用">63.7 参数意义与作用</a></li>
+<li><a href="#调参方法与经验">63.8 调参方法与经验</a></li>
+<li><a href="#优化与改进">63.9 优化与改进</a></li>
+<li><a href="#工程落地">63.10 工程落地</a></li>
+<li><a href="#优缺点与适用边界">63.11 优缺点与适用边界</a></li>
+<li><a href="#python-仿真代码">63.12 Python 仿真代码</a></li>
+</ul></li>
+</ul>
+</nav>
+<h1 id="第-63-章-鲁棒控制进阶">第 63 章 鲁棒控制进阶</h1>
+<p>第 62 章把“噪声有多大”变成了可以计算的方差下界，前提是模型准确。现实的回路里，模型从来不准：阀门的实际流通能力是铭牌值的 1.4 倍，物料的停留时间随产量在 0.5 到 1.5 秒之间漂，管壁结垢让时间常数一年里翻了一番。鲁棒控制要回答的是：<strong>在这些“不准”同时发生、并且发生在最坏的那个组合上时，回路还能不能稳、性能会掉到多少、为了不掉下去要付什么代价。</strong> 本章把这三个问题都落到同一台一阶惯性加纯延迟的对象上，用实测数字回答。</p>
+<h2 id="动机与直观理解">63.1 动机与直观理解</h2>
+<h3 id="一条标称漂亮现场失控的回路">63.1.1 一条“标称漂亮、现场失控”的回路</h3>
+<p>先看一个具体的对照。对象是一阶惯性加纯延迟</p>
+<p><span class="math display">
+P(s)=\frac{K}{Ts+1}e^{-\theta s}
+\tag{63-1}
+</span></p>
+<p>标称参数 <span class="math inline">K_0=2.0</span>、<span class="math inline">T=5</span> s、<span class="math inline">\theta_0=1.0</span> s。现场给出两个不确定区间：增益 <span class="math inline">K\in[1.2,\,3.0]</span>，也就是标称值的 <span class="math inline">-40\%</span> 到 <span class="math inline">+50\%</span>；延迟 <span class="math inline">\theta\in[0.5,\,1.5]</span> s，即 <span class="math inline">\pm0.5</span> s。这两个区间的来源很朴素——增益的不确定来自阀门特性与流量系数的偏差，延迟的不确定来自输送管路的长度与流速变化。注意时间常数 <span class="math inline">T</span> 在这里被当作已知，这是本章刻意做的一个简化：把不确定性限制在两个参数上，才能把“最坏情况”逐个顶点枚举出来核对。</p>
+<p>在这台对象上设计三个 PI 控制器，参数分别取 <span class="math inline">(k_p,T_i)=(0.60,10)</span>、<span class="math inline">(1.00,6)</span>、<span class="math inline">(1.80,3)</span>，指标列在表 63-1 里。</p>
+<table style="width:100%;">
+<colgroup>
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">控制器</th>
+<th style="text-align: right;"><span class="math inline">k_p</span></th>
+<th style="text-align: right;"><span class="math inline">T_i</span></th>
+<th style="text-align: right;"><span class="math inline">\omega_c</span> /(rad/s)</th>
+<th style="text-align: right;">相位裕度 /(°)</th>
+<th style="text-align: right;">标称 <span class="math inline">\lvert S\rvert</span> 峰值</th>
+<th style="text-align: right;">最坏 <span class="math inline">\lvert S\rvert</span> 峰值</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">保守 PI</td>
+<td style="text-align: right;">0.60</td>
+<td style="text-align: right;">10.0</td>
+<td style="text-align: right;">0.18</td>
+<td style="text-align: right;">98.2</td>
+<td style="text-align: right;">1.212</td>
+<td style="text-align: right;">1.562</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">折中 PI</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">6.0</td>
+<td style="text-align: right;">0.39</td>
+<td style="text-align: right;">71.9</td>
+<td style="text-align: right;">1.420</td>
+<td style="text-align: right;">2.522</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">激进 PI</td>
+<td style="text-align: right;">1.80</td>
+<td style="text-align: right;">3.0</td>
+<td style="text-align: right;">0.76</td>
+<td style="text-align: right;">37.3</td>
+<td style="text-align: right;">2.297</td>
+<td style="text-align: right;">86.249</td>
+</tr>
+</tbody>
+</table>
+<p>表 63-1　三个 PI 在标称点与最坏点上的灵敏度峰值</p>
+<p>表的最后两列是全章最重要的一个对照。折中 PI 在标称点上 <span class="math inline">\lvert S\rvert</span> 峰值 1.420，看起来比保守 PI 的 1.212 只差一点，但它已经用上了 71.9° 的相位裕度；一旦把对象推到最坏端点，<span class="math inline">\lvert S\rvert</span> 峰值跳到 2.522。激进 PI 的落差更极端：标称 2.297，最坏 86.249，<strong>相差 37 倍</strong>。而到了时域，激进 PI 在 <span class="math inline">K=3.0</span>、<span class="math inline">\theta=1.5</span> 这个端点上直接发散，阶跃响应的峰值冲到 50.462，按超调算就是 4626.75%。</p>
+<p>这就是“标称设计”最典型的失败方式：<strong>设计者看到的是一张 Bode 图，而现场运行的是那张图上的另一个点。</strong> 更麻烦的是，最坏点不在标称点附近，它落在参数区间的角上，而设计时用来画图的那条曲线恰好不经过那里。</p>
+<h3 id="不确定性从哪来两个数就够描述">63.1.2 不确定性从哪来：两个数就够描述</h3>
+<p>把不确定性写进框图是本章的第一个动作。图 63-1 给出标准形式：标称对象 <span class="math inline">P_0(s)</span> 之外挂一个“误差块” <span class="math inline">\Delta</span>，真实对象是 <span class="math inline">P_0</span> 与 <span class="math inline">\Delta</span> 的某种组合。乘性形式写作</p>
+<p><span class="math display">
+P(s)=P_0(s)\bigl[1+W(s)\Delta(s)\bigr],\qquad \lVert\Delta\rVert_\infty\le1
+\tag{63-2}
+</span></p>
+<p>其中 <span class="math inline">W(s)</span> 是<strong>不确定性权重</strong>，它的模在每一频率上给出“允许的误差半径”；<span class="math inline">\Delta</span> 是一个模不超过 1 的任意稳定传递函数，代表“误差落在半径内的哪个方向”。这个分解看起来抽象，实际含义很直接：<span class="math inline">W</span> 回答“我有多不确定”，<span class="math inline">\Delta</span> 回答“我不确定成什么样子”。鲁棒控制的全部结论都要对<strong>所有</strong>满足 <span class="math inline">\lVert\Delta\rVert_\infty\le1</span> 的 <span class="math inline">\Delta</span> 成立，这就是“最坏情况”的数学含义。</p>
+<figure>
+<img src="figs/ch063/fig_063_01_structure.svg" alt="图 63-1　乘性不确定性下的标准反馈结构" /><figcaption aria-hidden="true">图 63-1　乘性不确定性下的标准反馈结构</figcaption>
+</figure>
+<p>图 63-1 里，<span class="math inline">W</span> 与 <span class="math inline">\Delta</span> 串在对象的前向通道上，<span class="math inline">K(s)</span> 是控制器。判据要回答的问题是：当 <span class="math inline">\Delta</span> 在单位球里任意游走时，闭环极点会不会跑到右半平面去。</p>
+<p>权重 <span class="math inline">W</span> 从哪来？本章用两个区间直接算。增益的相对误差半径是</p>
+<p><span class="math display">
+w_K=\max\left(\frac{K_{\max}}{K_0}-1,\;1-\frac{K_{\min}}{K_0}\right)=0.500
+\tag{63-3}
+</span></p>
+<p>延迟的误差则不是加减关系，它进入的是 <span class="math inline">e^{-j\omega\theta}</span> 这个相位因子。取 <span class="math inline">\theta=\theta_0+\Delta\theta</span>、<span class="math inline">|\Delta\theta|\le0.5</span> s，两块相除得到</p>
+<p><span class="math display">
+\bigl|e^{-j\omega\theta}-e^{-j\omega\theta_0}\bigr|
+=\bigl|e^{-j\omega\Delta\theta}-1\bigr|
+=2\bigl|\sin(\omega\Delta\theta/2)\bigr|
+\tag{63-4}
+</span></p>
+<p>这个式子说明延迟误差的“半径”随频率增长，低频几乎为零、高频以 <span class="math inline">\omega\Delta\theta</span> 的速度线性上升。这一点和增益误差完全不同——增益误差在整个频段上是一个常数 0.500，延迟误差却是一条随频率抬头的曲线。两条曲线怎么合成一个 <span class="math inline">W</span>，是 §63.2 要处理的技术细节，而合成的不同做法带来的保守性差别，是本章给出的第一个定量结论。</p>
+<h3 id="三条路小增益qftmu">63.1.3 三条路：小增益、QFT、<span class="math inline">\mu</span></h3>
+<p>面对式 (63-2) 这种结构，历史上有三条技术路线，它们的区别只在“怎么处理 <span class="math inline">\Delta</span>”。</p>
+<p><strong>第一条是小增益定理。</strong> 它把 <span class="math inline">\Delta</span> 当成一个范数不超过 1 的黑箱，完全不看它的内部结构，直接要求“环路增益小于 1”：</p>
+<p><span class="math display">
+\lVert W T\rVert_\infty&lt;1
+\tag{63-5}
+</span></p>
+<p>好处是简单，一句话就能判；坏处是它把 <span class="math inline">\Delta</span> 当成“最恶毒的任意扰动”，而实际的不确定性往往只作用在少数几个通道上，小增益定理看不见这个限制，于是给出偏保守的结论。</p>
+<p><strong>第二条是定量反馈理论（QFT）。</strong> 它不解析地处理 <span class="math inline">\Delta</span>，而是把不确定性“画”出来：把参数区间里所有可能的对象频率响应都算一遍，在尼科尔斯图上形成一片“模板”（template），然后要求控制器把这片模板整体推到满足指标的边界之外。QFT 的强项是<strong>直接把性能指标画在图上</strong>——比如“所有情况下 <span class="math inline">\lvert S\rvert\le2.2</span>”就是一条边界线，设计者用眼睛看控制器够不够。它的弱项是设计过程依赖人工试凑，模板一多（多个参数同时不确定）就非常费力。</p>
+<p><strong>第三条是 <span class="math inline">\mu</span> 分析。</strong> 它试图把前两条的优点合起来：既保留 <span class="math inline">\Delta</span> 的结构信息（哪些通道有不确定性、各自多大），又给出一个可以计算的数。结构化奇异值 <span class="math inline">\mu</span> 的定义是</p>
+<p><span class="math display">
+\mu_\Delta(M)=\frac{1}{\min\{\bar\sigma(\Delta):\ \Delta\in\boldsymbol{\Delta},\ \det(I-M\Delta)=0\}}
+\tag{63-6}
+</span></p>
+<p>分母是“能使 <span class="math inline">I-M\Delta</span> 奇异的最小 <span class="math inline">\Delta</span> 有多大”，取倒数就是“离奇异还有多远”。<span class="math inline">\mu&lt;1</span> 意味着单位球内的任何 <span class="math inline">\Delta</span> 都不会破坏稳定，<span class="math inline">\mu&gt;1</span> 意味着存在一个破坏稳定的 <span class="math inline">\Delta</span>。<span class="math inline">\mu</span> 的准确值一般算不出来，工程上用的是上界</p>
+<p><span class="math display">
+\mu_\Delta(M)\le\min_{D\in\mathbf{D}}\bar\sigma\bigl(DMD^{-1}\bigr)
+\tag{63-7}
+</span></p>
+<p><span class="math inline">D</span> 是一族与 <span class="math inline">\Delta</span> 结构交换的标定矩阵。这个上界就是“<span class="math inline">\mu</span> 分析”实际在算的东西。</p>
+<p>三条路的关系可以一句话说清：<strong>小增益是 <span class="math inline">\mu</span> 在“完全不给结构信息”时的特例，QFT 是 <span class="math inline">\mu</span> 在“用图形代替计算”时的特例。</strong> 本章把三条都跑一遍，用同一台对象、同一组指标，让它们的保守性差别变成可以比较的数字。</p>
+<h3 id="一个反直觉的结论结构信息不一定换来放松">63.1.4 一个反直觉的结论：结构信息不一定换来放松</h3>
+<p>教科书介绍 <span class="math inline">\mu</span> 时，最常举的例子是“<span class="math inline">\mu</span> 比小增益判据放松好几倍”，读完之后很容易形成一个印象：<strong>只要把结构信息喂进去，保守性就会大幅下降。</strong> 本章的实测给出的答案要冷一些。</p>
+<p>看式 (63-2) 这个结构：增益误差与延迟误差是<strong>串在同一个点上</strong>的，它们乘在一起进入环路。对这种“两块不确定性进入同一点”的情形，结构化奇异值退化为两个半径的<strong>直接相乘</strong>：</p>
+<p><span class="math display">
+\mu=\lVert T\rVert_\infty\cdot\Bigl[\bigl(1+w_K\bigr)\bigl(1+w_\theta(\omega)\bigr)-1\Bigr]
+\tag{63-8}
+</span></p>
+<p>而小增益判据在同样的分解下要求的也是同一个式子小于 1。<strong>两式恒等。</strong> 换句话说，在这个最常见的单回路结构里，<span class="math inline">\mu</span> 分析一个数都没放松——它不是“更好的判据”，只是“同一判据的另一种写法”。（式 63-8 方括号里那个“乘积再减一”的形式，§63.2 会说明它为什么不是简单地把两个半径加起来。）</p>
+<p>放松确实存在，但它出现在另一个地方：<strong>鲁棒性能</strong>。把性能指标也写成 <span class="math inline">\Delta</span> 的形式（一个虚拟的、代表“允许的最大灵敏度”的块），互联矩阵就从 <span class="math inline">1\times1</span> 变成 <span class="math inline">2\times2</span>，这时结构信息才真正起作用。§63.6 的实测是：未结构化的 <span class="math inline">\bar\sigma</span> 峰值 1.7194，<span class="math inline">\mu</span> 上界峰值 1.6456，比值 <strong>1.411</strong>——也就是说 <span class="math inline">\mu</span> 只放松了约 4%，远不是教科书举例里常见的数倍。</p>
+<p>这个结论的工程含义很直接：<strong>如果你的不确定性只有一块、或者几块都挤在同一个信号点上，那么做 <span class="math inline">\mu</span> 分析是白费力气，小增益判据给出的数一模一样。</strong> <span class="math inline">\mu</span> 值得做的场合是“多通道、性能与稳定同时约束”，也就是回路数大于一、或者要把灵敏度指标一起算进去的时候。判断这件事只需要看互联矩阵的维数，不需要任何计算。</p>
+<h3 id="保守性是有价格的性能代价悬崖">63.1.5 保守性是有价格的：性能代价悬崖</h3>
+<p><span class="math inline">\mu</span> 判据是充分条件，所以它保守。保守的代价是性能——为了让 <span class="math inline">\mu</span> 小于 1，设计者必须把带宽压低，而带宽就是“回路能多快”。这条代价曲线不是线性的，它有一个悬崖。</p>
+<p>实验 4b 在固定约束（最坏 <span class="math inline">\lvert S\rvert\le2.2</span>、高频环路增益 <span class="math inline">\lvert L(2)\rvert\le0.5</span>）下，把二阶控制器族的穿越频率 <span class="math inline">\omega_c</span> 逐档抬高，记录能达到的最坏灵敏度峰值：</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;"><span class="math inline">\omega_c</span> /(rad/s)</th>
+<th style="text-align: right;">0.17</th>
+<th style="text-align: right;">0.23</th>
+<th style="text-align: right;">0.28</th>
+<th style="text-align: right;">0.33</th>
+<th style="text-align: right;">0.38</th>
+<th style="text-align: right;">0.43</th>
+<th style="text-align: right;">0.48</th>
+<th style="text-align: right;">0.53</th>
+<th style="text-align: right;">0.58</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">最坏 <span class="math inline">\lvert S\rvert</span></td>
+<td style="text-align: right;">1.377</td>
+<td style="text-align: right;">1.520</td>
+<td style="text-align: right;">1.683</td>
+<td style="text-align: right;">1.941</td>
+<td style="text-align: right;">2.798</td>
+<td style="text-align: right;">3.131</td>
+<td style="text-align: right;">4.976</td>
+<td style="text-align: right;">8.348</td>
+<td style="text-align: right;">21.786</td>
+</tr>
+</tbody>
+</table>
+<p>表 63-2　穿越频率与可达最坏灵敏度的代价关系（2 阶族）</p>
+<p>从 0.17 抬到 0.33，最坏 <span class="math inline">\lvert S\rvert</span> 从 1.377 涨到 1.941，涨了 41%，还算温和。再抬到 0.38 就跳到 2.798，0.58 直接到 21.786。<strong>拐点在 <span class="math inline">\omega_c\approx0.33</span> 附近，约等于 <span class="math inline">0.35\,\omega_b</span></strong>（<span class="math inline">\omega_b=0.15</span> rad/s 是灵敏度权重的带宽参数，见 §63.2）。</p>
+<p>这条悬崖的解释在相位上。延迟误差在高频段提供的相位不确定性约为 <span class="math inline">\omega\Delta\theta</span>，<span class="math inline">\omega=0.33</span> 时是 0.165 rad，还压得住；<span class="math inline">\omega=0.58</span> 时是 0.29 rad，加上对象本身的相位滞后，最坏点的相位裕度被吃光，控制器只能靠“提高增益硬顶”，而高增益又把灵敏度峰值顶上去，两头一起恶化。</p>
+<p>所以“鲁棒设计能要多快”有一个硬答案：<strong>要不到 <span class="math inline">0.35\,\omega_b</span> 以上。</strong> 这个数是本章用同一台对象、同一组约束扫出来的，换对象要重扫，但“存在悬崖、悬崖位置由延迟不确定性决定”这个结构是普遍的。</p>
+<h3 id="保守性的另一面它买到了什么">63.1.6 保守性的另一面：它买到了什么</h3>
+<p>前面几节都在说保守的坏处，容易得出“保守是坏事”的印象。反过来看一次同一条对照：激进 PI 与鲁棒二阶控制器（<span class="math inline">(k_p,T_i,z,p)=(2.40,10,0.40,0.10)</span>）在四个顶点上的阶跃表现。</p>
+<table>
+<colgroup>
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">顶点 <span class="math inline">(K,\theta)</span></th>
+<th style="text-align: right;">激进 PI 超调</th>
+<th style="text-align: right;">激进 PI <span class="math inline">\max\lvert y\rvert</span></th>
+<th style="text-align: right;">鲁棒二阶超调</th>
+<th style="text-align: right;">鲁棒二阶 <span class="math inline">\max\lvert y\rvert</span></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">(1.2, 0.5)</td>
+<td style="text-align: right;">8.58%</td>
+<td style="text-align: right;">1.086</td>
+<td style="text-align: right;">7.56%</td>
+<td style="text-align: right;">1.076</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">(1.2, 1.5)</td>
+<td style="text-align: right;">40.72%</td>
+<td style="text-align: right;">1.407</td>
+<td style="text-align: right;">15.29%</td>
+<td style="text-align: right;">1.153</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">(3.0, 0.5)</td>
+<td style="text-align: right;">18.26%</td>
+<td style="text-align: right;">1.183</td>
+<td style="text-align: right;">12.27%</td>
+<td style="text-align: right;">1.123</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">(3.0, 1.5)</td>
+<td style="text-align: right;">4626.75%</td>
+<td style="text-align: right;">50.462</td>
+<td style="text-align: right;">41.65%</td>
+<td style="text-align: right;">1.417</td>
+</tr>
+</tbody>
+</table>
+<p>表 63-3　两个控制器在不确定性区间四个顶点上的阶跃响应</p>
+<p>在三个顶点上，鲁棒二阶的超调都比激进 PI 更低或相当，代价是调节时间从 12 s 量级拉长到 20 s 量级。到了第四个顶点，激进 PI 发散，鲁棒二阶的超调 41.65%、峰值 1.417。<strong>保守性买到的是“最坏那一点上不崩”。</strong></p>
+<p>300 组随机参数（<span class="math inline">K</span>、<span class="math inline">\theta</span> 在区间内均匀取样，seed=63）给出了同一结论的统计版本：激进 PI 有 56.3% 的样本灵敏度峰值越界 2.2，鲁棒二阶是 0.0%；灵敏度峰值的 95% 分位数分别是 15.379 与 1.901。</p>
+<p>这也解释了为什么现场对“鲁棒”这个词常常有抵触：<strong>它的收益全部落在尾部，而尾部平时看不到。</strong> 一个回路一年可能只在某个极端工况下进入最坏点一次，那一次会不会停机，取决于当初设计时有没有为它留出余量。鲁棒设计做的就是这笔保险，保费是常态下的响应速度。</p>
+<h3 id="本章的骨架">63.1.7 本章的骨架</h3>
+<p>后面的安排是：§63.2 建立乘性不确定性、权重合成、小增益、<span class="math inline">\mu</span> 与 <span class="math inline">D</span> 标定这一套数学，重点讲清“两块进入同一点时 <span class="math inline">\mu</span> 退化”的来由；§63.3 把它压成六步设计流程；§63.4 讨论连续情形的频域设计与 QFT 边界；§63.5 给离散实现与采样周期的选择；§63.6 用实测数据回答“稳不稳、性能掉多少、<span class="math inline">\mu</span> 有多保守”；§63.7 逐个解释 <span class="math inline">K</span>、<span class="math inline">\theta</span>、<span class="math inline">W</span>、<span class="math inline">\omega_b</span>、<span class="math inline">M_S</span> 的作用；§63.8 给调参顺序与一次完整实录；§63.9 讲 <span class="math inline">\mu</span> 综合、<span class="math inline">H_\infty</span> 与降低保守性的几条改进路线；§63.10 讲不确定性建模的工程方法与控制器复杂度的取舍；§63.11 划边界；§63.12 给可复现代码。</p>
+<p>一句话概括本章的立场：<strong>鲁棒控制的产出不是一个更聪明的控制器，而是一张“最坏情况下会怎样”的地图。</strong> 这张地图告诉你三件事——稳定边界在哪、性能能要到多高、以及为这两者要付多少速度。它不保证常态下跑得最快，但它保证你不会在某个没想到的角落里翻车。</p>
+<h3 id="动手之前先拆三个误会">63.1.8 动手之前先拆三个误会</h3>
+<p>这三个误会几乎每次技术讨论都会出现，先把它们拆掉，后面的数学才不会被误读。</p>
+<p><strong>误会一：鲁棒性等于抗干扰。</strong> 两者不是一回事。抗干扰说的是“外部扰动进来，回路能压掉多少”，它由灵敏度函数 <span class="math inline">S</span> 在扰动频段的幅值决定，本质是一个<strong>性能</strong>问题；鲁棒性说的是“对象本身和我以为的不一样，回路还成不成立”，它由补灵敏度 <span class="math inline">T</span> 与误差权重 <span class="math inline">W</span> 的乘积决定，本质是一个<strong>生存</strong>问题。本章的对象在没有扰动、没有噪声的纯阶跃下就可能发散（激进 PI 在最坏顶点就是这样），此时抗干扰指标完全无从谈起。反过来说，一个抗干扰很好的慢回路可能在参数漂移下悄悄失去稳定裕度——它平时“看起来很好”，直到某天换了一批原料。<strong>两条指标要分开算、分开看</strong>，这是本章把 <span class="math inline">\lvert S\rvert</span> 与 <span class="math inline">\mu</span> 并列列出的原因。</p>
+<p><strong>误会二：<span class="math inline">\mu</span> 是“更高级的判据”，所以一定更松。</strong> §63.1.4 已经给出了反例：在“两块串在同一点”的结构里，<span class="math inline">\mu</span> 与小增益判据逐字相同。这件事的根源不在数值计算，而在结构——<span class="math inline">\mu</span> 的全部本事来自 <span class="math inline">D</span> 标定能把不同信号点上的块“折算”开，若所有块本来就叠在同一个标量因子上，<span class="math inline">D</span> 里只剩一个标量，折算了等于没折算。本章最终的实测把这条说得很死：<span class="math inline">2\times2</span> 的鲁棒性能矩阵确实带来了放松，但峰值处只有 4.5%。<strong>判据的“高级”程度不决定放松多少，结构的“分散”程度才决定。</strong></p>
+<p><strong>误会三：既然保守，那就把余量再放大一点更安全。</strong> 保守不是免费的，它的价格写在那条代价曲线上：<span class="math inline">\omega_c</span> 从 0.17 抬到 0.33，最坏 <span class="math inline">\lvert S\rvert</span> 只涨 41%；可一旦越过 0.33 的拐点，同样的增益增量换来的是 2.798、8.348、21.786 这样的跳变。反方向也一样：为了把某个裕度再放大 10%，往往要把带宽压掉三成，常态性能直接退一档。<strong>余量要按“能算清的保守量”给，不是按“心里踏实”给。</strong> 本章的做法是每一处保守都标出数字——磁盘宽 40%–60%、<span class="math inline">\mu</span> 判据保守 66%、<span class="math inline">\mu</span> 相对 <span class="math inline">\bar\sigma</span> 只放松 4.5%——数字摆出来之后，“再加一点”这种冲动才有讨论的基础。</p>
+<p>把这三个误会拆掉，本章剩下的工作就是一件事：把“不确定”从一句形容词变成一组可以代入的数字，然后诚实地把最坏情况算出来。</p>
+<h3 id="四级台阶本章站在哪一级">63.1.9 四级台阶：本章站在哪一级</h3>
+<p>频域里的鲁棒性判断有四条路，它们不是互相替代的新旧方法，而是四级台阶，每往上一级就多问一个问题。</p>
+<p><strong>第一级：相位裕度与增益裕度。</strong> 它只问一件事——把增益乘大多少倍、把相位再拖后多少度，回路开始振。两个数都是<strong>单个工作点</strong>上的读数，默认对象就是标称那个。这一级的成本几乎为零，第 44 章的整定口诀全部建立在这一级上。</p>
+<p><strong>第二级：磁盘加小增益。</strong> 它多问一句：如果对象不是一个点而是一片，最坏那片会不会顶到临界点？做法是把参数区间折成一个半径 <span class="math inline">w(\omega)</span>，再要求 <span class="math inline">\lvert T\rvert w&lt;1</span>。这一级第一次把“不确定性有多大”变成了一个可以填进公式的数字，代价是要先接受一个模型（乘性误差），也要先接受一个可能偏宽的包络——本章 §63.2.2 那个 40%–60% 的保守量就产生在这里。</p>
+<p><strong>第三级：<span class="math inline">\mu</span> 与结构。</strong> 它再问一句：这些不确定性是不是各自独立的？如果是，能不能把它们的“最坏方向”分开算，从而少保守一点？这一级需要把回路画成 <span class="math inline">M</span>-<span class="math inline">\Delta</span> 互联，需要 <span class="math inline">D</span> 标定，也需要接受“上界不等于真值”这件事。本章实测的收获只有 4.5%，但收获小不等于方法错——收获小恰恰是一个可靠的结论：<strong>在这个结构里，第二级已经把能拿的都拿到了。</strong></p>
+<p><strong>第四级：时域与统计复核。</strong> 前三级都是频域判据，都是充分条件，都可能保守，也都有可能在网格之间漏掉东西。第四级用顶点阶跃和随机抽样把结论验一遍，它不产生新的判据，只负责“证明前面没有算漏”。本章 300 组随机里激进 PI 越界 56.3%、鲁棒设计 0.0%，这个对比就是第四级给出的最终裁决。</p>
+<p>四级台阶的关系可以这样记：<strong>第一级看一个点，第二级看一片，第三级看一片里各块的独立性，第四级看这片在时间轴上真正会发生什么。</strong> 越往上，模型要求越多、算得越慢，换来的确定性也越具体。工程上不需要每章都爬到顶——本章最后停在第三级做设计、用第四级验收，这就是一个够用的组合。</p>
+<h3 id="一次推演不做鲁棒分析会怎样">63.1.10 一次推演：不做鲁棒分析会怎样</h3>
+<p>把本章的激进 PI 当成一个“只做标称设计”的样本，走一遍它会遇到的三个月。</p>
+<p><strong>设计阶段。</strong> 工程师在标称点（<span class="math inline">K=2.0</span>、<span class="math inline">\theta=1.0</span>）上调参，目标是“响应快一点”。<span class="math inline">k_p=1.8</span>、<span class="math inline">T_i=3</span> 给出标称穿越频率 0.76 rad/s、相位裕度 37.3°、标称曲线看上去还能接受——放在投运报告里，这是一份不错的整定。</p>
+<p><strong>第一个月，一切正常。</strong> 负荷稳定、管道新、<span class="math inline">K</span> 就在 2.0 附近。趋势上看不出任何问题。</p>
+<p><strong>第二个月，负荷上来。</strong> <span class="math inline">K</span> 从 2.0 涨到 2.6，回路增益相应涨 30%，等效于把 <span class="math inline">k_p</span> 推到 2.34。这个等效增益落在表 63-10 里 2.20 与 3.20 之间，那一带的阶跃峰值已经是 50.214 与 53.330——<strong>不是“超调偏大”，而是持续振荡</strong>。操作工的反应通常是“把设定值改小一点”，波形看上去被压下去了，但回路仍在边界外面。</p>
+<p><strong>第三个月，管道结垢，<span class="math inline">\theta</span> 从 1.0 涨到 1.3。</strong> <span class="math inline">\omega_c\theta</span> 从 0.76 涨到 0.99 rad，相位再掉 13°，两个方向的不利变化叠在一起。本章实验 7 的实测是：这个控制器在 <span class="math inline">K=3.0</span>、<span class="math inline">\theta=1.5</span> 顶点上超调 4626.75%，峰值冲到 50 以上，等于开环。300 组随机参数里有 56.3% 的样本最坏 <span class="math inline">\lvert S\rvert</span> 超过 2.2——<strong>也就是说，这个设计在参数空间里“多半不合格”，只是标称那一点恰好合格。</strong></p>
+<p><strong>事后看，三个判断都错了。</strong> 第一，把标称指标当成了全工况指标——标称 37.3° 的裕度，被延迟那十几度吃掉之后所剩无几。第二，把最坏工况当成了“极端情况”——高负荷加结垢是每年都要出现的常态组合，不是事故。第三，把“调设定值”当成了解决办法——它压住的是症状，回路仍然在边界外面运行。</p>
+<p><strong>换成鲁棒设计，代价是什么？</strong> 本章的答案很具体：最坏顶点超调 41.65%、调节时间 22 s，而激进 PI 在最好的顶点上只要 12 s。<strong>用慢一倍换“不会崩”，这就是全部的交易。</strong> 这笔交易划不划算，取决于这条回路停一次要损失多少——这正是 §63.11.5 第一题要问的。</p>
+<p>需要说明的是，这段推演不是某个工厂的真实事故，而是本章那三个候选控制器的完整画像按时间顺序排开。<strong>它想说明的只有一件事：标称设计与鲁棒设计的分歧不在数学，而在“你打算为哪一天做设计”。</strong></p>
+<h2 id="数学原理">63.2 数学原理</h2>
+<h3 id="从参数区间到乘性误差">63.2.1 从参数区间到乘性误差</h3>
+<p>§63.1 用的是“参数区间”的说法，判据要用的是“传递函数的误差”。两者之间的桥是乘性误差：</p>
+<p><span class="math display">
+E_m(j\omega)=\frac{P(j\omega)-P_0(j\omega)}{P_0(j\omega)}
+\tag{63-9}
+</span></p>
+<p>把式 (63-1) 代入，<span class="math inline">T</span> 与 <span class="math inline">s</span> 都约掉，只剩两个参数：</p>
+<p><span class="math display">
+E_m(j\omega)=\frac{K}{K_0}e^{-j\omega(\theta-\theta_0)}-1
+\tag{63-10}
+</span></p>
+<p>这一步很关键：<strong>时间常数不进入乘性误差</strong>。<span class="math inline">T</span> 的偏差只改变 <span class="math inline">1/(Ts+1)</span> 这个因子，而它在分子分母里同时出现，比值里被消掉了——除非把 <span class="math inline">T</span> 也放进不确定集，那时 <span class="math inline">E_m</span> 里会多出 <span class="math inline">\frac{T_0s+1}{Ts+1}-1</span> 一项。本章把 <span class="math inline">T</span> 固定，正是为了让式 (63-10) 里只剩“增益比”和“相位差”两件事，便于把几何关系看清楚。</p>
+<p>式 (63-10) 是一个复平面上的映射：<span class="math inline">K/K_0</span> 在 <span class="math inline">[0.6,\,1.5]</span> 上取值，<span class="math inline">e^{-j\omega\Delta\theta}</span> 在单位圆上转过 <span class="math inline">|角度|\le\omega\cdot0.5</span> 的一段弧。所有可能的 <span class="math inline">E_m</span> 构成一个“扇形环”，我们要用一个<strong>以原点为圆心、半径 <span class="math inline">w(\omega)</span> 的圆盘</strong>把它整个盖住。这个 <span class="math inline">w(\omega)</span> 就是不确定性权重。</p>
+<h3 id="两种磁盘三角不等式的胜负">63.2.2 两种磁盘：三角不等式的胜负</h3>
+<p>盖住的方法至少有两种，看上去都合理。</p>
+<p><strong>第一种是半径直接相加。</strong> 把增益误差看成半径 <span class="math inline">w_K=0.5</span> 的圆盘，把延迟误差看成半径</p>
+<p><span class="math display">
+w_\theta(\omega)=2\left|\sin\frac{\omega\Delta\theta}{2}\right|
+\tag{63-11}
+</span></p>
+<p>的圆盘，两块“并联”就得到 <span class="math inline">w_{\text{lin}}=w_K+w_\theta</span>。</p>
+<p><strong>第二种是把两块乘起来。</strong> 因为真实的误差是式 (63-10) 这种乘积形式，用三角不等式拆：</p>
+<p><span class="math display">
+\bigl|(1+\delta_K)e^{-j\varphi}-1\bigr|
+=\bigl|(1+\delta_K)(e^{-j\varphi}-1)+\delta_K\bigr|
+\le(1+w_K)w_\theta+w_K
+\tag{63-12}
+</span></p>
+<p>于是 <span class="math inline">w_{\text{prod}}=(1+w_K)(1+w_\theta)-1</span>。</p>
+<p>两者的区别是<strong>乘法还是加法</strong>。<span class="math inline">w_{\text{prod}}-w_{\text{lin}}=w_Kw_\theta</span>，差的就是那个交叉项。哪个更好，取决于交叉项该不该算。实测把答案摆在表 63-4 里。</p>
+<table style="width:100%;">
+<colgroup>
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: right;"><span class="math inline">\omega</span> /(rad/s)</th>
+<th style="text-align: right;">真实最大半径</th>
+<th style="text-align: right;">线性磁盘 <span class="math inline">w_{\text{lin}}</span></th>
+<th style="text-align: right;">乘积磁盘 <span class="math inline">w_{\text{prod}}</span></th>
+<th style="text-align: right;"><span class="math inline">w_{\text{lin}}/</span>真实</th>
+<th style="text-align: right;"><span class="math inline">w_{\text{prod}}/</span>真实</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">0.05</td>
+<td style="text-align: right;">0.5009</td>
+<td style="text-align: right;">0.5251</td>
+<td style="text-align: right;">0.5377</td>
+<td style="text-align: right;">1.048</td>
+<td style="text-align: right;">1.073</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">0.20</td>
+<td style="text-align: right;">0.5148</td>
+<td style="text-align: right;">0.6002</td>
+<td style="text-align: right;">0.6503</td>
+<td style="text-align: right;">1.166</td>
+<td style="text-align: right;">1.263</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">0.50</td>
+<td style="text-align: right;">0.5855</td>
+<td style="text-align: right;">0.7487</td>
+<td style="text-align: right;">0.8730</td>
+<td style="text-align: right;">1.279</td>
+<td style="text-align: right;">1.491</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">0.7839</td>
+<td style="text-align: right;">0.9929</td>
+<td style="text-align: right;">1.2394</td>
+<td style="text-align: right;">1.267</td>
+<td style="text-align: right;">1.581</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">2.00</td>
+<td style="text-align: right;">1.2714</td>
+<td style="text-align: right;">1.4544</td>
+<td style="text-align: right;">1.9316</td>
+<td style="text-align: right;">1.144</td>
+<td style="text-align: right;">1.519</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">5.00</td>
+<td style="text-align: right;">2.3788</td>
+<td style="text-align: right;">2.3989</td>
+<td style="text-align: right;">3.3484</td>
+<td style="text-align: right;">1.008</td>
+<td style="text-align: right;">1.408</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">6.28</td>
+<td style="text-align: right;">2.5000</td>
+<td style="text-align: right;">2.5000</td>
+<td style="text-align: right;">3.5000</td>
+<td style="text-align: right;">1.000</td>
+<td style="text-align: right;">1.400</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">10.00</td>
+<td style="text-align: right;">2.4965</td>
+<td style="text-align: right;">1.6969</td>
+<td style="text-align: right;">2.2954</td>
+<td style="text-align: right;"><strong>0.680</strong></td>
+<td style="text-align: right;"><strong>0.919</strong></td>
+</tr>
+</tbody>
+</table>
+<p>表 63-4　真实误差半径与两种磁盘模型的覆盖性（<span class="math inline">\omega</span> 单位 rad/s）</p>
+<figure>
+<img src="figs/ch063/fig_063_02_template.svg" alt="图 63-2　真实误差半径与两种磁盘模型" /><figcaption aria-hidden="true">图 63-2　真实误差半径与两种磁盘模型</figcaption>
+</figure>
+<p>读这张表要先看一个此前容易被忽略的事实：<strong>线性相加在中频段确实更紧，但它不是上界。</strong></p>
+<p>在 <span class="math inline">\omega=1</span> 附近，线性磁盘比真实半径大 27%，乘积磁盘大 58%。看起来线性磁盘“保守性小得多”，很多教材也是这么推荐的。但“更紧”和“有效”是两件事：线性磁盘的紧是靠运气——它把增益误差与相位误差当成两笔互不相干的开销去相加，而式 (63-10) 显示它们是<strong>相乘</strong>的。当相位误差很小（低频）时，两者数值接近；当相位误差变大，交叉项 <span class="math inline">w_Kw_\theta</span> 就不可忽略，线性相加开始低估。</p>
+<p>低估从 <span class="math inline">\omega\Delta\theta&gt;\pi</span> 开始变得严重。<span class="math inline">\Delta\theta=0.5</span> s 对应 <span class="math inline">\omega=6.28</span> rad/s，表里这一行线性磁盘恰好等于真实半径（两者都是 2.5），再往上走就系统性失守：<span class="math inline">\omega=10</span> 时线性磁盘只到真实半径的 68%，低估了 47%。</p>
+<p>乘积磁盘的表现是另一回事。它在 <span class="math inline">\omega\le6.28</span> 的整段上都是有效上界，代价是最坏处宽了 58%。到了 <span class="math inline">\omega=10</span>，它也只到真实半径的 92%——这一处不是磁盘模型本身的问题，而是式 (63-11) 的适用范围问题：<span class="math inline">2|\sin(\omega\Delta\theta/2)|</span> 是“相位差走到端点时的误差”，只有当 <span class="math inline">\omega\Delta\theta\le\pi</span> 时它才等于“整段弧上的最大误差”；一旦弧长超过半圆，区间内的最大值封顶在 2，公式却继续按正弦往下走。把式 (63-11) 里的正弦项在外面套一个“与 1 取小”（即 <span class="math inline">w_\theta=2\min\{|\sin(\omega\Delta\theta/2)|,1\}</span>）就处处正确了。本章的代码用的是未封顶的版本，因为设计带宽在 0.33 rad/s 量级，<span class="math inline">\omega\Delta\theta</span> 只有 0.17，离 <span class="math inline">\pi</span> 差 18 倍；表里 <span class="math inline">\omega&gt;6.28</span> 的两行是为了把失效机理摊开给人看才保留的。</p>
+<p><strong>结论落在工程选择上：用乘积磁盘，不要用线性相加。</strong> 它在关心的频段内严格有效，多付的 40%–60% 余量远比“低估 47%”安全。如果嫌它太宽，正确的降保守性办法不是换成加法，而是把延迟误差单独作为一个块处理——这正是 §63.2.5 与 §63.6 要讨论的结构化路线。</p>
+<h3 id="小增益定理">63.2.3 小增益定理</h3>
+<p>有了 <span class="math inline">w(\omega)</span>，稳定判据就可以写出来。闭环特征方程是 <span class="math inline">1+P_0(1+W\Delta)C=0</span>，整理成“<span class="math inline">1+</span>某某<span class="math inline">\cdot\Delta=0</span>”的形式：</p>
+<p><span class="math display">
+1+W\Delta\cdot\frac{P_0C}{1+P_0C}=0
+\quad\Longrightarrow\quad
+1+W T\Delta=0
+\tag{63-13}
+</span></p>
+<p>小增益定理说：如果 <span class="math inline">\lVert WT\rVert_\infty&lt;1</span>，那么对任意 <span class="math inline">\lVert\Delta\rVert_\infty\le1</span>，式 (63-13) 都不会有右半平面根。理由很直接——<span class="math inline">1+WT\Delta</span> 的零点等价于 <span class="math inline">-1/(WT)</span> 是 <span class="math inline">\Delta</span> 的取值，而后者模不超过 1，前者模大于 1，两者碰不上。</p>
+<p>写成频率逐点形式更便于画图：</p>
+<p><span class="math display">
+\lvert W(j\omega)T(j\omega)\rvert&lt;1,\qquad \forall\omega
+\tag{63-14}
+</span></p>
+<p>判据的几何意义是“<span class="math inline">T</span> 的 Nyquist 曲线必须落在半径 <span class="math inline">1/|W|</span> 的禁区之外”。禁区随频率变化，在高频处半径变小（<span class="math inline">W</span> 变大），所以高频段是主要战场。</p>
+<p>小增益定理是<strong>充分不必要</strong>的。它把 <span class="math inline">\Delta</span> 当成“可以任意挑方向的复增益”，而真实的不确定性往往只能沿某几个方向走。这个“方向限制”就是结构信息，用它可以把判据放松——但能不能放松，要看结构长什么样。</p>
+<h3 id="结构化奇异值定义与-d-标定上界">63.2.4 结构化奇异值：定义与 <span class="math inline">D</span> 标定上界</h3>
+<p>把 <span class="math inline">\Delta</span> 换成一个有内部结构的块对角矩阵</p>
+<p><span class="math display">
+\boldsymbol{\Delta}=\bigl\{\mathrm{diag}(\delta_1I_{r_1},\dots,\delta_mI_{r_m},\Delta_1,\dots,\Delta_f):\ \lVert\Delta_i\rVert\le1\bigr\}
+\tag{63-15}
+</span></p>
+<p>其中 <span class="math inline">\delta_i</span> 是标量块（重复标量），<span class="math inline">\Delta_i</span> 是满块。结构化奇异值定义为</p>
+<p><span class="math display">
+\mu_{\boldsymbol{\Delta}}(M)=\frac{1}{\min\{\bar\sigma(\Delta):\ \Delta\in\boldsymbol{\Delta},\ \det(I-M\Delta)=0\}}
+\tag{63-16}
+</span></p>
+<p>若集合为空（任何单位球内的 <span class="math inline">\Delta</span> 都不能让 <span class="math inline">I-M\Delta</span> 奇异），约定 <span class="math inline">\mu=0</span>。这个定义的读法是：<strong><span class="math inline">\mu</span> 是“到最近一次奇异”的距离的倒数</strong>。<span class="math inline">\mu=0.5</span> 意味着要把 <span class="math inline">\Delta</span> 放大两倍才能破坏稳定；<span class="math inline">\mu=2</span> 意味着单位球里就有一个破坏稳定的 <span class="math inline">\Delta</span>。</p>
+<p><span class="math inline">\mu</span> 的精确值一般算不出来（它是 NP 难的），工程上用上下界夹：</p>
+<p><span class="math display">
+\max_{U\in\mathbf{U}}\rho(UM)\le\mu_{\boldsymbol{\Delta}}(M)\le\min_{D\in\mathbf{D}}\bar\sigma\bigl(DMD^{-1}\bigr)
+\tag{63-17}
+</span></p>
+<p>上界里的 <span class="math inline">D</span> 是与 <span class="math inline">\Delta</span> 结构<strong>交换</strong>的正定对角阵集合，<span class="math inline">\mathbf{D}=\{\mathrm{diag}(d_1I_{r_1},\dots,d_mI_{r_m},I):\ d_i&gt;0\}</span>。它之所以能放松，是因为 <span class="math inline">D\Delta=\Delta D</span>，于是 <span class="math inline">\det(I-M\Delta)=\det(I-DMD^{-1}\Delta)</span>，把 <span class="math inline">M</span> 换成 <span class="math inline">DMD^{-1}</span> 不改变奇异性的存在性，但改变了 <span class="math inline">\bar\sigma</span>。</p>
+<p>这个“能换”就是全部的技巧所在。如果 <span class="math inline">M</span> 只有一个标量块，<span class="math inline">\mathbf{D}</span> 里只有一个标量 <span class="math inline">d</span>，<span class="math inline">dMd^{-1}=M</span>，换了个寂寞，上界退化为 <span class="math inline">\bar\sigma(M)</span>——<strong>这就是 §63.1.4 那个结论的来源</strong>。</p>
+<p>下界用幂迭代算，本章代码没有实现，只写上界。这一点必须说清楚：本章所有“<span class="math inline">\mu</span>”字样指的都是式 (63-17) 的右端，是一个<strong>上界</strong>，因此所有“<span class="math inline">\mu&lt;1</span>”的结论都是保守的，而“<span class="math inline">\mu&gt;1</span>”的结论才是确定的。</p>
+<h3 id="两块进入同一点mu-为什么会退化">63.2.5 两块进入同一点：<span class="math inline">\mu</span> 为什么会退化</h3>
+<p>现在把 §63.1.4 的论断证出来。考虑增益误差与延迟误差串在同一处，即</p>
+<p><span class="math display">
+P=P_0(1+\delta_K)e^{-j\varphi},\qquad |\delta_K|\le w_K,\ |\varphi|\le\omega\Delta\theta
+\tag{63-18}
+</span></p>
+<p>把式 (63-18) 与式 (63-10) 对照可知，这两个“块”其实是同一个乘性因子的两个来源，合起来仍然是一个标量因子</p>
+<p><span class="math display">
+1+E_m=(1+\delta_K)e^{-j\varphi}
+\tag{63-19}
+</span></p>
+<p>它落在复平面上的一个<strong>单连通区域</strong>里（扇形环），而这个区域可以被<strong>一个</strong>半径 <span class="math inline">w_{\text{prod}}</span> 的圆盘盖住。也就是说，无论把 <span class="math inline">\delta_K</span> 与 <span class="math inline">\varphi</span> 看成两块还是一块，进入环路的都是一个复数，其模不超过 <span class="math inline">w_{\text{prod}}</span>。</p>
+<p>对单个标量块，<span class="math inline">\mathbf{D}=\{d&gt;0\}</span>，<span class="math inline">DMD^{-1}=M</span>，于是</p>
+<p><span class="math display">
+\mu= \min_{d}\bar\sigma(dMd^{-1})=\bar\sigma(M)=\lvert T\rvert\cdot w_{\text{prod}}
+\tag{63-20}
+</span></p>
+<p>与小增益判据式 (63-14) 完全一致。<strong>结构信息在这里没有换来任何放松，因为“两块”本来就是“一块”。</strong></p>
+<p>反过来说，什么时候结构信息才有用？当不确定性出现在<strong>不同的信号点</strong>上时。两个例子：多变量系统里 <span class="math inline">P_{11}</span> 与 <span class="math inline">P_{22}</span> 各有误差，它们进入环路的位置不同，<span class="math inline">M</span> 不再是秩一，<span class="math inline">\mathbf{D}</span> 的作用才显现；以及鲁棒性能——性能指标是“加在输出上的一个虚拟块”，它与对象误差块处在不同的位置，<span class="math inline">M</span> 变成 <span class="math inline">2\times2</span>。</p>
+<p>这条判据很好用：<strong>数一数不确定性块进入 <span class="math inline">M</span> 的方式，如果所有块都是“同一个标量因子”的不同来源，就别做 <span class="math inline">\mu</span> 了，小增益给出的数一模一样。</strong> 这是本章最省时间的一条经验。</p>
+<h3 id="鲁棒性能把指标装进-delta-里">63.2.6 鲁棒性能：把指标装进 <span class="math inline">\Delta</span> 里</h3>
+<p>“稳定”只是底线，工程上真正要问的是“最坏情况下性能还剩多少”。鲁棒性能的标准做法是把性能指标也写成一个 <span class="math inline">\Delta</span> 块。</p>
+<p>设要求所有情况下灵敏度峰值不超过 <span class="math inline">1/\gamma</span>，即</p>
+<p><span class="math display">
+\lvert W_S(j\omega)S(j\omega)\rvert\le\gamma,\qquad\forall\omega,\ \forall\Delta
+\tag{63-21}
+</span></p>
+<p><span class="math inline">W_S</span> 是性能权重，<span class="math inline">1/\gamma</span> 是允许的峰值。把式 (63-21) 反写成“<span class="math inline">1-W_S S\Delta_P</span> 可逆”的形式，<span class="math inline">\Delta_P</span> 是虚拟的性能块，<span class="math inline">\lVert\Delta_P\rVert_\infty\le1/\gamma</span>。于是整个系统变成两个块的互联：对象误差块 <span class="math inline">\Delta</span>（真实存在）与性能块 <span class="math inline">\Delta_P</span>（虚拟，代表指标）。</p>
+<p>用下线性分式变换把 <span class="math inline">P</span>、<span class="math inline">C</span>、<span class="math inline">W</span>、<span class="math inline">W_S</span> 全部吸收进 <span class="math inline">M</span>，得到 <span class="math inline">2\times2</span> 的互联矩阵。本章的对象与权重下，四格是</p>
+<p><span class="math display">
+M=\begin{bmatrix}
+W_S S &amp; -W_S S\,P\,w_m\\[2pt]
+C S &amp; -T\,w_m
+\end{bmatrix}
+\tag{63-22}
+</span></p>
+<p>其中 <span class="math inline">w_m</span> 是式 (63-12) 的乘积磁盘，<span class="math inline">S=1/(1+P_0C)</span>、<span class="math inline">T=P_0C/(1+P_0C)</span>。四格的来历值得逐个说清：</p>
+<ul>
+<li><span class="math inline">M_{11}=W_S S</span> 是“性能块看到的东西”，即加权灵敏度；</li>
+<li><span class="math inline">M_{22}=-T w_m</span> 是“误差块看到的东西”，即小增益判据里的那一项；</li>
+<li><span class="math inline">M_{12}=-W_S S P w_m</span> 与 <span class="math inline">M_{21}=CS</span> 是两块之间的<strong>耦合</strong>，它们的存在说明两个块不是各管各的。</li>
+</ul>
+<p>鲁棒性能的判据是 <span class="math inline">\mu_{\boldsymbol{\Delta}}(M)&lt;1</span>，其中 <span class="math inline">\boldsymbol{\Delta}=\mathrm{diag}(\Delta_P,\Delta)</span>，<span class="math inline">\Delta_P</span> 是满块、<span class="math inline">\Delta</span> 是标量块，所以</p>
+<p><span class="math display">
+\mathbf{D}=\left\{\mathrm{diag}(d,1):\ d&gt;0\right\}
+\tag{63-23}
+</span></p>
+<p>只有一个自由度 <span class="math inline">d</span>。代码在 <span class="math inline">10^{-3}</span> 到 <span class="math inline">10^{3}</span> 之间取 61 个对数点扫这个 <span class="math inline">d</span>，逐频点取最小值，得到 <span class="math inline">\mu</span> 上界曲线。</p>
+<p><span class="math inline">\mu(M)&lt;1</span> 的含义可以拆成两句话：<strong><span class="math inline">\mu&lt;1</span> 说明“稳定 + 性能”两个要求同时被满足</strong>；而 <span class="math inline">\bar\sigma(M)&lt;1</span> 只是它的一个充分条件。两者的差就是结构信息买到的放松，§63.6 会给出实测：1.7194 对 1.6456，比值 1.411。</p>
+<p>请注意式 (63-22) 里 <span class="math inline">M_{11}</span> 与 <span class="math inline">M_{22}</span> 的量纲不同：<span class="math inline">M_{11}</span> 是“性能块”到“性能块”的增益，无量纲；<span class="math inline">M_{22}</span> 也是无量纲。这正是 <span class="math inline">D</span> 标定要处理的问题——<span class="math inline">d</span> 的作用就是把两个块“折算到同一量纲”再取最大奇异值，从而避免把 apples 与 oranges 直接相加。</p>
+<h3 id="性能权重的形状">63.2.7 性能权重的形状</h3>
+<p><span class="math inline">W_S</span> 的选择决定了“什么叫性能好”。本章用一阶形式</p>
+<p><span class="math display">
+W_S(s)=\frac{s/M_S+\omega_b}{s+A\,\omega_b},\qquad M_S=2.0,\ \omega_b=0.15,\ A=0.02
+\tag{63-24}
+</span></p>
+<p>三个参数的几何意义很清楚：</p>
+<ul>
+<li>低频 <span class="math inline">W_S(0)=1/(A M_S)=1/(0.02\times2)=25</span>，即要求低频灵敏度小于 <span class="math inline">1/25=0.04</span>，也就是“稳态误差压到 4% 以下”；</li>
+<li>高频 <span class="math inline">W_S(\infty)=1</span>，即不约束高频；</li>
+<li>转折处 <span class="math inline">W_S(j\omega_b)\approx M_S=2.0</span>，即峰值灵敏度约 2.0（6 dB）。</li>
+</ul>
+<p><span class="math inline">A</span> 控制低频增益的“陡度”：<span class="math inline">A</span> 越小，低频段越平、要求越狠，同时相位滞后越大。<span class="math inline">A=0.02</span> 是本章刻意选的激进值，它让低频要求接近积分器行为，从而把“带宽能不能做上去”这件事逼到极限。</p>
+<p>把式 (63-24) 与式 (63-21) 合起来看，<span class="math inline">\lvert W_S S\rvert\le1</span> 等价于 <span class="math inline">\lvert S\rvert\le1/\lvert W_S\rvert</span>，也就是一条随频率变化的灵敏度上限。这条上限在低频很紧（0.04），在 <span class="math inline">\omega_b</span> 处放宽到 0.5，在高频放开。<strong>设计的工作就是让 <span class="math inline">\lvert S\rvert</span> 曲线钻到这条上限下面，同时对所有参数组合都成立。</strong></p>
+<h3 id="从判据到设计为什么-mu-综合要迭代">63.2.8 从判据到设计：为什么 <span class="math inline">\mu</span> 综合要迭代</h3>
+<p>判据是“给定控制器，算 <span class="math inline">\mu</span>”。设计是反问题：“找控制器使 <span class="math inline">\mu&lt;1</span>”。直接求解很难，工程做法是 D-K 迭代：固定 <span class="math inline">D</span> 求 <span class="math inline">K</span>（这是一个 <span class="math inline">H_\infty</span> 问题），再固定 <span class="math inline">K</span> 求 <span class="math inline">D</span>（逐频点解一个凸问题），来回几次直到 <span class="math inline">\mu</span> 不再下降。</p>
+<p>D-K 迭代的两个已知毛病值得提前说：它只保证收敛到局部最优，且次数多了控制器阶数会膨胀（每次求 <span class="math inline">D</span> 都是频率逐点拟合，拟合阶数随迭代上升）。本章不展开 <span class="math inline">\mu</span> 综合的实现，§63.9 只讲它的工程替代方案：<strong>在低阶控制器族里做参数搜索，用 <span class="math inline">\mu</span> 当评价函数</strong>。实验 4 的三族扫描就是这么做的——枚举 <span class="math inline">k_p,T_i,z,p</span>，对每个候选算最坏 <span class="math inline">\lvert S\rvert</span> 与 <span class="math inline">\mu</span>，再挑满足约束的最大带宽。这种做法牺牲了最优性，但保住了“控制器是二阶、现场能维护”这一条硬约束。</p>
+<h3 id="把这一节的式子串成一条链">63.2.9 把这一节的式子串成一条链</h3>
+<p>这一节的公式看起来零散，其实是一条从“参数区间”到“一个数”的单向链，中间没有分叉。把本章的具体数字代进去走一遍，可以一次性看清每个环节各自贡献了什么。</p>
+<p><strong>第一环，参数区间变成两个标量。</strong> 式 (63-3) 给出 <span class="math inline">w_K=0.500</span>；式 (63-4) 给出一个随频率变化的 <span class="math inline">w_\theta(\omega)=2|\sin(0.25\omega)|</span>。到这一步，“不确定”已经被压缩成两条曲线，与环路无关，可以提前算好放在那里。</p>
+<p><strong>第二环，两条曲线合成一条磁盘半径。</strong> 式 (63-12) 的乘积形式给出 <span class="math inline">w_{\text{prod}}=(1+w_K)(1+w_\theta)-1</span>。在穿越频率 <span class="math inline">\omega_c=0.33</span> rad/s 处，<span class="math inline">w_\theta=2\sin(0.0825)=0.1648</span>，于是 <span class="math inline">w_{\text{prod}}=1.5\times1.1648-1=0.7473</span>——比增益单项的 0.500 宽了 49%，多出来的 0.247 全部来自延迟与增益的交叉项。这个数在整条链里只出现一次，却决定了后面所有判断的松紧。</p>
+<p><strong>第三环，磁盘乘上补灵敏度。</strong> 式 (63-14) 的逐频点形式 <span class="math inline">\lvert W T\rvert&lt;1</span>，在本例里就是 <span class="math inline">\lvert T(j\omega)\rvert\cdot w_{\text{prod}}(\omega)&lt;1</span>。<span class="math inline">\mu</span> 的峰值不在 <span class="math inline">\omega_c</span>，而在 0.37 rad/s：那里 <span class="math inline">w_\theta=0.1847</span>、<span class="math inline">w_{\text{prod}}=0.7771</span>，比穿越点又宽了 4%。<strong>峰值频率与穿越频率不重合</strong>这件事，是“只看穿越点的裕度”会误判的直接原因。</p>
+<p><strong>第四环，把一个频率上的判断变成全频段的判断。</strong> 逐点算完之后取最大值，得到 <span class="math inline">\mu_{RS}=0.846</span>。此时这条链的输出就是一个标量，可以拿去和 0.9 的预算比。</p>
+<p><strong>第五环，把性能也塞进同一个框架。</strong> 式 (63-22) 把 <span class="math inline">W_S S</span> 与 <span class="math inline">CS</span>、<span class="math inline">-T w_{\text{prod}}</span> 拼成 <span class="math inline">2\times2</span> 矩阵，<span class="math inline">D</span> 标定再逐频点折算出 <span class="math inline">\mu_{RP}=1.646</span>。注意这一步没有引入任何新的不确定性信息，用的还是第二环那条 <span class="math inline">w_{\text{prod}}</span>，只是把“性能要求”当成第三个块放了进去。</p>
+<p>看清这条链的实际好处是<strong>定位问题</strong>：如果最终 <span class="math inline">\mu</span> 超标，可能的入口只有三个——区间定窄了（第一环）、磁盘选错了（第二环）、性能权重提得太狠（第五环）。控制器参数只影响第三、五环里的 <span class="math inline">T</span> 与 <span class="math inline">S</span>，<strong>它无法改变前两环</strong>。很多“调了半天没效果”的场合，问题其实卡在设计者动不了的地方。</p>
+<h3 id="d-标定到底动了什么逐个频点看">63.2.10 <span class="math inline">D</span> 标定到底动了什么：逐个频点看</h3>
+<p><span class="math inline">D</span> 标定常被当成一个黑箱：输进去一个矩阵，吐出来一个更小的奇异值。其实它只做一件事——<strong>按行放大、按列缩小</strong>，把同一条通道两端的量级拉平。以本章最终设计（<span class="math inline">k_p=2.4</span>、<span class="math inline">T_i=10</span>、<span class="math inline">z=0.4</span>、<span class="math inline">p=0.1</span>）为例，把 <span class="math inline">M</span> 的四个元素在四个频点上的模列出来，就看得很清楚：</p>
+<ul>
+<li><span class="math inline">\omega=0.05</span>：<span class="math inline">\lvert M_{11}\rvert,\lvert M_{12}\rvert,\lvert M_{21}\rvert,\lvert M_{22}\rvert=0.328,\,0.342,\,0.522,\,0.545</span>；</li>
+<li><span class="math inline">\omega=0.37</span>（峰值处）：<span class="math inline">0.814,\,0.602,\,1.118,\,0.826</span>；</li>
+<li><span class="math inline">\omega=1.00</span>：<span class="math inline">0.677,\,0.331,\,0.839,\,0.409</span>；</li>
+<li><span class="math inline">\omega=10.0</span>：<span class="math inline">0.493,\,0.045,\,0.592,\,0.054</span>。</li>
+</ul>
+<p>低频端四个数挤在 0.33–0.55 这个窄带里，彼此只差 1.7 倍——这时无论怎么缩放，都只是把一个数换到另一个数旁边，<span class="math inline">\sigma_{\max}</span> 基本不动。实测也正是如此：<span class="math inline">d^\ast</span> 只比 1 偏开一格（1.259），<span class="math inline">\bar\sigma=0.8907</span>、<span class="math inline">\mu</span> 上界 <span class="math inline">0.8724</span>，比值 1.021，等于没有放松。<strong>在这个频段上，取 <span class="math inline">d=1</span> 与取 <span class="math inline">d=1.259</span> 的差别只有 2%，怎么取都无所谓。</strong></p>
+<p>高频端完全变了样：<span class="math inline">\lvert M_{12}\rvert</span> 与 <span class="math inline">\lvert M_{22}\rvert</span> 都塌到 0.05 附近，而 <span class="math inline">\lvert M_{11}\rvert</span>、<span class="math inline">\lvert M_{21}\rvert</span> 还在 0.5 左右，两组差了一个数量级。此时取 <span class="math inline">d=3.98</span>，<span class="math inline">M</span> 变成 <span class="math inline">\begin{bmatrix}0.493 &amp; 0.179\\ 0.149 &amp; 0.054\end{bmatrix}</span>，四个元素被拉到同一量级，<span class="math inline">\sigma_{\max}</span> 从 0.774 降到 0.549——这就是 <span class="math inline">\mu</span> 在 10 rad/s 处给出的 0.5488，比值 1.411 的来源。</p>
+<p>由此可以读出 <span class="math inline">d^\ast</span> 的物理含义：<strong>它不是“调参旋钮”，而是“两个块在这一频率上的量级失配程度”。</strong> <span class="math inline">d^\ast</span> 贴着 1 走，说明两个块本来就势均力敌，<span class="math inline">D</span> 无从下手；<span class="math inline">d^\ast</span> 离 1 越远，说明失配越严重，可压的空间越大。本章 <span class="math inline">d^\ast</span> 的走向是 0.05 处 1.259、0.60 处 1.585、2 rad/s 处 1.585、10 rad/s 处 3.981，单调向外——<strong>频率越高，两个块越不成比例。</strong></p>
+<p>还要注意 <span class="math inline">d^\ast</span> 是台阶状的：代码在 <span class="math inline">10^{-3}</span> 到 <span class="math inline">10^{3}</span> 之间取 61 个对数点，相邻两格的比值是 <span class="math inline">10^{0.1}=1.259</span>，所以 <span class="math inline">d^\ast</span> 只能取 1.259、1.585、1.995、2.512、3.162、3.981 这些离散值。<strong>台阶是网格的量化，不是对象的性质。</strong> 这一点在工程上有实际后果：如果峰值恰好落在两格之间，<span class="math inline">\mu</span> 上界会被高估或低估一两个百分点，这正是 §63.7.5 给 <span class="math inline">\mu</span> 留 10% 余量的原因之一。要判断台阶有没有影响，把 <span class="math inline">d</span> 的网格从 61 点加到 121 点重算一遍，看峰值变不变就够了。</p>
+<h2 id="设计步骤">63.3 设计步骤</h2>
+<h3 id="六步流程">63.3.1 六步流程</h3>
+<p>鲁棒设计看起来公式多，落到操作上只有六步，图 63-3 把它们串成一条线。</p>
+<figure>
+<img src="figs/ch063/fig_063_11_flow.svg" alt="图 63-3　鲁棒控制器的六步设计流程" /><figcaption aria-hidden="true">图 63-3　鲁棒控制器的六步设计流程</figcaption>
+</figure>
+<p>六步是：定不确定集、写性能权重、建互联矩阵、定控制器阶数预算、参数搜索、时域与统计复核。前两步是“把话讲清楚”，中间两步是“算”，最后两步是“验”。<strong>最容易出错的是第一步和第五步</strong>：第一步错，后面全错；第五步的搜索范围设错，会得出“无解”的假结论。</p>
+<p>下面逐条说明每一步的具体动作和判据。</p>
+<h3 id="第一步把参数区间变成不确定集">63.3.2 第一步：把参数区间变成不确定集</h3>
+<p>每个参数给出区间，然后做三件事。</p>
+<p><strong>第一，算相对误差半径。</strong> 增益用式 (63-3)：<span class="math inline">w_K=\max(3.0/2.0-1,\,1-1.2/2.0)=0.500</span>。注意上下不对称时取大的一侧，<span class="math inline">+50\%</span> 比 <span class="math inline">-40\%</span> 更狠。</p>
+<p><strong>第二，判断这些误差是否落在“同一点”。</strong> 本章的对象里，增益与延迟都作用在 <span class="math inline">P_0</span> 的输入输出比上，属于同一个乘性因子，因此按 §63.2.5 的结论，它们合成一个标量块，用乘积磁盘式 (63-12) 就够，不需要建多块结构。</p>
+<p><strong>第三，保底做一次网格枚举。</strong> 磁盘模型是充分条件，可能偏保守；在参数矩形上取 <span class="math inline">5\times5</span> 的网格（<span class="math inline">K</span> 与 <span class="math inline">\theta</span> 各 5 点，含四个角与中间的交叉点）逐点算真实灵敏度峰值，能给出“真实最坏”的参照。本章所有“最坏 <span class="math inline">\lvert S\rvert</span>”都是这 25 个点上的最大值。</p>
+<p>这一步的产出是两个数：<span class="math inline">w_K=0.500</span>、<span class="math inline">\Delta\theta=0.5</span> s。<strong>除此之外的东西都不要带进下一步。</strong></p>
+<h3 id="第二步写性能权重">63.3.3 第二步：写性能权重</h3>
+<p>性能权重回答“什么叫够好”，用式 (63-24) 的三个参数。定法是从指标倒推：</p>
+<ul>
+<li>稳态误差要求 <span class="math inline">\le4\%</span> → <span class="math inline">1/(A M_S)=25</span> → <span class="math inline">A=1/(25M_S)=0.02</span>；</li>
+<li>峰值灵敏度允许 2.0 → <span class="math inline">M_S=2.0</span>；</li>
+<li>希望的闭环带宽 0.15 rad/s → <span class="math inline">\omega_b=0.15</span>。</li>
+</ul>
+<p>三个数一旦定下，<span class="math inline">W_S</span> 的形状就定了，后面不再改。<strong>这一步的常见错误是把 <span class="math inline">\omega_b</span> 定成“希望的带宽”再指望设计能满足它</strong>——<span class="math inline">W_S</span> 是“要求”，不是“结果”，能不能满足要看第六步。本章的实测是：<span class="math inline">\omega_b=0.15</span> 时二阶控制器只能做到 <span class="math inline">\omega_c=0.33</span>，而 <span class="math inline">\mu_{RP}</span> 仍然大于 1，说明这个要求偏紧。</p>
+<h3 id="第三步建互联矩阵并算-mu">63.3.4 第三步：建互联矩阵并算 <span class="math inline">\mu</span></h3>
+<p>按式 (63-22) 填四格，然后逐频点扫 <span class="math inline">d</span>。有两个技术细节决定这一步算得对不对。</p>
+<p><strong>网格密度。</strong> 频率取 <span class="math inline">10^{-2}</span> 到 <span class="math inline">10</span> rad/s 的 600 个对数点，<span class="math inline">d</span> 取 <span class="math inline">10^{-3}</span> 到 <span class="math inline">10^{3}</span> 的 61 个对数点。<span class="math inline">d</span> 只做量纲折算，最优值附近 <span class="math inline">\bar\sigma(DMD^{-1})</span> 随 <span class="math inline">\ln d</span> 变化平缓（在最优点处是二次平坦的），所以 61 点足够；频率网格必须密，因为 <span class="math inline">\mu</span> 的峰值是一根尖峰，点太稀会把它削掉。</p>
+<p><strong>峰值位置要对齐。</strong> <span class="math inline">\mu</span> 的峰值与 <span class="math inline">\lvert S\rvert</span> 的峰值常常不在同一频率。本章二阶设计里，<span class="math inline">\mu</span> 上界与未结构化 <span class="math inline">\bar\sigma</span> 的峰值都落在 0.37 rad/s，而 <span class="math inline">\omega_c=0.325</span> rad/s——两个数挤在 14% 的频带内，这是“性能与稳定的矛盾集中在穿越频率附近”的典型表现。</p>
+<p>这一步的产出是一条 <span class="math inline">\mu(\omega)</span> 曲线和一个峰值。<strong>若峰值小于 1，设计通过；若大于 1，不要立刻放弃</strong>，先看是哪一格贡献的：若 <span class="math inline">M_{11}</span> 主导，说明性能要求太紧（放宽 <span class="math inline">\omega_b</span> 或 <span class="math inline">M_S</span>）；若 <span class="math inline">M_{22}</span> 主导，说明稳定裕度不够（降增益）。</p>
+<h3 id="第四步定控制器阶数预算">63.3.5 第四步：定控制器阶数预算</h3>
+<p>理论上 <span class="math inline">\mu</span> 综合能给出任意阶的控制器，工程上必须限阶。原因不是算力，是维护：三阶以上的控制器在现场要改一个参数，往往说不清会牵动什么。</p>
+<p>实验 4 在同一组约束（最坏 <span class="math inline">\lvert S\rvert\le2.2</span>、高频 <span class="math inline">\lvert L(2)\rvert\le0.5</span>）下，比较三个阶数族能达到的最好结果：</p>
+<table>
+<colgroup>
+<col style="width: 12%" />
+<col style="width: 12%" />
+<col style="width: 12%" />
+<col style="width: 12%" />
+<col style="width: 12%" />
+<col style="width: 12%" />
+<col style="width: 12%" />
+<col style="width: 12%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">控制器族</th>
+<th style="text-align: left;">参数</th>
+<th style="text-align: right;">最坏 <span class="math inline">\lvert S\rvert</span></th>
+<th style="text-align: right;">标称 <span class="math inline">\lvert S\rvert</span></th>
+<th style="text-align: right;"><span class="math inline">\mu_{RS}</span></th>
+<th style="text-align: right;"><span class="math inline">\mu_{RP}</span></th>
+<th style="text-align: right;"><span class="math inline">\omega_c</span></th>
+<th style="text-align: right;">相位裕度</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">PI（1 阶）</td>
+<td style="text-align: left;"><span class="math inline">k_p=0.87,\ T_i=6.0</span></td>
+<td style="text-align: right;">2.151</td>
+<td style="text-align: right;">1.354</td>
+<td style="text-align: right;">0.637</td>
+<td style="text-align: right;">1.319</td>
+<td style="text-align: right;">0.33</td>
+<td style="text-align: right;">75.3°</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">PI+滞后（2 阶）</td>
+<td style="text-align: left;"><span class="math inline">k_p=2.40,\ T_i=10.0,\ z=0.40,\ p=0.10</span></td>
+<td style="text-align: right;">2.180</td>
+<td style="text-align: right;">1.402</td>
+<td style="text-align: right;">0.846</td>
+<td style="text-align: right;">1.646</td>
+<td style="text-align: right;">0.33</td>
+<td style="text-align: right;">52.1°</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">PI+双滞后（3 阶）</td>
+<td style="text-align: left;"><span class="math inline">k_p=0.68,\ T_i=12.0,\ z=3.00,\ p=0.75</span></td>
+<td style="text-align: right;">2.191</td>
+<td style="text-align: right;">1.465</td>
+<td style="text-align: right;">0.577</td>
+<td style="text-align: right;">1.764</td>
+<td style="text-align: right;">0.19</td>
+<td style="text-align: right;">80.0°</td>
+</tr>
+</tbody>
+</table>
+<p>表 63-5　三个阶数族在相同约束下的最好结果</p>
+<p>这里说的“滞后”是零点频率高于极点频率的整形环节 <span class="math inline">\dfrac{1+s/z}{1+s/p}</span>（<span class="math inline">z&gt;p</span>），它在中频补一点增益、在高频衰减（高频增益 <span class="math inline">p/z</span>），与“超前”方向相反。之所以用滞后而不是超前，是因为本章的硬约束是 <span class="math inline">\lvert L(j2)\rvert\le0.5</span>：超前会把高频增益抬上去，直接撞约束；滞后反而允许把 <span class="math inline">k_p</span> 抬高。二阶族的高频增益是 <span class="math inline">0.10/0.40=0.25</span>，正是靠这 4 倍衰减，<span class="math inline">k_p</span> 才敢取到 2.40。</p>
+<p>这张表的结论和“阶数越高越好”的直觉相反。三个族的最坏 <span class="math inline">\lvert S\rvert</span> 都卡在 2.15–2.19，几乎没差别——因为约束就是 2.2，搜索自然把它顶到边界。真正的差别在别处：</p>
+<ul>
+<li><strong>2 阶族把 <span class="math inline">\omega_c</span> 顶到了 0.33，1 阶族也是 0.33，3 阶族反而只有 0.19。</strong> 3 阶族的搜索空间更大，但两级滞后的相位滞后叠起来（<span class="math inline">\omega_c=0.19</span> 处每级 <span class="math inline">-10.6°</span>，共 <span class="math inline">-21.2°</span>），加上高频增益被压到 <span class="math inline">0.75/3.00=0.25</span> 的平方即 0.0625，整条曲线为了同时满足“中频够高、高频够低”被拉得很别扭，带宽反而掉下来。</li>
+<li><strong><span class="math inline">\mu_{RP}</span> 随阶数升高而恶化</strong>：1.319 → 1.646 → 1.764，与相位裕度的排序（75.3°、52.1°、80.0°）并不一致。这说明它不由单一裕度决定，而是 <span class="math inline">W_S S</span> 与 <span class="math inline">CS</span> 两块形状叠加的结果。工程上把它当成“哪个候选更经得起最坏方向”的直接读数，不要试图用相位裕度去解释它。</li>
+</ul>
+<p>所以本章的选择是 <strong>2 阶族</strong>：它的 <span class="math inline">\omega_c</span> 与 1 阶族并列最高，相位裕度 52.1° 留着余量，<span class="math inline">\mu_{RS}=0.846</span> 恰好落在 0.9 的预算内侧——既不超，也没有白白浪费余量。3 阶族的额外自由度在这里没有换来任何东西——<strong>这是“降低保守性要靠权重模型和结构，不是靠控制器阶数”的一个直接证据。</strong></p>
+<h3 id="第五步在阶数族里搜参数">63.3.6 第五步：在阶数族里搜参数</h3>
+<p>搜索的目标写成一句优化问题：</p>
+<p><span class="math display">
+\max\ \omega_c\quad\text{s.t.}\quad \max_{\text{顶点}}\lvert S(j\omega)\rvert\le2.2,\quad \lvert L(j2)\rvert\le0.5,\quad \mu_{RS}\le0.9
+\tag{63-25}
+</span></p>
+<p>三个约束各有分工：第一条管性能（灵敏度峰值），第二条管高频（防噪声放大与未建模动态），第三条管稳定裕度（<span class="math inline">\mu_{RS}\le0.9</span> 留 10% 余量）。</p>
+<p>搜索的做法是网格枚举：<span class="math inline">k_p</span> 在 <span class="math inline">[0.3,2.4]</span> 取 12 点、<span class="math inline">T_i</span> 在 <span class="math inline">[2,20]</span> 取 10 点、零点 <span class="math inline">z</span> 取 <span class="math inline">\{0.4,\,0.8,\,1.5,\,3.0\}</span> 四档、极点固定为 <span class="math inline">z/4</span>，二阶族共 480 个组合，每个算一次全频段指标。全部算完不到一秒，比 D-K 迭代快几个数量级，而且结果是一个<strong>每个参数都能说清含义</strong>的控制器。极点取 <span class="math inline">z/4</span> 是刻意的偷懒：滞后整形的零极点比决定它对高频的衰减深度，固定在 4 倍上就把二维搜索降成一维，代价是放弃了“衰减更深或更浅”的那部分设计空间。</p>
+<p>搜索有个必须注意的陷阱：<strong>约束太紧会搜出空集。</strong> 本章第一版把三条约束写成 <span class="math inline">\omega_c\ge0.40</span>、最坏 <span class="math inline">\lvert S\rvert\le2.2</span>、<span class="math inline">\lvert L(2)\rvert\le0.5</span>，结果三个族全部无解。原因不是控制器不够好，而是 <span class="math inline">\omega_c</span> 与最坏 <span class="math inline">\lvert S\rvert</span> 在延迟不确定性下存在硬冲突（表 63-2 的悬崖）。正确做法是把 <span class="math inline">\omega_c</span> 从约束里拿出来当目标，让它自己落到能落的水平。</p>
+<h3 id="第六步时域与统计复核">63.3.7 第六步：时域与统计复核</h3>
+<p>频域判据全部通过，也不能直接上线。要做两次复核。</p>
+<p><strong>顶点阶跃。</strong> 在四个顶点上各跑一次阶跃，看超调、调节时间、<span class="math inline">\max\lvert y\rvert</span>。本章 2 阶设计的结果是：三个顶点超调 7.56%、15.29%、12.27%，最坏顶点（<span class="math inline">K=3.0</span>、<span class="math inline">\theta=1.5</span>）41.65%、峰值 1.417、不发散。</p>
+<p><strong>蒙特卡洛。</strong> 在区间内均匀取 300 组参数（seed=63），统计灵敏度峰值与超调的分布。2 阶设计的结果是：<span class="math inline">\lvert S\rvert</span> 峰值 95% 分位 1.901、最大 2.160、越界比例 0.0%；超调 95% 分位 33.41%。</p>
+<p>这两次复核的分工不同：顶点检查“最坏点会不会崩”，蒙特卡洛检查“中间那些点有没有意外的坏”。本章的实测里两者一致，但工程上经常出现“顶点都好、中间某处更坏”的情形——因为最坏点不一定在参数的角上，尤其当多个参数的非线性叠加出现时。<strong>只看顶点是不够的。</strong></p>
+<h3 id="一份完整实录">63.3.8 一份完整实录</h3>
+<p>把六步在同一个设计上走一遍，数字连起来看。</p>
+<ol type="1">
+<li>不确定集：<span class="math inline">w_K=0.500</span>、<span class="math inline">\Delta\theta=0.5</span> s，合成乘积磁盘，<span class="math inline">\omega\le6.28</span> 内有效。</li>
+<li>性能权重：<span class="math inline">M_S=2.0</span>、<span class="math inline">\omega_b=0.15</span>、<span class="math inline">A=0.02</span>，低频要求 <span class="math inline">1/\lvert W_S\rvert=0.04</span>。</li>
+<li>互联矩阵：标称 <span class="math inline">\lvert W_S S\rvert</span> 峰值 <strong>0.8284</strong>，余量 17%，看起来不错。</li>
+<li>阶数预算：2 阶，<span class="math inline">(k_p,T_i,z,p)</span>。</li>
+<li>搜索结果：<span class="math inline">k_p=2.40</span>、<span class="math inline">T_i=10.0</span>、<span class="math inline">z=0.40</span>、<span class="math inline">p=0.10</span>，<span class="math inline">\omega_c=0.325</span>、相位裕度 52.1°、增益裕度 5.84（15.3 dB）、最坏 <span class="math inline">\lvert S\rvert=2.180</span>、<span class="math inline">\mu_{RS}=0.846</span>。</li>
+<li>复核：四顶点最大超调 41.65%、300 组越界比例 0.0%。</li>
+</ol>
+<p>第 3 步与第 5 步的对照是本章最该记住的一组数：<strong>标称加权灵敏度 0.8284，鲁棒性能 <span class="math inline">\mu</span> 上界 1.6456。</strong> 前者说“余量 17%”，后者说“超出 65%”，两个结论完全相反，原因就是前者没算不确定性的最坏方向。如果只做标称设计，会以为这个回路还有余量，实际上它已经在边界外面。</p>
+<p>这也解释了为什么第 3 步算出来的东西不能当结论：<span class="math inline">\lvert W_S S\rvert</span> 是<strong>标称</strong>指标，<span class="math inline">\mu_{RP}</span> 才是<strong>最坏</strong>指标。工程报告里如果只写前者，等于报喜不报忧。</p>
+<h3 id="六步里最容易被做错的三处">63.3.9 六步里最容易被做错的三处</h3>
+<p>六步本身不难，难的是每一步都容易在图省事的地方悄悄走偏。本章在实跑中踩到的三处，按危害从大到小排列。</p>
+<p><strong>第一处，把“最坏”算在一张太粗的网格上。</strong> 本章的 <code>worst_ms()</code> 只在参数矩形上取 <span class="math inline">5\times5</span> 共 25 个点，而真正的最坏点可能落在点与点之间。这不是理论上可以忽略的小事：灵敏度峰值对参数的依赖是光滑的，但峰值的位置会随参数移动，粗网格可能同时错过“位置”和“高度”。本章用两条独立路径互相印证——25 点网格给出的最坏值是 2.180，300 组随机采样给出的最大值是 2.160，两者相差 1% 以内，说明在这个对象上 25 点确实够用。<strong>但这是实测结论，不是定理</strong>：换成三参数、或者换成谐振型对象，同样的 25 点就可能低估 10% 以上。判断依据应该是“参数进入传递函数的方式是否单调”，而不是“上次 25 点也够”。</p>
+<p><strong>第二处，先想控制器、后想权重。</strong> 很多人拿到对象就开始试 <span class="math inline">k_p</span>、<span class="math inline">T_i</span>，等性能不满意了才回头改 <span class="math inline">W_S</span>。这个顺序把两件不同性质的事混在了一起：权重表达的是“用户要求什么”，控制器表达的是“工程上能做到什么”。要求没写清就去调控制器，等于在没有靶子的情况下练习瞄准。本章的顺序是反的：先定 <span class="math inline">M_S=2.0</span>、<span class="math inline">\omega_b=0.15</span>、<span class="math inline">A=0.02</span>，把“够好”定义成一个具体的频率函数，再看哪个控制器能钻到它下面。<strong>权重定完就不能为了“让结果好看”而随手放宽</strong>——真要放宽，必须记录理由，因为那是需求变更而不是调参。</p>
+<p><strong>第三处，复核指标与设计指标不同源。</strong> 设计阶段用的是最坏 <span class="math inline">\lvert S\rvert</span> 与 <span class="math inline">\mu</span>，复核阶段用的是超调、调节时间、<span class="math inline">\max\lvert y\rvert</span>。两套指标在多数情况下同向，但并不严格同向——本章的实测里就有一个反例：激进 PI 的标称 <span class="math inline">\lvert S\rvert</span> 只有 2.297，看起来还过得去，时域却在最坏顶点冲到 50.462；反过来，保守 PI 的 <span class="math inline">\mu_{RP}=1.703</span> 比二阶设计的 1.646 更差，最坏超调反而略小（40.72% 对 41.65%）。<strong>所以复核不能只做“确认设计指标”，必须真的把时域跑一遍</strong>，否则频域与时域之间的那点不一致就会变成现场事故。</p>
+<p>这三处的共同点是：它们都不违反任何公式，只在“用哪个数代替真值”上做了顺手的选择。鲁棒设计里最贵的错误，几乎都出在这种顺手的选择上。</p>
+<h2 id="连续情形">63.4 连续情形</h2>
+<h3 id="连续域的三条整形规则">63.4.1 连续域的三条整形规则</h3>
+<p>连续域的鲁棒设计，操作上就是“把开环频率响应 <span class="math inline">L(j\omega)</span> 整成某个形状”。形状有三段，每段对应一条要求。</p>
+<p><strong>低频段要高增益。</strong> 低于 <span class="math inline">\omega_b</span> 的频段上，<span class="math inline">\lvert L\rvert\gg1</span>，于是 <span class="math inline">S\approx1/L</span>、<span class="math inline">\lvert S\rvert</span> 很小，扰动被压得住。这一段的高度由积分作用决定：PI 的 <span class="math inline">\lvert L\rvert\approx k_p/(T_i\omega)</span>，斜率 <span class="math inline">-20</span> dB/dec，要满足 <span class="math inline">\lvert S\rvert\le0.04</span> 就得让 <span class="math inline">L</span> 在低频高到 25 倍以上。本章的 <span class="math inline">A=0.02</span> 把这条要求压得很死，实际上决定了“积分时间不能太长”。</p>
+<p><strong>穿越段要平缓。</strong> <span class="math inline">\lvert L\rvert=1</span> 附近的斜率决定相位裕度。<span class="math inline">-20</span> dB/dec 穿越给出约 90° 的裕度，<span class="math inline">-40</span> dB/dec 只剩不到 45°。本章的最终设计在 0.325 rad/s 穿越，相位是这样被吃掉的：惯性环节 <span class="math inline">-58.4°</span>、标称延迟 <span class="math inline">-18.6°</span>、PI 的积分 <span class="math inline">-17.1°</span>、滞后整形 <span class="math inline">-33.8°</span>，合计 <span class="math inline">-127.9°</span>，剩 52.1° 裕度。延迟若取到 1.5 s，还要多扣 9.3°，裕度降到 42.8°——<strong>延迟不确定性的全部代价，就是裕度在这 9° 上摆动。</strong></p>
+<p><strong>高频段要滚降。</strong> <span class="math inline">\lvert L(j2)\rvert\le0.5</span> 这条约束的意思是“2 rad/s 以上环路增益必须低于 <span class="math inline">-6</span> dB”。它防两件事：噪声通过控制器放大到执行器，以及未建模的高频动态（阀门死区、传感器滤波）被环路增益“激活”。</p>
+<p>三条规则互相打架：低频要高、穿越要缓、高频要低，中间只有一个自由变量——穿越频率。<strong>鲁棒设计的全部张力都集中在这一个数上。</strong></p>
+<h3 id="三个候选的-bode-对照">63.4.2 三个候选的 Bode 对照</h3>
+<p>图 63-4 把表 63-1 的三个 PI 画在一起，上半是 <span class="math inline">\lvert L\rvert</span>，下半是 <span class="math inline">\lvert S\rvert</span>，实线标称、虚线最坏。</p>
+<figure>
+<img src="figs/ch063/fig_063_03_bode.svg" alt="图 63-4　三个 PI 的环路增益与灵敏度（实线标称，虚线最坏）" /><figcaption aria-hidden="true">图 63-4　三个 PI 的环路增益与灵敏度（实线标称，虚线最坏）</figcaption>
+</figure>
+<p>看下半张图。保守 PI 的两条曲线几乎重合（1.212 与 1.562），说明它对参数不敏感；折中 PI 的两条曲线在最坏处张开到 2.522；激进 PI 的虚线直接冲到 86.249，超出了纵轴范围。</p>
+<p>这个“张开”就是鲁棒性差的图形表现。它的机理在上半张图里：激进 PI 的穿越频率 0.76 rad/s 处，延迟不确定性带来的相位误差是 <span class="math inline">\omega\Delta\theta=0.38</span> rad，最坏情况下相位曲线整体左移 21.8°，穿越点向低频滑动，同时幅值曲线在低频被抬高——两件事叠加，灵敏度峰值就被顶起来了。</p>
+<p><strong>一条实用判据：标称与最坏的 <span class="math inline">\lvert S\rvert</span> 峰值之比超过 3，就不要用了。</strong> 保守 PI 是 1.29、折中 PI 是 1.78、激进 PI 是 37.5。这个比值比绝对峰值更能反映“设计对参数有多敏感”。</p>
+<h3 id="qft-边界把指标画在图上">63.4.3 QFT 边界：把指标画在图上</h3>
+<p>QFT 的做法是把“所有可能的对象”画成一片，再看控制器有没有把它们推到边界外。图 63-5 是本章设计的尼科尔斯图：横轴是开环相位，纵轴是开环增益（dB），细线是 <span class="math inline">K</span>、<span class="math inline">\theta</span> 在区间内变化时的对象模板，粗线是“<span class="math inline">\lvert S\rvert=2.2</span>”对应的等值边界。</p>
+<figure>
+<img src="figs/ch063/fig_063_08_nichols.svg" alt="图 63-5　尼科尔斯图上的对象模板与灵敏度边界" /><figcaption aria-hidden="true">图 63-5　尼科尔斯图上的对象模板与灵敏度边界</figcaption>
+</figure>
+<p>读这张图的方法：模板的每一条曲线代表一组 <span class="math inline">(K,\theta)</span>，控制器的作用是把整片模板沿纵轴平移（增益）、并沿横轴左右整形（相位）。要求是<strong>平移整形之后，整片模板都落在 <span class="math inline">\lvert S\rvert=2.2</span> 的边界线外侧</strong>（也就是离临界点 <span class="math inline">(-180°,0\,\text{dB})</span> 更远的一侧）。</p>
+<p>这套图形语言的好处是“保守性看得见”。模板的宽度就是不确定性的代价：<span class="math inline">K</span> 变化 1.2→3.0 让模板上下拉开 8 dB，<span class="math inline">\theta</span> 变化 0.5→1.5 s 让它在高频端左右拉开几十度。设计者一眼就能看出“是增益不确定更难对付，还是延迟不确定更难对付”——本章是后者，因为模板在低频段很窄、在高频段很宽。</p>
+<h3 id="边界与数值指标的对应">63.4.4 边界与数值指标的对应</h3>
+<p>QFT 的边界是图形，判据是数字，两者要能对上。实验 6 在最终设计上逐频点提取了三个量，列在表 63-6。</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: right;"><span class="math inline">\omega</span> /(rad/s)</th>
+<th style="text-align: right;"><span class="math inline">\lvert L\rvert</span></th>
+<th style="text-align: right;"><span class="math inline">\lvert S\rvert</span></th>
+<th style="text-align: right;"><span class="math inline">\lvert T\rvert</span></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">0.05</td>
+<td style="text-align: right;">9.336</td>
+<td style="text-align: right;">0.108</td>
+<td style="text-align: right;">1.013</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">0.10</td>
+<td style="text-align: right;">4.406</td>
+<td style="text-align: right;">0.238</td>
+<td style="text-align: right;">1.049</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">0.20</td>
+<td style="text-align: right;">1.891</td>
+<td style="text-align: right;">0.610</td>
+<td style="text-align: right;">1.153</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">0.30</td>
+<td style="text-align: right;">1.108</td>
+<td style="text-align: right;">1.051</td>
+<td style="text-align: right;">1.165</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">0.60</td>
+<td style="text-align: right;">0.456</td>
+<td style="text-align: right;">1.396</td>
+<td style="text-align: right;">0.637</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">0.255</td>
+<td style="text-align: right;">1.297</td>
+<td style="text-align: right;">0.330</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">2.00</td>
+<td style="text-align: right;">0.122</td>
+<td style="text-align: right;">1.116</td>
+<td style="text-align: right;">0.137</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">3.00</td>
+<td style="text-align: right;">0.080</td>
+<td style="text-align: right;">1.002</td>
+<td style="text-align: right;">0.080</td>
+</tr>
+</tbody>
+</table>
+<p>表 63-6　最终设计的开环、灵敏度与补灵敏度（标称点）</p>
+<p>这张表有三处值得注意。</p>
+<p><strong>第一，<span class="math inline">\lvert T\rvert</span> 在 0.30 rad/s 处超过 1（1.165）。</strong> 这不是错误，<span class="math inline">\lvert T\rvert</span> 可以大于 1，超出的部分就是“谐振峰”，对应阶跃响应的超调。1.165 意味着约 16.5% 的谐振，与实测超调 15.29%（<span class="math inline">K=1.2</span>、<span class="math inline">\theta=1.5</span> 顶点）同量级。</p>
+<p><strong>第二，<span class="math inline">\lvert S\rvert</span> 的峰值出现在 0.60 rad/s（1.396），不在穿越频率 0.33 处。</strong> 这是延迟造成的：穿越点右侧、相位已经接近 <span class="math inline">-180°</span> 但没有越过的地方，<span class="math inline">1+L</span> 的模最小。</p>
+<p><strong>第三，高频段 <span class="math inline">\lvert S\rvert\to1</span>、<span class="math inline">\lvert T\rvert\to0</span>，两者互补。</strong> 这是 <span class="math inline">S+T=1</span> 的直接结果，也是“高频不能靠反馈”的数学表述——高频扰动原封不动地穿过去。</p>
+<h3 id="连续设计的两个前提">63.4.5 连续设计的两个前提</h3>
+<p>连续域设计能成立，依赖两个前提，工程上都要核查。</p>
+<p><strong>前提一：延迟可以用 <span class="math inline">e^{-\theta s}</span> 精确表示。</strong> 这在频域分析里没问题（它就是 <span class="math inline">e^{-j\omega\theta}</span>），但一旦要写成有理传递函数（比如做 <span class="math inline">H_\infty</span> 综合），就得用 Padé 近似。一阶 Padé 给出 <span class="math inline">e^{-\theta s}\approx(1-\theta s/2)/(1+\theta s/2)</span>，它在 <span class="math inline">\omega\theta</span> 较大时相位误差明显；本章的频段内（<span class="math inline">\omega\theta\le1.5</span>）一阶 Padé 的相位误差约 3°，可以接受，二阶可以压到 1° 以内。<strong>Padé 近似的阶数要和延迟的“电气长度” <span class="math inline">\omega_c\theta</span> 匹配</strong>，这是 §63.9 要展开的一点。</p>
+<p><strong>前提二：控制器在连续域实现。</strong> 现场的控制器是数字的，连续设计要离散化才能落地。这一步不是“照抄”，它会把裕度吃掉一部分，而且吃掉的量与采样周期强相关——这正是 §63.5 的主题。</p>
+<h3 id="手算三行核对整条曲线">63.4.6 手算三行，核对整条曲线</h3>
+<p>表 63-6 是代码算出来的，读者未必愿意信；但整条 <span class="math inline">\lvert L\rvert</span> 曲线其实可以手算核对，代价只有三行乘法。最终设计的三个因子是</p>
+<p><span class="math display">
+P_0(j\omega)=\frac{2}{1+j5\omega},\qquad
+C(j\omega)=2.4\Bigl(1+\frac{1}{j10\omega}\Bigr),\qquad
+H(j\omega)=\frac{1+j\omega/0.4}{1+j\omega/0.1}
+</span></p>
+<p><span class="math inline">\lvert L\rvert</span> 就是三者模的乘积（延迟因子模为 1，不进幅值）。取三个频点：</p>
+<ul>
+<li><span class="math inline">\omega=0.05</span>：<span class="math inline">\lvert P_0\rvert=2/1.031=1.940</span>，<span class="math inline">\lvert C\rvert=2.4\times2.236=5.367</span>，<span class="math inline">\lvert H\rvert=1.008/1.118=0.901</span>，乘起来 9.38，表里是 9.336。</li>
+<li><span class="math inline">\omega=0.30</span>：<span class="math inline">\lvert P_0\rvert=2/1.803=1.109</span>，<span class="math inline">\lvert C\rvert=2.4\times1.054=2.530</span>，<span class="math inline">\lvert H\rvert=1.250/3.162=0.395</span>，乘起来 1.11，表里是 1.108。</li>
+<li><span class="math inline">\omega=0.60</span>：<span class="math inline">\lvert P_0\rvert=2/3.162=0.633</span>，<span class="math inline">\lvert C\rvert=2.4\times1.014=2.433</span>，<span class="math inline">\lvert H\rvert=1.803/6.083=0.296</span>，乘起来 0.456，表里是 0.456。</li>
+</ul>
+<p>三行都只差百分位以下的舍入，说明曲线没有算错，也说明这条曲线的形状完全由三个可解释的因子决定：惯性让它按 <span class="math inline">-20</span> dB/dec 下滑，积分让低频再陡一点，滞后整形让中频之后按 <span class="math inline">-20</span> dB/dec 额外衰减。<strong>读者在自己的对象上也可以用这三行核对任何一张 Bode 图</strong>——只要三个频点对得上，中间就不会有意外。</p>
+<p>相位同样可以手算，而且更值得算，因为它决定了裕度。在 <span class="math inline">\omega_c=0.325</span> 处，四个环节的相位分别是：惯性 <span class="math inline">-\arctan(1.625)=-58.4°</span>、延迟 <span class="math inline">-\omega\theta_0=-0.325</span> rad <span class="math inline">=-18.6°</span>、积分 <span class="math inline">-\arctan(1/3.25)=-17.1°</span>、滞后整形 <span class="math inline">\arctan(0.8125)-\arctan(3.25)=39.1°-72.9°=-33.8°</span>。合计 <span class="math inline">-127.9°</span>，相位裕度 <span class="math inline">52.1°</span>。<strong>这四项里只有延迟那一项随参数变化</strong>——<span class="math inline">\theta</span> 从 1.0 s 漂到 1.5 s，它从 <span class="math inline">-18.6°</span> 变成 <span class="math inline">-27.9°</span>，裕度掉 9.3°，其余三项纹丝不动。这就是“延迟不确定性是本章主要矛盾”的最直接算法表达：它不是靠数值扫描看出来的，是相位账本上唯一会动的那一行。</p>
+<h3 id="手画一次-lvert-srvert2.2-的禁区">63.4.7 手画一次 <span class="math inline">\lvert S\rvert=2.2</span> 的禁区</h3>
+<p>图 63-5 里那条粗线看着像画出来的，其实它由三个点唯一确定，可以手算。</p>
+<p>要求 <span class="math inline">\lvert S\rvert\le2.2</span>，等价于 <span class="math inline">\lvert1+L\rvert\ge1/2.2=0.4545</span>。在开环平面 <span class="math inline">L</span> 上，这是一个以 <span class="math inline">-1</span> 为圆心、半径 0.4545 的圆；圆内的点不合格，圆外的点合格。要在尼科尔斯图上画出它，只需三个特征点：</p>
+<ul>
+<li><strong>最左端</strong>：圆心向左走一个半径，<span class="math inline">L=-1.4545</span>，模 3.25 dB、相位 <span class="math inline">0°</span>；</li>
+<li><strong>最右端</strong>：圆心向右走一个半径，<span class="math inline">L=-0.5455</span>，模 <span class="math inline">-5.27</span> dB、相位 <span class="math inline">180°</span>；</li>
+<li><strong>最宽处</strong>：圆心向上（或向下）走一个半径，<span class="math inline">L=-1\pm j0.4545</span>，模 <span class="math inline">\sqrt{1+0.4545^2}=1.0986</span> 即 0.82 dB，相位 <span class="math inline">180°\mp24.5°</span>。</li>
+</ul>
+<p>三点连起来就是一条闭合的小弧：<strong>相位在 <span class="math inline">155.5°</span> 到 <span class="math inline">204.5°</span> 之间，幅值在 <span class="math inline">-5.27</span> dB 到 <span class="math inline">+3.25</span> dB 之间。</strong> 禁区就这么大——它不是一个半平面，而是一个小小的椭圆。这条曲线之外的所有地方都满足 <span class="math inline">\lvert S\rvert\le2.2</span>。</p>
+<p>知道它有多大，就能理解 QFT 设计的真实难度在哪：对象模板高 8 dB、宽几十度，要把整片模板都挡在这个小椭圆之外，靠的是“增益往下压 + 相位往前提”这一对互相打架的动作。压增益会把模板整体往下推，容易从下方越过禁区；提相位要靠零点，而零点同时抬高高频增益、把模板往右拉。<strong>能够同时满足两者的控制器，就是 QFT 边界上那一小段可行域对应的控制器。</strong></p>
+<p>穿越点上还有一个更好用的换算。若 <span class="math inline">\lvert L\rvert=1</span>、相位裕度 <span class="math inline">PM</span>，则 <span class="math inline">\lvert1+L\rvert=2\sin(PM/2)</span>，于是</p>
+<p><span class="math display">
+\lvert S(j\omega_c)\rvert=\frac{1}{2\sin(PM/2)}
+</span></p>
+<p><span class="math inline">PM=52.1°</span> 代入得 <span class="math inline">\lvert S\rvert=1.139</span>，与表 63-6 在穿越点附近的量级一致。反过来，若要求 <span class="math inline">\lvert S\rvert\le2.2</span>，则必须 <span class="math inline">\sin(PM/2)\ge1/4.4</span>，即 <strong><span class="math inline">PM\ge26.3°</span></strong>；若把阈值收紧到 2.0，则 <span class="math inline">PM\ge29.0°</span>。这条换算解释了 §63.7.5 里 <span class="math inline">SMAX</span> 为什么要取 2.2 而不是 2.0：两者只差 2.7° 的相位裕度，但可行域会窄掉一大截。</p>
+<p>必须提醒一句：这条换算是<strong>必要条件，不是充分条件</strong>。它只管穿越点那一个频率，而本章 <span class="math inline">\lvert S\rvert</span> 的峰值在 0.60 rad/s（1.396），根本不在穿越点 0.33 上——那里相位已经接近 <span class="math inline">-180°</span>、环路增益还没掉够，<span class="math inline">1+L</span> 的模最小。所以画完禁区、核完穿越点，仍然要把整条 <span class="math inline">\lvert S\rvert</span> 曲线扫一遍，看有没有别的频率先撞线。</p>
+<h3 id="为什么用滞后整形不用超前整形">63.4.8 为什么用滞后整形，不用超前整形</h3>
+<p>本章的 <span class="math inline">H(s)=\frac{1+s/0.4}{1+s/0.1}</span> 是<strong>滞后</strong>整形：零点频率高于极点频率，高频增益是 <span class="math inline">p/z=0.25</span>。初学者常问：滞后会吃相位（穿越点 <span class="math inline">-33.8°</span>），为什么不用超前整形去<strong>加</strong>相位？把同一对零极点对调成 <span class="math inline">\frac{1+s/0.1}{1+s/0.4}</span>，穿越点的相位立刻从 <span class="math inline">-33.8°</span> 变成 <span class="math inline">+33.8°</span>，等于白得 <span class="math inline">67.6°</span> 裕度。</p>
+<p>账要算全。对调之后，高频增益从 0.25 变成 4，<strong>同一个频段上的环路增益乘了 15.4 倍</strong>。表 63-6 里 <span class="math inline">\lvert L(j2)\rvert=0.122</span>，对调后变成 1.88，而本章的高频约束是 <span class="math inline">\lvert L(j2)\rvert\le0.5</span>——<strong>是上限的 3.8 倍，判据直接不合格。</strong> 这就是滞后与超前的本质差别：</p>
+<ul>
+<li>滞后整形是“<strong>用带宽换噪声</strong>”：把中高频增益压下去，代价是相位；</li>
+<li>超前整形是“<strong>用噪声换带宽</strong>”：把中高频增益抬上来，换相位，从而允许更高的 <span class="math inline">k_p</span>。</li>
+</ul>
+<p>对一个带延迟的温度回路，这两笔账的收支完全不对等。延迟已经吃掉了 <span class="math inline">-18.6°</span>（标称）到 <span class="math inline">-27.9°</span>（端点），对象本身再按 <span class="math inline">-20</span> dB/dec 下滑，环路在高频没有任何“多余的增益”可以拿来换。<strong>超前整形买来的每一度相位，都要用执行器的抖动去付</strong>——而执行器抖动的后果（阀杆磨损、噪声放大）在一个 20 秒级的温度回路上完全不值得。</p>
+<p>那什么时候该用超前？三个条件同时成立时：延迟小（<span class="math inline">\omega_c\theta&lt;0.2</span>，本章标称是 0.33，已经不满足）、噪声低、且确实需要带宽（伺服、流量这类秒级回路）。第 44 章给了超前-滞后组合的整定规则与相位补偿量的算法，本章不重复，只强调一条判据：<strong>先看 <span class="math inline">\lvert L(j\omega)\rvert</span> 在高频还剩多少余量，再决定能不能用超前把这部分余量换成相位。</strong> 余量为零的回路，超前整形是没有抵押品的贷款。</p>
+<p>顺带一提，本章的 <span class="math inline">p=z/4</span> 这个比例也是被高频约束逼出来的。若取 <span class="math inline">p=z/10</span>（衰减 10 倍），高频余量更大、<span class="math inline">k_p</span> 能再抬，但滞后更深、相位吃得更多，穿越频率反而上不去；若取 <span class="math inline">p=z/2</span>（只衰减 2 倍），相位好看，但 <span class="math inline">\lvert L(j2)\rvert</span> 立刻翻倍到 0.244，接近 0.5 的红线。<strong><span class="math inline">p/z</span> 的选择本质上是在“高频余量”与“相位”之间找平衡点，而本章的 0.25 是这条平衡线上偏保守的一侧。</strong></p>
+<h2 id="离散情形">63.5 离散情形</h2>
+<h3 id="离散化改变了两件事">63.5.1 离散化改变了两件事</h3>
+<p>连续设计搬到数字控制器上，要做的是“对象用 ZOH 保持、控制器用双线性变换”。这一步在标称情况下几乎无损——Tustin 变换在低频把 <span class="math inline">s</span> 与 <span class="math inline">\frac{2}{T_s}\frac{z-1}{z+1}</span> 对齐得很好。但鲁棒性会被动两处刀。</p>
+<p><strong>第一刀是延迟的量化。</strong> 数字实现里延迟只能是整数拍：<span class="math inline">n=\mathrm{round}(\theta/T_s)</span>。当 <span class="math inline">\theta=1.0</span> s、<span class="math inline">T_s=0.2</span> s 时，<span class="math inline">n=5</span>；当 <span class="math inline">\theta</span> 在实际中漂到 1.1 s，<span class="math inline">n</span> 仍然是 5，实现出来的延迟还是 1.0 s，误差 0.1 s。反过来 <span class="math inline">\theta</span> 漂到 0.9 s 时也一样。<strong>延迟的实际不确定区间被“取整”改写了</strong>，它的宽度不再是 <span class="math inline">\pm0.5</span> s，而是“取整误差 <span class="math inline">\pm T_s/2</span> 加上真实漂移中被取整吃掉的部分”。</p>
+<p><strong>第二刀是相位。</strong> 零阶保持器本身贡献 <span class="math inline">-\omega T_s/2</span> 的相位滞后，Tustin 又在高频把相位往上拉。这两项都与 <span class="math inline">T_s</span> 成正比，所以采样越慢，穿越点的相位裕度越小，而裕度正是鲁棒性的现金储备。</p>
+<h3 id="采样周期的实测代价">63.5.2 采样周期的实测代价</h3>
+<p>实验 8 把最终设计的连续参数固定不动，只改采样周期，在四个顶点上跑阶跃，取最坏值。</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: right;"><span class="math inline">T_s</span> /s</th>
+<th style="text-align: right;">每个延迟的采样数 <span class="math inline">\theta/T_s</span></th>
+<th style="text-align: right;">最坏超调</th>
+<th style="text-align: right;">最坏调节时间 /s</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">1.0</td>
+<td style="text-align: right;">93.16%</td>
+<td style="text-align: right;">98.0</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">0.50</td>
+<td style="text-align: right;">2.0</td>
+<td style="text-align: right;">53.01%</td>
+<td style="text-align: right;">29.0</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">0.20</td>
+<td style="text-align: right;">5.0</td>
+<td style="text-align: right;">50.80%</td>
+<td style="text-align: right;">28.6</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">0.05</td>
+<td style="text-align: right;">20.0</td>
+<td style="text-align: right;">42.33%</td>
+<td style="text-align: right;">22.0</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">0.02</td>
+<td style="text-align: right;">50.0</td>
+<td style="text-align: right;">41.65%</td>
+<td style="text-align: right;">22.0</td>
+</tr>
+</tbody>
+</table>
+<p>表 63-7　采样周期对最坏超调与调节时间的影响（控制器参数不变）</p>
+<figure>
+<img src="figs/ch063/fig_063_09_sampling.svg" alt="图 63-6　采样周期与最坏超调" /><figcaption aria-hidden="true">图 63-6　采样周期与最坏超调</figcaption>
+</figure>
+<p>这张表有两个看点。</p>
+<p><strong><span class="math inline">T_s=1.0</span> s 时彻底失效。</strong> 每个延迟只有 1 个采样点，超调 93.16%、调节时间 98 s。原因不是“控制器算得慢”，而是延迟的量化误差达到 <span class="math inline">\pm0.5</span> s——正好等于整个不确定区间的半宽。<strong>采样周期等于延迟，等于把延迟的不确定性放大了一倍。</strong></p>
+<p><strong><span class="math inline">T_s\le0.05</span> s 之后收益饱和。</strong> 0.05 s 与 0.02 s 的超调是 42.33% 与 41.65%，差 0.7 个百分点；调节时间都是 22 s。再快没有意义，因为此时误差的主项已经变成“连续设计本身的最坏超调 41.65%”，采样带来的额外损失被压到 1% 以内。</p>
+<h3 id="三条选样规则">63.5.3 三条选样规则</h3>
+<p>从这张表和相位关系可以总结出三条经验规则，本章的设计都满足。</p>
+<p><strong>规则一：每个延迟至少 10 个采样点。</strong> <span class="math inline">T_s\le\theta/10</span>，本章 <span class="math inline">\theta\in[0.5,1.5]</span>，取下界 <span class="math inline">\theta_{\min}/10=0.05</span> s。这条规则保证延迟量化误差不超过 0.05 s，是 <span class="math inline">\pm0.5</span> s 区间宽度的 10%。</p>
+<p><strong>规则二：穿越频率处每周期至少 20 个采样点。</strong> <span class="math inline">T_s\le2\pi/(20\omega_c)=0.31/0.325\approx0.97</span> s。这条比规则一松得多，说明本章的瓶颈是延迟量化，不是相位。</p>
+<p><strong>规则三：<span class="math inline">T_s</span> 不要超过时间常数的十分之一。</strong> <span class="math inline">T_s\le T/10=0.5</span> s。这条管的是对象动态被 ZOH “抹平”的程度。</p>
+<p>三条取最紧的：<span class="math inline">T_s=0.05</span> s。这与实验 8 的饱和点完全吻合——<strong>规则不是拍脑袋定的，它就是那张表的拐点。</strong></p>
+<h3 id="离散域的判据">63.5.4 离散域的判据</h3>
+<p>离散域的鲁棒判据与连续域一一对应，只是把 <span class="math inline">j\omega</span> 换成 <span class="math inline">z=e^{j\omega T_s}</span>，稳定边界从虚轴换成单位圆：</p>
+<p><span class="math display">
+\lvert W(e^{j\omega T_s})T(e^{j\omega T_s})\rvert&lt;1,\qquad \forall\omega\in[0,\pi/T_s]
+\tag{63-26}
+</span></p>
+<p>有两点与连续不同，实现时容易踩。</p>
+<p><strong>频率范围只有 <span class="math inline">[0,\pi/T_s]</span>。</strong> 连续域考虑到 10 rad/s，离散域只到 Nyquist 频率 <span class="math inline">\pi/T_s</span>；<span class="math inline">T_s=0.05</span> s 时是 62.8 rad/s，够用。但若取 <span class="math inline">T_s=0.2</span> s，Nyquist 只有 15.7 rad/s，高频段的判据根本看不到——这不是判据失效，而是“离散系统里根本不存在那些频率”。</p>
+<p><strong>延迟的磁盘要按整数拍写。</strong> 离散延迟是 <span class="math inline">z^{-n}</span>，它的误差半径是</p>
+<p><span class="math display">
+2\left|\sin\frac{\omega n T_s}{2}\right|,\qquad n=\mathrm{round}\left(\frac{\theta}{T_s}\right)
+\tag{63-27}
+</span></p>
+<p>而不是连续的 <span class="math inline">2|\sin(\omega\Delta\theta/2)|</span>。两者的关系是：<span class="math inline">T_s</span> 足够小、<span class="math inline">n</span> 足够大时，<span class="math inline">nT_s</span> 逼近期望的延迟值，式 (63-27) 收敛到连续形式；<span class="math inline">T_s</span> 大到 <span class="math inline">\theta</span> 只有一两拍时，<span class="math inline">n</span> 只能在 1 和 2 之间跳，半径的取值被“锁”在几个离散值上，随 <span class="math inline">\theta</span> 漂移发生跳变。<strong>离散化把延迟的不确定性从“连续变化”改成了“阶梯式跳变”，跳变的台阶高度正比于 <span class="math inline">T_s</span>。</strong> 这就是表 63-7 里 <span class="math inline">T_s=1.0</span> s 那一行的真正原因。</p>
+<h3 id="实现的三个细节">63.5.5 实现的三个细节</h3>
+<p>落地时还有三件事，与判据无关但会决定回路好不好用。</p>
+<p><strong>积分要抗饱和。</strong> 鲁棒设计把增益压得较低，但阶跃时积分器仍然会积到限幅之外。本章的时域仿真里没有加抗饱和，因为对象没有限幅；现场一定要加，否则 41.65% 的超调会变成“退饱和后的二次超调”。</p>
+<p><strong>微分要滤波。</strong> 本章的二阶族没有微分项，但三阶族有；一旦引入微分，必须串一阶低通，截止频率取 <span class="math inline">1/(5T_s)</span> 到 <span class="math inline">1/(10T_s)</span>，否则噪声会被放大到执行器。</p>
+<p><strong>延迟要用缓冲区实现，不要用多项式近似。</strong> <span class="math inline">n</span> 拍延迟就是一个长度 <span class="math inline">n</span> 的环形缓冲区，实现零成本、精度无损；用 Padé 近似反而引入额外的状态与相位误差。</p>
+<h3 id="本章的采样周期是怎么定下来的">63.5.6 本章的采样周期是怎么定下来的</h3>
+<p>把表 63-7 当成一张决策表来读，实际的选择过程只有三步。</p>
+<p><strong>第一步，先划出“不能用”的区域。</strong> <span class="math inline">T_s\ge0.5</span> s 时最坏超调已经到 53.01%，比连续设计的 41.65% 高出 11 个百分点；<span class="math inline">T_s=1.0</span> s 更是直接到 93.16%。这两行不是“性能差一点”，而是“设计意图被破坏”——按 41.65% 做的整定，落地变成 93%，现场必然要求重调，而重调之后又不再满足鲁棒约束。所以 <span class="math inline">T_s</span> 的上界必须在 0.2 s 以下取。</p>
+<p><strong>第二步，找“再加没有收益”的点。</strong> 从 0.2 s 到 0.05 s，最坏超调从 50.80% 降到 42.33%，改善 8.5 个百分点，值得付；从 0.05 s 到 0.02 s，只改善 0.68 个百分点。<strong>收益在这里断崖式衰减</strong>，因为量化误差 <span class="math inline">\pm T_s/2</span> 已经从 <span class="math inline">\pm0.025</span> s 缩到 <span class="math inline">\pm0.01</span> s，相对 <span class="math inline">\pm0.5</span> s 的区间宽度只从 5% 缩到 2%，而连续设计本身的 41.65% 成为主项。</p>
+<p><strong>第三步，算一遍实现成本。</strong> 延迟缓冲区长度是 <span class="math inline">n=\theta_{\max}/T_s</span>：<span class="math inline">T_s=0.05</span> s 时 <span class="math inline">n=30</span>，<span class="math inline">T_s=0.02</span> s 时 <span class="math inline">n=75</span>，内存与扫描负担按比例上升；而现场 PLC 的扫描周期通常就是 50 ms 或 100 ms，取 0.02 s 还得额外要求更快的任务周期。<strong>收益 0.68 个百分点，换 2.5 倍的缓冲区与一档硬件要求，不划算。</strong></p>
+<p>三步合起来，答案就是 0.05 s。这里的方法论比结论更重要：<strong>采样周期不是“越准越好”的参数，而是一条有拐点的成本曲线</strong>，拐点左边是“精度不够”，右边是“白花钱”。判断拐点位置只需要两列数——最坏超调随 <span class="math inline">T_s</span> 的变化，以及缓冲区长度随 <span class="math inline">T_s</span> 的变化。本章的这两列恰好都在 0.05 s 附近拐弯，这不是巧合：前者由 <span class="math inline">\pm T_s/2</span> 与 <span class="math inline">\pm0.5</span> s 的比值决定，后者由 <span class="math inline">\theta_{\max}</span> 决定，两条曲线的拐点被同一个“每个延迟 10 拍”的规则钉在了一起。</p>
+<p>顺带说一个现场常见的情形：如果控制器任务周期被迫取到 0.1 s（比如与其他逻辑共用一个慢任务），那么应当<strong>回到连续域重新设计</strong>，而不是把 0.05 s 的设计直接搬过去。表 63-7 里 0.2 s 那一行就是这种“直接搬”的后果——超调多出 9 个百分点。重新设计的做法是把 <span class="math inline">T_s</span> 写进不确定集，让搜索过程自己把带宽压低，这样得到的 41% 是在 0.1 s 下真实的 41%，而不是“连续设计在 0.1 s 下的残骸”。</p>
+<h3 id="采样周期吃掉的两份钱分开算">63.5.7 采样周期吃掉的两份钱，分开算</h3>
+<p>“采样会损失裕度”这句话太笼统，实际是两份互相独立的账，混在一起就会误判该往哪儿使劲。</p>
+<p><strong>第一份：连续近似误差。</strong> 它由三小块组成，都可以用穿越频率处的相位直接估。</p>
+<ul>
+<li><strong>零阶保持的半步延迟。</strong> ZOH 在频域的等效相位滞后是 <span class="math inline">-\omega T_s/2</span>。<span class="math inline">\omega_c=0.325</span> rad/s 处：<span class="math inline">T_s=0.05</span> s 时 <span class="math inline">-0.0081</span> rad 即 <span class="math inline">-0.47°</span>；<span class="math inline">T_s=0.2</span> s 时 <span class="math inline">-1.9°</span>；<span class="math inline">T_s=1.0</span> s 时 <span class="math inline">-9.3°</span>。</li>
+<li><strong>ZOH 的幅值下垂。</strong> 因子是 <span class="math inline">\mathrm{sinc}(\omega T_s/2)=\sin(\omega T_s/2)/(\omega T_s/2)</span>，<span class="math inline">T_s=1.0</span> s 时为 0.9956，即 <span class="math inline">-0.04</span> dB。<strong>这一项永远可以忽略</strong>，除非采样频率低到接近穿越频率。</li>
+<li><strong>Tustin 的频率畸变。</strong> 双线性变换把 <span class="math inline">j\omega</span> 映射到 <span class="math inline">j\frac{2}{T_s}\tan\frac{\omega T_s}{2}</span>，对一阶环节的相位误差约 <span class="math inline">-\frac{\omega T}{1+(\omega T)^2}\cdot\frac{(\omega T_s)^2}{12}</span>。代入 <span class="math inline">\omega T=1.65</span>、<span class="math inline">T_s=0.05</span> 得 <span class="math inline">10^{-5}</span> rad 量级——<strong>比 ZOH 那半步小两个数量级，根本不用管</strong>。</li>
+</ul>
+<p>三块加起来，<span class="math inline">T_s=0.05</span> s 时总共约 <span class="math inline">0.5°</span>，<span class="math inline">T_s=1.0</span> s 时约 <span class="math inline">9.3°</span>。按 §63.4.6 的相位账本，原本裕度 52.1°，<span class="math inline">9.3°</span> 吃掉后还剩 42.8°——这仍然是一个“能用”的回路。</p>
+<p><strong>第二份：延迟量化误差。</strong> 它没有这么温和。<span class="math inline">T_s=1.0</span> s 时，<span class="math inline">\theta=1.5</span> s 被写成 2 拍（2.0 s），<span class="math inline">\theta=0.5</span> s 被写成 0 拍（0 s），量化误差达到 <span class="math inline">\pm0.5</span> s，<strong>恰好等于整个不确定区间的半宽</strong>。也就是说，离散化把 <span class="math inline">\Delta\theta</span> 从 0.5 直接放大到 1.0，磁盘半径在 0.37 rad/s 处从 0.777 抬到 1.05（按 §63.7.7 的同一套换算：<span class="math inline">w_\theta=2\sin(0.185)=0.368</span>，<span class="math inline">w_{\text{prod}}=1.5\times1.368-1</span>）。<span class="math inline">|T|</span> 没变，<span class="math inline">\mu</span> 却涨了 35%——<strong>表 63-7 里 93.16% 的超调，主因是这一份，不是相位那 9.3°。</strong></p>
+<p>两份账的工程含义完全不同：第一份只能靠“提高采样率”来还，第二份可以靠“<strong>让控制器知道真实的延迟</strong>”来还。比如把延迟做成可配置的整数拍、由工艺参数（泵速、流量）算出 <span class="math inline">n</span> 后再写进缓冲区，那么即使 <span class="math inline">T_s=1.0</span> s，量化误差也不再是 <span class="math inline">\pm0.5</span> s，而是“估计误差”本身。<strong>这也是为什么现场调 <span class="math inline">T_s</span> 时，先看延迟是怎么实现的，再看采样率够不够</strong>——前者往往比后者便宜得多。</p>
+<h2 id="稳定性与性能">63.6 稳定性与性能</h2>
+<p>前面五节讲的是“怎么算”，这一节讲“算出来的数意味着什么”。三个判据——小增益、<span class="math inline">\mu_{RS}</span>、<span class="math inline">\mu_{RP}</span>——加上时域实测，同一批控制器在四把尺子下的读数并不一致，而不一致的地方恰恰是最有价值的信息。</p>
+<h3 id="三个判据的读数">63.6.1 三个判据的读数</h3>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">控制器</th>
+<th style="text-align: right;">最坏 <span class="math inline">\lvert S\rvert</span></th>
+<th style="text-align: right;"><span class="math inline">\mu_{RS}</span></th>
+<th style="text-align: right;"><span class="math inline">\mu_{RP}</span></th>
+<th style="text-align: right;">未结构化 <span class="math inline">\bar\sigma</span> 峰值</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">保守 PI</td>
+<td style="text-align: right;">1.562</td>
+<td style="text-align: right;">0.504</td>
+<td style="text-align: right;">1.703</td>
+<td style="text-align: right;">1.852</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">折中 PI</td>
+<td style="text-align: right;">2.522</td>
+<td style="text-align: right;">0.727</td>
+<td style="text-align: right;">1.442</td>
+<td style="text-align: right;">1.789</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">激进 PI</td>
+<td style="text-align: right;">86.249</td>
+<td style="text-align: right;">2.029</td>
+<td style="text-align: right;">3.221</td>
+<td style="text-align: right;">4.930</td>
+</tr>
+</tbody>
+</table>
+<p>表 63-8　三个控制器的稳定与性能判据读数</p>
+<p>先看 <span class="math inline">\mu_{RS}</span> 这一列。保守 0.504、折中 0.727 都小于 1，<strong>稳定判据通过</strong>；激进 2.029 大于 1，<strong>不通过</strong>。这一列的排序与最坏 <span class="math inline">\lvert S\rvert</span> 的排序完全一致（1.562、2.522、86.249）。排序一致不代表两者是同一个量：<span class="math inline">\mu_{RS}=\max\lvert T\rvert w</span>，最坏 <span class="math inline">\lvert S\rvert=\max\lvert 1/(1+L)\rvert</span>，一个看补灵敏度、一个看灵敏度；但在“带宽越高、穿越点相位越紧”的这段范围内，两者被同一个机理推高，所以同向变化。</p>
+<p>再看 <span class="math inline">\mu_{RP}</span> 这一列，排序变了：保守 1.703、折中 1.442、激进 3.221。<strong>折中 PI 的鲁棒性能读数比保守 PI 更好</strong>，尽管它的稳定裕度更差、最坏灵敏度更高。这看似矛盾，其实合理：<span class="math inline">\mu_{RP}</span> 衡量的是“在最坏方向上，性能指标还剩多少”，而保守 PI 的带宽太低（0.18 rad/s），低频段根本达不到 <span class="math inline">W_S</span> 要求的 25 倍增益，性能缺口反而更大。</p>
+<p>这就是鲁棒设计里最容易被忽略的一条：<strong>稳定裕度与性能裕度不是同向的。</strong> 一味保守会把 <span class="math inline">\mu_{RS}</span> 压低、把 <span class="math inline">\mu_{RP}</span> 推高；一味激进则反过来。两者之间有一个最优点，本章的三个候选里没有一个落在上面——折中 PI 的 <span class="math inline">\mu_{RP}=1.442</span> 最接近，但它的 <span class="math inline">\mu_{RS}=0.727</span> 还有余量，说明可以把增益再往上推一点。实验 4 的搜索给出的 <span class="math inline">k_p=2.40</span>（带滞后整形）就是这个方向的产物。</p>
+<h3 id="mu-与-barsigma-的间隙峰值处只有-4.5">63.6.2 <span class="math inline">\mu</span> 与 <span class="math inline">\bar\sigma</span> 的间隙：峰值处只有 4.5%</h3>
+<p>教科书说 <span class="math inline">\mu</span> 比小增益判据放松数倍。本章的实测是：峰值处只放松 4.5%，全频段上比值最大也只有 1.411 倍（图 63-7）。</p>
+<figure>
+<img src="figs/ch063/fig_063_07_mu_gap.svg" alt="图 63-7　鲁棒性能的 \mu 上界与未结构化 \bar\sigma 的对照" /><figcaption aria-hidden="true">图 63-7　鲁棒性能的 <span class="math inline">\mu</span> 上界与未结构化 <span class="math inline">\bar\sigma</span> 的对照</figcaption>
+</figure>
+<p>未结构化峰值 1.7194 @ 0.37 rad/s，<span class="math inline">\mu</span> 上界峰值 1.6456 @ 0.37 rad/s。两者的形状几乎重合，只在峰值附近张开一点点。<span class="math inline">1.7194/1.6456=1.045</span>，也就是说在真正决定设计的那一点上，完整的 <span class="math inline">\mu</span> 分析比直接取 <span class="math inline">\bar\sigma</span> 只多赚 4.5% 的余量。1.411 这个更大的数出现在曲线的另一段：那里 <span class="math inline">\bar\sigma</span> 还在往上走、<span class="math inline">\mu</span> 已经开始回落，两条曲线张开最多——但那段离峰值很远，不是设计真正在乎的地方。</p>
+<p><strong>看哪个数？看峰值处那个。</strong> 判据是“最大的那个频率上过不过关”，峰值处的间隙才是设计者能兑现的余量；别处的比值再大，也不改变“峰值超了”这个结论。</p>
+<p>4.5% 值不值得做？要分两种情况。</p>
+<ul>
+<li>如果设计正好卡在 <span class="math inline">\bar\sigma=1.03</span>、<span class="math inline">\mu=0.99</span> 这种边界上，4.5% 决定“能不能用”，值得。</li>
+<li>如果 <span class="math inline">\bar\sigma=1.72</span>、<span class="math inline">\mu=1.65</span> 这种两头都超，4.5% 毫无意义，两边都会判“不合格”。</li>
+</ul>
+<p>本章的结论是：<strong><span class="math inline">\mu</span> 的价值不在“放松 4.5%”，而在“分清是哪一块在拖后腿”。</strong> 把 <span class="math inline">\bar\sigma</span> 拆成 <span class="math inline">D</span> 标定形式之后，可以逐频点看 <span class="math inline">d</span> 的最优值：<span class="math inline">d</span> 偏离 1 越远，说明两块的量纲越不匹配、越需要分别处理。这比“峰值超了多少”有用得多——它告诉你该改控制器还是改权重。</p>
+<h3 id="mu-预测的边界-vs-时域实测的边界">63.6.3 <span class="math inline">\mu</span> 预测的边界 vs 时域实测的边界</h3>
+<p><span class="math inline">\mu</span> 是充分条件，所以它预测的失稳点应该比实测更早。实验 3 把这件事量化了。</p>
+<figure>
+<img src="figs/ch063/fig_063_04_scan.svg" alt="图 63-8　\mu 预测的稳定边界与时域实测的失稳点" /><figcaption aria-hidden="true">图 63-8　<span class="math inline">\mu</span> 预测的稳定边界与时域实测的失稳点</figcaption>
+</figure>
+<p>扫 <span class="math inline">k_p</span> 从 0.6 到 3.2（<span class="math inline">T_i=3</span>，工作点取 <span class="math inline">K=3.0</span>、<span class="math inline">\theta=1.5</span> 的最坏端点），<span class="math inline">\mu</span> 单调上升，在 <span class="math inline">k_p=1.026</span> 处穿过 1。时域里，<span class="math inline">\max\lvert y\rvert</span> 在 <span class="math inline">k_p=1.60</span> 处从 2.079 跳到 9.377，真正的失稳点在 <span class="math inline">k_p=1.70</span> 附近。<strong><span class="math inline">\mu</span> 判据保守 66%</strong>（<span class="math inline">1.70/1.026=1.66</span>）。</p>
+<p>保守的来源有三个，逐条说清。</p>
+<p><strong>第一，<span class="math inline">\mu</span> 上界本身不是 <span class="math inline">\mu</span>。</strong> 式 (63-17) 的右端在有两块以上结构时会高于真值，本章的这一处只高不到 5%，但方向是对的——判据偏严。</p>
+<p><strong>第二，最坏方向是“逐频点”挑的。</strong> <span class="math inline">\bar\sigma</span> 在每个频率上独立地挑最坏方向，实际系统里 <span class="math inline">\Delta</span> 是一个稳定的传递函数，它在不同频率上的取值受解析性约束，不可能每个频点都取到最坏。这条保守性在小增益判据里同样存在，<span class="math inline">\mu</span> 也没能消掉。</p>
+<p><strong>第三，时域失稳需要“持续激励”。</strong> 频域判据说“存在某个 <span class="math inline">\Delta</span> 使闭环不稳定”，但时域里阶跃响应能不能真的把这个不稳定激发出来，还取决于初值与输入。本章实测的失稳点 1.70 是“阶跃响应冲到 50 以上”的点，若输入更小或时间更短，可能要到 1.8 才看得出来。</p>
+<p><strong>这三条加起来，决定了 <span class="math inline">\mu</span> 判据的正确用法：它不是“能不能用”的判据，而是“要不要担心”的判据。</strong> <span class="math inline">\mu&lt;1</span> 一定安全；<span class="math inline">\mu</span> 在 1.0–1.8 之间要现场验证（本章的失稳点对应 <span class="math inline">\mu\approx1.83</span>）；<span class="math inline">\mu&gt;2.0</span> 基本没救。</p>
+<h3 id="性能的代价">63.6.4 性能的代价</h3>
+<p>表 63-2 已经给出了代价曲线，图 63-9 把它画出来。</p>
+<figure>
+<img src="figs/ch063/fig_063_05_frontier.svg" alt="图 63-9　穿越频率与可达最坏灵敏度的代价曲线" /><figcaption aria-hidden="true">图 63-9　穿越频率与可达最坏灵敏度的代价曲线</figcaption>
+</figure>
+<p>曲线有两个明显特征。<span class="math inline">\omega_c\le0.33</span> 的段近似线性，斜率约 8（<span class="math inline">\omega_c</span> 每涨 0.05，最坏 <span class="math inline">\lvert S\rvert</span> 涨 0.3–0.4）；<span class="math inline">\omega_c&gt;0.33</span> 的段是指数的，0.58 处冲到 21.786，之后甚至不再单调（0.63 降到 17.463、0.68 降到 17.012、0.73 又升到 24.276）。</p>
+<p>末端的非单调是搜索的副产品：在这么高的带宽区，能满足 <span class="math inline">\lvert L(2)\rvert\le0.5</span> 的候选很少，网格稀疏，每个格点代表的参数差别很大，所以“最坏 <span class="math inline">\lvert S\rvert</span>”随 <span class="math inline">\omega_c</span> 上下跳。<strong>这一段的数据不可用于设计，只能用于说明“这里已经没救了”。</strong></p>
+<h3 id="时域四个顶点与-300-组随机">63.6.5 时域：四个顶点与 300 组随机</h3>
+<p>图 63-10 把两个控制器在四个顶点上的阶跃响应画在一起。</p>
+<figure>
+<img src="figs/ch063/fig_063_06_time.svg" alt="图 63-10　激进 PI 与鲁棒二阶在不确定性区间四个顶点上的阶跃响应" /><figcaption aria-hidden="true">图 63-10　激进 PI 与鲁棒二阶在不确定性区间四个顶点上的阶跃响应</figcaption>
+</figure>
+<p>左栏是激进 PI，右栏是鲁棒二阶，四行对应四个顶点。最下面一行（<span class="math inline">K=3.0</span>、<span class="math inline">\theta=1.5</span>）是决定性的：激进 PI 的曲线直接冲出图外（峰值 50.462），鲁棒二阶的曲线上升到 1.417 后回落。前三行两者差别不大，甚至激进 PI 在第一个顶点上更快（12.0 s 对 22.0 s）。</p>
+<p>这个“三好一坏”的格局正是鲁棒设计的典型形态：<strong>它不是把每一点都做好，而是把最坏那一点拉回及格线，代价是其余点都变慢。</strong> 如果现场的最坏点一年只出现一次，这笔买卖划算；如果最坏点是常态工况，那么鲁棒设计就是纯粹的损失。</p>
+<p>图 63-11 是 300 组随机参数的累积分布。</p>
+<figure>
+<img src="figs/ch063/fig_063_10_mc.svg" alt="图 63-11　300 组随机参数下灵敏度峰值的累积分布" /><figcaption aria-hidden="true">图 63-11　300 组随机参数下灵敏度峰值的累积分布</figcaption>
+</figure>
+<p>激进 PI 的分布长尾一直拖到 265.677，56.3% 的样本超过 2.2；鲁棒二阶的分布整体压在 2.2 以内，最大 2.160，越界比例 0.0%。两条曲线的 95% 分位是 15.379 与 1.901，相差 8 倍。</p>
+<p>这张图还说明一件事：<strong>鲁棒设计的分布是“截断”的，激进设计的分布是“重尾”的。</strong> 截断分布的最大值可预测（2.160，与设计约束 2.2 吻合），重尾分布的最大值不可预测（265.677，换个种子可能更大）。对于需要写进安全评估报告的场合，“可预测的最坏值”比“平均性能高 10%”重要得多。</p>
+<h3 id="四类判据的分工">63.6.6 四类判据的分工</h3>
+<p>把本节的所有读数归拢成一张分工表。</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">判据</th>
+<th style="text-align: left;">回答的问题</th>
+<th style="text-align: left;">本章读数</th>
+<th style="text-align: left;">什么时候用</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">小增益 <span class="math inline">\lVert WT\rVert_\infty</span></td>
+<td style="text-align: left;">最坏情况下稳不稳</td>
+<td style="text-align: left;">与 <span class="math inline">\mu_{RS}</span> 恒等</td>
+<td style="text-align: left;">单块不确定性，快速筛查</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><span class="math inline">\mu_{RS}</span></td>
+<td style="text-align: left;">同上，但可拆结构</td>
+<td style="text-align: left;">0.504 / 0.727 / 2.029</td>
+<td style="text-align: left;">多块、需要知道哪块主导</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><span class="math inline">\mu_{RP}</span></td>
+<td style="text-align: left;">最坏情况下性能剩多少</td>
+<td style="text-align: left;">1.703 / 1.442 / 3.221</td>
+<td style="text-align: left;">要同时管稳定与性能</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">最坏 <span class="math inline">\lvert S\rvert</span></td>
+<td style="text-align: left;">最坏情况的频域性能</td>
+<td style="text-align: left;">1.562 / 2.522 / 86.249</td>
+<td style="text-align: left;">与现场指标对齐</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">顶点阶跃 + 蒙特卡洛</td>
+<td style="text-align: left;">实际会怎样</td>
+<td style="text-align: left;">超调 41.65%、越界 0.0%</td>
+<td style="text-align: left;">上线前的最终确认</td>
+</tr>
+</tbody>
+</table>
+<p>表 63-9　四类判据的分工</p>
+<p>用一句话概括这一节：<strong>判据越“高级”，给出的结论越保守；而最保守的那个（<span class="math inline">\mu</span> 预测 1.026）与最贴近现实的（实测 1.700）之间差 66%，这 66% 就是“理论安全”与“实际可用”之间的距离。</strong> 设计者的工作是在这 66% 里做判断，而不是把判据当成开关。</p>
+<h3 id="选控制器的次序先筛硬约束再排软指标">63.6.7 选控制器的次序：先筛硬约束，再排软指标</h3>
+<p>四个候选、四把尺子摆在一起，很自然会问“哪个最好”。本章的答案不是某个控制器，而是一个<strong>次序</strong>。</p>
+<p>先把四个候选的读数排成一张表（<span class="math inline">\mu_{RS}</span>／<span class="math inline">\mu_{RP}</span>／最坏 <span class="math inline">\lvert S\rvert</span>）：</p>
+<ul>
+<li>保守 PI：0.504／1.703／1.562</li>
+<li>折中 PI：0.727／1.442／2.522</li>
+<li>激进 PI：2.029／3.221／86.249</li>
+<li>鲁棒二阶：0.846／1.646／2.180</li>
+</ul>
+<p><strong>第一步，用 <span class="math inline">\mu_{RS}&lt;1</span> 筛掉“不稳”的。</strong> 激进 PI 的 2.029 直接被淘汰——它的问题不是“性能差一点”，而是“最坏情况下闭环会散”。这一步没有讨价还价的空间，因为它是生存判据而不是性能判据。</p>
+<p><strong>第二步，用最坏 <span class="math inline">\lvert S\rvert\le2.2</span> 筛掉“越界”的。</strong> 折中 PI 的 2.522 出局。注意它在剩下的三个里 <span class="math inline">\mu_{RP}</span> 最好（1.442），也就是说<strong>它在软指标上得分最高，却过不了硬约束</strong>。这是鲁棒设计里最常见的陷阱：如果一个候选在某张表上排第一，先确认它有没有被硬约束筛掉，再决定要不要为它惋惜。</p>
+<p><strong>第三步，在活下来的两个里比软指标。</strong> 保守 PI 的 <span class="math inline">\mu_{RP}=1.703</span>、鲁棒二阶 1.646，差别只有 3.5%；但保守 PI 的穿越频率 0.18 对 0.33，<strong>慢了接近一倍</strong>。到这一步，比较的已经不是判据，而是“用户能接受多慢”。本章选二阶，理由写在性能而不是鲁棒性上：两者的鲁棒读数在同一个量级，速度差一倍。</p>
+<p>这个次序的意义在于：<strong>硬约束是布尔量，软指标是连续量，混在一起排序必然出错。</strong> 把 <span class="math inline">\mu_{RP}</span> 与 <span class="math inline">\lvert S\rvert</span> 加权求和再挑最小，会选出折中 PI——一个最坏灵敏度 2.522、在真实工况下谐振明显的设计。工程上正确的做法永远是先做布尔筛选，再在剩下的集合里做连续优化。</p>
+<h3 id="把-66-拆开磁盘的账与判据的账">63.6.8 把 66% 拆开：磁盘的账与判据的账</h3>
+<p>“<span class="math inline">\mu</span> 判据保守 66%”这句话容易让人以为整个方法的保守量来自一处。其实它由两笔完全不同的钱组成，拆开之后才看得清哪一笔能还。</p>
+<p><strong>第一笔：磁盘比真实参数集宽。</strong> 把 <span class="math inline">w_{\text{prod}}(\omega)</span> 换成真实半径——即在整个 <span class="math inline">41\times41</span> 的参数网格上逐点算 <span class="math inline">\lvert P/P_0-1\rvert</span> 再取最大——重做同一条 <span class="math inline">\mu</span> 曲线，临界增益从 <span class="math inline">k_p=1.026</span> 抬到 <strong>1.543</strong>。半径的比值（真实／乘积磁盘）在几个频点是：</p>
+<ul>
+<li>0.05 rad/s：0.5009／0.5377 = 0.93；</li>
+<li>0.37 rad/s：0.5487／0.7767 = 0.71；</li>
+<li>1.00 rad/s：0.7839／1.2394 = 0.63；</li>
+<li>2.00 rad/s：1.2714／1.9316 = 0.66；</li>
+<li>5.00 rad/s：2.3788／3.3484 = 0.71；</li>
+<li>10.0 rad/s：2.4965／2.2954 = <strong>1.09</strong>。</li>
+</ul>
+<p>也就是说，在 0.3–5 rad/s 这段主力频段上，磁盘把真实半径高估了 40%–60%，这就是三角不等式那笔账（§63.2.2）。<strong>把磁盘换成网格，可以还掉 50 个百分点：1.026 → 1.543。</strong></p>
+<p><strong>第二笔：判据本身是充分条件。</strong> 即使半径给得一分不差，<span class="math inline">\lVert T\rVert_\infty\cdot\max\lvert\Delta\rvert&lt;1</span> 仍然只保证“若成立则稳定”，不保证“若不成立则不稳定”。实测失稳点是 <span class="math inline">k_p=1.700</span>，比真实半径算出的 1.543 又高 10%。这 10% 才是 <span class="math inline">\mu</span>/小增益判据<strong>不可回收</strong>的保守量——它来自“最坏参数点同时取最坏相位、且沿同一方向作用”这个假设，而实际的 <span class="math inline">K</span>、<span class="math inline">\theta</span> 组合往往对不上这个方向。</p>
+<p>拆完之后，两笔账的处理方式完全不同：</p>
+<ul>
+<li><strong>第一笔可以还，而且几乎免费。</strong> 网格法不需要任何新理论，只是把 <span class="math inline">w(\omega)</span> 换成 <span class="math inline">\max_{K,\theta}\lvert P/P_0-1\rvert</span>，代价是参数维数升高时计算量指数增长（两个参数 1600 点，三个参数就上万）。</li>
+<li><strong>第二笔还不掉。</strong> 除非改用更精细的结构（§63.9.2 的拆块）或直接做时域优化，否则 10% 就在那里。<strong>这 10% 应该当作“设计余量”提前写进预算，而不是事后再去争。</strong></li>
+</ul>
+<p>还有一个不能忽略的细节：10 rad/s 处比值是 1.09，<strong>磁盘在这一频点反而低估了 9%</strong>。“磁盘一定保守”是个误解——三角不等式只保证“某种组合下覆盖”，不保证逐点覆盖所有参数点。本章之所以没出事，是因为 <span class="math inline">\mu</span> 的峰值在 0.37 rad/s，那里磁盘高估 41%，低估的频段没有参与峰值。<strong>换一个峰值落在 5 rad/s 以上的对象，就必须先核对这条比值曲线，再决定能不能用磁盘。</strong></p>
+<h3 id="三张图连起来读">63.6.9 三张图连起来读</h3>
+<p>本章有三张图讲的是同一件事的三个面，分开看都对，合起来才有用：图 63-8 管“能不能稳”，图 63-9 管“要多快”，图 63-10 管“长什么样”。</p>
+<p><strong>先看图 63-9，它决定约束。</strong> 横轴是穿越频率，纵轴是这一带宽下能做到的最坏 <span class="math inline">\lvert S\rvert</span>。曲线的拐点在 0.33 rad/s：拐点左边近似线性，斜率约 8；拐点右边指数上冲，0.58 处已经是 21.786。这张图回答的是“我最多能要到多少速度”——它不是能力上限，而是<strong>代价曲线</strong>，越过拐点之后，每一点速度都要用数量级的灵敏度去换。</p>
+<p><strong>再回看图 63-8，它决定余量。</strong> 横轴是 <span class="math inline">k_p</span>、纵轴有两个量：<span class="math inline">\mu</span> 曲线（平滑）与阶跃峰值（跳变）。读法是从右往左：先找峰值跳变的位置（1.60 与 1.80 之间），再找 <span class="math inline">\mu=1</span> 的位置（1.026）。两个位置之间的间隔就是判据的保守量，本章是 66%。这张图告诉设计者：<strong>判据说“不行”的地方，实际还能跑；判据说“刚行”的地方，实际余量很大。</strong></p>
+<p><strong>最后看图 63-10，它决定接受不接受。</strong> 四条曲线对应四个顶点，右栏的形状才是现场会看到的东西：超调 41.65%、调节时间 22 s、峰顶有 1.165 的谐振。这张图不产生任何新判据，它只回答一个问题——<strong>这样的响应，工艺能不能接受。</strong></p>
+<p>三张图的连接点是同一个控制器。它在 63-8 上是 <span class="math inline">k_p=2.40</span> 的一个点，在 63-9 上是 <span class="math inline">\omega_c=0.33</span> 附近的一个点，在 63-10 上是右栏四条曲线。<strong>正因为三张图共享同一套参数，它们才能互相印证</strong>；如果三张图分别来自三个不同的设计，拼在一起看只会得到混乱。</p>
+<p>读图次序也有讲究。推荐的次序是“代价 → 余量 → 形态”，因为代价决定可行域，余量决定敢不敢往前推，形态决定最终签不签字。反过来读（先看形态，觉得 41% 超调太大，于是回头砍带宽）会白丢性能：41% 是在最坏顶点上的数，常态顶点的超调只有 15.29%，砍带宽砍掉的是常态性能，换来的只是最坏点那 10 个百分点的改善。</p>
+<p>还有一条经验：<strong>三张图里只要有一张说不通，就先别签字。</strong> 常见的不通有三种——代价曲线在拐点附近来回跳、<span class="math inline">\mu</span> 曲线在峰值附近出现锯齿、时域响应与 <span class="math inline">\lvert S\rvert</span> 峰值对不上。它们分别指向搜索网格太粗、频率点太少、以及时域与频域用了不同的工作点。这三种问题都不会让程序报错，只会让报告里的数字看起来自洽、实际站不住。<strong>所以签字之前先问一句：这三张图，是从同一次运行里导出来的吗？</strong></p>
+<h2 id="参数意义与作用">63.7 参数意义与作用</h2>
+<p>本章一共有四组参数：对象的（<span class="math inline">K</span>、<span class="math inline">T</span>、<span class="math inline">\theta</span>）、不确定性的（<span class="math inline">w_K</span>、<span class="math inline">\Delta\theta</span>）、性能权重的（<span class="math inline">M_S</span>、<span class="math inline">\omega_b</span>、<span class="math inline">A</span>）、控制器的（<span class="math inline">k_p</span>、<span class="math inline">T_i</span>、<span class="math inline">z</span>、<span class="math inline">p</span>）。它们的地位不同：前两组是“给定的事实”，第三组是“提出的要求”，只有第四组是“设计出来的”。混为一谈是初学鲁棒控制最常见的困惑。</p>
+<h3 id="对象参数决定难度">63.7.1 对象参数：决定难度</h3>
+<p><span class="math inline">K</span> 只影响开环增益，在闭环里被 <span class="math inline">k_p</span> 部分补偿，所以它本身不是难点；难点在<strong>它的相对误差 <span class="math inline">w_K</span></strong>。<span class="math inline">K</span> 从 2.0 变成 3.0，误差 50%，意味着控制器必须为“增益突然大一半”留出相位裕度。</p>
+<p><span class="math inline">T</span> 在本章被当作已知。实际中它是最容易被低估的参数：管壁结垢、物料黏度变化都会让 <span class="math inline">T</span> 翻倍，而 <span class="math inline">T</span> 从 5 s 翻到 10 s，穿越频率处的相位要从 <span class="math inline">-58.4°</span> 变成 <span class="math inline">-73.1°</span>，多扣近 15°。<strong>如果 <span class="math inline">T</span> 也不确定，本章的全部结论都要重算</strong>，因为式 (63-10) 里会多出一项 <span class="math inline">\frac{T_0s+1}{Ts+1}-1</span>，磁盘模型的形式完全变了。</p>
+<p><span class="math inline">\theta</span> 是最贵的参数，贵在两处：它同时贡献相位滞后与不确定性。1.0 s 的延迟在 0.33 rad/s 处扣 18.6°，±0.5 s 的漂移再加 9.3°。<strong>延迟是带宽上限的主要决定因素</strong>：本章的悬崖出现在 <span class="math inline">\omega_c\approx0.35\omega_b</span>，而把悬崖压在这个位置的正是 <span class="math inline">\Delta\theta</span>。若 <span class="math inline">\Delta\theta</span> 减半，同样的带宽只付一半的相位代价，悬崖右移；若加倍，悬崖左移。<strong>设计前先确认延迟的不确定区间，比后面调任何参数都重要。</strong></p>
+<h3 id="不确定性参数决定保守性">63.7.2 不确定性参数：决定保守性</h3>
+<p><span class="math inline">w_K=0.500</span> 由式 (63-3) 算出，取区间两侧的较大者。如果现场只关心“增益不会低于标称”，那么 <span class="math inline">w_K</span> 可以取单侧 0.5，磁盘不需要对称，判据可以相应放松。</p>
+<p><span class="math inline">\Delta\theta</span> 是延迟的半宽。它进入式 (63-11) 之后，在低频几乎为零、在高频线性增长，所以<strong>它对判据的贡献集中在穿越频率附近</strong>。这也是为什么“延迟不确定”比“增益不确定”更难对付：增益不确定在整个频段上均匀施压，而延迟不确定专打最脆弱的地方。</p>
+<p>两者的合成方式（加法还是乘法）在 §63.2.2 已经量化：乘法在关心频段严格有效、代价是多 40%–60% 的余量；加法在中频更紧、但高频失效。<strong>工程上选乘法，然后接受这份保守。</strong></p>
+<h3 id="性能权重决定什么叫够好">63.7.3 性能权重：决定“什么叫够好”</h3>
+<p><span class="math inline">M_S</span> 是允许的灵敏度峰值，也就是阶跃响应的超调上限（近似）。<span class="math inline">M_S=2.0</span> 对应约 6 dB 的谐振峰，实测最坏超调 41.65%，两者量级一致。它与可达带宽是直接对抗的：<span class="math inline">M_S</span> 越小，允许的谐振越低，能通过的候选带宽越低——表 63-2 那条代价曲线就是这个对抗的剖面。</p>
+<p><span class="math inline">\omega_b</span> 是性能要求的“转折频率”，可以理解成“希望闭环跟到多快”。它不等于实际带宽——本章 <span class="math inline">\omega_b=0.15</span>，实际 <span class="math inline">\omega_c=0.33</span>，后者是前者的 2.2 倍。这个倍数没有普遍性，但它反映了一个规律：<strong><span class="math inline">W_S</span> 是“要求”，实际带宽通常比它高出一截</strong>，因为 <span class="math inline">W_S</span> 在 <span class="math inline">\omega_b</span> 之后迅速变小，设计只要在 <span class="math inline">\omega_b</span> 附近满足它就算过关。</p>
+<p><span class="math inline">A</span> 控制低频要求的陡度。<span class="math inline">A=0.02</span> 给出 25 倍的低频增益要求，<span class="math inline">A=0.05</span> 只有 10 倍。<span class="math inline">A</span> 太小会让 <span class="math inline">W_S</span> 在低频接近积分器，设计被迫加大积分作用，相位裕度下降。<span class="math inline">A</span> 再小一个数量级（0.002）要求就是 250 倍，控制器几乎必须做成纯积分，穿越点的相位余量会被吃光。<strong>工程上 <span class="math inline">A</span> 很少低于 0.01。</strong></p>
+<h3 id="控制器参数决定能不能做到">63.7.4 控制器参数：决定能不能做到</h3>
+<p><span class="math inline">k_p</span> 是唯一能同时抬高“低频抑制”和“穿越频率”的参数，也是最危险的参数。实验 3 的扫描给出了它的完整画像：</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: right;"><span class="math inline">k_p</span></th>
+<th style="text-align: right;">0.60</th>
+<th style="text-align: right;">1.00</th>
+<th style="text-align: right;">1.40</th>
+<th style="text-align: right;">1.60</th>
+<th style="text-align: right;">1.80</th>
+<th style="text-align: right;">2.20</th>
+<th style="text-align: right;">3.20</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;"><span class="math inline">\mu</span>（最坏端点）</td>
+<td style="text-align: right;">0.742</td>
+<td style="text-align: right;">0.980</td>
+<td style="text-align: right;">1.378</td>
+<td style="text-align: right;">1.666</td>
+<td style="text-align: right;">2.029</td>
+<td style="text-align: right;">3.076</td>
+<td style="text-align: right;">13.947</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">最坏 <span class="math inline">\lvert S\rvert</span></td>
+<td style="text-align: right;">1.320</td>
+<td style="text-align: right;">1.548</td>
+<td style="text-align: right;">1.857</td>
+<td style="text-align: right;">2.056</td>
+<td style="text-align: right;">2.297</td>
+<td style="text-align: right;">2.976</td>
+<td style="text-align: right;">9.867</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">相位裕度 /(°)</td>
+<td style="text-align: right;">58.5</td>
+<td style="text-align: right;">51.4</td>
+<td style="text-align: right;">44.7</td>
+<td style="text-align: right;">41.3</td>
+<td style="text-align: right;">37.3</td>
+<td style="text-align: right;">29.7</td>
+<td style="text-align: right;">9.9</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;"><span class="math inline">\max\lvert y\rvert</span></td>
+<td style="text-align: right;">1.313</td>
+<td style="text-align: right;">1.681</td>
+<td style="text-align: right;">2.079</td>
+<td style="text-align: right;">9.377</td>
+<td style="text-align: right;">50.609</td>
+<td style="text-align: right;">50.214</td>
+<td style="text-align: right;">53.330</td>
+</tr>
+</tbody>
+</table>
+<p>表 63-10　比例增益的完整画像（<span class="math inline">T_i=3</span>，<span class="math inline">K=3.0</span>、<span class="math inline">\theta=1.5</span> 端点）</p>
+<p>这张表最值得注意的是 <span class="math inline">\max\lvert y\rvert</span> 的跳变：<span class="math inline">k_p</span> 从 1.40 到 1.60，这个数从 2.079 跳到 9.377，而 <span class="math inline">\mu</span> 只从 1.378 到 1.666。<strong>时域指标是“跳”的，频域指标是“滑”的。</strong> 这就是为什么不能只看 <span class="math inline">\mu</span> 曲线来判断“还能不能再加一点增益”——曲线上看起来平缓的一段，时域里可能已经跨过了悬崖。</p>
+<p><span class="math inline">T_i</span> 决定积分作用的强弱。<span class="math inline">T_i</span> 太小（强积分）会把相位裕度吃掉，<span class="math inline">T_i</span> 太大会让低频增益不足、稳态误差压不下去。本章的 <span class="math inline">T_i=10</span> 相对 <span class="math inline">T=5</span> 是 2 倍，属于“温和”的取值：积分转折频率 <span class="math inline">1/T_i=0.1</span> rad/s 远低于穿越频率 0.33，对裕度影响小。</p>
+<p><span class="math inline">z</span> 与 <span class="math inline">p</span> 是滞后整形的零点与极点，只以比值 <span class="math inline">p/z</span> 影响高频增益、以绝对位置影响相位。本章固定 <span class="math inline">p=z/4</span>，高频衰减 4 倍；若改成 <span class="math inline">p=z/10</span>，衰减 10 倍，<span class="math inline">k_p</span> 可以再抬高，但相位滞后更大、带宽反而可能下降。<strong>这是一个“想要更高增益”与“想要更快”之间的交换，不是免费的。</strong></p>
+<h3 id="判据阈值决定划线在哪">63.7.5 判据阈值：决定“划线在哪”</h3>
+<p>本章用了三个阈值：<span class="math inline">SMAX=2.2</span>（最坏灵敏度峰值）、<span class="math inline">LMAX\_HF=0.5</span>（2 rad/s 处的环路增益）、<span class="math inline">\mu_{DES}=0.90</span>（稳定判据的留量）。三个数都不是理论值，是工程选择。</p>
+<p><span class="math inline">SMAX=2.2</span> 对应 6.85 dB，是“超调不超过 45%”的粗略换算。取 2.2 而不是 2.0，是因为本章标称峰值与最坏峰值平均差 0.78：若要求最坏不超过 2.0，标称就得压到 1.2 附近，而三个阶数族的标称最好也只到 1.354（表 63-5），可行域会窄到搜不出解。</p>
+<p><span class="math inline">LMAX\_HF=0.5</span> 对应 <span class="math inline">-6</span> dB，是“高频不放大噪声”的经验线。取 0.5 而不是 0.2，是给滞后整形留空间：这条线越紧，越依赖更深的滞后衰减，而滞后本身吃相位，最终把可达带宽压下去。<strong>高频约束与带宽是隐性的对抗关系，不是“越严越好”。</strong></p>
+<p><span class="math inline">\mu_{DES}=0.90</span> 留 10% 余量，理由是 <span class="math inline">\mu</span> 上界在网格上可能被低估几个百分点（频率点不够密）。<strong>判据的阈值要留出“计算误差”的余量，这是数值设计的常识。</strong></p>
+<h3 id="采样周期决定离散化损失">63.7.6 采样周期：决定离散化损失</h3>
+<p><span class="math inline">T_s</span> 的作用在 §63.5 已经量化：<span class="math inline">T_s\le0.05</span> s 之后收益饱和，<span class="math inline">T_s=1.0</span> s 时彻底失效。它在参数体系里的位置比较特殊——它不影响连续域的任何一个判据，只影响“设计能不能落地”。<strong>所以它必须在设计阶段就定下来，不能等控制器算完再补。</strong></p>
+<h3 id="六组参数不是并列的一条单向依赖链">63.7.7 六组参数不是并列的：一条单向依赖链</h3>
+<p>把六组参数平铺在一张表上容易造成误解，以为它们可以各自独立地调。实际上它们之间是一条严格的单向依赖链：<strong>对象参数 → 不确定性参数 → 性能权重 → 控制器参数</strong>，而阈值与采样周期是两个“旁挂”的约束，分别从上、下游切进来。</p>
+<p>链的方向决定了“改了上游，下游全部作废”这条铁律。举一个最容易被低估的例子：把延迟上界从 1.5 s 放宽到 2.0 s，看似只是“区间画大一格”，实际后果是 <span class="math inline">\Delta\theta</span> 从 0.5 变成 0.75，磁盘在 0.37 rad/s 处从 0.777 抬到 0.915（因为 <span class="math inline">w_\theta=2\sin(0.375\times0.37/2)</span> 从 0.185 变成 0.277）。补灵敏度 <span class="math inline">T</span> 没变，<span class="math inline">\mu_{RS}</span> 却按同样比例涨 18%，从 0.846 直接到 1.0 附近——<strong>一个区间端点的改动，让原本合规的设计变成了边界设计。</strong> 这种“上游一动、下游全废”的连锁，正是 §63.10 要强调“不确定性建模必须最先冻结”的原因。</p>
+<p>阈值与采样周期虽然旁挂，但它们切进来的位置不同：<span class="math inline">SMAX</span>、<span class="math inline">\mu_{DES}</span> 切在搜索环节（决定可行域的边界），<span class="math inline">T_s</span> 切在落地环节（决定连续设计还剩多少）。前者改小一点，可行域变窄，可能直接导致“搜不出解”，这时的正确反应是<strong>重新审视权重是否要求过高</strong>，而不是把阈值放宽；后者改大一点，超调单调上升，没有回旋余地。</p>
+<p>还有一个方向性的事实值得记住：<strong>在这条链上，设计者真正能自由摆动的只有控制器参数。</strong> 上游三组要么是事实（对象参数）、要么是承诺（权重），改动它们属于“重新立项”而不是“调参”。所以日常工作的形态必然是：上游冻结，在下游反复走——本章 §63.8.3 那五次尝试，本质上就是在同一条下游链上打转。</p>
+<h3 id="四个参数各改-10谁最贵">63.7.8 四个参数各改 10%：谁最贵</h3>
+<p>前一小节是定性的，这一小节给数。以本章最终设计为基准（<span class="math inline">\mu_{RS}=0.846</span>、<span class="math inline">\mu_{RP}=1.646</span>、<span class="math inline">\bar\sigma</span> 峰值 1.719），把 <span class="math inline">k_p</span>、<span class="math inline">T_i</span>、<span class="math inline">z</span>、<span class="math inline">p</span> 分别乘 0.9 与 1.1，其余不动，重算三个指标：</p>
+<ul>
+<li><span class="math inline">k_p</span>：<span class="math inline">\mu_{RS}</span> 变成 0.808 / 0.885（<span class="math inline">-4.5\%</span> / <span class="math inline">+4.6\%</span>），<span class="math inline">\mu_{RP}</span> 变成 1.609 / 1.685；</li>
+<li><span class="math inline">T_i</span>：<span class="math inline">\mu_{RS}</span> 变成 0.878 / 0.821（<span class="math inline">+3.8\%</span> / <span class="math inline">-2.9\%</span>），<span class="math inline">\mu_{RP}</span> 变成 1.699 / 1.605；</li>
+<li><span class="math inline">z</span>：<span class="math inline">\mu_{RS}</span> 变成 0.820 / 0.874（<span class="math inline">-3.1\%</span> / <span class="math inline">+3.3\%</span>），<span class="math inline">\mu_{RP}</span> 变成 1.584 / 1.713；</li>
+<li><span class="math inline">p</span>：<span class="math inline">\mu_{RS}</span> 变成 0.837 / 0.858（<span class="math inline">-1.1\%</span> / <span class="math inline">+1.4\%</span>），<span class="math inline">\mu_{RP}</span> 变成 1.658 / 1.642。</li>
+</ul>
+<p>三件事值得记住。</p>
+<p><strong>第一，相对灵敏度都在 0.5 以下。</strong> 参数变 10%，指标只变 1%–5%。这是好消息：现场控制器的电阻电容公差、整定软件的小数位截断，都不会把设计推翻。<strong>但它同时是坏消息</strong>——反过来说，想靠微调参数把 <span class="math inline">\mu_{RP}</span> 从 1.646 拉回 1 以下，需要 −39% 的变化，按 0.4 的灵敏度要动 100% 的参数，等于把设计重做一遍。这个数把 §63.9 那条“改结构而不是改参数”的结论量化了：<strong>指标离合格线太远时，参数空间里没有解，只有结构空间里有。</strong></p>
+<p><strong>第二，<span class="math inline">p</span> 最便宜，<span class="math inline">z</span> 最贵。</strong> 极点 <span class="math inline">p=0.1</span> 落在穿越点以下一个多倍频程，<span class="math inline">\arctan(\omega/p)</span> 在 0.37 处已经饱和到 74.9°，<span class="math inline">p</span> 改 10% 只把它挪到 73.4°，相位差不到 2°；零点 <span class="math inline">z=0.4</span> 恰好压在穿越点上方的敏感区，<span class="math inline">\arctan(\omega/z)</span> 在 <span class="math inline">\omega\approx z</span> 处的斜率最大，<span class="math inline">z</span> 改 10% 就能动 3° 左右，还连带改掉整段高频增益。工程含义是：<strong>整定时先动极点、后动零点</strong>，因为极点的动作几乎没有副作用，而零点的每一个百分点都在改相位。这与 §63.8.2 给的三个起手值是一致的——起手时把 <span class="math inline">p</span> 放在 <span class="math inline">z/4</span>，就是为了让“调极点”这一步有足够的空间。</p>
+<p><strong>第三，<span class="math inline">\mu_{RS}</span> 与 <span class="math inline">\mu_{RP}</span> 同向而动。</strong> 四个参数无论往哪边偏，两个指标总是一起涨或一起落。这说明在本章这个设计点上，稳定裕度与性能裕度<strong>不再互相拉扯</strong>——拉扯发生在“换设计”的层面（保守 PI 与激进 PI 的对比，§63.6.4），而在“同一个设计的小邻域里”，所有参数的作用方向是一致的。实际影响是：<strong>在最终设计附近微调，不可能用稳定裕度去换性能裕度</strong>，想换就必须跳到另一个设计点，代价是重跑整条链。</p>
+<p>最后提一句：这四个数都是在 0.37 rad/s 的峰值附近兑现的。换到 2 rad/s 以上，主导因素变成幅值比 <span class="math inline">p/z</span>——在那个频段，动 <span class="math inline">p</span> 与动 <span class="math inline">z</span> 的作用是对称的，谁更贵取决于你往哪个方向动。<strong>“哪个参数最贵”没有全局答案，只有“在关心的频段上谁最贵”。</strong></p>
+<h2 id="调参方法与经验">63.8 调参方法与经验</h2>
+<h3 id="顺序从边界往里收">63.8.1 顺序：从边界往里收</h3>
+<p>鲁棒调参最容易犯的错是“从性能往里挤”——先按标称设计一个足够快的控制器，再想办法补裕度。这条路在本章的对象上必然失败：标称最快的激进 PI（<span class="math inline">k_p=1.8</span>、<span class="math inline">T_i=3</span>）标称 <span class="math inline">\lvert S\rvert</span> 只有 2.297，看起来不算离谱，最坏却是 86.249，已经无处可补。</p>
+<p>正确的顺序是反过来的：<strong>从边界往里收。</strong> 四步。</p>
+<p><strong>第一步，用纯 PI 摸稳定边界。</strong> 固定 <span class="math inline">T_i=3</span>（大约 <span class="math inline">0.6T</span>），把 <span class="math inline">k_p</span> 从 0.6 往上加，看 <span class="math inline">\mu</span> 什么时候过 1。本章的结果是 <span class="math inline">k_p=1.026</span>。这个数就是“最多能给多少比例增益”的第一手情报，比任何公式都可靠。</p>
+<p><strong>第二步，把 <span class="math inline">k_p</span> 退到 <span class="math inline">\mu</span> 边界的 70%。</strong> <span class="math inline">1.026\times0.7=0.72</span>。这个 0.7 是经验保险系数：<span class="math inline">\mu</span> 判据本身已经偏严（本章实测保守 66%），再退 30% 是双重保险，目的是给第三步的整形留出抬升空间。退完之后，<span class="math inline">k_p=0.72</span> 距时域实测的失稳点（1.70）还有 2.4 倍——第二步结束时的回路是“绝对安全但很慢”的。</p>
+<p><strong>第三步，用整形把 <span class="math inline">k_p</span> 抬回去。</strong> 直接抬 <span class="math inline">k_p</span> 会撞 <span class="math inline">\lvert L(2)\rvert\le0.5</span>，所以先加滞后整形（<span class="math inline">z=0.40</span>、<span class="math inline">p=0.10</span>，高频衰减 4 倍），再把 <span class="math inline">k_p</span> 从 0.72 抬到 2.40。<strong>注意这里的 <span class="math inline">k_p</span> 是整形环节之前的原始增益</strong>：高频被衰减 4 倍，所以 2.40 在高频只剩 0.60，仍然满足约束。</p>
+<p><strong>第四步，扫 <span class="math inline">T_i</span> 微调低频。</strong> <span class="math inline">T_i</span> 从 6 加到 10，低频增益抬高、稳态误差下降，代价是积分相位多扣几度。本章取 10 时相位裕度仍有 52.1°，可以接受。</p>
+<h3 id="三个起手值">63.8.2 三个起手值</h3>
+<p>每一步都要有个起点，本章的经验值如下。</p>
+<p><strong><span class="math inline">k_p</span> 的起点取 <span class="math inline">0.3/K_0</span>。</strong> <span class="math inline">0.3/2.0=0.15</span>，比最终的 2.40 小得多，但它是“肯定不会错”的起点——从它往上加，每一步都能看到指标怎么变；从一个激进值往下退，往往一退就退过头。</p>
+<p><strong><span class="math inline">T_i</span> 的起点取 <span class="math inline">T</span>。</strong> 积分转折频率 <span class="math inline">1/T=0.2</span> rad/s，接近但低于期望带宽，这是“积分不拖后腿”的自然位置。本章最终取 <span class="math inline">2T=10</span>，是因为延迟不确定性要求更保守的积分。</p>
+<p><strong><span class="math inline">z</span> 的起点取 <span class="math inline">1/\theta_0</span>。</strong> 延迟的倒数对应“延迟开始显著影响相位的频率”，滞后整形放在这里最有效。本章 <span class="math inline">1/1.0=1.0</span>，而最终选的 0.40 比它低——因为实际带宽只有 0.33，整形点要跟着带宽走，不能跟着延迟走。<strong>这条修正很重要：整形的零点位置应该由带宽决定，不是由延迟决定。</strong></p>
+<h3 id="一次完整的回退过程">63.8.3 一次完整的“回退”过程</h3>
+<p>下面这段是本章实际走过的弯路，值得记下来。</p>
+<p><strong>第一次尝试</strong>：<span class="math inline">k_p=1.80</span>、<span class="math inline">T_i=3</span>（激进 PI）。标称指标全部过关：<span class="math inline">\lvert S\rvert</span> 峰值 2.297、相位裕度 37.3°、穿越频率 0.76。看起来“稍微激进但可用”。</p>
+<p><strong>第二次尝试</strong>：加顶点复核。<span class="math inline">K=1.2</span>、<span class="math inline">\theta=0.5</span> 时超调 8.58%，很好；<span class="math inline">K=3.0</span>、<span class="math inline">\theta=1.5</span> 时超调 4626.75%、<span class="math inline">\max\lvert y\rvert=50.462</span>、判定发散。<strong>这一次复核就否掉了整个设计。</strong></p>
+<p><strong>第三次尝试</strong>：退回保守 PI（<span class="math inline">k_p=0.6</span>、<span class="math inline">T_i=10</span>）。最坏 <span class="math inline">\lvert S\rvert=1.562</span>、<span class="math inline">\mu_{RS}=0.504</span>，全部过关，但穿越频率只有 0.18——比激进版慢 4 倍，操作工会抱怨“阀动得太肉”。</p>
+<p><strong>第四次尝试</strong>：在保守与激进之间找折中（<span class="math inline">k_p=1.0</span>、<span class="math inline">T_i=6</span>）。最坏 <span class="math inline">\lvert S\rvert=2.522</span>，超了 2.2 的线，但 <span class="math inline">\mu_{RP}=1.442</span> 比保守 PI 的 1.703 好。这说明“往激进方向走一点是对的，只是走过头了”。</p>
+<p><strong>第五次尝试</strong>：带滞后整形的二阶族（<span class="math inline">k_p=2.40</span>、<span class="math inline">T_i=10</span>、<span class="math inline">z=0.40</span>、<span class="math inline">p=0.10</span>）。最坏 <span class="math inline">\lvert S\rvert=2.180</span>、<span class="math inline">\mu_{RS}=0.846</span>、<span class="math inline">\mu_{RP}=1.646</span>、超调 41.65%、300 组越界 0.0%。<strong>这才是最终设计。</strong></p>
+<p>五次尝试的顺序说明一件事：<strong>性能指标的“好”与鲁棒指标的“过”往往同时出现，只有把两者放在一起看，才知道该往哪个方向退。</strong> 激进 PI 的标称比折中 PI 好，但它的最坏已经越界；折中 PI 的最坏比保守 PI 差，但它的鲁棒性能读数更好。单看任何一列都会走错方向。</p>
+<h3 id="五个常见错误">63.8.4 五个常见错误</h3>
+<p><strong>错误一：在标称点上调参。</strong> 本章的折中 PI 在标称点 <span class="math inline">\lvert S\rvert=1.420</span>，看着“还有 35% 余量”，最坏已经 2.522。<strong>调参时必须始终显示最坏值，标称值只用于对照。</strong></p>
+<p><strong>错误二：把 <span class="math inline">\mu_{RP}&gt;1</span> 当成“不能用”。</strong> 本章最终设计的 <span class="math inline">\mu_{RP}=1.646</span>，按判据不合格，但时域 300 组越界 0.0%。原因是 <span class="math inline">\mu_{RP}</span> 用的是 <span class="math inline">W_S</span> 的严格形式（低频 25 倍），而实际工况对低频精度的要求没有这么高。<strong><span class="math inline">\mu_{RP}</span> 要结合“权重是否代表真实要求”来解释。</strong></p>
+<p><strong>错误三：一味加超前。</strong> 超前能补相位，但在延迟不确定的回路里，超前同时抬高高频增益，撞上 <span class="math inline">\lvert L(2)\rvert\le0.5</span>。本章改用滞后整形成功，原因就是它“补中频、削高频”，方向与约束一致。</p>
+<p><strong>错误四：采样周期后置。</strong> 先做完连续设计，最后才定 <span class="math inline">T_s</span>，结果 <span class="math inline">T_s=0.2</span> s 时超调从 41.65% 涨到 50.80%。<strong><span class="math inline">T_s</span> 要在第一步就定，因为它改写延迟的不确定性。</strong></p>
+<p><strong>错误五：只看 <span class="math inline">\mu</span> 不看时域。</strong> <span class="math inline">\mu</span> 从 1.378 到 1.666 只涨 21%（<span class="math inline">k_p</span> 1.40→1.60），同一段时域里 <span class="math inline">\max\lvert y\rvert</span> 从 2.079 跳到 9.377（4.5 倍）。<strong>频域判据是“滑”的，时域是“跳”的；两把尺子都要看。</strong></p>
+<h3 id="调参检查表">63.8.5 调参检查表</h3>
+<p>把上面的经验压成一张表，每次设计完逐条打勾。</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">检查项</th>
+<th style="text-align: left;">判据</th>
+<th style="text-align: left;">本章数值</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">不确定集是否覆盖真实区间</td>
+<td style="text-align: left;"><span class="math inline">w_{\text{prod}}\ge</span> 真实半径</td>
+<td style="text-align: left;"><span class="math inline">\omega\le6.28</span> 内覆盖</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">稳定判据</td>
+<td style="text-align: left;"><span class="math inline">\mu_{RS}&lt;0.9</span></td>
+<td style="text-align: left;">0.846</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">最坏灵敏度</td>
+<td style="text-align: left;"><span class="math inline">\max\lvert S\rvert\le2.2</span></td>
+<td style="text-align: left;">2.180</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">高频约束</td>
+<td style="text-align: left;"><span class="math inline">\lvert L(j2)\rvert\le0.5</span></td>
+<td style="text-align: left;">满足</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">鲁棒性能</td>
+<td style="text-align: left;"><span class="math inline">\mu_{RP}&lt;1</span>（理想）</td>
+<td style="text-align: left;">1.646（未达，已评估）</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">四顶点阶跃</td>
+<td style="text-align: left;">不发散、超调 <span class="math inline">&lt;50\%</span></td>
+<td style="text-align: left;">41.65%</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">蒙特卡洛</td>
+<td style="text-align: left;">越界比例 <span class="math inline">&lt;5\%</span></td>
+<td style="text-align: left;">0.0%</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">采样周期</td>
+<td style="text-align: left;"><span class="math inline">T_s\le\theta_{\min}/10</span></td>
+<td style="text-align: left;">0.05 s</td>
+</tr>
+</tbody>
+</table>
+<p>表 63-11　鲁棒设计验收检查表</p>
+<p>这张表里唯一“没过”的是 <span class="math inline">\mu_{RP}</span>。<strong>允许一项不过，但必须写明理由</strong>——本章的理由是“<span class="math inline">W_S</span> 的低频要求 25 倍比现场实际需要更严”。如果写不出理由，就不能放行。</p>
+<h3 id="一份可复用的调参记录">63.8.6 一份可复用的调参记录</h3>
+<p>调参过程里最有价值的产出不是最终那组参数，而是<strong>中途被否掉的每一组为什么被否</strong>。本章那张“五次尝试”的记录之所以有用，是因为它把“哪一列救了这个设计、哪一列否了那个设计”写清楚了。建议每次设计都留一张同样格式的表，至少包含六列：</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">尝试</th>
+<th style="text-align: left;"><span class="math inline">(k_p,T_i,z,p)</span></th>
+<th style="text-align: right;">标称 <span class="math inline">\lvert S\rvert</span></th>
+<th style="text-align: right;">最坏 <span class="math inline">\lvert S\rvert</span></th>
+<th style="text-align: right;"><span class="math inline">\mu_{RS}</span></th>
+<th style="text-align: left;">否决理由</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">1</td>
+<td style="text-align: left;">(1.80, 3, —, —)</td>
+<td style="text-align: right;">2.297</td>
+<td style="text-align: right;">86.249</td>
+<td style="text-align: right;">2.029</td>
+<td style="text-align: left;">顶点发散</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">3</td>
+<td style="text-align: left;">(0.60, 10, —, —)</td>
+<td style="text-align: right;">1.212</td>
+<td style="text-align: right;">1.562</td>
+<td style="text-align: right;">0.504</td>
+<td style="text-align: left;">太慢</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">4</td>
+<td style="text-align: left;">(1.00, 6, —, —)</td>
+<td style="text-align: right;">1.420</td>
+<td style="text-align: right;">2.522</td>
+<td style="text-align: right;">0.727</td>
+<td style="text-align: left;">灵敏度越界</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">5</td>
+<td style="text-align: left;">(2.40, 10, 0.40, 0.10)</td>
+<td style="text-align: right;">1.402</td>
+<td style="text-align: right;">2.180</td>
+<td style="text-align: right;">0.846</td>
+<td style="text-align: left;">采用</td>
+</tr>
+</tbody>
+</table>
+<p>表 63-12　调参记录示例（本章实际走过的路径）</p>
+<p>表 63-11 与表 63-12 一前一后，两件事就都有据可查了：<strong>后者记的是“走过的路”，前者记的是“到没到”</strong>。</p>
+<p>写这张表有三条要求。第一，<strong>标称与最坏必须并列</strong>，否则事后无法判断否决理由到底是硬约束还是软指标；本章第 1 行标称 2.297 看着体面，最坏 86.249 才是真因，两列缺一就会留下“为什么好设计被放弃了”的疑问。第二，<strong>否决理由要写成可复核的判据</strong>（“顶点发散”“灵敏度越界”），不要写“感觉不太好”——后者无法在评审中被质疑，也就无法被纠正。第三，<strong>被采用的方案也要有一行</strong>，写清它相对上一行改善了什么，这样下一轮换人接手时，不必从头再走一遍。</p>
+<p>这张表还有一层副作用：它会暴露搜索范围的问题。如果五次尝试里有两三次的否决理由是“搜不出满足约束的候选”，那么该怀疑的不是控制器族，而是权重或阈值定得过紧——<strong>连续的“无解”通常说明上游参数错了，而不是下游不够努力</strong>。</p>
+<h2 id="优化与改进">63.9 优化与改进</h2>
+<p>本章的六步流程给出的是一个“能过线”的设计，不是“最优”的设计。这一节讨论四条改进路线，按本章实测能拿到的收益排序。</p>
+<h3 id="第一条把磁盘换成真实参数网格">63.9.1 第一条：把磁盘换成真实参数网格</h3>
+<p>收益最大、代价最小的一条。磁盘模型的保守性在 §63.2.2 已经量化：乘积磁盘在 <span class="math inline">\omega=1</span> 处比真实半径大 58%。这 58% 直接进了判据，把可行的带宽压低。</p>
+<p>改进的做法是不用磁盘，直接对 <span class="math inline">(K,\theta)</span> 网格上的每个点算真实灵敏度，取最大值。这个量与 <span class="math inline">\mu_{RS}</span> 不是一回事（<span class="math inline">\mu_{RS}</span> 是充分条件，网格最大值是“样本最大值”），但工程上更好用：<strong>它给的是真实的最坏值，不是上界。</strong></p>
+<p>本章的代码已经这么做了：<code>worst_ms()</code> 在 <span class="math inline">5\times5</span> 网格上取最大值。正文里所有“最坏 <span class="math inline">\lvert S\rvert</span>”都是网格最大值，而 <span class="math inline">\mu_{RS}</span> 只用于稳定判据的交叉核对。两个数不能直接相减比较：<span class="math inline">\mu_{RS}</span> 是“补灵敏度乘半径”的峰值，单位是 1；最坏 <span class="math inline">\lvert S\rvert</span> 是“灵敏度”的峰值，单位也是 1，但物理含义不同。<strong>要比较保守性，比的是“同一个指标在磁盘模型下与在网格上差多少”</strong>，不是把两个不同定义的峰值放在一起。</p>
+<p>这条改进的边界要清楚：<strong>网格法只用在你确信“最坏点落在网格上”的场合。</strong> 若参数多于三个，网格会爆炸；若最坏点可能落在网格之间，就要加密或改用优化搜索。本章两个参数、<span class="math inline">5\times5</span> 足够，因为最坏点确实在角上。</p>
+<h3 id="第二条把延迟拆成独立的块">63.9.2 第二条：把延迟拆成独立的块</h3>
+<p>磁盘模型把增益误差与延迟误差压成一个标量半径，这本身就是保守的来源——它假设两者可以“同时取最坏且方向相同”。实际上增益误差是实轴方向的，延迟误差是相位的，两者的最坏组合不一定落在同一个复方向上。</p>
+<p>改进的做法是拆成两个块：<span class="math inline">\Delta=\mathrm{diag}(\delta_K,\delta_\theta)</span>，<span class="math inline">M</span> 相应地变成 <span class="math inline">2\times2</span>。这时 <span class="math inline">D</span> 标定有自由度，<span class="math inline">\mu</span> 可以低于小增益判据。<strong>这是唯一能让 <span class="math inline">\mu</span> 真正“放松数倍”的结构</strong>——而本章 §63.6.2 峰值处只放松 4.5%，正是因为没拆块。</p>
+<p>拆块的代价是 <span class="math inline">M</span> 的维数上升、<span class="math inline">D</span> 的搜索维数上升，计算量增加。对单回路，这个代价可以接受；对多回路，维数会迅速膨胀。</p>
+<h3 id="第三条mu-综合与-h_infty">63.9.3 第三条：<span class="math inline">\mu</span> 综合与 <span class="math inline">H_\infty</span></h3>
+<p><span class="math inline">H_\infty</span> 混合灵敏度是工业界最常用的鲁棒设计方法，目标函数写成</p>
+<p><span class="math display">
+\min_{K}\ \left\|
+\begin{bmatrix}
+W_S S\\
+W_{KS}KS\\
+W_T T
+\end{bmatrix}
+\right\|_\infty
+\tag{63-28}
+</span></p>
+<p>三块分别管“扰动抑制”、“控制量大小”、“鲁棒稳定性”。它的解可以用 Riccati 方程直接算，不需要迭代，得到的是一个阶数等于“对象阶数 + 权重阶数”的控制器。</p>
+<p><span class="math inline">\mu</span> 综合在 <span class="math inline">H_\infty</span> 外面再套一层 <span class="math inline">D</span> 迭代，能处理结构化的 <span class="math inline">\Delta</span>，代价是控制器阶数会膨胀。本章的对象是 1 阶 + 延迟，用 <span class="math inline">H_\infty</span> 得到的控制器大约 4–6 阶，用 <span class="math inline">\mu</span> 综合可能到 8–10 阶。<strong>对一个温度回路，8 阶控制器在现场是无法维护的</strong>——这就是本章选择“2 阶 + 网格搜索”的现实理由。</p>
+<p>改进的折中方案是“<span class="math inline">H_\infty</span> 求初值 + 降阶拟合”：先用 <span class="math inline">H_\infty</span> 算出最优控制器，再用平衡截断或 Hankel 范数近似降到 2–3 阶，最后用本章的判据复核降阶后的性能损失。这条路的工程价值在于“知道最优在哪”，即使最终不用最优解。</p>
+<h3 id="第四条增益调度">63.9.4 第四条：增益调度</h3>
+<p>如果参数的变化不是“不确定”而是“可测量”，那么最好的办法不是鲁棒，而是调度：按工况把 <span class="math inline">(K,\theta)</span> 分区，每区一套控制器参数，运行时按测量值切换。</p>
+<p>本章的对象很适合调度：<span class="math inline">K</span> 可以由流量与阀位算出来，<span class="math inline">\theta</span> 可以由输送泵的转速推算。分区之后，每个区内的不确定性大幅缩小，带宽可以抬高。</p>
+<p>调度的代价是“切换”本身：两套参数在边界上切换时，积分器状态要不间断，否则会产生跳变。<strong>无扰切换的实现比设计两套参数更难</strong>，这是增益调度在现场落地的主要障碍，第 44 章讲了完整的切换与自整定实现。</p>
+<h3 id="四条路线的收益排序">63.9.5 四条路线的收益排序</h3>
+<p>把本章的实测摆进来，四条路线的收益大致是：</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">改进</th>
+<th style="text-align: left;">收益</th>
+<th style="text-align: left;">代价</th>
+<th style="text-align: left;">本章是否采用</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">网格代替磁盘</td>
+<td style="text-align: left;">去掉 40%–60% 的权重保守</td>
+<td style="text-align: left;">计算量随参数个数指数增长</td>
+<td style="text-align: left;">采用（评价指标）</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">延迟拆块</td>
+<td style="text-align: left;"><span class="math inline">\mu</span> 可能放松数倍</td>
+<td style="text-align: left;"><span class="math inline">M</span> 与 <span class="math inline">D</span> 维数上升</td>
+<td style="text-align: left;">未采用（单回路收益小）</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><span class="math inline">\mu</span> 综合 / <span class="math inline">H_\infty</span></td>
+<td style="text-align: left;">逼近最优</td>
+<td style="text-align: left;">控制器 8–10 阶，无法维护</td>
+<td style="text-align: left;">未采用（阶数不可接受）</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">增益调度</td>
+<td style="text-align: left;">带宽可显著抬高</td>
+<td style="text-align: left;">无扰切换难实现</td>
+<td style="text-align: left;">未采用（<span class="math inline">K</span>、<span class="math inline">\theta</span> 未在线测量）</td>
+</tr>
+</tbody>
+</table>
+<p>表 63-13　四条改进路线的收益与代价</p>
+<p>这张表解释了一个常见的困惑：<strong>为什么工业界大量使用 PI/PID，而不是 <span class="math inline">\mu</span> 综合？</strong> 不是因为理论不好，而是因为“控制器的可维护性”这条约束比“性能最优”更硬。本章的最终设计是一个 2 阶控制器，四个参数，现场工程师看一眼就能懂；<span class="math inline">\mu</span> 综合给出的 10 阶控制器，连作者自己都说不清每个极点是干什么的。</p>
+<h3 id="一条不建议走的路把-mu-当优化目标直接搜">63.9.6 一条不建议走的路：把 <span class="math inline">\mu</span> 当优化目标直接搜</h3>
+<p>有人会把 <span class="math inline">\mu_{RP}</span> 当目标函数，用遗传算法或粒子群直接搜控制器参数。这条路在小规模问题上可行，但有两个陷阱。</p>
+<p><strong>陷阱一：<span class="math inline">\mu</span> 的计算本身有网格误差。</strong> 频率 600 点、<span class="math inline">d</span> 61 点，峰值可能被削掉几个百分点。用它当目标函数，优化器会去“钻网格的空子”——找到一组参数，其 <span class="math inline">\mu</span> 在网格上很小、在网格之间很大。</p>
+<p><strong>陷阱二：<span class="math inline">\mu</span> 与真实性能的相关性不强。</strong> 本章二阶设计的 <span class="math inline">\mu_{RP}=1.646</span>，时域最坏超调 41.65%；而保守 PI 的 <span class="math inline">\mu_{RP}=1.703</span>，时域最坏超调（在 <span class="math inline">K=1.2</span>、<span class="math inline">\theta=1.5</span> 顶点）是 40.72%——<span class="math inline">\mu</span> 更差的反而超调更小。<strong><span class="math inline">\mu</span> 排序不等于性能排序</strong>，把它当唯一目标会选出“判据好看、现场难用”的控制器。</p>
+<p>正确的用法是本章的做法：<strong>用 <span class="math inline">\mu</span> 做约束（<span class="math inline">\mu_{RS}\le0.9</span>），用真实指标做目标（最大化 <span class="math inline">\omega_c</span>、最小化最坏 <span class="math inline">\lvert S\rvert</span>）。</strong> 判据负责“不许越界”，指标负责“尽量好”。</p>
+<h3 id="四条路线的先后三个问题定次序">63.9.7 四条路线的先后：三个问题定次序</h3>
+<p>表 63-13 的收益与代价摆在那里，但真正决定“先做哪一条”的不是收益大小，而是三个是非题。</p>
+<p><strong>问题一：参数能不能在线测出来？</strong> 能——直接跳到增益调度，其余三条都不必做。调度把“不确定”变成“已知”，这是降维打击：本章对象若 <span class="math inline">K</span> 与 <span class="math inline">\theta</span> 都能从流量与泵速推算，每个分区内只剩 <span class="math inline">\pm10\%</span> 的残余误差，带宽可以翻倍，代价只是无扰切换的实现。不能——进入问题二。</p>
+<p><strong>问题二：不确定性的主导项是增益还是延迟？</strong> 这一条决定“拆块”值不值得试。本章的相位账本已经给出答案：<span class="math inline">\omega_c\theta</span> 贡献的相位不确定性（<span class="math inline">\pm18.6°</span> 到 <span class="math inline">\pm27.9°</span>）远大于增益的幅值不确定性，而增益误差在低频几乎不影响穿越点。<strong>当两个误差的主导频段不重叠时，拆块才可能拿到数倍放松</strong>；本章的实测是两者在 0.3–0.5 rad/s 处同时起作用，所以 §63.6.2 只测到 4.5%。判断方法很便宜：把 <span class="math inline">w_K</span> 与 <span class="math inline">w_\theta(\omega)</span> 画在一张图上，看它们在 <span class="math inline">\omega_c</span> 附近是不是同一个量级——是，就别指望拆块。</p>
+<p><strong>问题三：回路数大于一吗？</strong> 不大于——网格法就够了，本章走的就是这条路。大于——<span class="math inline">\mu</span> 综合才有意义，因为多回路里 <span class="math inline">D</span> 标定的自由度是真实存在的，放松倍数也才配得上它带来的阶数膨胀。单回路去做 <span class="math inline">\mu</span> 综合，等于用十阶控制器换 4.5% 的判据改善。</p>
+<p>三个问题串起来，实际得到一个很朴素的次序：<strong>能测就调度，不能测就看主导项，单回路到此为止，多回路才上 <span class="math inline">\mu</span> 综合。</strong> 本章停在第二档的末尾——这是对象的性质决定的，不是方法的偏好。把这句话记住，比记住任何一条改进路线的收益数字都有用，因为对象换了、数字就变了，而次序不变。</p>
+<h3 id="第四条之后改工艺往往比改算法便宜">63.9.8 第四条之后：改工艺往往比改算法便宜</h3>
+<p>四条改进路线全在控制器和判据上做文章，但本章 41.65% 超调、22 s 调节时间的根源不在控制器，而在对象本身：<span class="math inline">\theta/T=0.2</span>、<span class="math inline">\omega_c\theta=0.33</span>。<strong>当瓶颈在对象上时，改对象的收益往往比改算法大一个量级</strong>，只是它不写进控制论文。</p>
+<p>按 §63.7.7 的同一套换算，把标称延迟从 1.0 s 降到 0.5 s（比如把输送管路缩短一半、或把泵改成直连），区间随之从 <span class="math inline">[0.5,1.5]</span> 变成 <span class="math inline">[0.25,0.75]</span>、<span class="math inline">\Delta\theta=0.25</span>：</p>
+<ul>
+<li>相位账本上延迟那一项从 <span class="math inline">-18.6°</span> 变成 <span class="math inline">-9.3°</span>，相位裕度从 <span class="math inline">52.1°</span> 抬到 <span class="math inline">61.4°</span>；</li>
+<li>磁盘半径在 0.37 rad/s 处从 0.777 降到 0.639（<span class="math inline">w_\theta=2\sin(0.0925)=0.0925</span>），<span class="math inline">\mu_{RS}</span> 随之从 0.846 降到 0.70 附近；</li>
+<li>省下的裕度可以直接换成增益：<span class="math inline">\mu_{RS}</span> 回到 0.846 时，<span class="math inline">k_p</span> 大约能再抬 20%，穿越频率从 0.33 往 0.4 走。</li>
+</ul>
+<p>三笔收益都是白得的，代价是一次停机改造。反过来，<strong>改错方向的工艺改动会吃掉裕度</strong>：加一个缓冲罐把 <span class="math inline">T</span> 从 5 s 抬到 10 s，看着像“让对象更温和”，实际相位要从 <span class="math inline">-58.4°</span> 变成 <span class="math inline">-73.1°</span>（§63.7.1 算过），多扣 14.7°，等于把上面赚的全赔回去。<strong>判断标准不是“对象变得多平滑”，而是“<span class="math inline">\theta/T</span> 变小了还是变大了”。</strong></p>
+<p>还有两项不需要改流程的：<strong>减小阀门死区与提高执行器分辨率</strong>，它们直接对应 §63.10.7 的小幅值极限环；<strong>缩短取样管线、把温度计插深一点</strong>，直接减小测量滞后，效果等同于减小 <span class="math inline">\theta</span>。这两项通常只需检修窗口，比改管路便宜得多。</p>
+<p>所以现场的顺序应该是：先看仪表与执行器有没有便宜可捡，再看管路能不能缩短，最后才回到控制器上抠那 4.5%。<strong>算法改动可以软件下发、随时回退，工艺改动一次投入、长期生效</strong>——两者的选择依据是“停机窗口有多长、工况还会不会变”，而不是“哪个更先进”。</p>
+<h3 id="什么时候该停手">63.9.9 什么时候该停手</h3>
+<p>本章最终设计的 <span class="math inline">\mu_{RP}=1.646</span>，严格说并不合格——它大于 1，意味着“在最坏参数下加权灵敏度超了 65%”。设计却停在这里，原因不是没时间，而是三条停手信号同时亮了。</p>
+<p><strong>信号一：加阶不再改善。</strong> 最直觉的改进是“再加一阶滞后”，让控制器多一个自由度。实测结果相反：三阶族的 <span class="math inline">\mu_{RS}=0.577</span> 确实比二阶的 0.846 好，但 <span class="math inline">\mu_{RP}=1.764</span> <strong>比二阶的 1.646 更差</strong>。原因是性能判据的 <span class="math inline">M_{21}=CS</span> 那一项：多一阶意味着 <span class="math inline">C</span> 在中高频更大，<span class="math inline">S</span> 一旦不为零，乘积就上去了。<strong>稳定判据受益、性能判据受害，这是加阶的常态，不是意外。</strong></p>
+<p><strong>信号二：相邻格点之间的读数开始跳动。</strong> §63.3.9 记过一组对照：<span class="math inline">5\times5</span> 网格给出的最坏 <span class="math inline">\lvert S\rvert</span> 是 2.180，300 组随机是 2.160，差 0.9%——这个量级说明网格已经收敛。判断办法很直接：把网格加密一档、重算一遍，若最坏 <span class="math inline">\lvert S\rvert</span> 的变化仍在 1% 以内，就可以停；若超过 5%，说明还没收敛，得继续加密。<strong>当“改一个格点就变 5%”时，继续细化已经分不出优劣</strong>，再搜下去只是在拟合网格噪声。</p>
+<p><strong>信号三：敏感度超过了现场公差的量级。</strong> §63.7.8 的四个数都在 0.5 以下，说明参数改动 10% 只兑现 1%–5% 的指标变化；反过来说，<strong>任何小于 5% 的“改进”都在现场公差的噪声里，验不出来</strong>。继续抠下去，得到的是纸面上的小数点，不是现场的性能。</p>
+<p>三条信号共同指向一件事：<strong>优化的终点不是“达标”，而是“再改也不动”。</strong> 未达标的项不该藏起来，而应该写进交接文档并注明含义——本章的写法是“<span class="math inline">\mu_{RP}=1.646</span>，对应最坏顶点超调 41.65%、调节时间 22 s，工艺已确认可接受”。这句话把判据、时域、工艺三方对齐了，比一个漂亮的 0.98 更有用：<strong>前者说清了风险在哪，后者只是把风险藏进了余量里。</strong></p>
+<h2 id="工程落地">63.10 工程落地</h2>
+<h3 id="不确定性从哪测出来">63.10.1 不确定性从哪“测”出来</h3>
+<p>理论章节里 <span class="math inline">w_K</span> 与 <span class="math inline">\Delta\theta</span> 是给定的，现场必须自己量。三个来源，可信度依次下降。</p>
+<p><strong>来源一：设备铭牌与设计资料。</strong> 阀门的额定 <span class="math inline">C_v</span>、管路的几何容积，能给出 <span class="math inline">K</span> 与 <span class="math inline">\theta</span> 的“设计值”。这一类的误差通常有 ±20%，够用来做初步设计，不够用来定区间。</p>
+<p><strong>来源二：历史运行数据。</strong> 从 DCS 里取一年的趋势，找几次明显的阶跃或扰动，用两点法反算 <span class="math inline">K</span> 与 <span class="math inline">\theta</span>。本章的对象可以这样做：阶跃后 63% 的时间减去延迟就是 <span class="math inline">T</span>，稳态增量比就是 <span class="math inline">K</span>，纯延迟从“阀动但输出未动”的时长读出。<strong>历史数据的价值在于它覆盖了真实的工况范围</strong>，比铭牌可信得多。</p>
+<p><strong>来源三：极端工况的实测或推算。</strong> 最大负荷、最小负荷、结垢末期，这三种情况下 <span class="math inline">(K,\theta)</span> 会跑到区间的两端。这一类数据往往拿不到，只能推算——而推算的可靠性决定了整个鲁棒设计的可靠性。</p>
+<p><strong>区间的确定原则是“宁宽勿窄”。</strong> 区间偏宽，设计偏保守，代价是响应慢；区间偏窄，设计看起来漂亮，但最坏点落在区间外，鲁棒性无从谈起。本章的 <span class="math inline">K\in[1.2,3.0]</span> 覆盖 <span class="math inline">-40\%</span> 到 <span class="math inline">+50\%</span>，比常见的 <span class="math inline">\pm30\%</span> 宽，正是这个原则的体现。</p>
+<h3 id="权重不要拍脑袋">63.10.2 权重不要“拍脑袋”</h3>
+<p><span class="math inline">W_S</span> 的三个参数（<span class="math inline">M_S</span>、<span class="math inline">\omega_b</span>、<span class="math inline">A</span>）经常被随手取成 2、0.1、0.01 这种“教科书值”。正确的做法是从现场已有的指标倒推，本章 §63.3.3 已经示范了一遍：</p>
+<ul>
+<li>稳态精度要求 → 低频增益 <span class="math inline">1/(AM_S)</span>；</li>
+<li>允许的超调 → <span class="math inline">M_S</span>；</li>
+<li>希望的响应速度 → <span class="math inline">\omega_b</span>。</li>
+</ul>
+<p>三条里最容易错的是第一条。<strong>“稳态误差 4%”这个数必须来自工艺要求，不能来自“看起来差不多”。</strong> 如果工艺只要求 10%，那么 <span class="math inline">A</span> 应该取 0.05 而不是 0.02，设计会宽松很多；反之如果要求 1%，<span class="math inline">A=0.005</span>，要做好“设计可能无解”的准备。</p>
+<h3 id="控制器复杂度的上限">63.10.3 控制器复杂度的上限</h3>
+<p>本章的结论是<strong>二阶</strong>。这个结论不是从理论推出来的，是从“现场能不能维护”推出来的。判断标准有三条：</p>
+<ul>
+<li>参数个数不超过 4 个；</li>
+<li>每个参数能用一句话说清“调大调小会怎样”；</li>
+<li>参数之间的耦合是单向的（调 <span class="math inline">k_p</span> 主要影响带宽，调 <span class="math inline">T_i</span> 主要影响低频）。</li>
+</ul>
+<p>本章的 2 阶控制器四个参数（<span class="math inline">k_p</span>、<span class="math inline">T_i</span>、<span class="math inline">z</span>、<span class="math inline">p</span>）满足这三条。3 阶族的六个参数就不满足第三条了：<span class="math inline">z</span> 与 <span class="math inline">p</span> 在两级滞后里各出现一次，改一个会同时影响中频与高频。</p>
+<p><strong>如果 <span class="math inline">\mu</span> 综合给出的控制器超过 4 阶，要做的不是“勉强用”，而是降阶后重算判据。</strong> 降阶会损失性能，但损失多少是可以量化的——用本章的六步流程复核一遍即可。</p>
+<h3 id="上线前的四个测试">63.10.4 上线前的四个测试</h3>
+<p>频域判据、顶点阶跃、蒙特卡洛都过了，还要做四个现场测试。它们针对的是仿真里没有的东西。</p>
+<p><strong>测试一：真实阶跃。</strong> 在手自动切换的状态下，给 5%、10%、20% 三档阶跃，记录超调与调节时间。与仿真对比，若差得远，说明模型不准。</p>
+<p><strong>测试二：扰动阶跃。</strong> 在稳定工况下突然改变负荷（比如开一台泵），看恢复时间与最大偏差。这一项对应灵敏度 <span class="math inline">S</span>，是鲁棒设计最直接的效果。</p>
+<p><strong>测试三：参数拉偏。</strong> 把阀位手动拉到两个极端，让 <span class="math inline">K</span> 跑到区间两端，重复测试一。<strong>这一项是鲁棒设计独有的</strong>，标称设计不需要做，因为它在端点本来就不保证。</p>
+<p><strong>测试四：切换。</strong> 手自动来回切三次，看积分器有没有跳变、输出有没有 bump。这一项与鲁棒性无关，但现场最容易出问题。</p>
+<h3 id="运行期的监控">63.10.5 运行期的监控</h3>
+<p>鲁棒设计假设“参数在区间内”，运行期要确认这个假设还成立。三个可用的信号：</p>
+<p><strong>残差。</strong> 模型输出与实际输出的差。残差持续偏大，说明 <span class="math inline">K</span> 或 <span class="math inline">\theta</span> 已经跑出区间。</p>
+<p><strong>控制量的动作频率。</strong> 本章的仿真里没有噪声，现场一定有。若阀的动作频率突然上升，往往是增益相对变高了（<span class="math inline">K</span> 变大而控制器不知道），这对应 §63.1 那个“标称漂亮、现场失控”的场景。</p>
+<p><strong>振荡周期。</strong> 闭环振荡的周期可以反推穿越频率。若周期比设计值短，说明实际带宽比设计高、相位裕度比设计小——这是“参数跑到激进一侧”的直接证据。</p>
+<p>三个信号都不需要额外建模，用现成的趋势数据就能算。<strong>它们的价值在于“提前发现假设失效”，而不是“替代鲁棒设计”。</strong></p>
+<h3 id="变更管理">63.10.6 变更管理</h3>
+<p>鲁棒设计的参数是“算出来的”，不是“试出来的”，所以任何一次改动都要重跑整条链路。本章建议的流程是：</p>
+<ol type="1">
+<li>改参数（<span class="math inline">K</span> 区间、<span class="math inline">\theta</span> 区间、<span class="math inline">W_S</span>）→ 重跑六步；</li>
+<li>改控制器（<span class="math inline">k_p</span>、<span class="math inline">T_i</span>、<span class="math inline">z</span>、<span class="math inline">p</span>）→ 重跑第四到第六步；</li>
+<li>改采样周期 → 重跑第五、六步，并重做表 63-7；</li>
+<li>只改报警阈值 → 不需要重跑，但要记录。</li>
+</ol>
+<p><strong>最容易被跳过的是第三步。</strong> 现场换个 PLC、把扫描周期从 50 ms 改成 200 ms，看起来只是“硬件升级”，实际上把延迟的量化台阶抬高了 4 倍，表 63-7 里对应的超调会从 42.33% 涨到 50.80%。这类改动必须纳入变更评审。</p>
+<h3 id="三个不在模型里的东西">63.10.7 三个不在模型里的东西</h3>
+<p>鲁棒设计把“模型不准”处理得很彻底，但只处理了<strong>线性、连续、时不变</strong>这一类的“不准”。现场还有三样东西根本不在这套语言里，必须单独核对，否则前面所有判据都白算。</p>
+<p><strong>第一样：阀门死区与迟滞。</strong> 它们是输入端的非线性，既不是增益误差也不是延迟误差，乘性权重 <span class="math inline">W</span> 表示不了。后果是小幅值工况下的极限环：阶跃 20% 时一切正常，阶跃 2% 时阀在死区里来回蹭，输出持续小幅振荡。<strong>所以 §63.10.4 的测试一必须包含 5% 这一档</strong>，而不是只做 20%。本章的 41.65% 超调是大阶跃指标，它对小幅值极限环没有任何约束力。</p>
+<p><strong>第二样：执行器的速率限制。</strong> 速率限制在描述函数意义下等效于一个附加的相位滞后，且滞后量随幅值增大而增大——这相当于“不确定的延迟”，但它的方向是单向的（只会更慢），且与 <span class="math inline">K</span>、<span class="math inline">\theta</span> 无关。工程上的处理办法是把它折算成附加延迟，塞进 <span class="math inline">\Delta\theta</span>：若阀全行程时间 30 s、设计带宽 0.33 rad/s，一次全行程对应的等效延迟量级是不可忽略的，需要单独估算后再决定要不要放宽区间。</p>
+<p><strong>第三样：测量噪声与滤波器。</strong> 本章的 <span class="math inline">\lvert L(j2)\rvert\le0.5</span> 这条约束防的就是它，但这条约束只保证“噪声不被放大 1 倍以上”，不保证“执行器不抖”。若传感器噪声在 2 rad/s 附近有尖峰，即使环路增益 0.5，执行器仍会明显动作。<strong>这时该做的是加测量滤波，而滤波本身又贡献相位、又吃掉裕度</strong>——它与 §63.4 那三条整形规则是同一场战争，只是战场从“对象”移到了“仪表”。</p>
+<p>三样东西的共同点是：<strong>它们都不违反鲁棒判据，却都能让回路在现场表现得不像仿真。</strong> 处理办法不是把它们硬塞进 <span class="math inline">W</span>，而是在验收清单里单列三条，用现场测试回答。判据管的是“模型错了会怎样”，这三条管的是“模型之外还有什么”。</p>
+<h3 id="三个信号怎么从趋势数据算出来">63.10.8 三个信号怎么从趋势数据算出来</h3>
+<p>上一小节说了三个信号，这一小节把它们变成可以在趋势画面上一分钟算完的动作。</p>
+<p><strong>信号一：静态增益 <span class="math inline">K</span> 的在线估计。</strong> 从历史趋势里挑两段“阀位稳定、温度稳定”的窗口（各取 10 分钟平均），记作 <span class="math inline">(\bar u_1,\bar y_1)</span> 与 <span class="math inline">(\bar u_2,\bar y_2)</span>，则 <span class="math inline">\hat K=(\bar y_2-\bar y_1)/(\bar u_2-\bar u_1)</span>。<strong>必须挑稳态窗口</strong>，因为动态段里积分器还在动，比值没有意义。两周做一次，把 <span class="math inline">\hat K</span> 打在趋势图上，与 <span class="math inline">[1.2,3.0]</span> 的区间比：连续三个点跑出区间，说明 §63.2 的不确定集已经不成立，要重做设计，而不是“再调调 <span class="math inline">k_p</span>”。</p>
+<p><strong>信号二：振荡周期换算成穿越频率。</strong> 闭环振荡的周期 <span class="math inline">T_{osc}</span> 满足 <span class="math inline">\omega_{osc}=2\pi/T_{osc}</span>。本章最终设计的穿越频率是 0.3255 rad/s，对应周期 19.3 s；若趋势上看到 19 s 左右的缓慢摆动，那是设计本身的谐振峰（<span class="math inline">\lvert T\rvert</span> 在 0.30 处 1.165），属于正常。真正要报警的是<strong>周期缩短</strong>。用同一族控制器（<span class="math inline">T_i=3</span>、无滞后）标定一下换算关系：</p>
+<ul>
+<li><span class="math inline">k_p=1.0</span>：<span class="math inline">\omega_c=0.4547</span>、周期 13.8 s、相位裕度 <span class="math inline">51.4°</span>；</li>
+<li><span class="math inline">k_p=1.4</span>：<span class="math inline">\omega_c=0.6067</span>、周期 10.4 s、相位裕度 <span class="math inline">44.7°</span>；</li>
+<li><span class="math inline">k_p=1.8</span>：<span class="math inline">\omega_c=0.7641</span>、周期 8.2 s、相位裕度 <span class="math inline">37.3°</span>；</li>
+<li><span class="math inline">k_p=2.2</span>：<span class="math inline">\omega_c=0.9189</span>、周期 6.8 s、相位裕度 <span class="math inline">29.7°</span>。</li>
+</ul>
+<p>周期从 13.8 s 缩到 10.4 s，只缩短了 25%，相位裕度却掉了 6.7°；再缩到 8.2 s，裕度只剩 37.3°。<strong>周期是裕度的一面放大镜</strong>——它容易测（数峰就行），而且对增益变化很敏感。工程上可以定一条线：实测周期比设计值短 20% 以上，先按比例把 <span class="math inline">k_p</span> 降 10%，观察一周；短 40% 以上，直接切到保守参数并查原因。</p>
+<p><strong>信号三：阀位累计行程。</strong> 在趋势上取一段 8 小时的同工况数据，算 <span class="math inline">\sum\lvert u_{k+1}-u_k\rvert</span>，与投运首月的基线比。这个数把“控制量的动作频率”和“动作幅度”合成一个标量，比分频段看频谱省事。翻倍通常有两个原因：相对增益变高（<span class="math inline">K</span> 变大），或者测量噪声变大（仪表接线、取样管线堵塞）。<strong>两者的区分办法是看动作的幅值分布</strong>：增益问题的动作幅值大而慢，噪声问题的动作幅值小而快，在趋势放大图上肉眼可辨。</p>
+<p>三个信号加起来只用一个趋势导出文件，不需要额外建模，也不需要在线辨识。<strong>它们的分工是：<span class="math inline">\hat K</span> 管“假设还成不成立”，周期管“裕度还剩多少”，行程管“执行器受不受得了”。</strong> 三条都不报警，才可以认为“鲁棒设计仍在它的适用区间内”。</p>
+<h2 id="优缺点与适用边界">63.11 优缺点与适用边界</h2>
+<h3 id="优点它买到的是可预测">63.11.1 优点：它买到的是“可预测”</h3>
+<p><strong>第一，最坏情况有保证。</strong> 这是鲁棒控制唯一不可替代的价值。本章的保守 PI 在四个顶点上都不发散，300 组随机参数越界 0.0%；激进 PI 在最坏顶点超调 4626.75%、56.3% 的样本越界。<strong>两者的差别不是“平均好多少”，而是“会不会崩”。</strong></p>
+<p><strong>第二，设计过程可追溯。</strong> 六步流程的每一步都有明确的输入输出：不确定集 → 权重 → 互联矩阵 → 阶数预算 → 参数 → 复核。任何一个数字都能说清来源，这对需要写设计文件、过安全评审的场合极其重要。</p>
+<p><strong>第三，保守性可量化。</strong> 磁盘模型宽多少（40%–60%）、<span class="math inline">\mu</span> 在峰值处放松多少（4.5%）、<span class="math inline">\mu</span> 判据比实测保守多少（66%），本章都给出了数字。<strong>知道保守多少，才能在“要不要冒险”这件事上做决定</strong>——这是经验调参做不到的。</p>
+<p><strong>第四，控制器可以很简单。</strong> 最终设计是 2 阶、4 个参数。鲁棒性不是靠复杂控制器换来的，是靠“在对的地方留余量”换来的。这一点与很多人的印象相反。</p>
+<p><strong>第五，与既有工具兼容。</strong> 本章的判据只需要频率响应，不需要状态空间模型，用 Bode 图、尼科尔斯图就能算；现场已有的辨识结果可以直接用，不必重新建模。</p>
+<h3 id="缺点它买到的是慢">63.11.2 缺点：它买到的是“慢”</h3>
+<p><strong>第一，常态性能必然下降。</strong> 这是最直接的成本。鲁棒二阶在三个顶点上的调节时间是 20–22 s，激进 PI 只要 6.5–13.7 s。<strong>为了让最坏点不崩，所有点都变慢了 1.5–3 倍。</strong></p>
+<p><strong>第二，结果依赖不确定集。</strong> 区间定宽了设计保守，定窄了设计失效。而区间本身往往靠推算，这是整条链路上最不可靠的一环。本章 §63.10.1 之所以强调“宁宽勿窄”，就是因为这个依赖无法消除。</p>
+<p><strong>第三，判据保守，容易误判。</strong> <span class="math inline">\mu=1</span> 预测的临界增益是 1.026，实测 1.700，保守 66%。如果按 <span class="math inline">\mu</span> 判据设计，会在还有 66% 余量的时候就停手；如果按实测设计，又没有理论保证。<strong>这个 66% 的空档只能靠经验填。</strong></p>
+<p><strong>第四，<span class="math inline">\mu</span> 分析的成本与收益不成比例。</strong> 本章的实测是“峰值处只放松 4.5%”，却要多写几百行矩阵运算、多调一个 <span class="math inline">D</span> 标定。<strong>对单回路，做 <span class="math inline">\mu</span> 分析基本是白费力气</strong>（§63.1.4 已经解释：单块结构下 <span class="math inline">\mu</span> 与小增益恒等）。</p>
+<p><strong>第五，它不解决“参数跑到区间外”的问题。</strong> 鲁棒控制的所有保证都以“<span class="math inline">\Delta</span> 在球内”为前提。若实际参数跑出区间（比如换热器严重结垢），判据不再有效，回路照样会失控。这时需要的是自适应或调度，不是更强的鲁棒性。</p>
+<h3 id="适用边界">63.11.3 适用边界</h3>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">情形</th>
+<th style="text-align: left;">是否适用</th>
+<th style="text-align: left;">理由</th>
+<th style="text-align: left;">替代方法</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">参数慢漂、区间已知</td>
+<td style="text-align: left;">适用</td>
+<td style="text-align: left;">正是本章的场景</td>
+<td style="text-align: left;">—</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">参数可在线测量</td>
+<td style="text-align: left;">不必用</td>
+<td style="text-align: left;">调度比鲁棒更有效</td>
+<td style="text-align: left;">增益调度（第 44 章）</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">多变量、通道间耦合强</td>
+<td style="text-align: left;">适用（需多块）</td>
+<td style="text-align: left;"><span class="math inline">\mu</span> 的结构信息在这里才值钱</td>
+<td style="text-align: left;"><span class="math inline">\mu</span> 综合、MPC</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">约束是硬约束（阀位、速率）</td>
+<td style="text-align: left;">部分适用</td>
+<td style="text-align: left;">频域判据不直接处理时域约束</td>
+<td style="text-align: left;">MPC（第 58、80 章）</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">延迟占主导且可测</td>
+<td style="text-align: left;">优先用预估</td>
+<td style="text-align: left;">鲁棒设计只能“绕开”延迟，不能补偿</td>
+<td style="text-align: left;">Smith 预估（第 47、107 章）</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">扰动有已知频谱</td>
+<td style="text-align: left;">优先用随机控制</td>
+<td style="text-align: left;">鲁棒只保证最坏，不利用结构</td>
+<td style="text-align: left;">最小方差 / GMV（第 62 章）</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">参数跑出区间</td>
+<td style="text-align: left;">不适用</td>
+<td style="text-align: left;">判据前提失效</td>
+<td style="text-align: left;">自适应、切换</td>
+</tr>
+</tbody>
+</table>
+<p>表 63-14　鲁棒控制的适用边界</p>
+<p>这张表的用法是：<strong>先判断“不确定性是不是主要矛盾”。</strong> 如果主要矛盾是延迟，用 Smith 预估；是约束，用 MPC；是扰动频谱，用随机控制；只有当“参数在一个已知区间内漂、且没有更好的利用方式”时，鲁棒设计才是首选。</p>
+<h3 id="与相邻章的分工">63.11.4 与相邻章的分工</h3>
+<p><strong>与 PID（第 44、106 章）的分工。</strong> PID 章节讲的是“给定对象，怎么把三个参数调好”；本章讲的是“对象不确定时，这三个参数该留多少余量”。两章的交集是“增益裕度与相位裕度”，但 PID 章节把它们当经验指标，本章把它们换算成 <span class="math inline">\mu</span> 与 <span class="math inline">W</span>。<strong>本章不重复 PID 的整定公式</strong>，只回答“整定完之后还剩多少鲁棒性”。</p>
+<p><strong>与 MPC（第 58、80 章）的分工。</strong> MPC 在时域里处理约束与多变量，鲁棒 MPC 是它的一个分支。本章的频域判据不能替代 MPC 的约束处理，但可以给 MPC 的权重整定提供一个“最坏情况”的参照。<strong>如果回路有硬约束，先看 MPC；如果只有参数不确定，本章更轻。</strong></p>
+<p><strong>与 Smith 预估（第 47、107 章）的分工。</strong> Smith 预估用模型把延迟“搬出”闭环，理论上能恢复带宽。但它对延迟误差极其敏感——模型延迟偏差 20% 就可能失稳。本章的做法相反：不补偿延迟，而是把延迟的不确定性算进权重，用降带宽换稳定。<strong>延迟可测且准确 → Smith；延迟不确定 → 本章。</strong></p>
+<p><strong>与随机控制（第 62 章）的分工。</strong> 第 62 章假设扰动有结构（相关噪声），利用它降低方差；本章假设不确定性无结构（只知区间），保证最坏情况。两者的评价指标不同（方差 vs 峰值），不能直接比较。<strong>如果扰动是噪声，看第 62 章；如果对象参数会漂，看本章。</strong></p>
+<h3 id="一张决策清单">63.11.5 一张决策清单</h3>
+<p>把前面四小节压成五个是非题，按顺序问，任何一题给出否定答案就停在那里。</p>
+<p><strong>第一题：崩一次和常年慢三成，哪个更贵？</strong> 这是唯一真正的入口。本章的代价是明确的——同样的对象，鲁棒二阶的调节时间 20–22 s，激进 PI 只要 6.5–13.7 s，慢 1.5–3 倍。如果这个回路是产量瓶颈、且操作工每小时都要盯着看，慢三成就是不可接受的成本，那么后面四题都不必问了。<strong>注意这里问的是“慢”而不是“差”</strong>：鲁棒设计的稳态精度并不差（低频 25 倍增益照样满足），差的是动态响应。</p>
+<p><strong>第二题：不确定性能不能写成两个参数以内的区间？</strong> 能，继续；不能，先回去做辨识。本章之所以能给出全部数字，前提就是 <span class="math inline">K</span> 与 <span class="math inline">\theta</span> 各有一个区间、<span class="math inline">T</span> 被当作已知。若三个以上参数都显著不确定，<span class="math inline">5\times5</span> 网格要变成 <span class="math inline">5^3</span>，<span class="math inline">\mu</span> 的 <span class="math inline">D</span> 标定也要跟着升维，工作量与保守性一起上涨，收益很可能被吃光。</p>
+<p><strong>第三题：这两个参数能不能在线测？</strong> 能，去做调度（第 44 章），不要做鲁棒；不能，继续。这是本章反复强调的一条：<strong>能测的不确定不是不确定，是已知量</strong>，用鲁棒方法处理已知量是纯粹的浪费。</p>
+<p><strong>第四题：主要矛盾是不是延迟？延迟可不可测？</strong> 若延迟主导且可测，Smith 预估（第 47、107 章）能直接恢复带宽；若延迟主导但不可测，本章就是正解——把 <span class="math inline">\pm0.5</span> s 折成 <span class="math inline">\mu</span> 里的磁盘，用降带宽换稳定，这是本章那条“延迟是相位账本上唯一会动的一行”的直接推论。</p>
+<p><strong>第五题：有没有硬约束？</strong> 有（阀位、速率、温度上限），先看 MPC（第 58、80 章）；没有，本章更轻。频域判据天生不处理时域约束，硬把它拉来处理，只会得到“约束被违反但灵敏度很漂亮”的结论。</p>
+<p>五题全过，本章的方法才是首选。这个清单的价值不在于“多一个流程”，而在于它把“要不要用鲁棒控制”从一种理论偏好，变成了五个可以用现场事实回答的问题。</p>
+<h3 id="换成别的对象哪几步要改">63.11.6 换成别的对象，哪几步要改</h3>
+<p>本章的对象是最“标准”的一类：一阶惯性加纯延迟，<span class="math inline">\theta/T=0.2</span>。现场遇到的对象大多不是这个样子，但方法的骨架可以整体搬过去，只有四处需要动。</p>
+<p><strong>第一处：对象阶数升高时，磁盘公式不用改，网格要加维。</strong> 二阶对象 <span class="math inline">\frac{K}{(T_1s+1)(T_2s+1)}e^{-\theta s}</span> 只要把 <span class="math inline">T_1,T_2</span> 当已知，<span class="math inline">K</span> 与 <span class="math inline">\theta</span> 的区间仍能折成同一条 <span class="math inline">w_{\text{prod}}(\omega)</span>，<span class="math inline">\mu</span> 的算法一字不改。真正的变化在相位账本：多了一个 <span class="math inline">-\arctan(\omega T_2)</span>，它随频率单调增长，会把穿越频率往下压。<strong>阶数每加一阶，可得的带宽大概掉三成</strong>，这是“同样的鲁棒要求、更慢的回路”的直接来源。</p>
+<p><strong>第二处：对象含积分环节时，乘性磁盘在低频失效。</strong> 若 <span class="math inline">P(s)=\frac{K}{s(Ts+1)}e^{-\theta s}</span>，则 <span class="math inline">|P(j\omega)|\to\infty</span>（<span class="math inline">\omega\to0</span>），乘性误差半径 <span class="math inline">|P/P_0-1|</span> 在低频不再是个小量，磁盘会宽到没有意义。这时要换成<strong>分母型（互质因子）不确定性</strong>：把误差加在 <span class="math inline">s</span> 前面的系数上，<span class="math inline">\frac{K}{s(Ts+1)}\to\frac{K}{(1+\delta)s(Ts+1)}</span>。工程上的判断很简单：<strong>对象的低频增益是不是有限</strong>——有限就用乘法，无限（含积分）就换分母型。液位、压力这类“自衡”对象属于前者，流量、某些液位属于后者。</p>
+<p><strong>第三处：对象本身不稳定时，小增益判据不能直接用。</strong> 若 <span class="math inline">P(s)=\frac{K}{Ts-1}e^{-\theta s}</span>，开环就有一个右半平面极点，<span class="math inline">\lVert T\rVert_\infty&lt;1</span> 既不必要也不充分。正确做法是先把对象“稳定化”——用一个标称控制器把回路闭合，再对<strong>闭环</strong>做互质因子摄动分析。这一步的代价很高：稳定化控制器本身要设计，且它的带宽直接决定了后续鲁棒分析的自由度。<strong>这类对象的鲁棒设计，工作量大约是本章的三倍。</strong></p>
+<p><strong>第四处：延迟远大于时间常数时，本章的路线性价比急剧下降。</strong> 本章 <span class="math inline">\theta/T=0.2</span>，可达带宽 0.33 rad/s，距 <span class="math inline">1/\theta=1</span> rad/s 还有三倍余量；当 <span class="math inline">\theta/T\to1</span> 以上（比如长管道、大滞后换热器），可达带宽被压到 <span class="math inline">1/\theta</span> 的十分之一量级，此时无论怎么优化控制器，响应都慢到不可接受。<strong>这不是鲁棒控制的失败，而是“用反馈对抗延迟”这条路走到头了。</strong> 正确的方向是改变结构：能测延迟就用 Smith 预估（第 47、107 章），能改工艺就减少管道长度或加中间缓冲，能接受慢就干脆开环加前馈。</p>
+<p>四处改动的共同点：<strong>骨架（区间 → 磁盘 → <span class="math inline">\mu</span>/小增益 → 时域验收）不变，变的是磁盘的形式、相位账本的行数、以及“这个方法还值不值得用”的判断。</strong> 判断顺序建议照 §63.11.5 那五道题走一遍——尤其是第四题，它是这四个情形里唯一会让“整个路线”失效的一条。</p>
+<h3 id="一句话总结">63.11.7 一句话总结</h3>
+<p><strong>鲁棒控制不是“更强的控制”，而是“更诚实的控制”。</strong> 它承认模型不准，把这个“不准”量化成区间，然后要求设计在这个区间里的每一点都成立。代价是慢，收益是“不会在最坏那天崩”。判断要不要用它，只问一个问题：<strong>这个回路崩一次的代价，是否大于它常年慢 30% 的代价？</strong> 是，就用；不是，就用 PID 调到刚好，然后接受风险。</p>
+<h2 id="python-仿真代码">63.12 Python 仿真代码</h2>
+<h3 id="两个文件一条命令">63.12.1 两个文件，一条命令</h3>
+<p>本章的全部数字由两个脚本生成：</p>
+<ul>
+<li><code>code/ch063_sim.py</code>：九个数值实验，跑完在终端打印全部读数；</li>
+<li><code>code/ch063_figs.py</code>：读同一批函数，画十一张图，导出 SVG 与 PDF 各一份。</li>
+</ul>
+<p>跑法只有一条命令（在 <code>book/</code> 目录下）：</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="st">&quot;D:\Anaconda3\envs\py311\python.exe&quot;</span> code/ch063_sim.py</span></code></pre></div>
+<p><code>ch063_figs.py</code> 不自己算数，它 <code>import</code> 前者的函数。这样正文里的每个数字与图中的每条曲线同源，改一处两处一起变——<strong>这是防止“图文不一致”最省事的办法，也是本章反复改盘径模型却没有出现图文矛盾的唯一原因。</strong></p>
+<h3 id="常量集中在一处">63.12.2 常量集中在一处</h3>
+<p>文件开头是全章的“事实表”，所有区间、阈值、频率网格都在这里：</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>K0, TA0, TH0 <span class="op">=</span> <span class="fl">2.0</span>, <span class="fl">5.0</span>, <span class="fl">1.0</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>K_LO, K_HI <span class="op">=</span> <span class="fl">1.2</span>, <span class="fl">3.0</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>TH_LO, TH_HI <span class="op">=</span> <span class="fl">0.5</span>, <span class="fl">1.5</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>SMAX <span class="op">=</span> <span class="fl">2.2</span>          <span class="co"># 灵敏度峰值许可（|S| &lt;= 2.2 约 6.8 dB）</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>LMAX_HF <span class="op">=</span> <span class="fl">0.5</span>       <span class="co"># 高频环路增益上限（-6 dB）</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>MU_DES <span class="op">=</span> <span class="fl">0.90</span>       <span class="co"># 设计时的 mu 预算</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>W <span class="op">=</span> np.logspace(<span class="op">-</span><span class="dv">2</span>, <span class="fl">1.0</span>, <span class="dv">600</span>)                 <span class="co"># 0.01 ~ 10 rad/s</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>W_K <span class="op">=</span> <span class="bu">max</span>(K_HI <span class="op">/</span> K0 <span class="op">-</span> <span class="fl">1.0</span>, <span class="fl">1.0</span> <span class="op">-</span> K_LO <span class="op">/</span> K0)   <span class="co"># 增益乘性误差半径 = 0.5</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>W_TH <span class="op">=</span> (TH_HI <span class="op">-</span> TH_LO) <span class="op">/</span> <span class="fl">2.0</span>                  <span class="co"># 延迟误差半宽 = 0.5 s</span></span></code></pre></div>
+<p>三条约定值得注意。第一，<span class="math inline">w_K</span> 用 <code>max()</code> 写成式子而不是写死 0.5，这样改了区间它自己会跟着变——<strong>能由区间推出来的数，绝不手抄</strong>。第二，<span class="math inline">w_\theta</span> 存的是<strong>半宽</strong> <span class="math inline">\Delta\theta</span> 而不是区间上下界，因为式 (63-11) 里的正弦用的是半宽。第三，频率网格取 600 点、对数分布，下界 0.01 是为了看清低频 25 倍增益，上界 10 是为了把磁盘模型的失效段（<span class="math inline">\omega&gt;6.28</span>）包进来。</p>
+<h3 id="两个磁盘函数全章最该盯住的六行">63.12.3 两个磁盘函数：全章最该盯住的六行</h3>
+<div class="sourceCode" id="cb3"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> w_th_radius(w: np.ndarray <span class="op">=</span> W) <span class="op">-&gt;</span> np.ndarray:</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">&quot;&quot;&quot;延迟乘性误差的模上界：|exp(-j w dth) - 1| = 2|sin(w dth/2)|。&quot;&quot;&quot;</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="fl">2.0</span> <span class="op">*</span> np.<span class="bu">abs</span>(np.sin(w <span class="op">*</span> W_TH <span class="op">/</span> <span class="fl">2.0</span>))</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> w_disk(w: np.ndarray <span class="op">=</span> W) <span class="op">-&gt;</span> np.ndarray:</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>    <span class="co">&quot;&quot;&quot;乘性误差半径（乘积磁盘）：(1+w_K)(1+w_th)-1，由三角不等式保证覆盖。&quot;&quot;&quot;</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> (<span class="fl">1.0</span> <span class="op">+</span> W_K) <span class="op">*</span> (<span class="fl">1.0</span> <span class="op">+</span> w_th_radius(w)) <span class="op">-</span> <span class="fl">1.0</span></span></code></pre></div>
+<p>第一行把式 (63-4) 的几何关系直接翻成代码：两个单位复数的差，模等于半角正弦的两倍。第二行是式 (63-12) 的三角不等式结论。<strong>这两行是整个判据的“物理入口”</strong>，后面的 <span class="math inline">\mu</span>、<span class="math inline">\bar\sigma</span>、<span class="math inline">D</span> 标定都只是在这条半径上做线性运算，所以它们错了，全部数字都会错，而且错得很像对的。</p>
+<p>本章在收尾阶段就栽在这里一次：最初为了让磁盘更紧，写成了 <span class="math inline">w_K+w_\theta</span>（线性相加）。它在 <span class="math inline">\omega\le1</span> 时看起来更好（表 63-4 里确实更接近真实半径），但 <span class="math inline">\omega=10</span> 处只有真实半径的 68%。<strong>“更紧”与“有效”是两件事</strong>，式 (63-12) 的目的不是紧，是不漏。</p>
+<h3 id="互联矩阵与-d-标定三行-einsum">63.12.4 互联矩阵与 <span class="math inline">D</span> 标定：三行 <code>einsum</code></h3>
+<p>鲁棒性能的 <span class="math inline">2\times2</span> 矩阵按式 (63-22) 填四格，注意它是“逐频率”的一组矩阵，所以数组形状取 <code>(2, 2, len(w))</code>：</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> m_rp(p, K<span class="op">=</span>K0, th<span class="op">=</span>TH0, w<span class="op">=</span>W):</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    L <span class="op">=</span> p_resp(K, th, w) <span class="op">*</span> c_resp(p, w)</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    S <span class="op">=</span> <span class="fl">1.0</span> <span class="op">/</span> (<span class="fl">1.0</span> <span class="op">+</span> L)</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    T <span class="op">=</span> L <span class="op">/</span> (<span class="fl">1.0</span> <span class="op">+</span> L)</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    wm <span class="op">=</span> w_disk(w)</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>    M <span class="op">=</span> np.zeros((<span class="dv">2</span>, <span class="dv">2</span>, <span class="bu">len</span>(w)), dtype<span class="op">=</span><span class="bu">complex</span>)</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>    M[<span class="dv">0</span>, <span class="dv">0</span>] <span class="op">=</span> ws_resp(w) <span class="op">*</span> S</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>    M[<span class="dv">0</span>, <span class="dv">1</span>] <span class="op">=</span> <span class="op">-</span>ws_resp(w) <span class="op">*</span> S <span class="op">*</span> p_resp(K, th, w) <span class="op">*</span> wm</span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>    M[<span class="dv">1</span>, <span class="dv">0</span>] <span class="op">=</span> c_resp(p, w) <span class="op">*</span> S</span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>    M[<span class="dv">1</span>, <span class="dv">1</span>] <span class="op">=</span> <span class="op">-</span>T <span class="op">*</span> wm</span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> M</span></code></pre></div>
+<p><span class="math inline">D</span> 标定这一步只扫一个标量 <span class="math inline">d</span>，所以不需要真的做矩阵乘法，用 <code>einsum</code> 一次把 600 个频点全部折算完：</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> mu_ub_curve(p, w<span class="op">=</span>W):</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    M <span class="op">=</span> m_rp(p, w<span class="op">=</span>w)</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    best <span class="op">=</span> np.full(<span class="bu">len</span>(w), np.inf)</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> d <span class="kw">in</span> np.logspace(<span class="op">-</span><span class="dv">3</span>, <span class="dv">3</span>, <span class="dv">61</span>):</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>        D <span class="op">=</span> np.diag([d, <span class="fl">1.0</span>]).astype(<span class="bu">complex</span>)</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>        Dinv <span class="op">=</span> np.diag([<span class="fl">1.0</span> <span class="op">/</span> d, <span class="fl">1.0</span>]).astype(<span class="bu">complex</span>)</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>        Md <span class="op">=</span> np.einsum(<span class="st">&quot;ij,jkn,kl-&gt;iln&quot;</span>, D, M, Dinv)</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>        sv <span class="op">=</span> np.linalg.svd(Md.transpose(<span class="dv">2</span>, <span class="dv">0</span>, <span class="dv">1</span>), compute_uv<span class="op">=</span><span class="va">False</span>)[:, <span class="dv">0</span>]</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>        best <span class="op">=</span> np.minimum(best, sv)</span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> best</span></code></pre></div>
+<p><code>"ij,jkn,kl-&gt;iln"</code> 的意思是：对每个频点 <span class="math inline">n</span> 做 <span class="math inline">D\,M_n\,D^{-1}</span>。因为 <span class="math inline">D</span> 是对角阵，这一步其实等价于给第 0 行乘 <span class="math inline">d</span>、给第 0 列乘 <span class="math inline">1/d</span>，手写只需两行；用 <code>einsum</code> 是为了让形状语义写在代码里，读的人不必脑补。61 个 <span class="math inline">d</span> 逐个取最小，得到的就是式 (63-17) 的右端。</p>
+<h3 id="sim-类时序是唯一容易错的地方">63.12.5 <code>Sim</code> 类：时序是唯一容易错的地方</h3>
+<p>时域部分只有一个类，控制器用 Tustin 离散、对象用 ZOH 精确离散、延迟用环形缓冲区。核心是 <code>run()</code> 的循环体：</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>n <span class="op">=</span> <span class="bu">int</span>(np.floor(th <span class="op">/</span> <span class="va">self</span>.Ts <span class="op">+</span> <span class="fl">0.5</span>))     <span class="co"># 延迟拍数，四舍五入</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>buf <span class="op">=</span> np.zeros(n <span class="op">+</span> <span class="dv">1</span>)</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> k <span class="kw">in</span> <span class="bu">range</span>(N):</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>    e <span class="op">=</span> r <span class="op">-</span> y[k]</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>    uk <span class="op">=</span> <span class="va">self</span>.ctrl(e)</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>    buf <span class="op">=</span> np.roll(buf, <span class="dv">1</span>)                 <span class="co"># 整条缓冲区后移一格</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>    buf[<span class="dv">0</span>] <span class="op">=</span> uk                           <span class="co"># 新拍进入队首</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>    y[k <span class="op">+</span> <span class="dv">1</span>] <span class="op">=</span> <span class="va">self</span>.ad <span class="op">*</span> y[k] <span class="op">+</span> K <span class="op">*</span> (<span class="fl">1.0</span> <span class="op">-</span> <span class="va">self</span>.ad) <span class="op">*</span> buf[n]</span></code></pre></div>
+<p>三个细节决定结果对不对。<strong>第一，<code>buf[n]</code> 而不是 <code>buf[n-1]</code></strong>：缓冲区长度取 <code>n+1</code>，<code>buf[0]</code> 是当前拍，<code>buf[n]</code> 才是 <span class="math inline">n</span> 拍之前的那一个——差一格就是差一个采样周期，在 <span class="math inline">T_s=0.2</span> s 时足以让超调差好几个百分点。<strong>第二，对象离散化用 <code>ad=exp(-Ts/T)</code> 的精确 ZOH 形式</strong>，不用欧拉法；<span class="math inline">T_s=1.0</span> s 时欧拉法会直接把对象算成不稳定的，那张表就失真了。<strong>第三，积分器在 <code>ctrl()</code> 里先算输出、再累加</strong>，顺序反了会引入一拍额外的延迟。</p>
+<p><code>run()</code> 里还有一个“发散开关”：<code>if abs(y[k+1]) &gt; 50.0</code> 就截断并置 <code>diverge=True</code>。阈值 50 不是随便取的——表 63-10 里失稳后的峰值都落在 50.0–53.3 之间，说明这个系统一旦散就立刻冲到同一量级，50 是一条干净的判别线。</p>
+<h3 id="九个实验各自回答什么">63.12.6 九个实验各自回答什么</h3>
+<p>九个实验不是并列的，它们对应正文的九处结论，各管一件事：</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">实验</th>
+<th style="text-align: left;">回答的问题</th>
+<th style="text-align: left;">正文位置</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">1</td>
+<td style="text-align: left;">哪种磁盘真的覆盖真实误差</td>
+<td style="text-align: left;">§63.2.2、表 63-4</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">2</td>
+<td style="text-align: left;">三个候选 PI 的完整读数</td>
+<td style="text-align: left;">表 63-1、表 63-8</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">3</td>
+<td style="text-align: left;"><span class="math inline">\mu</span> 预测的边界比实测保守多少</td>
+<td style="text-align: left;">§63.6.3、表 63-10</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">4</td>
+<td style="text-align: left;">阶数能不能换来带宽</td>
+<td style="text-align: left;">表 63-5</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">4b</td>
+<td style="text-align: left;">带宽的代价曲线</td>
+<td style="text-align: left;">表 63-2、图 63-9</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">5</td>
+<td style="text-align: left;"><span class="math inline">\mu</span> 相对 <span class="math inline">\bar\sigma</span> 放松多少</td>
+<td style="text-align: left;">§63.6.2、图 63-7</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">6</td>
+<td style="text-align: left;">QFT 边界与数值对不对得上</td>
+<td style="text-align: left;">表 63-6、图 63-5</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">7</td>
+<td style="text-align: left;">四个顶点上会不会崩</td>
+<td style="text-align: left;">表 63-3、图 63-10</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">8</td>
+<td style="text-align: left;">采样周期吃掉多少性能</td>
+<td style="text-align: left;">表 63-7、图 63-6</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">9</td>
+<td style="text-align: left;">区间内部有没有意外的坏点</td>
+<td style="text-align: left;">图 63-11</td>
+</tr>
+</tbody>
+</table>
+<p>实验 4 里藏着一个性能上的关键设计：所有候选先过一道硬筛 <code>if np.abs(L[j]) &gt; LMAX_HF: continue</code>，再做最坏灵敏度排序。<strong>先筛硬约束、再排软指标</strong>，这个次序与 §63.6.7 讲的选控制器次序完全一致——代码结构和决策结构对上了，读起来才不会有第二套逻辑。</p>
+<h3 id="复现核对表">63.12.7 复现核对表</h3>
+<p>换一台机器复现时，逐条对数，下面这些是本轮实跑的读数（保留四位有效数字）：</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">量</th>
+<th style="text-align: right;">期望值</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">真实/乘积磁盘 最大值（覆盖性）</td>
+<td style="text-align: right;">1.0876</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">真实/线性磁盘 最大值（漏覆盖）</td>
+<td style="text-align: right;">1.4712</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">保守 PI 的 <span class="math inline">\mu_{RS}</span>／<span class="math inline">\mu_{RP}</span>／<span class="math inline">\bar\sigma</span></td>
+<td style="text-align: right;">0.504／1.703／1.852</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">折中 PI 的 <span class="math inline">\mu_{RS}</span>／<span class="math inline">\mu_{RP}</span></td>
+<td style="text-align: right;">0.727／1.442</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">激进 PI 的 <span class="math inline">\mu_{RS}</span>／<span class="math inline">\mu_{RP}</span></td>
+<td style="text-align: right;">2.029／3.221</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><span class="math inline">\mu=1</span> 预测的临界 <span class="math inline">k_p</span></td>
+<td style="text-align: right;">1.026</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">时域实测的失稳 <span class="math inline">k_p</span></td>
+<td style="text-align: right;">1.700</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">一阶／二阶／三阶族的 <span class="math inline">\mu_{RS}</span></td>
+<td style="text-align: right;">0.637／0.846／0.577</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">鲁棒性能峰值 <span class="math inline">\bar\sigma</span>／<span class="math inline">\mu</span>／最大比</td>
+<td style="text-align: right;">1.7194／1.6456／1.411</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">最终设计四顶点最大超调</td>
+<td style="text-align: right;">41.65%</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><span class="math inline">T_s=0.05</span> s 时最坏超调</td>
+<td style="text-align: right;">42.33%</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">300 组随机：激进／鲁棒 越界比例</td>
+<td style="text-align: right;">56.3%／0.0%</td>
+</tr>
+</tbody>
+</table>
+<p>若某一行的值与表中差得较多，按下面的顺序排查：先看 <code>W</code> 的频率点数（600）与 <span class="math inline">d</span> 的点数（61），再看 <code>W_K</code>、<code>W_TH</code> 是否被改动，最后才怀疑公式——<strong>这三处是本脚本里唯一会“悄悄改变结果而不报错”的地方。</strong></p>
+<h3 id="复现时的四个坑">63.12.8 复现时的四个坑</h3>
+<p><strong>坑一：<code>np.roll</code> 的方向。</strong> <code>np.roll(buf, 1)</code> 把整条缓冲区往后推一格，队首空出来再写新值；若写成 <code>np.roll(buf, -1)</code>，延迟就变成了“提前”，仿真会给出好得多的超调，而且不会报任何错。</p>
+<p><strong>坑二：<code>mu_crit</code> 用了 <code>np.interp</code>。</strong> 它要求自变量单调递增；本章的 <code>mus</code> 随 <span class="math inline">k_p</span> 单调上升，所以成立。若换成有非单调段的控制器族，这一句会给出错误但看起来合理的边界值，必须改成“找第一个穿越点”。</p>
+<p><strong>坑三：<code>worst_ms</code> 的频率抽稀。</strong> 代码里用 <code>wg = W[::3]</code>（200 点）来加速，这是全章唯一一处“故意降低精度换速度”的地方。若把参数网格从 <span class="math inline">5\times5</span> 加密到 <span class="math inline">9\times9</span>，抽稀就可能导致最坏值偏低，届时要把 <code>[::3]</code> 去掉。</p>
+<p><strong>坑四：种子。</strong> 实验 9 用 <code>seed=63</code>，蒙特卡洛的具体分位数（1.901、15.379）都依赖它。换种子会得到略有差异的 95% 分位，但“56.3% 对 0.0%”这个量级不会变——<strong>如果越界比例的量级变了，那不是种子的问题，是区间或磁盘错了。</strong></p>
+<h3 id="把这套代码搬到自己的对象上">63.12.9 把这套代码搬到自己的对象上</h3>
+<p>本章的三个文件都是为这一个对象写的，搬到别的回路上需要改五处，按改动的“危险程度”从低到高排列。</p>
+<p><strong>第一处：对象。</strong> 改 <code>p_resp()</code> 里的表达式。若对象是高阶的，直接用 <code>scipy.signal.freqresp</code> 算频率响应再填进来，不必手写；<code>loop()</code>、<code>m_rp()</code> 都只依赖它返回的复数组，不关心内部结构。<strong>唯一的要求是频率点 <code>W</code> 要覆盖到峰值所在的频段</strong>——本章 <span class="math inline">W</span> 取 0.01–10 rad/s，峰值 0.37 落在中间，很安全；若对象的时间常数小于 0.5 s，上限要抬到 <span class="math inline">10\omega_c</span> 以上，否则 <span class="math inline">\mu</span> 的峰值会被截在窗外，算出来偏小而不报错。</p>
+<p><strong>第二处：不确定性区间。</strong> 改 <code>K_LO/K_HI</code>、<code>TH_LO/TH_HI</code>，并确认 <code>W_K</code> 的取法：上下不对称时取大的一侧（本章 <span class="math inline">+50\%</span> 与 <span class="math inline">-40\%</span> 取 0.5）。这一步的输入来自现场，不是来自代码——§63.10.1 那三个来源里，历史数据最可信、推算最不可信。</p>
+<p><strong>第三处：性能权重。</strong> 改 <code>WS_MS</code>、<code>WS_WB</code>、<code>WS_A</code>。三个数分别对应超调、响应速度、稳态精度（§63.10.2），<strong>这三个必须从工艺指标倒推，不能照抄本章的 2.0／0.15／0.02</strong>。倒推完之后先做一次标称计算，看 <span class="math inline">\lvert W_S S\rvert</span> 的峰值是不是 1 附近；若差得远，说明权重与控制器不匹配，先调控制器再谈鲁棒。</p>
+<p><strong>第四处：控制器族。</strong> 改 <code>scan()</code> 里 <span class="math inline">k_p</span>、<span class="math inline">T_i</span>、<span class="math inline">z</span> 的搜索范围。原则是“先宽后窄”：第一轮故意放宽到“明显不稳”和“明显太慢”两头，让搜索结果落在区间的内部；若最优点贴在边界上，说明范围设窄了，这一轮的结果不能用。</p>
+<p><strong>第五处：采样周期。</strong> 改 <code>Sim(Ts=...)</code>。定法照 §63.5.3：先算 <span class="math inline">\theta_{\min}/10</span>，再与 PLC 的实际扫描周期取整。<strong>这一处最危险</strong>，因为它同时影响时域仿真与延迟量化，改错之后频域指标全部不变、时域指标全变，很容易误判成“控制器不行”。</p>
+<p>五处改完，最后一步是<strong>给自己重建一张锚点表</strong>：挑三到五个数（<span class="math inline">\mu_{RS}</span>、<span class="math inline">\mu_{RP}</span>、最坏 <span class="math inline">\lvert S\rvert</span>、最坏超调、调节时间），记下实跑值，写进交接文档。以后任何一次改动，先对这几个数——差得少就是正常波动，差得多就是改错了地方。本章的锚点表就是 §63.12.7，它的作用不是“证明代码对”，而是<strong>把“我改了什么、结果变了多少”变成一件可以查的事</strong>。</p>
+<p>最后提醒一件小事：<strong>不要为了跑得快去砍频率点数。</strong> 本章 <span class="math inline">W</span> 取 600 点，覆盖 0.01–10 rad/s 三个十倍频程，相邻频点的间隔只有 1.2%；<span class="math inline">\mu</span> 的峰值只在 0.37 rad/s 附近一处，峰形很窄，点数一少就会被“削平”，算出来的 <span class="math inline">\mu</span> 偏低、而且不会报错。<strong>这类“静默偏差”比报错危险得多</strong>——报错会让你去查，静默偏差只会让你以为设计通过了。</p>
+
+<nav class="footnav"><a href="ch062.html">← 上一章</a><a href="index.html">返回目录</a><a href="ch064.html">下一章 →</a></nav>
+</body>
+</html>

@@ -1,0 +1,1694 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="zh-CN" xml:lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>第 77 章　Koopman 算子与数据驱动控制 · 控制大综合</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    span.underline{text-decoration: underline;}
+    div.column{display: inline-block; vertical-align: top; width: 50%;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    ul.task-list{list-style: none;}
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+  <link rel="stylesheet" href="assets/book.css" />
+  <script src="assets/katex/katex.min.js"></script>
+  <script>document.addEventListener("DOMContentLoaded", function () {
+   var mathElements = document.getElementsByClassName("math");
+   var macros = [];
+   for (var i = 0; i < mathElements.length; i++) {
+    var texText = mathElements[i].firstChild;
+    if (mathElements[i].tagName == "SPAN") {
+     katex.render(texText.data, mathElements[i], {
+      displayMode: mathElements[i].classList.contains('display'),
+      throwOnError: false,
+      macros: macros,
+      fleqn: false
+     });
+  }}});
+  </script>
+  <link rel="stylesheet" href="assets/katex/katex.min.css" />
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+  <link rel="stylesheet" href="assets/site.css" />
+</head>
+<body>
+<nav class="topnav"><a class="home" href="index.html">目录</a><span class="pos">077 / 115</span><span class="pager"><a href="ch076.html">上一章</a><a href="ch078.html">下一章</a></span></nav>
+
+<nav id="TOC" role="doc-toc">
+<ul>
+<li><a href="#第77章-koopman-算子与数据驱动控制">第77章 Koopman 算子与数据驱动控制</a>
+<ul>
+<li><a href="#动机与直观理解">77.1 动机与直观理解</a></li>
+<li><a href="#数学原理">77.2 数学原理</a></li>
+<li><a href="#设计步骤">77.3 设计步骤</a></li>
+<li><a href="#连续情形">77.4 连续情形</a></li>
+<li><a href="#离散情形">77.5 离散情形</a></li>
+<li><a href="#稳定性与性能">77.6 稳定性与性能</a></li>
+<li><a href="#参数意义与作用">77.7 参数意义与作用</a></li>
+<li><a href="#调参方法与经验">77.8 调参方法与经验</a></li>
+<li><a href="#优化与改进">77.9 优化与改进</a></li>
+<li><a href="#工程落地">77.10 工程落地</a></li>
+<li><a href="#优缺点与适用边界">77.11 优缺点与适用边界</a></li>
+<li><a href="#python-仿真代码">77.12 Python 仿真代码</a></li>
+</ul></li>
+</ul>
+</nav>
+<h1 id="第77章-koopman-算子与数据驱动控制">第77章 Koopman 算子与数据驱动控制</h1>
+<h2 id="动机与直观理解">77.1 动机与直观理解</h2>
+<h3 id="一个看起来像线性的非线性对象">77.1.1 一个“看起来像线性”的非线性对象</h3>
+<p>先看一台再普通不过的设备：单摆。把摆杆看作刚性、无弹性、转轴有黏性摩擦，取角度 <span class="math inline">x_1</span> 与角速度 <span class="math inline">x_2</span> 为状态，输入 <span class="math inline">u</span> 为加在转轴上的力矩，它的运动方程是</p>
+<p><span class="math display">
+\dot x_1=x_2,\qquad \dot x_2=-\sin x_1-0.2x_2+u
+\tag{77-1}
+</span></p>
+<p>本章全部控制实验都用这个对象，采样周期 <span class="math inline">T_s=0.02</span> s，输入限幅 <span class="math inline">|u|\le 4</span>。控制目标是把它从任意初始角度拉回竖直位置 <span class="math inline">x_1=0</span>、<span class="math inline">x_2=0</span>，代价函数取</p>
+<p><span class="math display">
+J=\int_0^{t_f}\left(x_1^2+0.2x_2^2+0.1u^2\right)\mathrm{d}t
+\tag{77-2}
+</span></p>
+<p>式 (77-1) 里只有一个非线性项 <span class="math inline">\sin x_1</span>，其余都是线性的。工程师遇到这种对象的第一反应是线性化：在 <span class="math inline">x_1=0</span> 处把 <span class="math inline">\sin x_1</span> 换成 <span class="math inline">x_1</span>，得到</p>
+<p><span class="math display">
+\dot x_1=x_2,\qquad \dot x_2=-x_1-0.2x_2+u
+\tag{77-3}
+</span></p>
+<p>它的极点是 <span class="math inline">-0.1\pm0.9950j</span>，阻尼比约 <span class="math inline">0.1</span>，无阻尼自然频率约 <span class="math inline">1</span> rad/s。按式 (77-3) 设计 LQR，得到状态反馈增益 <span class="math inline">\boldsymbol K=\begin{bmatrix}2.2385 &amp; 2.3451\end{bmatrix}</span>（见 §77.6）。这套做法在摆角小于 <span class="math inline">30^\circ</span> 时工作得很好，几乎没有人会怀疑它。</p>
+<p>问题出在“几乎”两个字上。摆角到 <span class="math inline">60^\circ</span> 时，<span class="math inline">\sin x_1</span> 比 <span class="math inline">x_1</span> 小 <span class="math inline">17\%</span>；到 <span class="math inline">90^\circ</span> 时小 <span class="math inline">36\%</span>；到 <span class="math inline">149^\circ</span>（本章实测用的初值 <span class="math inline">x_1(0)=2.60</span> rad）时，<span class="math inline">\sin x_1=0.5155</span>，不到 <span class="math inline">x_1</span> 的两成。这时线性化模型给出的“恢复力矩”是真实值的 <span class="math inline">5</span> 倍，控制器会误以为对象比实际更有力，于是给的动作偏小、收敛偏慢。传统上这类偏差靠“多留裕度”或“分段线性化”来兜，前者牺牲性能，后者在切换点附近引入新的不连续。</p>
+<h3 id="提升换一组坐标把非线性摊到维数上">77.1.2 提升：换一组坐标，把非线性摊到维数上</h3>
+<p>Koopman 提升的想法可以用一句话概括：<strong>不去改对象，去改我们观察对象的坐标</strong>。</p>
+<p>具体地说，原来我们只观察两个量 <span class="math inline">x_1</span> 与 <span class="math inline">x_2</span>。现在允许观察任意函数：<span class="math inline">x_1^2</span>、<span class="math inline">x_2^2</span>、<span class="math inline">x_1x_2</span>、<span class="math inline">x_1^3</span>、<span class="math inline">\sin x_1</span>……把这些函数排成一个向量</p>
+<p><span class="math display">
+\boldsymbol z=\boldsymbol\varphi(\boldsymbol x)=\begin{bmatrix}\varphi_1(\boldsymbol x)\\ \varphi_2(\boldsymbol x)\\ \vdots\\ \varphi_n(\boldsymbol x)\end{bmatrix}
+\tag{77-4}
+</span></p>
+<p>叫作<strong>提升向量</strong>，<span class="math inline">\boldsymbol\varphi</span> 叫作<strong>字典</strong>。Koopman 算子的定义是：把任意一个观测函数 <span class="math inline">g</span> 映射成“下一步的观测函数” <span class="math inline">g\circ f</span>，即</p>
+<p><span class="math display">
+(\mathcal{K}g)(\boldsymbol x)=g\big(f(\boldsymbol x)\big)
+\tag{77-5}
+</span></p>
+<p>其中 <span class="math inline">\boldsymbol x_{k+1}=f(\boldsymbol x_k)</span> 是对象的离散演化。<span class="math inline">\mathcal{K}</span> 作用在函数空间上，是<strong>线性</strong>的——这一点不需要任何假设，因为“先演化再观察”与“先观察再演化”的复合本身对 <span class="math inline">g</span> 就是线性的。真正的问题在于：<span class="math inline">\mathcal{K}</span> 作用在无穷维函数空间上，而我们只能用有限个 <span class="math inline">\varphi_i</span> 去近似它。</p>
+<p>图 77-1 画出了这条链。左边是非线性的状态空间，经过字典映射进入中间那层“观测函数空间”，演化在那里由矩阵 <span class="math inline">\boldsymbol K</span> 完成，最后经反投影回到状态。下方那条虚线支路是数据驱动辨识：拿采集到的 <span class="math inline">\boldsymbol z_k</span>、<span class="math inline">\boldsymbol z_{k+1}</span> 做最小二乘，直接拟合出 <span class="math inline">\boldsymbol A</span> 与 <span class="math inline">\boldsymbol B</span>，完全不需要知道 <span class="math inline">f</span> 的解析式。</p>
+<figure>
+<img src="figs/ch077/fig_077_01_koopman_lift.svg" alt="图 77-1 Koopman 提升的结构：状态经字典进入观测函数空间，演化变为矩阵乘法，反投影回状态；下方虚线支路为数据驱动辨识" /><figcaption aria-hidden="true">图 77-1 Koopman 提升的结构：状态经字典进入观测函数空间，演化变为矩阵乘法，反投影回状态；下方虚线支路为数据驱动辨识</figcaption>
+</figure>
+<p>这条链的价值在于：<strong>一旦进入观测函数空间，所有线性系统成熟工具立刻可用</strong>——极点配置、LQR、观测器、频域分析、模型预测控制。代价是维数从 2 涨到 9、20 甚至上百，而且提升只是近似的，除非字典恰好张成了 <span class="math inline">\mathcal{K}</span> 的一个不变子空间。</p>
+<h3 id="定理与工程之间的那道缝">77.1.3 定理与工程之间的那道缝</h3>
+<p>把上面的想法写成一句可计算的式子，就是</p>
+<p><span class="math display">
+\boldsymbol z_{k+1}=\boldsymbol A\boldsymbol z_k+\boldsymbol B u_k,\qquad \boldsymbol z_k=\boldsymbol\varphi(\boldsymbol x_k)
+\tag{77-6}
+</span></p>
+<p>式 (77-6) 与式 (77-1) 描述同一个对象，区别只在于前者是对后者的近似，而且近似误差没有解析上界。这一点决定了 Koopman 方法在工程上的全部难点：<strong>你不知道自己错在哪里，只能用数据反复验证</strong>。</p>
+<p>本章用两个对象把这件事说透。</p>
+<p>第一个是带慢流形的二状态自治系统，记作对象 A：</p>
+<p><span class="math display">
+\dot x_1=\mu x_1,\qquad \dot x_2=\lambda\left(x_2-x_1^2\right),\qquad \mu=-0.20,\ \lambda=-1.00
+\tag{77-7}
+</span></p>
+<p>它有一个三维不变子空间 <span class="math inline">\mathrm{span}\{x_1,x_2,x_1^2\}</span>，只要字典取到这三个函数，提升就是<strong>精确</strong>的，误差只受浮点精度限制。这个性质让本章可以先把“方法本身对不对”验证清楚。</p>
+<p>第二个就是式 (77-1) 的单摆，记作对象 B。它的提升永远不是有限维的，只能用多项式或径向基函数去逼近——这才是工程上绝大多数对象的情形。本章用它比较线性化 LQR、DMD-LQR、EDMD-LQR 与 Koopman-MPC，并做字典、数据量、噪声、激励四组扫描。</p>
+<h3 id="本章要回答的四个问题">77.1.4 本章要回答的四个问题</h3>
+<p><strong>第一，字典怎么选？</strong> 选少了欠拟合，选多了过拟合，而且“多”这件事在提升空间里的表现与通常的回归问题不一样：字典越大，提升空间的单步残差反而可能上升，但状态空间的长时预测反而变好。§77.5 会用实测数据把这对反向趋势摆出来。</p>
+<p><strong>第二，数据要多少、怎么采？</strong> 本章实测，样本数从 <span class="math inline">N=50</span> 增到 <span class="math inline">N=6400</span>，200 步预测误差从 <span class="math inline">11.8645</span> 降到 <span class="math inline">0.0195</span>，但中间不是单调的：<span class="math inline">N\le400</span> 时误差在 <span class="math inline">O(1)</span>，<span class="math inline">N\ge800</span> 后掉到 <span class="math inline">O(0.01)</span>。分水岭不是样本数本身，而是拟合矩阵的谱半径是否跨过 <span class="math inline">1</span>（§77.5.4）。</p>
+<p><strong>第三，提升之后怎么设计控制器？</strong> 在式 (77-6) 上直接解离散 LQR 是最省事的做法，但它默认了“提升坐标里的二次型代价”就是我们要的代价。本章会说明这个默认有多强，以及为什么在本章对象上它恰好没造成麻烦。</p>
+<p><strong>第四，什么时候不该用 Koopman？</strong> §77.11 给出边界。一句话预告：当对象在工作点附近线性化已经够好时，Koopman 带来的收益往往在 <span class="math inline">1\%</span> 量级（本章实测 <span class="math inline">0.34\%</span> 到 <span class="math inline">0.27\%</span>），<strong>真正值钱的是约束处理与激励设计，而不是提升本身</strong>。</p>
+<h3 id="一句话核心思想">77.1.5 一句话核心思想</h3>
+<p>本章的一句话是：<strong>非线性对象的困难不在于非线性本身，而在于我们能否找到一组坐标让演化在那组坐标下是线性的；Koopman 提升是找这组坐标的系统方法，字典与数据决定了能找多准，而控制器设计决定了找得准有没有用。</strong></p>
+<p>这句话的后半段常被忽略。很多教材把 Koopman 讲成“把非线性变成线性的魔法”，但本章的实测会反复显示：提升得再准，如果控制目标、约束、执行器能力没变，闭环性能的改善也是非常有限的。真正被改变的是<strong>可分析性</strong>——你能用线性工具去算谱、算能控性、算约束可行性，而不是靠试凑。</p>
+<h3 id="三个对象各管一件事">77.1.6 三个对象各管一件事</h3>
+<p>本章用了三个对象，各自回答一个问题，不能互换。</p>
+<p><strong>对象 A 只用来验证“方法本身”。</strong> 它没有输入，做不了控制实验；但它有一个三维不变子空间，字典取对了提升就是精确的。这让本章能先回答“EDMD 的代码与理解对不对”，再回答“这个方法在这个对象上有没有用”。工程上做任何辨识之前都该有这样一个“已知答案”的算例：连它都算不准，后面所有结论都是空的。</p>
+<p>A 的第二个作用是把“字典缺项”的后果放大到肉眼可见。线性字典给出的连续特征值是 <span class="math inline">-0.2</span> 与 <span class="math inline">-1.5174</span>，后者与真值 <span class="math inline">-1.0</span> 差 <span class="math inline">51.7\%</span>，而它的轨迹要到 2 s 后才明显偏离。如果直接在单摆上做同样的比较，误差会被其他因素掩盖；在 A 上，只有“缺了 <span class="math inline">x_1^2</span>”这一个原因可怪。</p>
+<p><strong>对象 B 承担全部控制实验。</strong> 单摆的非线性项光滑、单变量、物理意义明确，字典阶数与精度之间的关系容易解释。它的状态只有两维，五次字典也才 20 列，一组扫描几秒钟跑完。换成六自由度机械臂，同样的扫描要跑几个小时，而且很难判断误差来自字典截断还是来自未建模的关节柔性。</p>
+<p>对教学与工程验证来说，<strong>能快速跑完的简单对象比真实但昂贵的对象更有用</strong>。前者的结论可以反复检查，后者的结论只能信一次。</p>
+<p>B 还提供一个宽工作域。初值从 <span class="math inline">0.65</span> rad 扫到 <span class="math inline">2.60</span> rad，线性化给出的恢复力矩从与真值接近一路涨到真值的 <span class="math inline">5</span> 倍，正好覆盖“线性化够用”到“线性化失效”的全过程。这个跨度是 §77.6 能得出“收益随初值增大而增大”这条结论的前提。</p>
+<p><strong>对象 C 用在 §77.9.4。</strong> 它的方程是 <span class="math inline">\dot y=-0.8y+0.4\tanh(2y)+u</span>，参考信号取 <span class="math inline">\tanh\big(3\sin(2\pi t/3)\big)</span>，周期 3 s。<span class="math inline">\tanh</span> 让静态增益随幅值下降，线性 PID 在大幅跟踪时必然滞后，于是“整定能带来多少改善”有一个明确的量。</p>
+<p>这个对象只用来考察“控制器结构固定、只调参数”的场景。VRFT 与 IFT 只需要输入输出数据，不需要提升、不需要 <span class="math inline">\boldsymbol A</span> 与 <span class="math inline">\boldsymbol B</span>，所以用一个标量对象最清楚。用单摆反而会把“整定”与“建模”两件事混在一起，说不清改善来自哪一步。</p>
+<p>三个对象对应本章的三条主线：<strong>精确性（A）、闭环性能（B）、免模型整定（C）</strong>。读的时候要记住每个数字来自哪个对象。</p>
+<p>A 的 <span class="math inline">2.174\times10^{-16}</span> 不能当成 B 也能达到的精度；B 的 <span class="math inline">0.27\%</span> 也不能推广到硬非线性对象。把不同对象上的数字混着引用，是读这类文献时最常见的误读。</p>
+<h3 id="本章怎么读">77.1.7 本章怎么读</h3>
+<p>这一章篇幅不短，不同读者可以走不同的路径。</p>
+<p><strong>现场工程师</strong>建议先读 §77.1、§77.3、§77.10 三节。它们回答“要不要用、怎么做、怎么上线”，几乎不含推导。§77.3.8 的选型演练可以当成模板，照着走一遍大约需要四五批数据。</p>
+<p><strong>做研究或写论文的读者</strong>重点在 §77.2、§77.4、§77.5。这三节讲清了提升的数学含义、连续与离散的取舍、以及三个校验指标为什么必须同时看。§77.5.3 与 §77.6.4 的两个反直觉结论，是本章最值得带走的东西。</p>
+<p><strong>教学使用</strong>可以按顺序讲，但建议把 §77.9.3 的 MPC 实测提前到 §77.6 之前。学生看到“提升没有带来性能收益”容易失去兴趣，先看到“用 17% 的代价换 0 步越界”，再回头看为什么无约束时没收益，逻辑会更顺。</p>
+<p><strong>关于数字。</strong> 本章所有数字都来自 <code>code/ch077_sim.py</code> 的一次运行，没有估算值。单位在首次出现时标注，之后省略；有效位数按测量精度给，一般不刻意凑整。</p>
+<p><strong>关于图。</strong> 十张图里只有图 77-1 是框图，其余都是数据图。数据图的纵轴几乎都用了对数刻度或截断，原因在对应图注里说明——尤其是图 77-10，纵轴截断是为了看清 <span class="math inline">0.27\%</span> 的差异方向，而不是夸大它。</p>
+<p><strong>关于公式。</strong> 本章共有 33 个编号公式，其中真正需要推导的只有式 (77-13) 与式 (77-24)。其余或是定义，或是标准结果，读者可以跳过推导直接用。</p>
+<p><strong>与其他章节的关系。</strong> 线性系统的基础在第 30 章，LQR 在第 30 章与第 44 章，MPC 在第 58 章与第 80 章，PID 整定在第 44 章与第 106 章。本章不重复这些内容，只在需要时指回去。</p>
+<h2 id="数学原理">77.2 数学原理</h2>
+<h3 id="算子特征函数与不变子空间">77.2.1 算子、特征函数与不变子空间</h3>
+<p>设离散演化 <span class="math inline">\boldsymbol x_{k+1}=f(\boldsymbol x_k)</span>，观测函数 <span class="math inline">g</span> 属于某个函数空间 <span class="math inline">\mathcal{F}</span>。Koopman 算子 <span class="math inline">\mathcal{K}:\mathcal{F}\to\mathcal{F}</span> 由式 (77-5) 定义。它的线性性是显然的：</p>
+<p><span class="math display">
+\mathcal{K}(a g_1+b g_2)(\boldsymbol x)=a g_1(f(\boldsymbol x))+b g_2(f(\boldsymbol x))
+=a(\mathcal{K}g_1)(\boldsymbol x)+b(\mathcal{K}g_2)(\boldsymbol x)
+\tag{77-8}
+</span></p>
+<p>如果存在非零 <span class="math inline">g</span> 与常数 <span class="math inline">\lambda</span> 使 <span class="math inline">\mathcal{K}g=\lambda g</span>，则称 <span class="math inline">g</span> 是 <span class="math inline">\mathcal{K}</span> 的<strong>特征函数</strong>、<span class="math inline">\lambda</span> 是对应的<strong>特征值</strong>。特征函数有一个非常有用的性质：沿着轨迹它按几何级数演化，</p>
+<p><span class="math display">
+g(\boldsymbol x_k)=\mathcal{K}^k g(\boldsymbol x_0)=\lambda^k g(\boldsymbol x_0)
+\tag{77-9}
+</span></p>
+<p>也就是说，只要知道 <span class="math inline">\lambda</span> 与初值 <span class="math inline">g(\boldsymbol x_0)</span>，就能预测 <span class="math inline">g</span> 在任意时刻的值，不需要仿真。这正是“线性化”在函数空间里的含义。</p>
+<p>对连续时间系统 <span class="math inline">\dot{\boldsymbol x}=\boldsymbol f(\boldsymbol x)</span>，对应的算子是<strong>无穷小生成元</strong></p>
+<p><span class="math display">
+(\mathcal{L}g)(\boldsymbol x)=\nabla g(\boldsymbol x)\cdot\boldsymbol f(\boldsymbol x)
+\tag{77-10}
+</span></p>
+<p>它与 <span class="math inline">\mathcal{K}</span> 的关系是 <span class="math inline">\mathcal{K}=\mathrm{e}^{\mathcal{L}t}</span>，因此 <span class="math inline">\mathcal{L}</span> 的特征值 <span class="math inline">\nu</span> 与离散 <span class="math inline">\mathcal{K}</span> 的特征值 <span class="math inline">\lambda</span> 满足 <span class="math inline">\lambda=\mathrm{e}^{\nu T_s}</span>。本章后面报的“连续特征值”都是 <span class="math inline">\nu=\ln(\lambda)/T_s</span>，这样可以直接与线性化极点比较。</p>
+<h3 id="对象-a一个可以算准的例子">77.2.2 对象 A：一个可以算准的例子</h3>
+<p>用式 (77-7) 验证上面的定义。取 <span class="math inline">g_1=x_1</span>、<span class="math inline">g_2=x_2</span>、<span class="math inline">g_3=x_1^2</span>，先算 <span class="math inline">g_3</span> 的生成元：</p>
+<p><span class="math display">
+\mathcal{L}(x_1^2)=2x_1\dot x_1=2\mu x_1^2=2\mu\,g_3
+\tag{77-11}
+</span></p>
+<p>再算 <span class="math inline">g_2</span>：</p>
+<p><span class="math display">
+\mathcal{L}(x_2)=\dot x_2=\lambda\left(x_2-x_1^2\right)=\lambda g_2-\lambda g_3
+\tag{77-12}
+</span></p>
+<p><span class="math inline">g_1</span> 更直接：<span class="math inline">\mathcal{L}(x_1)=\mu x_1=\mu g_1</span>。把三式写成矩阵形式，</p>
+<p><span class="math display">
+\frac{\mathrm{d}}{\mathrm{d}t}\begin{bmatrix}g_1\\g_2\\g_3\end{bmatrix}
+=\begin{bmatrix}\mu &amp; 0 &amp; 0\\ 0 &amp; \lambda &amp; -\lambda\\ 0 &amp; 0 &amp; 2\mu\end{bmatrix}
+\begin{bmatrix}g_1\\g_2\\g_3\end{bmatrix}
+\tag{77-13}
+</span></p>
+<p><strong>矩阵是上三角的，而且第三列只影响第二行</strong>——这意味着 <span class="math inline">\mathrm{span}\{g_1,g_2,g_3\}</span> 在 <span class="math inline">\mathcal{L}</span> 下封闭，是一个三维不变子空间。三个特征值是 <span class="math inline">\mu=-0.20</span>、<span class="math inline">\lambda=-1.00</span>、<span class="math inline">2\mu=-0.40</span>。</p>
+<p>代入 <span class="math inline">T_s=0.02</span> s，离散特征值应为</p>
+<p><span class="math display">
+\mathrm{e}^{-0.004}=0.99600799,\qquad \mathrm{e}^{-0.02}=0.98019867,\qquad \mathrm{e}^{-0.008}=0.99203191
+\tag{77-14}
+</span></p>
+<p>本章脚本 E1 用最小二乘拟合这三个函数，得到的矩阵 <span class="math inline">\boldsymbol A</span> 对角元是 <span class="math inline">0.99600799</span>、<span class="math inline">0.98019867</span>、<span class="math inline">0.99203191</span>，与式 (77-14) <strong>逐位一致</strong>；单步残差 <span class="math inline">2.174\times10^{-16}</span>，300 步开环预测的 RMSE 是 <span class="math inline">1.2224\times10^{-14}</span>。这两个数字都在双精度浮点的舍入量级，说明提升在数值上是精确的，而不是“近似得很好”。</p>
+<p>反过来，如果字典只取 <span class="math inline">\{x_1,x_2\}</span>（线性字典），拟合出来的连续特征值是 <span class="math inline">-0.2</span> 与 <span class="math inline">-1.5174</span>。前者对，后者错——真值是 <span class="math inline">-1.0</span>，误差 <span class="math inline">51.7\%</span>。更要紧的是，这个错的特征值<strong>看起来完全正常</strong>：它是负实数，衰减得比真值还快，从谱上根本看不出问题。这就是 §77.1.3 说的那道缝：近似误差不会自己报警。</p>
+<h3 id="有限维截断edmd-的最小二乘形式">77.2.3 有限维截断：EDMD 的最小二乘形式</h3>
+<p>真实对象的 <span class="math inline">\mathcal{K}</span> 是无穷维的，我们只能取有限个观测函数 <span class="math inline">\varphi_1,\dots,\varphi_n</span> 构成字典，并假设</p>
+<p><span class="math display">
+\boldsymbol\varphi(f(\boldsymbol x))\approx\boldsymbol A\,\boldsymbol\varphi(\boldsymbol x)+\boldsymbol B u
+\tag{77-15}
+</span></p>
+<p>式 (77-15) 里的 <span class="math inline">\boldsymbol A</span> 就是 <span class="math inline">\mathcal{K}</span> 在 <span class="math inline">\mathrm{span}\{\varphi_i\}</span> 上的<strong>伽辽金投影</strong>：把 <span class="math inline">\mathcal{K}\varphi_j</span> 投影回这个子空间，投影系数就是 <span class="math inline">\boldsymbol A</span> 的第 <span class="math inline">j</span> 列。当子空间不变时等号成立（对象 A 的三项字典），否则只是最小二乘意义下的最优。</p>
+<p>把 <span class="math inline">M</span> 组相邻样本排成矩阵，</p>
+<p><span class="math display">
+\boldsymbol Z_1=\begin{bmatrix}\boldsymbol\varphi(\boldsymbol x_1)^\top\\ \vdots\\ \boldsymbol\varphi(\boldsymbol x_M)^\top\end{bmatrix},\qquad
+\boldsymbol Z_2=\begin{bmatrix}\boldsymbol\varphi(\boldsymbol x_2)^\top\\ \vdots\\ \boldsymbol\varphi(\boldsymbol x_{M+1})^\top\end{bmatrix},\qquad
+\boldsymbol W=\begin{bmatrix}\boldsymbol Z_1 &amp; \boldsymbol u\end{bmatrix}
+\tag{77-16}
+</span></p>
+<p>带输入的 EDMD（文献里常记作 EDMDc）就是解</p>
+<p><span class="math display">
+\boldsymbol\Theta^\star=\arg\min_{\boldsymbol\Theta}\left\|\boldsymbol Z_2-\boldsymbol W\boldsymbol\Theta\right\|_F^2
+\tag{77-17}
+</span></p>
+<p>它的闭式解是 <span class="math inline">\boldsymbol\Theta^\star=(\boldsymbol W^\top\boldsymbol W)^{-1}\boldsymbol W^\top\boldsymbol Z_2</span>，或直接用 QR 分解求解以避免显式求逆。解出来之后按行切开：前 <span class="math inline">n</span> 行转置得 <span class="math inline">\boldsymbol A^\top</span>，最后一行转置得 <span class="math inline">\boldsymbol B^\top</span>。本章脚本里就是三行：</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>A <span class="op">=</span> Th[:<span class="op">-</span><span class="dv">1</span>].T</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>B <span class="op">=</span> Th[<span class="op">-</span><span class="dv">1</span>:].T</span></code></pre></div>
+<p>式 (77-17) 有一个容易被忽视的细节：<strong>它把字典的所有分量同等对待</strong>。如果 <span class="math inline">\varphi_1=x_1</span> 的量级是 <span class="math inline">1</span>，而 <span class="math inline">\varphi_9=x_1^5</span> 的量级是 <span class="math inline">0.1</span>，最小二乘会倾向于把误差摊在量级大的分量上，结果就是低阶项拟合得好、高阶项拟合得差。这不是算法缺陷，而是“没有加权”的必然后果。工程上的对策有两个：一是把字典按样本标准差归一化后再拟合，二是改用状态空间误差作为评价指标（§77.5.2）。</p>
+<h3 id="连续时间与离散时间怎么选">77.2.4 连续时间与离散时间怎么选</h3>
+<p>式 (77-6) 是离散形式，式 (77-10) 是连续形式，两者只差一个矩阵指数。工程上选哪个，取决于数据是怎么来的。</p>
+<p><strong>离散形式适合“采样数据直接拟合”</strong>：传感器每 <span class="math inline">T_s</span> 给一组数，相邻两组就是一个样本对，不需要知道采样之间的演化。本章的全部实验都用这种形式，因为现场数据就是这样。</p>
+<p><strong>连续形式适合“有解析模型、想算谱”</strong>：如果 <span class="math inline">\boldsymbol f</span> 已知，可以直接在字典上算 <span class="math inline">\mathcal{L}</span> 的矩阵表示，特征值就是连续时间的衰减率与频率，物理意义更直观。对象 A 的式 (77-13) 就是连续形式。</p>
+<p>两者的换算在数值上要小心。<span class="math inline">\lambda=\mathrm{e}^{\nu T_s}</span> 在 <span class="math inline">|\lambda|</span> 接近 <span class="math inline">1</span> 时对舍入误差极其敏感：<span class="math inline">T_s=0.02</span>、<span class="math inline">\nu=-0.01</span> 时，<span class="math inline">\lambda=0.9998</span>，此时 <span class="math inline">\lambda</span> 的 <span class="math inline">10^{-6}</span> 误差会让 <span class="math inline">\nu</span> 产生 <span class="math inline">5\times10^{-5}</span> 的误差。本章脚本里两次出现“对数特征值”，都用了双精度，并且只报四位有效数字，就是为了避开这个陷阱。</p>
+<h3 id="提升空间的维数从哪来">77.2.5 提升空间的维数从哪来</h3>
+<p>字典大小决定了提升维数 <span class="math inline">n</span>。二状态对象取到 <span class="math inline">d</span> 阶完全多项式时，</p>
+<p><span class="math display">
+n=\frac{(d+1)(d+2)}{2}
+\tag{77-18}
+</span></p>
+<p><span class="math inline">d=1</span> 给 <span class="math inline">n=3</span>，<span class="math inline">d=2</span> 给 <span class="math inline">n=6</span>，<span class="math inline">d=3</span> 给 <span class="math inline">n=10</span>。本章脚本去掉了常数项（它对演化没有信息，且会让 <span class="math inline">\boldsymbol A</span> 多一个等于 <span class="math inline">1</span> 的平凡特征值），所以实际列数是 <span class="math inline">n-1</span>：线性字典 <span class="math inline">2</span> 列、三次 <span class="math inline">9</span> 列、四次 <span class="math inline">14</span> 列、五次 <span class="math inline">20</span> 列。径向基字典取 <span class="math inline">5\times5=25</span> 个中心，加上两个线性项共 <span class="math inline">27</span> 列。</p>
+<p><span class="math inline">n</span> 增长得很快。<span class="math inline">d=8</span> 时 <span class="math inline">n=44</span>，<span class="math inline">d=12</span> 时 <span class="math inline">n=90</span>；如果再加入三角函数、指数函数等“物理字典”，<span class="math inline">n</span> 上百是常事。这就是 Koopman 方法最现实的成本：<strong>它的线性是用维数换来的</strong>。§77.7 会给出维数、数据量、计算量三者的定量关系。</p>
+<h3 id="两种残差伽辽金与最小二乘">77.2.6 两种残差：伽辽金与最小二乘</h3>
+<p>式 (77-15) 说了“近似”，但没说在什么意义下近似。这个“意义”决定了你算出来的 <span class="math inline">\boldsymbol A</span> 到底是什么。</p>
+<p><strong>第一种意义是连续伽辽金。</strong> 要求残差 <span class="math inline">\mathcal{K}\varphi_j-\sum_i A_{ij}\varphi_i</span> 与子空间里的每个基函数都正交，内积按状态空间上的某个测度取。如果子空间不变，残差恒为零，投影是精确的——对象 A 的三项字典就是这种情形。</p>
+<p><strong>第二种意义是离散最小二乘。</strong> 只在采集到的样本点上让误差平方和最小，也就是式 (77-17)。它不提“正交”，只提“这 <span class="math inline">M</span> 个点上误差小”。</p>
+<p>两者的关系是：<strong>离散最小二乘就是拿经验测度代替真实测度的伽辽金投影</strong>。样本在哪儿多，测度就在哪儿重，模型就在哪儿准。这句话解释了本章后面几个看似无关的现象。</p>
+<p>第一，它解释了为什么训练数据必须覆盖工作域（§77.3.4）。数据没去过的地方，测度为零，残差在那儿取什么值都不影响最小二乘，模型的行为完全由外推决定。</p>
+<p>第二，它解释了为什么闭环初值超出训练域时仍能收敛（表 77-5）。单摆的非线性是良性的，外推虽然不准，但方向没错；换个带继电器或死区的对象，同样的外推会直接把闭环推散。</p>
+<p>第三，它解释了为什么“加数据”与“加覆盖”是两件事（§77.5.4）。在同一小片工况里加样本只是把测度变得更集中，谱半径会改善，但工作域边缘的精度不会动。</p>
+<p>残差不为零有三个来源，对策完全不同，混在一起就会得出错误的调参结论。</p>
+<p><strong>结构误差</strong>来自子空间不变性缺失。字典里没有 <span class="math inline">x_1^2</span>，无论多少数据都补不回来。对策是加阶或换字典族。</p>
+<p><strong>统计误差</strong>来自样本有限。<span class="math inline">N</span> 增大时它会下降，但下降速度取决于激励的丰富程度。</p>
+<p><strong>数值误差</strong>来自病态。高阶列量级悬殊、矩阵条件数大，最小二乘的解对舍入敏感。对策是归一化与岭。</p>
+<p>有一个便宜的判别方法：固定字典，把 <span class="math inline">N</span> 从 <span class="math inline">400</span> 加到 <span class="math inline">6400</span>，看单步误差怎么走。若单调下降到某个平台，说明统计误差已饱和、剩下的是结构误差；若抖动甚至上升，说明数值误差在起作用。</p>
+<p>本章表 77-3 就是这个方法的实例：字典固定为三次，单步误差从 <span class="math inline">N=50</span> 的 <span class="math inline">2.1039\times10^{-6}</span> 升到 <span class="math inline">N=1600</span> 的 <span class="math inline">1.1648\times10^{-4}</span>，之后才回落到 <span class="math inline">8.3298\times10^{-5}</span>。</p>
+<p>单步误差随 <span class="math inline">N</span> 上升，初看违反直觉，其实是<strong>从训练误差变成了泛化误差</strong>。<span class="math inline">N=50</span> 时 9 个参数拟合 50 个点，模型几乎在插值，训练集上的单步误差自然小得离谱；<span class="math inline">N</span> 大了，每个点都摊不到一个自由参数，误差才反映真实水平。</p>
+<p>所以跨 <span class="math inline">N</span> 比较单步误差没有意义，只能在同一个 <span class="math inline">N</span> 下比较不同字典。这一点与普通回归的“训练误差—验证误差”之分完全一致，只是 Koopman 把训练集与验证集的差别藏在了字典里。</p>
+<h3 id="什么该放进字典">77.2.7 什么该放进字典</h3>
+<p>字典是方法的全部“先验”，选它等于决定模型能表达什么。按信息来源分，可用的基函数有三类。</p>
+<p><strong>第一类是状态的低阶多项式。</strong> <span class="math inline">x_1,x_2,x_1^2,x_1x_2,x_2^2,\dots</span>。它们不需要任何对象知识，适合做默认选择。缺点是维数涨得快，且外推时迅速爆炸。</p>
+<p><strong>第二类是物理已知项。</strong> 单摆的 <span class="math inline">\sin x_1</span>、干摩擦的 <span class="math inline">\mathrm{sgn}(x_2)</span>、饱和的 <span class="math inline">\tanh(kx_2)</span>。这类项一旦猜对，维数可以压到很低，精度还高。</p>
+<p><strong>第三类是局部基。</strong> RBF、样条、分段多项式。它们不依赖对象知识，靠局部逼近换取灵活性，适合“非线性形状复杂但没有明确表达式”的场合。</p>
+<p>选择顺序应当是：<strong>先用第二类，没有就先上第一类，两者都不够再考虑第三类</strong>。这个顺序的理由是“先验越强，需要的数越少”。</p>
+<p>有一个常见的错误是把三类混在一起，觉得“多放一些总没坏处”。实际后果是列之间高度相关，条件数暴涨，谱半径越过 1。§77.7.8 的耦合分析已经说明，加列必须加数据。</p>
+<p><strong>关于常数项。</strong> 本章脚本去掉了常数项 <span class="math inline">1</span>。原因是它在演化下不变，会让 <span class="math inline">\boldsymbol A</span> 多一个等于 <span class="math inline">1</span> 的特征值，谱半径的下界被钉在 1 上，之后所有关于稳定性的判断都失效。</p>
+<p>如果对象有明显的偏置（比如重力导致的静态力矩），正确做法是把偏置并进输入通道，而不是放一个常数基函数。</p>
+<p><strong>关于量纲。</strong> 角度以 rad 计、角速度以 rad/s 计，两者的数值量级可能差一个数量级。混合项 <span class="math inline">x_1x_2</span> 与 <span class="math inline">x_1^2</span> 的量级也随之不同，最小二乘会偏向量级大的列。</p>
+<p>处理办法有两个：一是拟合前按列标准差归一化（§77.3.5），二是选字典时就避免量级悬殊的组合。前者是通用手段，后者要求对工况有感觉。</p>
+<p><strong>关于“要不要加 <span class="math inline">\sin x_1</span>”。</strong> 对单摆这类对象，加 <span class="math inline">\sin x_1</span> 几乎一定有效，因为它就是非线性本身。但工程上更常见的情形是“知道有非线性、不知道是什么形状”，这时加一个 <span class="math inline">\sin</span> 只是在赌。</p>
+<p>一个稳妥的做法是同时准备两套字典：多项式版与物理版，用同一批数据各拟合一次，比三个校验指标。如果物理版明显更好，说明猜对了；如果差不多，就用多项式版，因为它不依赖猜测。</p>
+<p>这条建议看起来保守，但它避免了一个隐蔽的风险：<strong>物理项猜错时，模型不会报警，只会在某个工况下突然失效</strong>。多项式版至少误差是连续变化的，容易发现。</p>
+<h2 id="设计步骤">77.3 设计步骤</h2>
+<h3 id="七步流程总览">77.3.1 七步流程总览</h3>
+<p>Koopman 控制看起来是一堆矩阵运算，落到工程上仍然是一条有先后的流程。顺序错了，后面每一步都会建在错的基础上。表 77-1 是本章推荐的七步，后面六小节逐步展开。</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">步骤</th>
+<th style="text-align: left;">做什么</th>
+<th style="text-align: left;">交付物</th>
+<th style="text-align: left;">常见错误</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">1</td>
+<td style="text-align: left;">确定观测变量、工况范围、约束</td>
+<td style="text-align: left;">变量清单与量程</td>
+<td style="text-align: left;">只取状态，忘了执行器动态</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">2</td>
+<td style="text-align: left;">选字典族与阶数</td>
+<td style="text-align: left;">候选字典 2–3 套</td>
+<td style="text-align: left;">一上来就用五次多项式</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">3</td>
+<td style="text-align: left;">设计激励、采集数据</td>
+<td style="text-align: left;">训练集与验证集</td>
+<td style="text-align: left;">用闭环运行数据当训练集</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">4</td>
+<td style="text-align: left;">拟合 <span class="math inline">\boldsymbol A,\boldsymbol B</span> 并正则化</td>
+<td style="text-align: left;">提升模型</td>
+<td style="text-align: left;">不做归一化、不做岭</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">5</td>
+<td style="text-align: left;">三重校验：单步、谱半径、长时</td>
+<td style="text-align: left;">校验报告</td>
+<td style="text-align: left;">只看单步误差</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">6</td>
+<td style="text-align: left;">在提升空间设计控制器</td>
+<td style="text-align: left;">增益或 MPC</td>
+<td style="text-align: left;">直接把 <span class="math inline">\boldsymbol Q</span> 套在提升坐标上</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">7</td>
+<td style="text-align: left;">闭环验证与退化预案</td>
+<td style="text-align: left;">上线判据</td>
+<td style="text-align: left;">不准备回退到线性化方案</td>
+</tr>
+</tbody>
+</table>
+<p>这张表里最容易被跳过的是第 5 步。多数教程给完最小二乘公式就结束了，而工程上真正决定成败的正是“你怎么知道自己拟合对了”。本章把第 5 步拆成三个互补的指标，原因在 §77.5.2 会看到：<strong>单步误差与长时误差可以反向变化</strong>，只报一个必然误导。</p>
+<h3 id="第一步把观测变量定清楚">77.3.2 第一步：把观测变量定清楚</h3>
+<p>第一步不是选字典，而是把“能测什么”列清楚。这里有三个常犯的错。</p>
+<p><strong>第一个错是只写状态。</strong> 式 (77-1) 的状态是角度与角速度，看起来两个量就够。但现场往往测不到角速度，只能对角度做差分；差分引入的噪声在提升空间里会被高阶项放大。如果角速度是观测出来的，字典里就应该包含滤波后的角速度，而不是原始差分。</p>
+<p><strong>第二个错是忘了执行器动态。</strong> 力矩源如果是电机，电流环有几十毫秒的滞后；如果是气动，阀门的死区与滞环更明显。这些动态不写进字典，辨识出来的 <span class="math inline">\boldsymbol B</span> 会把滞后摊进增益里，闭环在高频段就会出现相位不足。工程上的做法是把执行器输出也作为一个观测变量，让字典自己去学它与状态的耦合。</p>
+<p><strong>第三个错是量程没定。</strong> 提升是非线性的，超出训练数据覆盖范围之后，多项式字典会以 <span class="math inline">x^5</span> 的速度外推，结果毫无意义。所以第一步必须写下“训练覆盖 <span class="math inline">x_1\in[-1.35,1.74]</span>、<span class="math inline">x_2\in[-1.18,1.27]</span>”这样的边界（本章脚本按初值 <span class="math inline">\pm2.2</span> 抽样，实际轨迹落在这个范围内），并在第 7 步把它变成软约束或报警。</p>
+<h3 id="第二步先小后大选字典">77.3.3 第二步：先小后大选字典</h3>
+<p>字典的选择有三条判据，按优先级排列。</p>
+<p><strong>判据一：能覆盖非线性机制。</strong> 如果知道非线性来自 <span class="math inline">\sin x_1</span>，字典里放 <span class="math inline">\sin x_1</span> 与 <span class="math inline">\cos x_1</span> 比放 <span class="math inline">x_1^5</span> 有效得多；如果来自干摩擦，放 <span class="math inline">\mathrm{sgn}(x_2)</span> 或 <span class="math inline">\tanh(kx_2)</span> 更合适。这类“物理字典”能把维数压到很低，但要求对对象有先验认识。</p>
+<p><strong>判据二：在数据覆盖范围内数值稳定。</strong> 五次多项式在 <span class="math inline">x_1=2.2</span> 处的值是 <span class="math inline">51.5</span>，而线性项只有 <span class="math inline">2.2</span>，两者相差 23 倍。如果数据只覆盖到 <span class="math inline">1.0</span>，<span class="math inline">x_1^5</span> 的最大值只有 <span class="math inline">1</span>，量级接近，拟合是良态的；一旦外推到 <span class="math inline">2.2</span>，高阶项立刻主导。这就是为什么同一套字典在不同工况下表现可以差很多。</p>
+<p><strong>判据三：列数不要超过样本数的十分之一。</strong> 这是经验值。<span class="math inline">N=400</span> 个样本配 <span class="math inline">20</span> 列的字典，比例是 <span class="math inline">20:1</span>，勉强够；配 <span class="math inline">27</span> 列的 RBF，比例降到 <span class="math inline">15:1</span>，噪声一大就开始过拟合（§77.8 有实测）。样本少的时候，宁可降阶也不要加岭——降阶损失的是模型结构，加岭损失的是无偏性，前者还可以靠物理直觉补，后者只能靠更多数据补。</p>
+<h3 id="第三步激励要在敢做的范围内尽量丰富">77.3.4 第三步：激励要在“敢做”的范围内尽量丰富</h3>
+<p>这是本章最容易被低估的一步。很多现场的做法是“让设备正常跑一段，把数据拿来拟合”，看起来省事，实际上采集到的数据只在一条窄窄的工况带里，提升模型在这个带外完全没有约束。</p>
+<p>正确的做法是主动设计激励。可选的信号有四类：</p>
+<ul>
+<li><strong>伪随机二进制序列（PRBS）</strong>：幅值只有两档，对执行器友好，频谱宽，适合阀门类对象；</li>
+<li><strong>多正弦</strong>：几个不相关的频率叠加，频谱可控，信噪比高，适合伺服类对象；</li>
+<li><strong>阶跃序列</strong>：最贴近工艺操作，但只激励低频，高频信息缺失；</li>
+<li><strong>闭环抖动</strong>：在反馈上叠加小幅随机扰动，最安全，但激励能量集中在闭环带宽内。</li>
+</ul>
+<p>本章 E9 实测了这四种信号（§77.10.2）：多正弦的条件数最小（<span class="math inline">12.14</span>），阶跃最大（<span class="math inline">138.53</span>），而闭环抖动的条件数高达 <span class="math inline">120.36</span> 却给出了可用的模型。这组数据说明<strong>条件数不是判据</strong>——后面会详细解释。</p>
+<h3 id="第四步拟合归一化与正则化">77.3.5 第四步：拟合、归一化与正则化</h3>
+<p>拟合本身是一次最小二乘（式 77-17），工程上要加三件事。</p>
+<p><strong>归一化。</strong> 把每一列 <span class="math inline">\varphi_i</span> 除以它在训练集上的标准差，拟合完再把系数除回去。这一步能把条件数降一到两个数量级，几乎不要成本。</p>
+<p><strong>岭项。</strong> 在正规方程里加 <span class="math inline">\gamma\boldsymbol I</span>：</p>
+<p><span class="math display">
+\boldsymbol\Theta^\star=\left(\boldsymbol W^\top\boldsymbol W+\gamma\boldsymbol I\right)^{-1}\boldsymbol W^\top\boldsymbol Z_2
+\tag{77-19}
+</span></p>
+<p><span class="math inline">\gamma</span> 的作用是把解往零拉，等价于给高阶项加惩罚。<span class="math inline">\gamma</span> 的量级要相对于 <span class="math inline">\boldsymbol W^\top\boldsymbol W</span> 的迹来定，通常取 <span class="math inline">\gamma=10^{-6}\sim10^{-3}\|\boldsymbol W\|_F^2/n</span>。本章无噪声实验取 <span class="math inline">\gamma=0</span>，噪声实验也保持 <span class="math inline">0</span>，目的是把“过拟合”这个现象暴露出来而不是掩盖它。</p>
+<p><strong>分段处理。</strong> 数据来自多段独立实验时，不要把段尾与段首接起来当成相邻样本。本章脚本按段堆叠（<code>np.vstack</code>），段内取相邻对，段间不取，这样避免了“从段尾跳到段首”的假样本。</p>
+<h3 id="第五步三重校验一个都不能少">77.3.6 第五步：三重校验，一个都不能少</h3>
+<p>这一小节是本章方法论的骨架，后面所有实验的结论都建立在它上面。</p>
+<p><strong>校验一：状态空间单步误差。</strong> 注意不是提升空间的残差。定义</p>
+<p><span class="math display">
+e_{\text{1步}}=\sqrt{\frac{1}{M}\sum_{k=1}^{M}\left\|\hat{\boldsymbol x}_{k+1}-\boldsymbol x_{k+1}\right\|^2},\qquad
+\hat{\boldsymbol x}_{k+1}=\left[\boldsymbol A\boldsymbol\varphi(\boldsymbol x_k)+\boldsymbol B u_k\right]_{1:2}
+\tag{77-20}
+</span></p>
+<p>只取提升向量的前两维（也就是 <span class="math inline">x_1,x_2</span>）反投影回来比。为什么必须这样？因为提升空间的残差随字典增大而<strong>上升</strong>——字典越大，高阶分量越多，拟合时摊到每个分量上的相对误差越大，但状态本身可能预测得更准。本章实测：线性字典的提升残差 <span class="math inline">1.24\times10^{-3}</span>，五次字典是 <span class="math inline">7.18\times10^{-3}</span>，后者反而大 5.8 倍；而状态单步误差从 <span class="math inline">1.0844\times10^{-3}</span> 降到 <span class="math inline">6.2731\times10^{-7}</span>，后者好 1728 倍。两个指标给出完全相反的排序，只有状态空间的那个才是工程师关心的。</p>
+<p><strong>校验二：谱半径。</strong> 计算 <span class="math inline">\rho(\boldsymbol A)=\max_i|\lambda_i(\boldsymbol A)|</span>。离散系统要求 <span class="math inline">\rho&lt;1</span>，否则开环预测必然发散。这个指标极其便宜（一次特征值分解），却极其有效：本章 E3 里，<span class="math inline">N\le400</span> 时谱半径在 <span class="math inline">1.0126\sim1.0261</span> 之间，200 步预测误差是 <span class="math inline">0.0871\sim11.8645</span>；<span class="math inline">N\ge800</span> 后谱半径降到 <span class="math inline">1.0007</span> 以下，误差掉到 <span class="math inline">0.0195\sim0.0589</span>。<strong>分水岭就是 <span class="math inline">\rho=1</span> 这条线</strong>。</p>
+<p><strong>校验三：长时开环 rollout。</strong> 用验证集（与训练集不同的初值与激励）跑 200 步纯开环预测，算</p>
+<p><span class="math display">
+e_{200}=\sqrt{\frac{1}{200}\sum_{k=1}^{200}\left\|\hat{\boldsymbol x}_{k}-\boldsymbol x_{k}\right\|^2}
+\tag{77-21}
+</span></p>
+<p>这个指标把单步误差与谱半径的效应合在一起：单步误差小但谱半径略大于 <span class="math inline">1</span>，200 步后误差会被指数放大；谱半径小于 <span class="math inline">1</span> 但单步误差大，误差会稳定在一个偏高的平台上。工程上真正该看的是它。</p>
+<p>三个指标的读法可以总结成一句话：<strong>单步看拟合，谱半径看稳定，长时看可用</strong>。</p>
+<h3 id="第六步与第七步控制器与闭环">77.3.7 第六步与第七步：控制器与闭环</h3>
+<p>有了可信的提升模型，第六步是在它上面设计控制器。最直接的是离散 LQR：</p>
+<p><span class="math display">
+\boldsymbol K=\left(\boldsymbol R+\boldsymbol B^\top\boldsymbol P\boldsymbol B\right)^{-1}\boldsymbol B^\top\boldsymbol P\boldsymbol A,\qquad
+\boldsymbol P=\boldsymbol A^\top\boldsymbol P\boldsymbol A-\boldsymbol A^\top\boldsymbol P\boldsymbol B\left(\boldsymbol R+\boldsymbol B^\top\boldsymbol P\boldsymbol B\right)^{-1}\boldsymbol B^\top\boldsymbol P\boldsymbol A+\boldsymbol Q
+\tag{77-22}
+</span></p>
+<p>式 (77-22) 是标准 Riccati 方程，与第 30 章的连续形式只差离散化，不再重复推导。需要强调的是 <span class="math inline">\boldsymbol Q</span> 的取法：提升坐标里除 <span class="math inline">x_1,x_2</span> 之外的分量没有直接物理意义，给它们加权等于隐式地惩罚“非线性程度”。本章的做法是给前两维正常权重（<span class="math inline">1</span> 与 <span class="math inline">0.2</span>），其余维给很小的权重（<span class="math inline">10^{-3}</span> 或 <span class="math inline">10^{-4}</span>），让它们只起“补足动力学”的作用，不参与性能评价。</p>
+<p>第七步是闭环验证。这里要准备一个退化预案：如果闭环性能不如线性化方案，或者在某些初值下失稳，要能立刻切回线性化 LQR。本章实测的结论是，在这个单摆对象上，Koopman 方案与线性化方案的闭环代价只差 <span class="math inline">0.27\%</span>（§77.11），所以退化预案不是可选项而是必备项——<strong>收益这么小的时候，任何一点异常都足以抵消它</strong>。</p>
+<h3 id="把七步走一遍单摆的选型演练">77.3.8 把七步走一遍：单摆的选型演练</h3>
+<p>抽象的流程只有落到一个具体场景里才知道怎么用。这一小节把表 77-1 完整走一遍，数字全部取自本章实验。</p>
+<p>设定如下：单摆台架，角度编码器分辨率 <span class="math inline">0.001</span> rad，力矩电机限幅 <span class="math inline">\pm4</span>，工艺要求是从任意初值在 7 s 内回到竖直位置，且角速度不超过 <span class="math inline">1.2</span> rad/s。</p>
+<p><strong>第一步，列变量与量程。</strong> 状态取角度与角速度，输入取力矩。量程由静态检查确定：角度 <span class="math inline">\pm3.0</span> rad、角速度 <span class="math inline">\pm2.5</span> rad/s、力矩 <span class="math inline">\pm4</span>。训练域要留余量，取角度 <span class="math inline">\pm1.7</span> rad，而不是贴着机械限位。</p>
+<p><strong>第二步，先试线性字典。</strong> 拟合出来的单步误差 <span class="math inline">1.0844\times10^{-3}</span>，200 步 RMSE <span class="math inline">0.0669</span>。这两个数只能作为基准，不能单独判断好坏——它们说明“线性字典能做到这个程度”，但没说该不该加阶。</p>
+<p>判断依据要拿线性化误差来比。工作域边缘 <span class="math inline">1.7</span> rad 处 <span class="math inline">\sin x_1=0.9917</span>，线性化给出 <span class="math inline">1.7</span>，高估 <span class="math inline">71\%</span>。既然结构误差这么大，就值得加阶，于是试三次字典。</p>
+<p>三次字典的单步误差 <span class="math inline">4.3217\times10^{-5}</span>，比线性好 25 倍，200 步 RMSE <span class="math inline">0.0429</span>。改善明确，先停在这里，不急着上五次——四次、五次留到“三次不够”时再试。</p>
+<p><strong>第三步，设计激励。</strong> 选多正弦，四个频率、每路幅值 <span class="math inline">0.30</span>，采 6 段、每段 400 步，共 2400 个样本。三次字典 <span class="math inline">n=9</span>，<span class="math inline">40n=360</span>，样本量有六倍余量。</p>
+<p>不用阶跃的理由很实在：表 77-9 里阶跃数据的闭环代价是 <span class="math inline">524.5593</span>，是正常值的 147 倍。现场没有第二次机会去发现这个错误，所以第一次就该选对激励。</p>
+<p><strong>第四步，拟合。</strong> 先不加岭，把无正则化的结果留作基线；同时保留 <span class="math inline">\gamma</span> 作为后续手段——如果谱半径过线，第一反应是加样本，第二反应才是加岭。</p>
+<p><strong>第五步，三重校验。</strong> 单步误差比线性字典好 25 倍，满足“至少一个数量级”；200 步 RMSE <span class="math inline">0.0429</span> 低于工作域 <span class="math inline">1.7</span> rad 的 <span class="math inline">5\%</span>（即 <span class="math inline">0.085</span>），通过；谱半径按 §77.5.4 的门槛应小于 <span class="math inline">1</span>，若不满足就按表 77-7 的第 3 轮加样本。</p>
+<p><strong>第六步，设计控制器。</strong> 取 <span class="math inline">\boldsymbol Q=\mathrm{diag}(1,0.2,10^{-3},\dots)</span>、<span class="math inline">R=0.1</span>，与式 (77-2) 的代价对应。解出的增益前两维是 <span class="math inline">2.1756</span> 与 <span class="math inline">2.3846</span>，与线性化的 <span class="math inline">2.2385</span>、<span class="math inline">2.3451</span> 同量级；第三维只有 <span class="math inline">-4.0\times10^{-4}</span>，几乎为零（§77.6.6 会专门讨论这一点）。</p>
+<p><strong>第七步，闭环验证与决策。</strong> 初值从 <span class="math inline">0.65</span> 扫到 <span class="math inline">2.60</span>，闭环代价 <span class="math inline">0.3599</span> 到 <span class="math inline">6.3181</span>；同条件下线性化是 <span class="math inline">0.3597</span> 到 <span class="math inline">6.3399</span>，最坏情形只好 <span class="math inline">0.34\%</span>。</p>
+<p>按 §77.8.3 的判定标准（改善不足 <span class="math inline">1\%</span> 就不值得增加复杂度），这次选型的结论是<strong>不采用 Koopman-LQR</strong>。但工艺还有一条“速度不超过 <span class="math inline">1.2</span> rad/s”，线性化 LQR 会越界 27 步，这条它满足不了。</p>
+<p>于是回到表 77-8：Koopman-MPC 用 <span class="math inline">17.1\%</span> 的代价换来 0 步越界。到这一步，采用 Koopman 的理由已经不是“更准”，而是“能把速度约束写成线性不等式”。<strong>选型结论从“提升更准”换成了“提升更好约束”，这才是这条路的真实卖点。</strong></p>
+<p>这个演练的意义在于：七步走完得到的结论可能是“不用”，这不是失败，而是选型的正常结果。本章大部分篇幅在讲怎么把模型做准，但工程决策的依据始终是“任务需要什么”，而不是“方法有多先进”。</p>
+<h3 id="激励频率怎么选">77.3.9 激励频率怎么选</h3>
+<p>“多正弦”三个字说起来简单，频率选错等于没激励。这一小节给出一套可执行的选频方法。</p>
+<p><strong>最低频率由数据总时长决定。</strong> 式 (77-27) 说 <span class="math inline">f_{\min}=1/T_{\text{total}}</span>。要比这个值高两到三倍，才有足够多的周期去辨识。</p>
+<p>本章 <span class="math inline">T_{\text{total}}=48</span> s，<span class="math inline">f_{\min}=0.021</span> Hz，取最低频率 <span class="math inline">0.18</span> Hz，是下限的八倍多，余量充足。如果把总时长缩到 8 s，<span class="math inline">f_{\min}=0.125</span> Hz，<span class="math inline">0.18</span> Hz 就只剩一点四倍，辨识会变得不稳。</p>
+<p><strong>最高频率由闭环带宽与采样决定。</strong> 经验上取闭环带宽的五到十倍，同时不超过 <span class="math inline">1/(10T_s)</span>。本章 <span class="math inline">T_s=0.02</span> s，上限是 <span class="math inline">5</span> Hz；实际取的最高频率 <span class="math inline">1.21</span> Hz，远低于上限。</p>
+<p>为什么不取到上限？因为再高的频率对状态预测没有帮助，反而会激励伪模态，让谱半径变大。</p>
+<p><strong>频率不要成整数比。</strong> 四个频率若取 <span class="math inline">1:2:3:4</span>，叠加信号会周期重复，某些相位组合下幅值叠加成尖峰。本章取的是非整数比，叠加后的输入峰值 <span class="math inline">1.11</span>，比单路幅值 <span class="math inline">0.30</span> 的四倍小得多。</p>
+<p><strong>幅值要逐级加。</strong> 从 <span class="math inline">0.1</span> 到 <span class="math inline">0.2</span> 再到 <span class="math inline">0.3</span>，每一档跑 30 s，观察有没有异响、超限、饱和。本章最终取 <span class="math inline">0.30</span>，轨迹覆盖 <span class="math inline">x_1\in[-1.35,1.74]</span>，正好在工作域内。</p>
+<p>幅值再大，轨迹会跑到 <span class="math inline">2</span> rad 以上，高阶项主导，拟合出来的模型在常用工况反而不准。幅值再小，<span class="math inline">\boldsymbol B</span> 的信噪比不够（§77.6.1 前提三）。</p>
+<p><strong>怎么检查选得对不对？</strong> 采完数据后看一眼输入与状态的频谱：输入应在四个频率上有明显峰，状态应在这些频率及其谐波上有响应。</p>
+<p>如果状态频谱在某个频率上没有响应，说明该频率没有激励到对象，可以去掉；如果输入频谱出现很多高频毛刺，说明执行器有非线性（比如死区），需要在预处理时注意。</p>
+<p><strong>最后一条：频率要与控制目标对齐。</strong> 如果关心的是“多快能回到零”，激励就要覆盖闭环带宽附近；如果关心的是“稳态精度”，低频段的激励更重要。频率选得再“宽”，与目标无关的频段也只是浪费行程。</p>
+<h2 id="连续情形">77.4 连续情形</h2>
+<h3 id="为什么先讲连续谱有物理意义">77.4.1 为什么先讲连续：谱有物理意义</h3>
+<p>离散特征值 <span class="math inline">\lambda</span> 是个复数，<span class="math inline">|\lambda|&lt;1</span> 表示衰减，辐角表示每步转多少度。这两个量都不直观。连续特征值 <span class="math inline">\nu=\ln(\lambda)/T_s</span> 的实部直接是衰减率（单位 1/s），虚部直接是角频率（单位 rad/s），能和“时间常数 <span class="math inline">1/|\mathrm{Re}\,\nu|</span> 秒”“周期 <span class="math inline">2\pi/|\mathrm{Im}\,\nu|</span> 秒”对应起来。</p>
+<p>所以本章的诊断都换算到连续域再讲。换算的前提是 <span class="math inline">T_s</span> 足够小，使得 <span class="math inline">\nu T_s</span> 落在主值区间 <span class="math inline">(-\pi,\pi)</span> 内；本章 <span class="math inline">T_s=0.02</span> s，最高关注的频率约 <span class="math inline">1.2</span> Hz（角频率 <span class="math inline">7.5</span> rad/s），<span class="math inline">\nu T_s\approx0.15</span>，离 <span class="math inline">\pi</span> 很远，不存在混叠。</p>
+<h3 id="解析构造三项字典的生成元矩阵">77.4.2 解析构造：三项字典的生成元矩阵</h3>
+<p>§77.2.2 已经算出对象 A 的生成元矩阵（式 77-13）。把它写成离散形式只需要一次矩阵指数：</p>
+<p><span class="math display">
+\boldsymbol A=\exp\left(\boldsymbol L T_s\right),\qquad
+\boldsymbol L=\begin{bmatrix}\mu &amp; 0 &amp; 0\\ 0 &amp; \lambda &amp; -\lambda\\ 0 &amp; 0 &amp; 2\mu\end{bmatrix}
+\tag{77-23}
+</span></p>
+<p>因为 <span class="math inline">\boldsymbol L</span> 是上三角的，<span class="math inline">\exp(\boldsymbol L T_s)</span> 也是上三角的，对角元分别是 <span class="math inline">\mathrm{e}^{\mu T_s}</span>、<span class="math inline">\mathrm{e}^{\lambda T_s}</span>、<span class="math inline">\mathrm{e}^{2\mu T_s}</span>。这就是式 (77-14) 那三个数。非对角元 <span class="math inline">(2,3)</span> 是</p>
+<p><span class="math display">
+\left[\exp(\boldsymbol L T_s)\right]_{23}=-\lambda\,\frac{\mathrm{e}^{\lambda T_s}-\mathrm{e}^{2\mu T_s}}{\lambda-2\mu}
+\tag{77-24}
+</span></p>
+<p>代入 <span class="math inline">\lambda=-1</span>、<span class="math inline">\mu=-0.2</span>、<span class="math inline">T_s=0.02</span> 得 <span class="math inline">0.01972207</span>，与脚本拟合出来的 <span class="math inline">(2,3)</span> 元 <span class="math inline">0.01972207</span> <strong>完全一致</strong>。这个非对角元很关键：它表示“<span class="math inline">x_1^2</span> 会往 <span class="math inline">x_2</span> 里注入多少”，是慢流形耦合的直接度量。如果字典里没有 <span class="math inline">x_1^2</span>，这一项只能被强行压进 <span class="math inline">(2,1)</span> 元，而 <span class="math inline">(2,1)</span> 元在真实系统里是严格为零的——拟合出来的线性模型于是把“平方项的影响”误认成“线性耦合”，谱就被扭曲成 <span class="math inline">-1.5174</span>。</p>
+<h3 id="精确与不精确的对比">77.4.3 精确与不精确的对比</h3>
+<p>图 77-2 是同一段 300 步（6 s）自治数据的预测对比。真值用粗黑线，线性字典用红虚线，三项字典用灰点划线。</p>
+<figure>
+<img src="figs/ch077/fig_077_02_exact_lift.svg" alt="图 77-2 对象 A 的 300 步开环预测：三项字典与真值完全重合，线性字典在 2 s 后明显偏离" /><figcaption aria-hidden="true">图 77-2 对象 A 的 300 步开环预测：三项字典与真值完全重合，线性字典在 2 s 后明显偏离</figcaption>
+</figure>
+<p>三项字典那条线在图上根本看不出来，因为它与真值重合到 <span class="math inline">10^{-14}</span>。线性字典的偏差从 1 s 左右开始显现，到 6 s 时累积到 <span class="math inline">6.4681\times10^{-2}</span> 的 RMSE。注意这个偏差<strong>不是随机漂移</strong>：它是有方向的，<span class="math inline">x_1</span> 偏大、<span class="math inline">x_2</span> 偏小，因为线性模型把“<span class="math inline">x_1^2</span> 向 <span class="math inline">x_2</span> 注入”这一项漏掉了，导致 <span class="math inline">x_2</span> 衰减得比真实快，反过来又让 <span class="math inline">x_1</span> 衰减得比真实慢。</p>
+<p>这就是“谱错了会怎样”的直观版本：错的特征值 <span class="math inline">-1.5174</span> 比真值 <span class="math inline">-1.0</span> 衰减更快，于是 <span class="math inline">x_2</span> 被过度衰减；漏掉的耦合项本应把 <span class="math inline">x_1^2</span> 的能量送进 <span class="math inline">x_2</span>，现在这部分能量留在 <span class="math inline">x_1</span> 里，<span class="math inline">x_1</span> 就衰减不足。<strong>谱的误差与轨迹的误差是一一对应的，只是前者藏在复数里，后者画在图上才看得见。</strong></p>
+<h3 id="连续谱怎么读">77.4.4 连续谱怎么读</h3>
+<p>把拟合矩阵的特征值取对数除以 <span class="math inline">T_s</span>，得到三个连续特征值：<span class="math inline">-0.2</span>、<span class="math inline">-0.4</span>、<span class="math inline">-1.0</span>。它们对应三种时间尺度：</p>
+<ul>
+<li><span class="math inline">-0.2</span>：时间常数 <span class="math inline">5</span> s，是 <span class="math inline">x_1</span> 的慢衰减；</li>
+<li><span class="math inline">-1.0</span>：时间常数 <span class="math inline">1</span> s，是 <span class="math inline">x_2</span> 追随 <span class="math inline">x_1^2</span> 的快衰减；</li>
+<li><span class="math inline">-0.4</span>：时间常数 <span class="math inline">2.5</span> s，是 <span class="math inline">x_1^2</span> 的衰减，恰好是 <span class="math inline">x_1</span> 的两倍速率。</li>
+</ul>
+<p>第三个特征是理解慢流形的钥匙。<span class="math inline">x_1^2</span> 衰减得比 <span class="math inline">x_1</span> 快一倍，所以经过几个时间常数后，<span class="math inline">x_1^2</span> 相对于 <span class="math inline">x_1</span> 可以忽略，<span class="math inline">x_2</span> 的动态退化成 <span class="math inline">\dot x_2=\lambda x_2</span>，系统在 <span class="math inline">(x_1,x_2)</span> 平面上沿 <span class="math inline">\mathrm{d}x_2/\mathrm{d}x_1=\lambda x_2/(\mu x_1)</span> 这条曲线滑向原点。这条曲线就是<strong>慢流形</strong>，它的存在让“降阶建模”成为可能——很多工程对象的有效维数远低于名义维数，原因就在这里。</p>
+<h3 id="采样周期的影响">77.4.5 采样周期的影响</h3>
+<p>连续形式看起来更漂亮，但工程上必须回到离散，因为数据是离散采的。<span class="math inline">T_s</span> 的选择有两个约束。</p>
+<p><strong>上界来自混叠与稳定性。</strong> 对象最快的极点实部是 <span class="math inline">-1.0</span>，周期约 <span class="math inline">6.3</span> s，<span class="math inline">T_s=0.02</span> s 对应每周期 314 个点，非常充裕。如果把 <span class="math inline">T_s</span> 加到 <span class="math inline">0.1</span> s，每周期 63 个点，仍然够用；加到 <span class="math inline">0.5</span> s 就只剩 12.6 个点，离散化的相位误差开始明显。经验规则是 <span class="math inline">T_s\le1/(10|\nu_{\max}|)</span>，本章 <span class="math inline">|\nu_{\max}|\approx1</span>，所以 <span class="math inline">T_s\le0.1</span> s。</p>
+<p><strong>下界来自噪声放大。</strong> <span class="math inline">T_s</span> 越小，相邻样本的差越小，测量噪声在差分里的相对比重越大。本章 E4 的噪声实验用 <span class="math inline">T_s=0.02</span> s，噪声标准差 <span class="math inline">0.06</span> rad 时，相邻两步的角度差通常只有 <span class="math inline">0.02\times1=0.02</span> rad，噪声已经是信号的三倍。这时提升拟合实际上是在拟合噪声，必须靠岭或降阶来压制。</p>
+<p>两个约束一夹，<span class="math inline">T_s</span> 的合理区间往往很窄。工程上的做法是先按上界定，再根据噪声水平往下调一档，然后<strong>用状态单步误差验证</strong>：如果单步误差随 <span class="math inline">T_s</span> 减小而急剧上升，说明已经进入噪声主导区，应该退回去。</p>
+<h3 id="连续形式什么时候值得用">77.4.6 连续形式什么时候值得用</h3>
+<p>连续形式好看，但不是所有场合都值得绕这一圈。判断标准只有一条：<strong>算出来的 <span class="math inline">\nu</span> 会不会被你真正用来做决定</strong>。</p>
+<p>值得用的第一种场合，是对象有一部分解析知识。比如单摆的 <span class="math inline">\sin x_1</span> 是确定的，只有阻尼系数未知；这时可以在已知结构上算生成元，只让数据去定那几个系数。这样得到的 <span class="math inline">\nu</span> 有明确的物理归属，不是一堆拟合出来的数。</p>
+<p>值得用的第二种场合，是要与线性化极点对照。§77.6.2 就是例子：DMD 给出 <span class="math inline">-0.1072\pm0.8919j</span>，线性化给出 <span class="math inline">-0.1\pm0.9950j</span>，实部差 <span class="math inline">7.2\%</span>、虚部差 <span class="math inline">10.4\%</span>。这两个数只有在连续域里才好比；换成离散特征值，实部与虚部的差别都落在小数点后第三、四位，肉眼很难分辨。</p>
+<p>值得用的第三种场合，是要做频域设计或共振分析。<span class="math inline">\nu</span> 的虚部直接是振荡频率，实部直接是阻尼，能与 Bode 图、与结构的固有频率对上。用离散 <span class="math inline">\lambda</span> 也能换算，但每换一次就多引入一次对数误差。</p>
+<p>反过来，三种场合不值得用。<strong>一是纯黑箱数据。</strong> 对数换算要求严格等间隔采样，现场采集常有丢帧与抖动，一处理就要插值，插值又引入相位误差。</p>
+<p><strong>二是矩阵非正规严重。</strong> 特征值对扰动本来就敏感，取对数会把这种敏感放大。这时离散 <span class="math inline">\boldsymbol A</span> 的谱半径反而是更稳的判据，因为它只依赖特征值的模，不依赖幅角。</p>
+<p><strong>三是只做预测或控制。</strong> 直接拟合离散映射就够了，中间多一层连续化没有任何收益。本章的实验全部走这条路。</p>
+<p>本章采用的是一种折中：<strong>拟合离散 <span class="math inline">\boldsymbol A</span>，只在读谱时取对数，不回代仿真</strong>。这样既保留了物理解释，又避免了连续模型在回代时的数值放大。</p>
+<p>还有一个细节必须提醒：对数有分支。<span class="math inline">\lambda=\mathrm{e}^{\nu T_s}</span> 只在 <span class="math inline">\nu T_s\in(-\pi,\pi)</span> 时唯一。如果 <span class="math inline">T_s</span> 太大，某个高频模态的 <span class="math inline">\nu T_s</span> 超过 <span class="math inline">\pi</span>，<span class="math inline">\ln\lambda</span> 会给出主值，把它误读成一个低频模态。</p>
+<p>本章 <span class="math inline">T_s=0.02</span> s、最高关注频率约 <span class="math inline">1.2</span> Hz（角频率 <span class="math inline">7.5</span> rad/s），<span class="math inline">\nu T_s\approx0.15</span>，离 <span class="math inline">\pi</span> 很远，不存在这个问题。但凡把 <span class="math inline">T_s</span> 放大到 <span class="math inline">0.5</span> s 以上，读谱前就必须先检查分支。</p>
+<p>最后一条经验：<strong>报连续特征值时一定同时报 <span class="math inline">T_s</span></strong>。只写“极点在 <span class="math inline">-0.13</span>”而没写采样周期，别人无法复算，也无法判断有没有混叠。这是文献里很常见的一处信息缺失。</p>
+<h3 id="谱的精度受什么限制">77.4.7 谱的精度受什么限制</h3>
+<p>连续特征值看起来是“算出来的”，其实它的有效位数远少于矩阵元素的位数。四个因素依次限制精度。</p>
+<p><strong>第一是采样。</strong> <span class="math inline">\nu=\ln\lambda/T_s</span> 里 <span class="math inline">T_s</span> 是分母，<span class="math inline">T_s</span> 的相对误差直接进入 <span class="math inline">\nu</span>。现场采样常有时基抖动，<span class="math inline">1\%</span> 的周期误差就有 <span class="math inline">1\%</span> 的谱误差。</p>
+<p><strong>第二是噪声。</strong> 噪声让 <span class="math inline">\boldsymbol A</span> 的估计有偏，特征值随之偏移。E4 里 <span class="math inline">\sigma=0.02</span> 时五次字典的谱半径从 <span class="math inline">1.0045</span> 掉到 <span class="math inline">0.9994</span>，这个变化不是对象变了，而是估计变了。</p>
+<p><strong>第三是字典截断。</strong> 截断产生的伪模态会与真实模态“混”在一起。本章三次 EDMD 给出 9 个实极点，真正对应主要动态的只有 <span class="math inline">-0.1302</span> 那一对，其余 7 个的数值随字典阶数漂移。</p>
+<p><strong>第四是数值。</strong> 对数在 <span class="math inline">|\lambda|</span> 接近 1 时条件数极大，双精度也只能保证几位有效数字。所以本章报谱时一律只给四位，最后一位还可能变。</p>
+<p><strong>怎么区分真实模态与伪模态？</strong> 有三个可操作的判据。</p>
+<p>第一，加阶后是否稳定。把字典从三次加到五次，<span class="math inline">-0.1302</span> 几乎不动，其余的值明显漂移——稳定的那个可信。</p>
+<p>第二，是否与已知物理时间常数对上。单摆的线性化极点 <span class="math inline">-0.1\pm0.9950j</span> 有明确来源，任何接近它的极点都值得注意。</p>
+<p>第三，换一批数据是否复现。同一对象、不同激励段重复辨识，真实模态会稳定出现，伪模态会跳。</p>
+<p>三个判据都通过，才可以给这个极点“编故事”。只通过一个，最好只把它当成拟合参数。</p>
+<p><strong>还有一条实践建议：报谱时同时报条件数。</strong> 条件数大的模型，谱的误差也大；只看谱的数值而不看它的可信度，容易被最后一位小数误导。</p>
+<h2 id="离散情形">77.5 离散情形</h2>
+<h3 id="两条离散化路线">77.5.1 两条离散化路线</h3>
+<p>从连续到离散有两条路，选哪条取决于你手上有什么。</p>
+<p><strong>第一条：先辨识连续、再离散化。</strong> 先用数据拟合生成元矩阵 <span class="math inline">\boldsymbol L</span>，再算 <span class="math inline">\boldsymbol A=\mathrm{e}^{\boldsymbol L T_s}</span>、<span class="math inline">\boldsymbol B=\int_0^{T_s}\mathrm{e}^{\boldsymbol L\tau}\mathrm{d}\tau\,\boldsymbol B_c</span>。这条路的优点是特征值有物理意义，缺点是矩阵指数对 <span class="math inline">\boldsymbol L</span> 的误差敏感——<span class="math inline">\boldsymbol L</span> 的特征值差 <span class="math inline">1\%</span>，<span class="math inline">\mathrm{e}^{\boldsymbol L T_s}</span> 可能差得更多，尤其在 <span class="math inline">\boldsymbol L</span> 非正规时。</p>
+<p><strong>第二条：直接拟合离散映射。</strong> 把相邻样本对直接代入式 (77-17)，得到的就是 <span class="math inline">\boldsymbol A</span>、<span class="math inline">\boldsymbol B</span>，不需要经过连续域。本章全部实验走这条路，因为它是“数据驱动”的原意：不假设中间有一个连续模型。</p>
+<p>两条路的结果在 <span class="math inline">T_s</span> 足够小时应该一致，但数值性质差别很大。第一条路的 <span class="math inline">\boldsymbol A</span> 一定是可逆的（矩阵指数永远可逆），第二条路的 <span class="math inline">\boldsymbol A</span> 在数据不足时可能接近奇异。这个差别在 §77.5.4 会变成一个可用的诊断信号。</p>
+<h3 id="字典阶梯实测">77.5.2 字典阶梯实测</h3>
+<p>先看字典从小到大是什么表现。训练集用 6 段、每段 400 步的多正弦激励数据（共 2400 个样本），验证集另采一段 200 步，结果列在表 77-2。</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">字典</th>
+<th style="text-align: right;">列数 <span class="math inline">n</span></th>
+<th style="text-align: right;">状态单步误差</th>
+<th style="text-align: right;">200 步 RMSE</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">线性</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;"><span class="math inline">1.0844\times10^{-3}</span></td>
+<td style="text-align: right;"><span class="math inline">0.0669</span></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">三次</td>
+<td style="text-align: right;">9</td>
+<td style="text-align: right;"><span class="math inline">4.3217\times10^{-5}</span></td>
+<td style="text-align: right;"><span class="math inline">0.0429</span></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">四次</td>
+<td style="text-align: right;">14</td>
+<td style="text-align: right;"><span class="math inline">2.7734\times10^{-5}</span></td>
+<td style="text-align: right;"><span class="math inline">0.0259</span></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">五次</td>
+<td style="text-align: right;">20</td>
+<td style="text-align: right;"><span class="math inline">6.2731\times10^{-7}</span></td>
+<td style="text-align: right;"><span class="math inline">0.0187</span></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">RBF（<span class="math inline">5\times5</span>）</td>
+<td style="text-align: right;">27</td>
+<td style="text-align: right;"><span class="math inline">6.0449\times10^{-7}</span></td>
+<td style="text-align: right;"><span class="math inline">0.0305</span></td>
+</tr>
+</tbody>
+</table>
+<p>两条趋势值得注意。</p>
+<p><strong>趋势一：误差都在降，但降的幅度不一样。</strong> 从线性到三次，单步误差降了 25 倍，长时误差只降了 36%；从三次到五次，单步误差再降 69 倍，长时误差降 56%。<strong>长时误差的下降总是比单步误差慢</strong>，因为长时误差受谱半径支配，而谱半径的改善不随单步精度线性变化。</p>
+<p><strong>趋势二：RBF 不是万能的。</strong> RBF 字典的单步误差（<span class="math inline">6.0449\times10^{-7}</span>）与五次多项式（<span class="math inline">6.2731\times10^{-7}</span>）几乎相同，但长时误差差了 63%（<span class="math inline">0.0305</span> 对 <span class="math inline">0.0187</span>）。原因是 RBF 的局部性：每个基函数只在一小块区域里有效，区域之间靠线性项连接，长时外推时区域之间的“接缝”会累积误差。多项式是全局的，外推更平滑，代价是超出训练范围后迅速爆炸。</p>
+<p>图 77-3 把这两列数据画在一起。左轴是对数的单步误差，右轴是线性的 200 步 RMSE，横轴是字典。图上能看出两条曲线的形状不同：单步误差在三次到五次之间掉了一个数量级，而长时误差是平缓下降的。</p>
+<figure>
+<img src="figs/ch077/fig_077_03_dict_ladder.svg" alt="图 77-3 字典阶梯：单步误差（左轴，对数）与 200 步 RMSE（右轴）随字典增大的变化" /><figcaption aria-hidden="true">图 77-3 字典阶梯：单步误差（左轴，对数）与 200 步 RMSE（右轴）随字典增大的变化</figcaption>
+</figure>
+<h3 id="残差为什么反向">77.5.3 残差为什么反向</h3>
+<p>§77.3.6 提到一个反直觉的现象：字典越大，提升空间的残差反而越大。这里把机理说清楚。</p>
+<p>提升残差的定义是 <span class="math inline">\|\boldsymbol Z_2-\boldsymbol W\boldsymbol\Theta\|_F/\sqrt{Mn}</span>，分母里有 <span class="math inline">n</span>。字典从 2 列增到 20 列，分母涨了 <span class="math inline">\sqrt{10}\approx3.16</span> 倍。与此同时，新增的高阶分量 <span class="math inline">\varphi_i</span> 本身量级不小、但它们的演化更难拟合：<span class="math inline">x_1^5</span> 的下一步值涉及五阶项的乘积，用二阶以内的动力学去解释必然有残差。两项一叠加，平均到每个分量上的残差就上去了。</p>
+<p>换句话说，<strong>提升残差度量的是“每个分量平均拟合得多好”，而不是“状态预测得多准”</strong>。字典变大时，新增的分量本来就更难拟合，平均下来自然变差；但它们携带的信息让状态预测变准。两个指标回答的是不同的问题，混用就会得出“字典越大越差”的错误结论。</p>
+<p>工程上的推论很直接：<strong>永远不要用提升残差选字典</strong>。本章脚本里的 <code>state_err</code> 函数就是为此写的，它只取前两维反投影，让不同字典的误差可以直接比较。</p>
+<h3 id="数据量谱半径才是分水岭">77.5.4 数据量：谱半径才是分水岭</h3>
+<p>固定三次字典（9 列），把样本数从 50 增到 6400，结果见表 77-3 与图 77-4。</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: right;">样本数 <span class="math inline">N</span></th>
+<th style="text-align: right;">状态单步误差</th>
+<th style="text-align: right;">谱半径 <span class="math inline">\rho(\boldsymbol A)</span></th>
+<th style="text-align: right;">200 步 RMSE</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">50</td>
+<td style="text-align: right;"><span class="math inline">2.1039\times10^{-6}</span></td>
+<td style="text-align: right;"><span class="math inline">1.0194</span></td>
+<td style="text-align: right;"><span class="math inline">11.8645</span></td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">100</td>
+<td style="text-align: right;"><span class="math inline">6.2936\times10^{-6}</span></td>
+<td style="text-align: right;"><span class="math inline">1.0140</span></td>
+<td style="text-align: right;"><span class="math inline">1.0653</span></td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">200</td>
+<td style="text-align: right;"><span class="math inline">1.4217\times10^{-5}</span></td>
+<td style="text-align: right;"><span class="math inline">1.0261</span></td>
+<td style="text-align: right;"><span class="math inline">4.6883</span></td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">400</td>
+<td style="text-align: right;"><span class="math inline">8.6250\times10^{-5}</span></td>
+<td style="text-align: right;"><span class="math inline">1.0126</span></td>
+<td style="text-align: right;"><span class="math inline">0.0871</span></td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">800</td>
+<td style="text-align: right;"><span class="math inline">1.1460\times10^{-4}</span></td>
+<td style="text-align: right;"><span class="math inline">1.0007</span></td>
+<td style="text-align: right;"><span class="math inline">0.0525</span></td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">1600</td>
+<td style="text-align: right;"><span class="math inline">1.1648\times10^{-4}</span></td>
+<td style="text-align: right;"><span class="math inline">0.9995</span></td>
+<td style="text-align: right;"><span class="math inline">0.0589</span></td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">3200</td>
+<td style="text-align: right;"><span class="math inline">1.0296\times10^{-4}</span></td>
+<td style="text-align: right;"><span class="math inline">0.9993</span></td>
+<td style="text-align: right;"><span class="math inline">0.0260</span></td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">6400</td>
+<td style="text-align: right;"><span class="math inline">8.3298\times10^{-5}</span></td>
+<td style="text-align: right;"><span class="math inline">0.9990</span></td>
+<td style="text-align: right;"><span class="math inline">0.0195</span></td>
+</tr>
+</tbody>
+</table>
+<p>这张表最刺眼的是前两列与最后一列的关系。<span class="math inline">N=50</span> 时，状态单步误差只有 <span class="math inline">2.1039\times10^{-6}</span>——比 <span class="math inline">N=6400</span> 时的 <span class="math inline">8.3298\times10^{-5}</span> 还好 40 倍。如果只看单步误差，会得出“数据越少越好”的荒谬结论。但它的 200 步 RMSE 是 <span class="math inline">11.8645</span>，完全不可用。</p>
+<p>原因就在第三列：<span class="math inline">N=50</span> 时谱半径 <span class="math inline">1.0194</span>，<span class="math inline">1.0194^{200}=46.8</span>，任何微小的初始误差都会被放大近 47 倍。而 <span class="math inline">N=50</span> 只有 50 个样本拟合 9 个参数，最小二乘几乎是在插值，它把噪声与舍入误差一并拟合进去，得到的矩阵自然略不稳定。</p>
+<p><span class="math inline">N\ge800</span> 后谱半径降到 <span class="math inline">1.0007</span> 以下，<span class="math inline">1.0007^{200}=1.15</span>，放大倍数是 15%，可以接受。<span class="math inline">N=1600</span> 时 <span class="math inline">\rho=0.9995</span>，<span class="math inline">0.9995^{200}=0.905</span>，误差反而略有收缩。这就是“分水岭”的含义：<strong>不是样本数本身有魔法，而是谱半径跨过 1 的那一刻，长时行为从指数放大切换成指数衰减。</strong></p>
+<p>图 77-4 的左右两栏正好对应这两件事。左栏是误差随 <span class="math inline">N</span> 的变化，右栏是谱半径随 <span class="math inline">N</span> 的变化，右栏里那条 <span class="math inline">\rho=1</span> 的参考线就是分界。</p>
+<figure>
+<img src="figs/ch077/fig_077_04_data_scan.svg" alt="图 77-4 数据量扫描：误差（左）与谱半径（右）；谱半径跨过 1 的位置与长时误差骤降的位置重合" /><figcaption aria-hidden="true">图 77-4 数据量扫描：误差（左）与谱半径（右）；谱半径跨过 1 的位置与长时误差骤降的位置重合</figcaption>
+</figure>
+<p>还要注意 <span class="math inline">N=400</span> 到 <span class="math inline">N=1600</span> 之间长时误差的小幅非单调（<span class="math inline">0.0871\to0.0525\to0.0589</span>）。这不是随机波动：<span class="math inline">N=1600</span> 时用的前缀覆盖了更多工况，而这些工况里包含更大的角度，线性化误差占比更高，所以误差略回升。<span class="math inline">N=3200</span> 之后样本覆盖足够密，误差才继续下降。这个细节说明<strong>“加数据”与“加覆盖”是两件事</strong>：只在一小片工况里加样本，对谱半径有帮助，对模型在整个工作域上的精度帮助有限。</p>
+<h3 id="噪声下的阶数权衡">77.5.5 噪声下的阶数权衡</h3>
+<p>把测量噪声加到状态上（<span class="math inline">\sigma</span> 从 <span class="math inline">0</span> 到 <span class="math inline">0.06</span> rad），三次与五次字典的表现见表 77-4 与图 77-5。</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: right;">噪声 <span class="math inline">\sigma</span> (rad)</th>
+<th style="text-align: right;">三次单步</th>
+<th style="text-align: right;">三次 200 步</th>
+<th style="text-align: right;">三次 <span class="math inline">\rho</span></th>
+<th style="text-align: right;">五次单步</th>
+<th style="text-align: right;">五次 200 步</th>
+<th style="text-align: right;">五次 <span class="math inline">\rho</span></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">0</td>
+<td style="text-align: right;"><span class="math inline">8.4804\times10^{-5}</span></td>
+<td style="text-align: right;"><span class="math inline">0.0149</span></td>
+<td style="text-align: right;"><span class="math inline">0.9988</span></td>
+<td style="text-align: right;"><span class="math inline">9.9799\times10^{-7}</span></td>
+<td style="text-align: right;"><span class="math inline">0.0320</span></td>
+<td style="text-align: right;"><span class="math inline">1.0045</span></td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">0.001</td>
+<td style="text-align: right;"><span class="math inline">1.4560\times10^{-3}</span></td>
+<td style="text-align: right;"><span class="math inline">0.0145</span></td>
+<td style="text-align: right;"><span class="math inline">0.9988</span></td>
+<td style="text-align: right;"><span class="math inline">1.4532\times10^{-3}</span></td>
+<td style="text-align: right;"><span class="math inline">0.0363</span></td>
+<td style="text-align: right;"><span class="math inline">1.0041</span></td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">0.005</td>
+<td style="text-align: right;"><span class="math inline">7.2665\times10^{-3}</span></td>
+<td style="text-align: right;"><span class="math inline">0.0142</span></td>
+<td style="text-align: right;"><span class="math inline">0.9988</span></td>
+<td style="text-align: right;"><span class="math inline">7.2436\times10^{-3}</span></td>
+<td style="text-align: right;"><span class="math inline">0.0363</span></td>
+<td style="text-align: right;"><span class="math inline">1.0010</span></td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">0.020</td>
+<td style="text-align: right;"><span class="math inline">2.8998\times10^{-2}</span></td>
+<td style="text-align: right;"><span class="math inline">0.0663</span></td>
+<td style="text-align: right;"><span class="math inline">0.9990</span></td>
+<td style="text-align: right;"><span class="math inline">2.8174\times10^{-2}</span></td>
+<td style="text-align: right;"><span class="math inline">0.0624</span></td>
+<td style="text-align: right;"><span class="math inline">0.9994</span></td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">0.060</td>
+<td style="text-align: right;"><span class="math inline">8.5691\times10^{-2}</span></td>
+<td style="text-align: right;"><span class="math inline">0.1004</span></td>
+<td style="text-align: right;"><span class="math inline">0.9950</span></td>
+<td style="text-align: right;"><span class="math inline">8.1800\times10^{-2}</span></td>
+<td style="text-align: right;"><span class="math inline">0.0898</span></td>
+<td style="text-align: right;"><span class="math inline">0.9953</span></td>
+</tr>
+</tbody>
+</table>
+<p>这张表推翻了一个常见的直觉：“阶数越高越容易过拟合，所以噪声一大就该降阶”。实际情形更微妙。</p>
+<p><strong>在无噪声与低噪声下，五次字典的单步误差确实好得多</strong>（<span class="math inline">9.9799\times10^{-7}</span> 对 <span class="math inline">8.4804\times10^{-5}</span>，差 85 倍），但它的谱半径 <span class="math inline">1.0045</span> 略大于 <span class="math inline">1</span>，200 步后误差反而翻倍（<span class="math inline">0.0320</span> 对 <span class="math inline">0.0149</span>）。这是典型的“单步更准、长时更差”：高阶项把训练数据拟合得很细，连数值舍入都不放过，拟合出的矩阵有极小的不稳定模态，200 步足够让它显形。</p>
+<p><strong>噪声增大到 <span class="math inline">0.02</span> 之后，两者的谱半径都回到 <span class="math inline">1</span> 以下</strong>，长时误差变得接近（<span class="math inline">0.0624</span> 对 <span class="math inline">0.0663</span>），五次还略好一点。原因有点反直觉：噪声把最小二乘解往零收缩（相当于隐式正则化），恰好把那个略大于 <span class="math inline">1</span> 的模态压了回去。换句话说，<strong>在这里噪声起了阻尼作用</strong>，它牺牲了单步精度，换来了谱稳定性。</p>
+<p>这个现象在工程上有实际意义：如果你的数据本身有噪声，不必急着降阶；先看谱半径，如果它已经在 <span class="math inline">1</span> 以下，高阶字典是可以用的。反过来，如果数据是仿真来的、异常干净，高阶字典反而更危险——它会把数值误差当成真实动力学学进去。本章 E2 的五次字典（无噪声、<span class="math inline">200</span> 步 <span class="math inline">0.0187</span>）表现很好，是因为训练样本足够多（2400 个）；E4 的五次字典（<span class="math inline">500</span> 个样本）就露出问题了。<strong>样本数与阶数必须一起看</strong>，这也是 §77.3.3 判据三的由来。</p>
+<figure>
+<img src="figs/ch077/fig_077_05_noise_tradeoff.svg" alt="图 77-5 噪声与阶数的权衡：低噪声下五次字典单步更准但长时更差，噪声增大后两者趋同" /><figcaption aria-hidden="true">图 77-5 噪声与阶数的权衡：低噪声下五次字典单步更准但长时更差，噪声增大后两者趋同</figcaption>
+</figure>
+<h3 id="一个可复用的校验清单">77.5.6 一个可复用的校验清单</h3>
+<p>把上面几小节的结论整理成一张可执行的清单，每一步都有明确的通过判据。</p>
+<ol type="1">
+<li><strong>状态单步误差</strong>：与线性化模型的单步误差比，Koopman 模型应至少好一个数量级，否则提升没有带来信息。</li>
+<li><strong>谱半径</strong>：必须小于 <span class="math inline">1</span>。若在 <span class="math inline">0.999\sim1.001</span> 之间，长时预测会被放大，需要加样本或加岭。</li>
+<li><strong>长时 rollout</strong>：200 步 RMSE 应小于工作域尺度的 <span class="math inline">5\%</span>。本章工作域角度约 <span class="math inline">1.7</span> rad，门槛是 <span class="math inline">0.085</span>，五个字典全部通过（最差的线性字典 <span class="math inline">0.0669</span> 也低于门槛）——这条门槛不严，真正的区分度在前两条。</li>
+<li><strong>验证集独立性</strong>：验证数据的初值、激励、噪声水平都要与训练集不同。本章验证集用另一段随机初值的多正弦数据，seed 与训练集不同。</li>
+<li><strong>闭环前的预演</strong>：把设计好的 <span class="math inline">\boldsymbol K</span> 在提升模型上闭环仿真一遍，确认提升坐标不发散。提升坐标发散而状态收敛是可能的（高阶分量自己跑飞），这种情形上线后会在某个工况突然失效。</li>
+</ol>
+<h3 id="三个指标怎么合起来读">77.5.7 三个指标怎么合起来读</h3>
+<p>三个指标各自回答一个问题，但工程判断要把它们放在一起。下面按“先否决、再评价、后诊断”的顺序给一套读法。</p>
+<p><strong>第一步看谱半径，它有一票否决权。</strong> <span class="math inline">\rho\ge1</span> 意味着开环预测必然指数放大，无论单步误差多小都不能用。放大的速度可以用 <span class="math inline">\rho^{200}</span> 估算：<span class="math inline">1.0194^{200}=46.8</span>，<span class="math inline">1.0126^{200}=12.3</span>，<span class="math inline">1.0007^{200}=1.15</span>。同样是“大于 1”，前者已经彻底不可用，后者只是缓慢漂移。</p>
+<p>这一步最容易被忽略，因为单步误差看起来很好。表 77-3 里 <span class="math inline">N=50</span> 的单步误差 <span class="math inline">2.1039\times10^{-6}</span> 是全表最低，谱半径 <span class="math inline">1.0194</span> 却是全表最高，200 步 RMSE 直接爆到 <span class="math inline">11.8645</span>。只看第一列，会得出完全相反的结论。</p>
+<p><strong>第二步看 200 步 RMSE，它决定“能不能用”。</strong> 门槛要按工作域定，本章取工作域 <span class="math inline">1.7</span> rad 的 <span class="math inline">5\%</span>，即 <span class="math inline">0.085</span>。低于门槛的模型可以直接拿去设计控制器；高于门槛的，即使谱半径合格也要谨慎。</p>
+<p><span class="math inline">N=6400</span> 是正例：<span class="math inline">\rho=0.9990</span>，<span class="math inline">0.9990^{200}=0.819</span>，误差不但不放大还略有收缩，200 步 RMSE <span class="math inline">0.0195</span>，余量很大。<span class="math inline">N=400</span> 是临界例：<span class="math inline">\rho=1.0126</span> 刚过线，200 步 RMSE <span class="math inline">0.0871</span> 刚好压在门槛上，这种模型能跑但经不起工况变化。</p>
+<p><strong>第三步看单步误差，它只用于诊断。</strong> 单步误差小说明拟合到了结构，大说明结构不够或数据不够；但它不能跨 <span class="math inline">N</span> 比较，也不能单独决定取舍。</p>
+<p>把三步合起来，可以得到四种组合，对应四种处置。</p>
+<p><strong>组合一：单步小、<span class="math inline">\rho&lt;1</span>、200 步小。</strong> 模型可用，进入控制器设计。本章 2400 样本的三次字典属于这一类。</p>
+<p><strong>组合二：单步小、<span class="math inline">\rho&gt;1</span>。</strong> 典型的插值式过拟合，<span class="math inline">N=50</span> 就是。处置是加数据，不是加岭——加岭会同时压掉真实的高阶动态。</p>
+<p><strong>组合三：单步大、<span class="math inline">\rho&lt;1</span>、200 步大。</strong> 结构误差主导。E4 的 <span class="math inline">\sigma=0.06</span> 一组是例子：五次字典 <span class="math inline">\rho=0.9953</span>、单步 <span class="math inline">8.1800\times10^{-2}</span>、200 步 <span class="math inline">0.0898</span>，谱半径很安全，误差却全部来自单步。处置是加阶或改字典族，加数据没用。</p>
+<p><strong>组合四：单步大、<span class="math inline">\rho&gt;1</span>。</strong> 数据与结构都缺，通常是“样本少 + 字典大”的组合。先按 <span class="math inline">40n</span> 补齐样本，再重看谱半径。</p>
+<p>还有一条容易误读的现象：表 77-3 里 <span class="math inline">N=200</span> 的 200 步 RMSE（<span class="math inline">4.6883</span>）比 <span class="math inline">N=100</span>（<span class="math inline">1.0653</span>）更差，而谱半径也确实从 <span class="math inline">1.0140</span> 升到 <span class="math inline">1.0261</span>。这不是随机波动，而是小样本下 <span class="math inline">\boldsymbol A</span> 的估计本身在抖——样本量没到“统计稳定”之前，加样本不一定单调改善。</p>
+<p>所以“加数据”也有前提：<strong>要加到统计稳定区，零散地加几十个样本没有意义</strong>。本章的分界在 <span class="math inline">N=800</span> 附近，与 <span class="math inline">40n=360</span> 的经验值同量级但更保守，这也是表 77-6 把 <span class="math inline">N</span> 的建议起点写成 <span class="math inline">40n</span> 而不是精确值的原因。</p>
+<h3 id="验证集怎么造">77.5.8 验证集怎么造</h3>
+<p>三个校验指标里有两个依赖验证集。验证集造错，指标再漂亮也没有意义。这一小节给出五条要求。</p>
+<p><strong>第一，初值必须独立。</strong> 验证段的初始状态要取自训练段没覆盖的位置，至少有一部分落在工作域边缘。本章训练段按初值抽样，验证段另取初值，两者不重叠。</p>
+<p><strong>第二，激励必须独立。</strong> 多正弦的相位、频率组合要与训练段不同；随机信号的种子要换。用同一段激励的另一次噪声实现不算独立。</p>
+<p><strong>第三，噪声水平要与现场一致。</strong> 训练数据干净、验证数据带噪，或反过来，都会让指标失真。本章 E4 在训练与验证上加同一水平的噪声。</p>
+<p><strong>第四，长度要够。</strong> 200 步是本章的标准，因为闭环验证也跑 200 步。验证段短于这个长度，就无法暴露谱半径引起的放大。</p>
+<p><strong>第五，至少三段。</strong> 单段验证的结论可能是运气。三段各自算指标，取最差的一段作为判据，比取平均更保守也更符合工程直觉。</p>
+<p><strong>最常见的错误是把训练集的后 <span class="math inline">20\%</span> 当验证集。</strong> 这部分数据与训练段共享同一条轨迹，初值、激励、噪声全都相关，指标会明显偏乐观。</p>
+<p>另一种常见错误是“用同一批数据反复调参，直到验证误差满意”。这时验证集已经在事实上参与训练，指标失去意义。正确做法是留一段“只在最后看一次”的测试集。</p>
+<p><strong>验证集与工作域的关系要写清楚。</strong> 如果验证段只覆盖 <span class="math inline">x_1\in[0,1]</span>，那么 200 步 RMSE 只能说明这个区间准，不能说明 <span class="math inline">2.6</span> rad 处准。本章的表 77-5 就是专门补这个缺口的：它直接用闭环初值扫描，覆盖到 <span class="math inline">2.60</span> rad。</p>
+<p><strong>最后一点：验证集要能复现。</strong> 本章把 seed 写进脚本，任何人重跑都得到同一段数据。现场做不到这一点，就更要把验证数据单独存档，不能随手重采。</p>
+<h2 id="稳定性与性能">77.6 稳定性与性能</h2>
+<h3 id="提升空间-lqr-的三个前提">77.6.1 提升空间 LQR 的三个前提</h3>
+<p>式 (77-22) 的解在数学上总是存在的（只要 <span class="math inline">(\boldsymbol A,\boldsymbol B)</span> 可稳），但它的工程意义依赖三个前提，缺一个结论就不成立。</p>
+<p><strong>前提一：提升模型在闭环轨迹覆盖的区域内准确。</strong> LQR 是在整个状态空间上最优的，但提升模型只在训练数据覆盖的区域内可信。本章的训练轨迹覆盖 <span class="math inline">x_1\in[-1.35,1.74]</span>，闭环初值最大取到 <span class="math inline">2.60</span>，明显超出，这是故意的——用来观察“外推”的后果。实测代价依然收敛（表 77-5），说明轻微外推尚可容忍，但这是运气，不是保证。</p>
+<p><strong>前提二：<span class="math inline">\boldsymbol Q</span> 的加权与真实代价一致。</strong> 式 (77-2) 的代价只含 <span class="math inline">x_1,x_2,u</span>，所以 <span class="math inline">\boldsymbol Q</span> 的前两维应该是 <span class="math inline">1</span> 与 <span class="math inline">0.2</span>，其余维应接近零。如果给高阶分量也加大权重，控制器会去压“非线性程度”而不是压“状态偏差”，性能会莫名其妙地变差。</p>
+<p><strong>前提三：<span class="math inline">\boldsymbol B</span> 的辨识是准确的。</strong> <span class="math inline">\boldsymbol B</span> 只有一列，它决定“输入往提升空间的哪个方向注入能量”。如果激励数据里输入的变化幅度太小，<span class="math inline">\boldsymbol B</span> 的信噪比就低，LQR 解出来的增益方向会偏。本章 E9 的闭环抖动数据就是这样：条件数 <span class="math inline">120.36</span>，但 <span class="math inline">\boldsymbol B</span> 仍然辨识得不错（单步误差 <span class="math inline">1.991\times10^{-4}</span>，是四种激励里最好的），因为抖动虽然小，却持续存在，正好提供了 <span class="math inline">\boldsymbol B</span> 所需的方向信息。</p>
+<h3 id="单摆的谱dmd-与-edmd-差在哪">77.6.2 单摆的谱：DMD 与 EDMD 差在哪</h3>
+<p>图 77-6 是两种字典给出的连续特征值。线性 DMD 只给两个共轭复极点 <span class="math inline">-0.1072\pm0.8919j</span>，与线性化的理论值 <span class="math inline">-0.1\pm0.9950j</span> 相比，实部差 <span class="math inline">7.2\%</span>，虚部差 <span class="math inline">10.4\%</span>。三次 EDMD 给 9 个实极点，实部落在 <span class="math inline">[-0.1302,-0.0064]</span> 之间，全部在左半平面。</p>
+<figure>
+<img src="figs/ch077/fig_077_06_spectrum.svg" alt="图 77-6 连续特征值：线性 DMD（叉）与三次 EDMD（圈）及线性化理论值（十字）" /><figcaption aria-hidden="true">图 77-6 连续特征值：线性 DMD（叉）与三次 EDMD（圈）及线性化理论值（十字）</figcaption>
+</figure>
+<p>这张图最值得注意的是“数量级上的差别”：DMD 只能给出两个极点，而真实的单摆有无穷多个 Koopman 特征值。三次 EDMD 给出的 9 个实极点里，只有靠近 <span class="math inline">-0.1</span> 的那一对（<span class="math inline">-0.1302</span>）对应主要动态，其余 7 个是字典截断产生的“伪模态”。它们对短时预测有帮助（相当于给模型加了额外的衰减通道），但物理意义不明确。</p>
+<p>这一点在工程上很重要：<strong>不要试图给 EDMD 的每个特征值找物理解释</strong>。字典截断必然产生伪模态，它们的数量随 <span class="math inline">n</span> 增长。可信的是那些在字典加阶后仍然稳定出现的特征值——本章把字典从三次加到五次时，<span class="math inline">-0.1302</span> 这个值几乎不动，而其余的值会漂移。</p>
+<h3 id="闭环初值扫描">77.6.3 闭环初值扫描</h3>
+<p>把三种模型各自配上 LQR，在真实单摆上闭环仿真 200 步，初始角度从 <span class="math inline">0.65</span> rad 增到 <span class="math inline">2.60</span> rad，代价见表 77-5。</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: right;">初值 <span class="math inline">x_1(0)</span> (rad)</th>
+<th style="text-align: right;">线性化 LQR</th>
+<th style="text-align: right;">三次 EDMD</th>
+<th style="text-align: right;">五次 EDMD</th>
+<th style="text-align: right;">三次方案末值</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">0.65</td>
+<td style="text-align: right;">0.3597</td>
+<td style="text-align: right;">0.3599</td>
+<td style="text-align: right;">0.3599</td>
+<td style="text-align: right;"><span class="math inline">9.19\times10^{-3}</span></td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">1.30</td>
+<td style="text-align: right;">1.4634</td>
+<td style="text-align: right;">1.4625</td>
+<td style="text-align: right;">1.4625</td>
+<td style="text-align: right;"><span class="math inline">1.87\times10^{-2}</span></td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">1.95</td>
+<td style="text-align: right;">3.3894</td>
+<td style="text-align: right;">3.3805</td>
+<td style="text-align: right;">3.3809</td>
+<td style="text-align: right;"><span class="math inline">2.90\times10^{-2}</span></td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">2.60</td>
+<td style="text-align: right;">6.3399</td>
+<td style="text-align: right;">6.3181</td>
+<td style="text-align: right;">6.3326</td>
+<td style="text-align: right;"><span class="math inline">4.29\times10^{-2}</span></td>
+</tr>
+</tbody>
+</table>
+<p>三个结论。</p>
+<p><strong>第一，差距随初值增大而增大，但绝对量很小。</strong> 初值 <span class="math inline">0.65</span> 时三次方案比线性化差 <span class="math inline">0.06\%</span>，<span class="math inline">2.60</span> 时好 <span class="math inline">0.34\%</span>。这个量级远小于 §77.5 里模型精度的差异（单步误差差 25 倍），说明<strong>模型精度并没有转化成闭环性能</strong>。</p>
+<p><strong>第二，五次方案并不比三次好。</strong> 在 <span class="math inline">1.95</span> 处五次是 <span class="math inline">3.3809</span>，比三次的 <span class="math inline">3.3805</span> 略差；在 <span class="math inline">2.60</span> 处五次是 <span class="math inline">6.3326</span>，比三次的 <span class="math inline">6.3181</span> 差 <span class="math inline">0.23\%</span>。这与 §77.5.5 的结论一致：五次字典的谱半径更接近 <span class="math inline">1</span>，闭环时虽然轨迹有界，但收敛速度略慢。</p>
+<p><strong>第三，末值都在 <span class="math inline">10^{-2}</span> 量级，没有收敛到零。</strong> 200 步（4 s）时三次方案的末值从 <span class="math inline">9.19\times10^{-3}</span> 涨到 <span class="math inline">4.29\times10^{-2}</span>，这是因为初值越大、需要的时间越长。实测：初值 <span class="math inline">2.60</span> 时要到第 339 步（6.78 s）状态范数才降到 <span class="math inline">10^{-3}</span> 以下，这一点在 §77.10 的上线判据里会用到。</p>
+<figure>
+<img src="figs/ch077/fig_077_07_closed_loop.svg" alt="图 77-7 闭环代价随初始角度的变化：三种模型的曲线几乎重合" /><figcaption aria-hidden="true">图 77-7 闭环代价随初始角度的变化：三种模型的曲线几乎重合</figcaption>
+</figure>
+<p>图 77-7 把这组数据画出来，三条线基本重合。如果只看这张图，会得出“Koopman 没用”的结论。这个结论在本章的对象上是<strong>对的</strong>，但要理解它对在哪里、不对在哪里。</p>
+<h3 id="为什么提升没有带来性能收益">77.6.4 为什么提升没有带来性能收益</h3>
+<p>单摆的非线性只有一个 <span class="math inline">\sin x_1</span>，它在 <span class="math inline">x_1=0</span> 附近的泰勒展开是 <span class="math inline">x_1-x_1^3/6+\cdots</span>。到 <span class="math inline">x_1=2.6</span> 时，三次项 <span class="math inline">x_1^3/6=2.93</span> 已经超过线性项 <span class="math inline">2.6</span> 本身——线性化在那个位置不是“略有偏差”，而是完全失效。但闭环的目标是回到零，<strong>轨迹大部分时间在 <span class="math inline">|x_1|&lt;1</span> 的区域</strong>，那里三次项只有 <span class="math inline">0.17</span>，线性化误差不到 <span class="math inline">3\%</span>。</p>
+<p>更根本的原因是：LQR 本身对模型误差有鲁棒性。增益 <span class="math inline">\boldsymbol K=\begin{bmatrix}2.2385 &amp; 2.3451\end{bmatrix}</span> 给出的闭环带宽约 <span class="math inline">2</span> rad/s，远低于非线性项产生高次谐波的频率，闭环把模型误差“滤”掉了。只有当模型误差在闭环带宽内显著时，性能才会明显下降。</p>
+<p>这就引出本章最重要的一条工程判断：<strong>Koopman 提升的收益，取决于线性化误差是否落在闭环带宽内</strong>。本章的单摆不是，所以收益只有 <span class="math inline">0.34\%</span>；如果对象是硬非线性（继电器、死区、大幅摆动的机械臂），线性化误差在低频段就很大，收益会显著得多。</p>
+<h3 id="稳定性判据与失效模式">77.6.5 稳定性判据与失效模式</h3>
+<p>提升模型的闭环稳定性有三个层次，从弱到强。</p>
+<p><strong>层次一：<span class="math inline">\rho(\boldsymbol A)&lt;1</span> 且 <span class="math inline">\boldsymbol A-\boldsymbol B\boldsymbol K</span> 的所有特征值在单位圆内。</strong> 这是最基本的要求，计算便宜，但不保证真实对象稳定——因为提升是近似的，提升坐标稳定不代表状态稳定。</p>
+<p><strong>层次二：真实对象在闭环下的轨迹有界。</strong> 这只能靠仿真或实验验证。工程上要扫初值、扫参考、扫扰动，确认最坏情况下不发散。</p>
+<p><strong>层次三：存在公共 Lyapunov 函数。</strong> 如果能找到 <span class="math inline">\boldsymbol P\succ0</span> 使 <span class="math inline">(\boldsymbol A-\boldsymbol B\boldsymbol K)^\top\boldsymbol P(\boldsymbol A-\boldsymbol B\boldsymbol K)-\boldsymbol P\prec0</span> <strong>并且在真实对象上也成立</strong>（即沿真实轨迹 <span class="math inline">\boldsymbol z^\top\boldsymbol P\boldsymbol z</span> 单调下降），稳定性才有理论保证。这一步在字典截断时几乎无法严格验证，只能近似检验。</p>
+<p>三种典型失效模式要提前想好对策。</p>
+<p><strong>失效一：外推爆炸。</strong> 轨迹跑出训练域，多项式字典的高阶项主导，<span class="math inline">\boldsymbol B</span> 的方向完全错，控制器给出反向动作。对策是加状态软约束（§77.9 的 MPC 就是干这个的），或在检测到 <span class="math inline">|x_1|</span> 超限时切回线性化控制器。</p>
+<p><strong>失效二：伪模态被激励。</strong> 字典截断产生的伪模态在某个频率上被输入激励起来，闭环里表现为高频抖动。对策是给高阶分量加小权重（<span class="math inline">10^{-3}</span>），让 LQR 主动抑制它们；或者在拟合时加岭，把伪模态的极点往原点拉。</p>
+<p><strong>失效三：<span class="math inline">\boldsymbol B</span> 方向错误。</strong> 激励数据里输入变化太小，<span class="math inline">\boldsymbol B</span> 的估计偏向噪声方向，闭环增益把能量注入错误的方向，表现为“越控越偏”。对策是检查 <span class="math inline">\boldsymbol B</span> 的信噪比：用不同段数据分别辨识，看 <span class="math inline">\boldsymbol B</span> 的方向是否稳定；如果不稳定，说明激励不足。</p>
+<h3 id="增益里藏着答案">77.6.6 增益里藏着答案</h3>
+<p>闭环代价只差 <span class="math inline">0.27\%</span>，这个结果看起来像“说不清”，其实可以从增益矩阵直接读出来。脚本打印的线性化 LQR 增益是 <span class="math inline">[2.2385,\ 2.3451]</span>，三次 EDMD 是 <span class="math inline">[2.1756,\ 2.3846,\ -4.0\times10^{-4}]</span>，五次 EDMD 是 <span class="math inline">[2.1641,\ 2.3709,\ 8.0\times10^{-4}]</span>（后两个只打印了前三个分量）。</p>
+<p>先说前两维。三次方案与线性化差 <span class="math inline">2.8\%</span> 与 <span class="math inline">1.7\%</span>，五次方案差 <span class="math inline">3.3\%</span> 与 <span class="math inline">1.1\%</span>。这个量级说明提升改变的是“细节”，没有改变“结构”——两者都是角度偏差给正增益、速度偏差给正增益，方向一致、比例接近。</p>
+<p>再说第三维，也就是 <span class="math inline">x_1^2</span> 这一列上的增益。它只有 <span class="math inline">4.0\times10^{-4}</span> 与 <span class="math inline">8.0\times10^{-4}</span>，比前两维小了三到四个数量级。这意味着闭环里几乎不需要通过“非线性通道”施加控制。</p>
+<p>这就是 <span class="math inline">0.27\%</span> 的直接原因：<strong>LQR 自己判断，用非线性通道不划算</strong>。<span class="math inline">\boldsymbol Q</span> 给高阶分量的权重是 <span class="math inline">10^{-3}</span> 或 <span class="math inline">10^{-4}</span>，而这些分量的动态衰减比 <span class="math inline">x_1,x_2</span> 更快，LQR 的结论是“放着不管它们也会消失”，于是把力矩全花在前两维上。</p>
+<p>为什么这个观察比“代价差 <span class="math inline">0.27\%</span>”更有说服力？因为代价是结果，增益是原因。看到代价几乎相同，你只知道“没差别”；看到第三维增益接近零，你知道“没差别”是因为控制器根本没有启用非线性通道。</p>
+<p>由此可以得到三条推论。</p>
+<p><strong>推论一：调 <span class="math inline">\epsilon</span> 通常不会改变结论。</strong> 只要 <span class="math inline">\epsilon</span> 远小于前两维的权重，LQR 就继续把非线性通道的增益压到零。把 <span class="math inline">\epsilon</span> 从 <span class="math inline">10^{-3}</span> 加到 <span class="math inline">10^{-2}</span>，第三维会变大，但闭环代价未必改善，因为被压制的“非线性程度”本来也不大。</p>
+<p><strong>推论二：如果第三维增益很大，先怀疑伪模态。</strong> 正常的物理直觉是“<span class="math inline">x_1^2</span> 的系数应该与 <span class="math inline">x_1</span> 的系数同量级或更小”。如果算出来的第三维比前两维还大，多半是某个伪模态在拟合时被放大，控制器于是去压一个不存在的东西。</p>
+<p><strong>推论三：这个诊断几乎不花成本。</strong> 解完 Riccati 就能看到 <span class="math inline">\boldsymbol K</span>，不需要额外仿真。工程上可以把它当成“提升有没有被用上”的第一道检查：第三维接近零，说明这次提升对闭环没有贡献，收益不会超过 <span class="math inline">1\%</span>。</p>
+<p>最后提醒一句：第三维的符号没有物理意义。三次是负、五次是正，这并不是“控制方向反了”，而是字典的排列与缩放不同，同一个方向可以用不同的基函数组合表示。<strong>能解释的是量级，不能解释的是符号。</strong></p>
+<h3 id="怎样做一次公平的对比">77.6.7 怎样做一次公平的对比</h3>
+<p>本章反复出现“差 <span class="math inline">0.27\%</span>”“差 147 倍”这类数字，前提是它们都在同一套条件下算出来。这一小节把条件列清楚，方便读者复核，也方便自己以后做对比。</p>
+<p><strong>第一，代价函数必须是同一个。</strong> 本章所有闭环代价都用式 (77-2)，积分区间、权重、离散化方式完全一致。如果一边用连续积分、一边用离散求和，差出来的可能比方法差异还大。</p>
+<p><strong>第二，限幅与采样必须相同。</strong> 输入限幅 <span class="math inline">|u|\le4</span>、采样周期 <span class="math inline">T_s=0.02</span> s、仿真步数 200（表 77-12）或 80（表 77-8），都写在表注里。限幅不同，饱和时间就不同，代价没有可比性。</p>
+<p><strong>第三，初值集合必须相同。</strong> 表 77-5 用四个初值，表 77-12 用 <span class="math inline">[2.0,0]</span>，表 77-8 用 <span class="math inline">[1.7,0]</span>。三组实验各自内部可比，跨组不可比，所以本章从不把 <span class="math inline">6.3181</span> 与 <span class="math inline">3.5664</span> 放在一起讨论。</p>
+<p><strong>第四，评价必须在真实对象上做。</strong> 提升模型只用来算增益，闭环仿真一律回到式 (77-1) 的 RK4 积分。用提升模型评价提升模型，结果一定偏乐观。</p>
+<p><strong>第五，两边的调参预算必须对等。</strong> 如果给 Koopman 方案试了五组 <span class="math inline">\boldsymbol Q,R</span>，却只给线性化方案用一组，那 <span class="math inline">0.27\%</span> 就没有意义。本章的线性化增益是用同一套 <span class="math inline">\boldsymbol Q,R</span> 解出来的，没有单独调优。</p>
+<p>还有三条常见的“不公平”，读文献时要警惕。</p>
+<p><strong>一是在训练数据上比。</strong> 训练集上的误差总能做得很好看，尤其字典大时。本章的 200 步 RMSE 一律在独立验证集上算。</p>
+<p><strong>二是只报一个初值。</strong> 单摆的差距随初值增大而增大，只报 <span class="math inline">0.65</span> 会显得“完全一样”，只报 <span class="math inline">2.60</span> 会显得“略好一点”。表 77-5 报四个点，趋势才看得出来。</p>
+<p><strong>三是把“违反约束”当成优势。</strong> 表 77-8 里 LQR 的代价 <span class="math inline">2.4900</span> 低于 MPC 的 <span class="math inline">2.9159</span>，但它是靠 27 步速度越界换来的。约束没进代价函数，比较就不成立。</p>
+<p>一句话总结：<strong>公平对比的最小条件是“除了模型，其他全一样”</strong>。这条听起来简单，但文献里大量“提升多少”的结论，问题恰恰出在“其他”没有一样。</p>
+<h3 id="提升空间的能控性与能观性">77.6.8 提升空间的能控性与能观性</h3>
+<p>线性系统有成熟的能控性、能观性判据，提升之后可以直接套用。但套用之前要明白一件事：<strong>提升坐标可控，不等于状态可控</strong>。</p>
+<p><strong>能控性怎么看。</strong> 提升模型是单输入系统，能控性矩阵是 <span class="math inline">[\boldsymbol B,\ \boldsymbol A\boldsymbol B,\ \dots,\ \boldsymbol A^{n-1}\boldsymbol B]</span>。若它的秩等于 <span class="math inline">n</span>，提升空间完全可控。</p>
+<p>三次字典 <span class="math inline">n=9</span>，矩阵是 <span class="math inline">9\times9</span>。本章没有打印它的秩，读者可以自己算一次。经验上，多项式字典的秩往往不满——高阶单项式很难被输入“直接推动”，只能通过低阶分量的耦合间接影响。</p>
+<p>不满秩的直接后果是：<strong>LQR 会给不能控方向零增益</strong>。这与 §77.6.6 看到的“第三维增益只有 <span class="math inline">4.0\times10^{-4}</span>”是同一件事的两个说法。</p>
+<p><strong>这是缺陷还是特性？</strong> 取决于你怎么用它。如果那些不能控方向恰好是伪模态，不满秩反而是好事，因为它自动被忽略。如果不能控方向对应真实的慢动态，问题就大了——控制器对它无能为力，只能靠开环自然衰减。</p>
+<p>判断方法是：把不能控方向投影回状态空间，看它对应 <span class="math inline">x_1</span>、<span class="math inline">x_2</span> 的哪个组合。若投影主要落在 <span class="math inline">x_1</span> 上，说明角度不能控，这在物理上说不通，一定是字典或数据出了问题。</p>
+<p><strong>能观性怎么看。</strong> 若把 <span class="math inline">\boldsymbol y=\boldsymbol z_{1:2}</span> 当作输出，能观性矩阵是 <span class="math inline">[\boldsymbol C;\ \boldsymbol C\boldsymbol A;\ \dots]</span>。它同样可能不满秩。</p>
+<p>不满秩意味着“某些提升分量的组合在输出里看不见”。对控制没有直接影响（我们用的是全状态反馈），但对状态估计有影响：如果要用观测器估计 <span class="math inline">\boldsymbol z</span>，不能观的方向只能靠模型外推。</p>
+<p><strong>数值上的坑。</strong> 秩的判定依赖容差。理论满秩的矩阵，条件数一大，数值秩就可能掉。工程上不要只看 <code>matrix_rank</code> 的返回值，要同时看奇异值的分布：若最小奇异值比最大小十个数量级，就当作不满秩处理。</p>
+<p><strong>一句话总结。</strong> 能控性与能观性在提升空间里是“可算的”，这是 Koopman 相对纯非线性方法的优势；但算出来的结论要翻译回状态空间才有意义，而翻译这一步没有通用公式，只能逐例分析。</p>
+<h2 id="参数意义与作用">77.7 参数意义与作用</h2>
+<h3 id="字典阶数影响最大最需要试的一个">77.7.1 字典阶数：影响最大、最需要试的一个</h3>
+<p>字典阶数 <span class="math inline">d</span> 决定提升维数 <span class="math inline">n</span>，是全部参数里影响最大的一项。它的作用方向可以分三段看。</p>
+<p><strong><span class="math inline">d</span> 太小时的欠拟合段。</strong> 本章线性字典（<span class="math inline">d=1</span>，<span class="math inline">n=2</span>）的单步误差 <span class="math inline">1.0844\times10^{-3}</span>，200 步 RMSE <span class="math inline">0.0669</span>。这个误差不是噪声，而是结构性的：它把 <span class="math inline">\sin x_1</span> 硬当成 <span class="math inline">x_1</span>，在 <span class="math inline">|x_1|&gt;1</span> 的区域必然偏。加阶到三次（<span class="math inline">n=9</span>）后，单步误差降了 25 倍，说明三次项 <span class="math inline">x_1^3</span> 确实捕捉到了 <span class="math inline">\sin</span> 的主要修正。</p>
+<p><strong><span class="math inline">d</span> 合适时的收益段。</strong> 三次到五次，单步误差还能再降 69 倍（<span class="math inline">4.3217\times10^{-5}\to6.2731\times10^{-7}</span>），但长时误差只降 56%（<span class="math inline">0.0429\to0.0187</span>）。这一段是“边际收益递减”：每加一阶，计算量涨 <span class="math inline">O(n^3)</span>（解 Riccati 或求逆），精度只涨一点。</p>
+<p><strong><span class="math inline">d</span> 过大时的过拟合段。</strong> E4 给出了明确证据：<span class="math inline">N=500</span> 个样本配五次字典（<span class="math inline">n=20</span>），无噪声时单步误差 <span class="math inline">9.9799\times10^{-7}</span>，看起来极好，但谱半径 <span class="math inline">1.0045</span>，200 步误差 <span class="math inline">0.0320</span>，比三次字典差一倍。这一段的表现是“训练集上完美、验证集上变差”，与普通回归的过拟合一模一样。</p>
+<p>工程上的起点建议是 <span class="math inline">d=3</span>：它覆盖了绝大多数机械、过程对象的二次与三次非线性，<span class="math inline">n=9</span> 的维数在计算上毫无压力。只有确认三次不够（单步误差比线性化好不到一个数量级）时，才往 <span class="math inline">d=4</span>、<span class="math inline">d=5</span> 走。</p>
+<h3 id="rbf-的中心数与宽度">77.7.2 RBF 的中心数与宽度</h3>
+<p>RBF 字典用的是</p>
+<p><span class="math display">
+\varphi_i(\boldsymbol x)=\exp\left(-\frac{\|\boldsymbol x-\boldsymbol c_i\|^2}{2\sigma^2}\right)
+\tag{77-25}
+</span></p>
+<p>它有两个参数：中心 <span class="math inline">\boldsymbol c_i</span> 的布置与宽度 <span class="math inline">\sigma</span>。</p>
+<p><strong>中心数决定分辨率。</strong> 本章用 <span class="math inline">5\times5=25</span> 个中心，在 <span class="math inline">[-2.4,2.4]^2</span> 的方形区域内均匀铺开，间距 <span class="math inline">1.2</span>。这个分辨率对应的工作域尺度是 <span class="math inline">2.4/5=0.48</span>，比工作域小 5 倍，足够分辨 <span class="math inline">\sin x_1</span> 的一个波峰。如果中心数减到 <span class="math inline">3\times3=9</span>，间距变 <span class="math inline">2.4</span>，与工作域同量级，就分辨不出细节了。</p>
+<p><strong>宽度决定重叠程度。</strong> <span class="math inline">\sigma=1.2</span> 与间距相等，相邻基函数在中心连线中点处的值约为 <span class="math inline">\mathrm{e}^{-0.5}=0.61</span>，重叠充分，插值平滑。<span class="math inline">\sigma</span> 太小（比如 <span class="math inline">0.4</span>）会退化成“最近邻”，基函数之间几乎没有重叠，拟合出来是分段的、不连续的；<span class="math inline">\sigma</span> 太大（比如 <span class="math inline">4</span>）所有基函数几乎一样，矩阵接近奇异，条件数爆炸。</p>
+<p>经验规则是 <span class="math inline">\sigma</span> 取 <span class="math inline">1\sim2</span> 倍的中心间距。这个规则来自径向基插值的经典结论：<span class="math inline">\sigma</span> 与间距同量级时，插值矩阵的条件数在 <span class="math inline">10^2\sim10^3</span>，既能保证精度又不至于病态。</p>
+<p><strong>RBF 与多项式的取舍。</strong> 本章实测（表 77-2）：RBF 的单步误差与五次多项式几乎相同，但长时误差差 63%。原因是 RBF 的局部性让它在训练区内很准，外推时快速衰减到零，等价于“模型在边界外认为对象停止运动”。多项式相反，外推时快速增长，等价于“模型在边界外认为对象加速逃离”。两者都不对，但多项式至少保持了连续性，长时 rollout 的误差更平滑。<strong>如果工作域边界清晰、可以保证不外推，RBF 更准；如果边界模糊、可能越界，多项式更稳。</strong></p>
+<h3 id="岭系数小到几乎看不见但不能没有">77.7.3 岭系数：小到几乎看不见，但不能没有</h3>
+<p>岭系数 <span class="math inline">\gamma</span> 在式 (77-19) 里。它的作用是把解往零拉，抑制高阶项，代价是引入偏差。</p>
+<p>量级上要相对于 <span class="math inline">\boldsymbol W^\top\boldsymbol W</span> 的尺度来定。如果字典做过列归一化，<span class="math inline">\boldsymbol W^\top\boldsymbol W</span> 的对角元约等于样本数 <span class="math inline">M=2400</span>，此时 <span class="math inline">\gamma=1</span> 相当于 <span class="math inline">0.04\%</span> 的相对扰动，<span class="math inline">\gamma=100</span> 相当于 <span class="math inline">4\%</span>。本章脚本没有归一化，<span class="math inline">x_1^5</span> 这类列的量级远小于 <span class="math inline">x_1</span>，其对角元也小得多，于是同一个 <span class="math inline">\gamma</span> 对不同列的压制强度并不相同——这本身就是“不归一化”的代价。工程上常用的区间是 <span class="math inline">\gamma\in[10^{-6},10^{-2}]\,M/n</span>，归一化之后对应绝对值 <span class="math inline">0.1\sim1000</span>。</p>
+<p><span class="math inline">\gamma</span> 的效果不是单调的。太小（<span class="math inline">&lt;0.1</span>）没有作用，谱半径该大于 1 还是大于 1；太大（<span class="math inline">&gt;1000</span>）会把真实的高阶动力学也压掉，单步误差急剧上升。有效的区间通常只有一个数量级宽，靠“看谱半径”来定：逐步加大 <span class="math inline">\gamma</span>，直到 <span class="math inline">\rho(\boldsymbol A)</span> 从 <span class="math inline">1</span> 以上降到 <span class="math inline">1</span> 以下，然后停手。</p>
+<p>本章的无噪声实验全部取 <span class="math inline">\gamma=0</span>，是为了把过拟合现象暴露出来。工程上不建议这么做——<strong>只要数据有噪声，<span class="math inline">\gamma</span> 就不该取零</strong>。</p>
+<h3 id="样本数与激励幅度">77.7.4 样本数与激励幅度</h3>
+<p>样本数 <span class="math inline">N</span> 的作用在 §77.5.4 已经量化：<span class="math inline">N\ge800</span> 后谱半径才降到 <span class="math inline">1</span> 以下。这个门槛不是绝对的，它与字典列数 <span class="math inline">n</span> 有关。经验比例是</p>
+<p><span class="math display">
+N\ge 40\,n
+\tag{77-26}
+</span></p>
+<p>三次字典 <span class="math inline">n=9</span> 对应 <span class="math inline">N\ge360</span>，与实测的 <span class="math inline">400</span> 吻合；五次字典 <span class="math inline">n=20</span> 对应 <span class="math inline">N\ge800</span>，而 E4 只用了 <span class="math inline">500</span>，难怪出问题。</p>
+<p>激励幅度影响的是“信噪比”而不是“样本数”。幅度太小，<span class="math inline">\boldsymbol B</span> 的方向辨识不准（§77.6.1 前提三）；幅度太大，轨迹跑出工作域，高阶项主导。本章的多正弦用四个频率、每个幅值 <span class="math inline">0.30</span>，叠加后的输入峰值 <span class="math inline">1.11</span>，实测轨迹覆盖 <span class="math inline">x_1\in[-1.35,1.74]</span>、<span class="math inline">x_2\in[-1.18,1.27]</span>，都落在工作域内。这个幅度是“够用就好”的典型值：再大就开始激励高阶非线性，再小就淹没在噪声里。</p>
+<h3 id="采样周期与数据长度">77.7.5 采样周期与数据长度</h3>
+<p><span class="math inline">T_s</span> 的选择在 §77.4.5 讲了两条约束。这里补一个定量关系：总数据长度 <span class="math inline">T_{\text{total}}=N T_s</span> 决定了能分辨的最低频率，</p>
+<p><span class="math display">
+f_{\min}=\frac{1}{T_{\text{total}}}
+\tag{77-27}
+</span></p>
+<p>本章 <span class="math inline">N=2400</span>、<span class="math inline">T_s=0.02</span> s，<span class="math inline">T_{\text{total}}=48</span> s，<span class="math inline">f_{\min}=0.021</span> Hz。单摆的慢模态时间常数 <span class="math inline">5</span> s，对应 <span class="math inline">0.032</span> Hz，比 <span class="math inline">f_{\min}</span> 高，勉强能分辨。如果把 <span class="math inline">N</span> 减到 <span class="math inline">400</span>（<span class="math inline">T_{\text{total}}=8</span> s），<span class="math inline">f_{\min}=0.125</span> Hz，慢模态就分辨不出来了——这是 <span class="math inline">N=400</span> 时长时误差还有 <span class="math inline">0.0871</span> 的另一个原因（除了谱半径，还有频率分辨率不足）。</p>
+<p>这条关系常被忽略：<strong>加样本不只是加数量，还是加时间跨度</strong>。如果只是把同一段 <span class="math inline">8</span> s 的数据重复采样（更高频率），<span class="math inline">N</span> 上去了，<span class="math inline">f_{\min}</span> 没变，对慢模态的辨识没有帮助。</p>
+<h3 id="提升坐标里的权重矩阵">77.7.6 提升坐标里的权重矩阵</h3>
+<p><span class="math inline">\boldsymbol Q</span> 的取法是 Koopman 控制独有的一步，也是最容易出错的一步。</p>
+<p>提升坐标 <span class="math inline">\boldsymbol z</span> 的前两维是 <span class="math inline">x_1,x_2</span>，其余维是 <span class="math inline">x_1^2,x_1x_2,x_2^2,\dots</span>。真实代价（式 77-2）只对 <span class="math inline">x_1,x_2,u</span> 加权，所以 <span class="math inline">\boldsymbol Q</span> 应该是</p>
+<p><span class="math display">
+\boldsymbol Q=\mathrm{diag}\left(1,\ 0.2,\ \epsilon,\ \dots,\ \epsilon\right),\qquad \epsilon=10^{-3}\sim10^{-4}
+\tag{77-28}
+</span></p>
+<p><span class="math inline">\epsilon</span> 不能取零。取零意味着对高阶分量完全不惩罚，LQR 会允许它们自由漂移，闭环里表现为高频抖动（§77.6.5 失效二）。<span class="math inline">\epsilon</span> 也不能太大，取 <span class="math inline">0.1</span> 就意味着“压非线性程度”与“压角度偏差”同等重要，控制器会为了保持线性而牺牲收敛速度。</p>
+<p>本章实测过 <span class="math inline">\epsilon=10^{-3}</span>（三次）与 <span class="math inline">10^{-4}</span>（五次）两组，闭环代价分别是 <span class="math inline">3.5664</span> 与 <span class="math inline">3.5669</span>，差别 <span class="math inline">0.01\%</span>——在这个对象上 <span class="math inline">\epsilon</span> 不敏感。但对伪模态活跃的对象，<span class="math inline">\epsilon</span> 的取值会明显影响抖动幅度，需要用闭环频谱来定：把 <span class="math inline">\epsilon</span> 从 <span class="math inline">10^{-4}</span> 加到 <span class="math inline">10^{-2}</span>，看输入信号的高频分量是否下降。</p>
+<p><span class="math inline">R</span> 的作用与线性 LQR 完全相同，不再重复（见第 30 章）。要提醒的是：<span class="math inline">R</span> 的相对大小决定了闭环带宽，而闭环带宽又决定了“模型误差会不会被放大”（§77.6.4）。<span class="math inline">R</span> 取得太小（带宽太高）时，提升模型的高频误差会进入闭环，表现为抖动；<span class="math inline">R</span> 取得太大（带宽太低）时，收敛慢，代价里 <span class="math inline">x_1^2</span> 的积分项占主导。</p>
+<h3 id="参数汇总">77.7.7 参数汇总</h3>
+<p>表 77-6 把七个参数的影响方向、量级与建议起点列在一起。</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">参数</th>
+<th style="text-align: left;">符号</th>
+<th style="text-align: left;">影响方向</th>
+<th style="text-align: left;">本章取值</th>
+<th style="text-align: left;">建议起点</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">字典阶数</td>
+<td style="text-align: left;"><span class="math inline">d</span></td>
+<td style="text-align: left;">大则单步准、易过拟合</td>
+<td style="text-align: left;">3</td>
+<td style="text-align: left;">3</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">RBF 中心数</td>
+<td style="text-align: left;"><span class="math inline">m</span></td>
+<td style="text-align: left;">大则分辨率高、易病态</td>
+<td style="text-align: left;">25</td>
+<td style="text-align: left;"><span class="math inline">5\times5</span></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">RBF 宽度</td>
+<td style="text-align: left;"><span class="math inline">\sigma</span></td>
+<td style="text-align: left;">取 <span class="math inline">1\sim2</span> 倍间距</td>
+<td style="text-align: left;">1.2</td>
+<td style="text-align: left;"><span class="math inline">1.2\times</span> 间距</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">岭系数</td>
+<td style="text-align: left;"><span class="math inline">\gamma</span></td>
+<td style="text-align: left;">大则谱半径小、偏差大</td>
+<td style="text-align: left;">0</td>
+<td style="text-align: left;"><span class="math inline">10^{-3}Mn^{-1}</span></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">样本数</td>
+<td style="text-align: left;"><span class="math inline">N</span></td>
+<td style="text-align: left;">大则谱半径小</td>
+<td style="text-align: left;">2400</td>
+<td style="text-align: left;"><span class="math inline">\ge40n</span></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">采样周期</td>
+<td style="text-align: left;"><span class="math inline">T_s</span></td>
+<td style="text-align: left;">小则噪声重、大则混叠</td>
+<td style="text-align: left;">0.02 s</td>
+<td style="text-align: left;"><span class="math inline">1/(10|\nu_{\max}|)</span></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">高阶权重</td>
+<td style="text-align: left;"><span class="math inline">\epsilon</span></td>
+<td style="text-align: left;">大则抑抖动、慢收敛</td>
+<td style="text-align: left;"><span class="math inline">10^{-3}</span></td>
+<td style="text-align: left;"><span class="math inline">10^{-3}</span></td>
+</tr>
+</tbody>
+</table>
+<p>这张表只能当起点。本章的实测反复显示，同一个参数在不同对象上的最优值可以差一个数量级，<strong>唯一可靠的办法是按 §77.8 的顺序做实验</strong>。</p>
+<h3 id="参数之间是耦合的">77.7.8 参数之间是耦合的</h3>
+<p>表 77-6 按参数逐个列，容易给人一个错觉：可以一个一个调。实际上七个参数两两耦合，改动其中一个，另外几个的最优值会跟着动。这一小节把主要的几组耦合说清楚。</p>
+<p><strong>耦合一：阶数 <span class="math inline">d</span> 与样本数 <span class="math inline">N</span>。</strong> 式 (77-26) 说的是 <span class="math inline">N\ge40n</span>，而 <span class="math inline">n</span> 由 <span class="math inline">d</span> 决定。加一阶，<span class="math inline">n</span> 从 9 涨到 14，样本门槛从 360 涨到 560。数据不够时，加阶的后果不是“精度提高”，而是谱半径跨过 1。</p>
+<p>E4 是最好的例子：<span class="math inline">N=500</span>、五次字典 <span class="math inline">n=20</span>，门槛是 800，差了一大截。结果是单步误差 <span class="math inline">9.9799\times10^{-7}</span> 看起来漂亮，谱半径 <span class="math inline">1.0045</span>、200 步 RMSE <span class="math inline">0.0320</span>，比三次字典的 <span class="math inline">0.0149</span> 差一倍。<strong>这是“只加阶不加数据”的典型代价。</strong></p>
+<p><strong>耦合二：阶数 <span class="math inline">d</span> 与岭系数 <span class="math inline">\gamma</span>。</strong> 阶数越高，<span class="math inline">\boldsymbol W</span> 的列越接近共线，需要越大的 <span class="math inline">\gamma</span> 才能把谱半径压回 1 以下。但 <span class="math inline">\gamma</span> 一大，低阶项也被压，单步误差上升。两者要一起调：先定阶数，再用 <span class="math inline">\gamma</span> 把谱半径压到刚过 1。</p>
+<p>如果反过来，先用一个大 <span class="math inline">\gamma</span> 把谱半径压住，再加阶，会发现新加的高阶项几乎被完全压掉，等于白加。这就是为什么 §77.8.1 把“调字典”放在“加岭”之前。</p>
+<p><strong>耦合三：RBF 宽度 <span class="math inline">\sigma</span> 与中心间距。</strong> 单独看 <span class="math inline">\sigma</span> 没有意义，要看 <span class="math inline">\sigma</span> 与间距的比值。本章间距 <span class="math inline">1.2</span>、<span class="math inline">\sigma=1.2</span>，比值 1；若中心数改成 <span class="math inline">3\times3</span>，间距变 <span class="math inline">2.4</span>，同样的 <span class="math inline">\sigma=1.2</span> 比值变成 0.5，基函数之间几乎不重叠，得把 <span class="math inline">\sigma</span> 也加到 <span class="math inline">2.4</span> 左右。</p>
+<p><strong>耦合四：采样周期 <span class="math inline">T_s</span>、噪声与岭。</strong> <span class="math inline">T_s</span> 减半，相邻样本的差也减半，噪声的相对比重翻倍。原来 <span class="math inline">\gamma=0</span> 够用的场合，可能需要 <span class="math inline">\gamma=10^{-3}Mn^{-1}</span> 才稳。反过来，<span class="math inline">T_s</span> 加大到接近混叠，噪声不再是问题，但离散化误差变成主要误差，加岭没有帮助。</p>
+<p><strong>耦合五：高阶权重 <span class="math inline">\epsilon</span> 与输入权重 <span class="math inline">R</span>。</strong> 两者都决定“控制器愿不愿意动”。<span class="math inline">\epsilon</span> 大，控制器花力气压非线性分量；<span class="math inline">R</span> 大，控制器整体少动。调其中一个时必须固定另一个，否则分不清改善来自哪里。本章的做法是先按真实代价定 <span class="math inline">R=0.1</span>，再扫 <span class="math inline">\epsilon</span>。</p>
+<p><strong>耦合六：样本数 <span class="math inline">N</span> 与数据时长 <span class="math inline">T_{\text{total}}</span>。</strong> 式 (77-27) 说最低可分辨频率是 <span class="math inline">1/T_{\text{total}}</span>。把采样频率加倍、时长不变，<span class="math inline">N</span> 翻倍但频率分辨率不变，对慢模态没有帮助。这一点在 §77.7.5 已经说过，放在这里是因为它常被当成“加数据”的手段。</p>
+<p>把这六组耦合摆在一起，可以得到一条操作原则：<strong>每次只动一个参数，但动完要复查另外两个指标。</strong> 具体是改 <span class="math inline">d</span> 之后复查 <span class="math inline">\rho</span> 与 200 步，改 <span class="math inline">\gamma</span> 之后复查单步误差，改 <span class="math inline">T_s</span> 之后复查单步误差与 <span class="math inline">\rho</span>。</p>
+<p>这条原则听起来啰嗦，但它能防止最常见的错误：看到单步误差下降就宣布“升级成功”，而谱半径已经悄悄越过 1，200 步误差要等下一批数据才暴露。</p>
+<h3 id="哪些参数动一点没关系">77.7.9 哪些参数动一点没关系</h3>
+<p>七个参数不是同等重要。分不清主次，就会把时间花在收益最小的地方。按本章实测，可以分成两档。</p>
+<p><strong>敏感档：<span class="math inline">d</span>、<span class="math inline">N</span>、激励方式、<span class="math inline">T_s</span>。</strong> 这四个动一点，结果就变一个量级。</p>
+<p><span class="math inline">d</span> 从 2 到 9，单步误差从 <span class="math inline">1.0844\times10^{-3}</span> 掉到 <span class="math inline">4.3217\times10^{-5}</span>，差 25 倍。<span class="math inline">N</span> 从 400 到 6400，200 步 RMSE 从 <span class="math inline">0.0871</span> 掉到 <span class="math inline">0.0195</span>，差 4.5 倍。激励从阶跃换成多正弦，闭环代价从 <span class="math inline">524.5593</span> 掉到 <span class="math inline">3.5665</span>，差 147 倍。</p>
+<p><strong>迟钝档：<span class="math inline">\epsilon</span>、<span class="math inline">R</span> 在合理范围内的取值、RBF 宽度在 <span class="math inline">1\sim2</span> 倍间距内的取值。</strong> 这几个动一点，结果只变百分之几甚至万分之一。</p>
+<p>本章实测过 <span class="math inline">\epsilon=10^{-3}</span> 与 <span class="math inline">10^{-4}</span>，闭环代价 <span class="math inline">3.5664</span> 与 <span class="math inline">3.5669</span>，差 <span class="math inline">0.01\%</span>。这个差异比 OSQP 的迭代误差大不了多少，没有工程意义。</p>
+<p>RBF 宽度取 <span class="math inline">1.2</span> 与取 <span class="math inline">2.0</span>，只要中心间距不变，插值矩阵的条件数都在 <span class="math inline">10^2\sim10^3</span>，预测精度变化很小。只有当 <span class="math inline">\sigma</span> 偏离到 <span class="math inline">0.5</span> 倍或 <span class="math inline">3</span> 倍以上，才会明显退化。</p>
+<p><strong>这个分档的实践含义是：把时间花在敏感档上。</strong> 见过不少项目，团队花一周精调 <span class="math inline">\boldsymbol Q,R</span>，收益 <span class="math inline">0.01\%</span>；而换一种激励信号，收益是 147 倍。</p>
+<p>调参的优先级因此很清楚：先把激励与数据量做对，再选字典阶数，最后才是控制器权重。</p>
+<p><strong>迟钝档也不是可以乱取。</strong> <span class="math inline">\epsilon</span> 取 <span class="math inline">0</span> 会让伪模态失控，取 <span class="math inline">0.1</span> 会让控制器去压非线性；<span class="math inline">R</span> 取太小会放大噪声，取太大会让收敛变慢。它们在一个宽区间内不敏感，但区间之外会突然失效。</p>
+<p><strong>怎么判断自己处在“区间内”还是“区间外”？</strong> 看闭环的两个量：输入峰值与高频抖动。输入峰值远离限幅、输入信号没有明显高频成分，说明在区间内；反之就在区间外。</p>
+<p><strong>最后一个提醒：敏感档之间会互相影响。</strong> 加 <span class="math inline">d</span> 会让 <span class="math inline">N</span> 的需求变大，改激励会让 <span class="math inline">d</span> 的最优值变化。所以分档只用于分配精力，不用于简化流程——该做的扫描还是要做。</p>
+<h2 id="调参方法与经验">77.8 调参方法与经验</h2>
+<h3 id="调整顺序数据字典控制器">77.8.1 调整顺序：数据、字典、控制器</h3>
+<p>调参的顺序不能颠倒，因为后面一步的结论依赖前面一步的正确性。</p>
+<p><strong>第一步调数据。</strong> 先确认激励覆盖了工作域、样本数满足 <span class="math inline">N\ge40n</span>、噪声水平已知。这一步不做，后面调字典就是在拟合噪声。判断标准很简单：把数据随机分成两半，各自辨识一次，看两个 <span class="math inline">\boldsymbol A</span> 的差异。差异小于 <span class="math inline">5\%</span> 说明数据够，大于 <span class="math inline">20\%</span> 说明数据不够。</p>
+<p><strong>第二步调字典。</strong> 从线性字典开始，逐级加阶，每加一级记录三个指标（单步、谱半径、200 步 RMSE）。当“单步误差改善小于 3 倍”或“谱半径开始大于 1”时停手。这一段通常只需要试三到四套字典，计算量很小。</p>
+<p><strong>第三步调控制器。</strong> 字典定了，<span class="math inline">\boldsymbol Q</span>、<span class="math inline">R</span> 的调整与线性 LQR 完全一样：先按真实代价设 <span class="math inline">\boldsymbol Q</span> 的前两维，再调 <span class="math inline">R</span> 定带宽，最后用 <span class="math inline">\epsilon</span> 压抖动。这一步不要回头改字典——改了字典，前面的谱分析全部作废。</p>
+<h3 id="三个反直觉现象">77.8.2 三个反直觉现象</h3>
+<p>本章的实验暴露了三个与教科书直觉相反的现象，调参时必须记住。</p>
+<p><strong>现象一：提升残差与状态精度反向。</strong> §77.5.3 已解释。实践含义：任何“用训练残差选模型”的自动化流程（早停、交叉验证的默认实现）在 Koopman 上都会选错。必须自定义评价函数，用状态空间误差。</p>
+<p><strong>现象二：噪声有时是有益的。</strong> §77.5.5 显示，五次字典在无噪声时谱半径 <span class="math inline">1.0045</span>、长时误差 <span class="math inline">0.0320</span>，是三次字典（<span class="math inline">0.0149</span>）的 2.15 倍；噪声加到 <span class="math inline">\sigma=0.02</span> 后，谱半径降到 <span class="math inline">0.9994</span>，长时误差 <span class="math inline">0.0624</span>，反而比三次字典（<span class="math inline">0.0663</span>）好 <span class="math inline">5.9\%</span>。绝对误差上升了，但相对排序反转了。实践含义：<strong>不要为了“干净数据”而过度滤波</strong>。过度滤波会去掉噪声，也会去掉高频激励，后者恰恰是辨识 <span class="math inline">\boldsymbol B</span> 方向所必需的。</p>
+<p><strong>现象三：条件数不是判据。</strong> §77.10.2 会给出完整数据，这里先给结论：闭环抖动的条件数 <span class="math inline">120.36</span>，阶跃是 <span class="math inline">138.53</span>，两者接近；但闭环抖动的闭环代价 <span class="math inline">3.5664</span>，阶跃是 <span class="math inline">524.5593</span>，差 147 倍。条件数只反映“矩阵求逆的数值稳定性”，不反映“模型在关心的工作域上是否准确”。一个条件数很大的矩阵，如果它的病态方向恰好对应我们不关心的分量，模型仍然可用。</p>
+<h3 id="一张可以照着做的试凑表">77.8.3 一张可以照着做的试凑表</h3>
+<p>把 §77.8.1 的三步展开成具体动作，得到表 77-7。这张表的每一行都是一个可以独立完成的实验，做完大约需要采集四到五批数据。</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">轮次</th>
+<th style="text-align: left;">改什么</th>
+<th style="text-align: left;">观察什么</th>
+<th style="text-align: left;">判定</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">1</td>
+<td style="text-align: left;">线性字典，<span class="math inline">N=400</span></td>
+<td style="text-align: left;">单步误差</td>
+<td style="text-align: left;">作为基准</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">2</td>
+<td style="text-align: left;">三次字典，<span class="math inline">N=400</span></td>
+<td style="text-align: left;">单步是否降 10 倍</td>
+<td style="text-align: left;">否则加激励</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">3</td>
+<td style="text-align: left;">三次字典，<span class="math inline">N</span> 加倍</td>
+<td style="text-align: left;">谱半径是否 <span class="math inline">&lt;1</span></td>
+<td style="text-align: left;">否则继续加 <span class="math inline">N</span></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">4</td>
+<td style="text-align: left;">四次、五次字典</td>
+<td style="text-align: left;">长时误差是否再降</td>
+<td style="text-align: left;">不降则停在三次</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">5</td>
+<td style="text-align: left;">加岭 <span class="math inline">\gamma</span></td>
+<td style="text-align: left;">谱半径与单步的折中</td>
+<td style="text-align: left;">取谱半径刚过 1 的值</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">6</td>
+<td style="text-align: left;">调 <span class="math inline">\boldsymbol Q,\ R</span></td>
+<td style="text-align: left;">闭环代价与输入峰值</td>
+<td style="text-align: left;">与线性化方案对比</td>
+</tr>
+</tbody>
+</table>
+<p>第 6 轮是关键：如果 Koopman 方案的闭环代价不比线性化好 <span class="math inline">1\%</span> 以上，就不值得为它承担额外的复杂度。本章的实测是 <span class="math inline">0.34\%</span> 到 <span class="math inline">0.27\%</span>，按这条标准应当<strong>不采用</strong>——这是一个诚实但不受欢迎的结论，也正是 §77.11 要展开的内容。</p>
+<h3 id="常见故障与处置">77.8.4 常见故障与处置</h3>
+<p><strong>故障一：单步误差很小，闭环一跑就发散。</strong> 典型原因是谱半径略大于 <span class="math inline">1</span>，开环预测看不出来，闭环里被反馈放大。处置：先算 <span class="math inline">\rho(\boldsymbol A)</span>，若大于 <span class="math inline">1</span>，加样本或加岭；若小于 <span class="math inline">1</span> 仍发散，检查 <span class="math inline">\boldsymbol B</span> 的方向与量级（把 <span class="math inline">\boldsymbol B</span> 打印出来，与“输入直接影响 <span class="math inline">x_2</span>”的物理直觉对照）。</p>
+<p><strong>故障二：闭环收敛但输入抖动。</strong> 典型原因是伪模态被激励。处置：加大 <span class="math inline">\epsilon</span>，或在拟合时对高阶项单独加岭；也可以在控制律上加一阶低通，代价是相位滞后。</p>
+<p><strong>故障三：换一个初值就失效。</strong> 典型原因是训练数据没覆盖那个区域。处置：检查失效初值处的 <span class="math inline">\boldsymbol z</span> 是否落在训练集的凸包外；若是，补采该区域的数据，或按 §77.6.5 失效一切回线性化。</p>
+<p><strong>故障四：<span class="math inline">\boldsymbol A</span> 的特征值全是实数，但对象明明有振荡。</strong> 单摆的线性化极点是共轭复对，EDMD 却给出 9 个实极点——这不是错误，而是伪模态把复对被“拆开”了。处置：不要试图修它；用 DMD 的复极点看振荡频率，用 EDMD 的实极点做预测，各取所需。</p>
+<h3 id="与-pidmpc-调参的异同">77.8.5 与 PID、MPC 调参的异同</h3>
+<p><strong>与 PID 的相同点</strong>：都只有一个“带宽”旋钮真正重要。PID 里是 <span class="math inline">k_p</span> 与 <span class="math inline">k_d</span> 的比例，Koopman-LQR 里是 <span class="math inline">R</span> 与 <span class="math inline">\boldsymbol Q</span> 的比例。调大带宽，响应快、抗扰好、噪声放大；调小带宽，平稳、迟钝。这条取舍在两类方法里完全一样（PID 的整定细节见第 44 章与第 106 章）。</p>
+<p><strong>与 PID 的不同点</strong>：PID 调坏了表现为“振荡”，肉眼可见；Koopman 调坏了表现为“某个工况突然失效”，因为提升模型是分区域的。所以 Koopman 必须做初值扫描（§77.6.3 的表 77-5 就是范例），PID 通常不需要。</p>
+<p><strong>与 MPC 的相同点</strong>：都依赖模型，都能处理约束。Koopman-MPC 本质上是“用提升模型替代状态空间模型”的 MPC，时域、权重、约束的调法完全沿用（见第 58 章与第 80 章）。</p>
+<p><strong>与 MPC 的不同点</strong>：MPC 的模型误差可以通过反馈校正（用测量更新预测起点）部分补偿，Koopman-MPC 也可以，但提升坐标的“测量更新”需要把测到的 <span class="math inline">\boldsymbol x</span> 重新映射成 <span class="math inline">\boldsymbol z=\boldsymbol\varphi(\boldsymbol x)</span>，这个映射在高阶字典下会把测量噪声放大。所以 Koopman-MPC 对噪声更敏感，<span class="math inline">T_s</span> 不能取太小，观测器要更保守。</p>
+<h3 id="一份调参记录长什么样">77.8.6 一份调参记录长什么样</h3>
+<p>调参最大的浪费不是算力，而是“上周那组参数是怎么来的”想不起来。Koopman 的参数多、耦合强，没有记录就无法复盘。这一小节给一个最小记录格式。</p>
+<p>每条记录至少包含八项：日期与数据批次、字典族与列数、样本数 <span class="math inline">N</span>、采样周期 <span class="math inline">T_s</span>、噪声水平 <span class="math inline">\sigma</span>、岭系数 <span class="math inline">\gamma</span>、三个校验指标、闭环结论。</p>
+<p>数据批次要写到“哪一天采的第几段”，因为换一批数据等于换一个对象。本章脚本用固定 seed，所以批次可以写成 seed；现场没有 seed，只能写时间与工况。</p>
+<p>三个校验指标要一起记：单步误差、谱半径、200 步 RMSE。少记谱半径，事后就无法解释“单步很好但长时发散”；少记 200 步，就无法判断“谱半径 <span class="math inline">0.9995</span> 到底够不够”。</p>
+<p>闭环结论要写“与哪个基准比、差多少”。只写“效果不错”没有意义，因为本章的“不错”是 <span class="math inline">0.34\%</span>，换个对象可能是 <span class="math inline">30\%</span>。</p>
+<p>举个具体例子。E4 的两组数据可以记成两行。</p>
+<p>第一行：第一批，三次 9 列，<span class="math inline">N=500</span>，<span class="math inline">T_s=0.02</span> s，<span class="math inline">\sigma=0</span>，<span class="math inline">\gamma=0</span>，单步 <span class="math inline">8.4804\times10^{-5}</span>，<span class="math inline">\rho=0.9988</span>，200 步 <span class="math inline">0.0149</span>，结论可用。</p>
+<p>第二行：第一批，五次 20 列，<span class="math inline">N=500</span>，<span class="math inline">T_s=0.02</span> s，<span class="math inline">\sigma=0</span>，<span class="math inline">\gamma=0</span>，单步 <span class="math inline">9.9799\times10^{-7}</span>，<span class="math inline">\rho=1.0045</span>，200 步 <span class="math inline">0.0320</span>，结论不用。</p>
+<p>这两行放在一起，任何人都能看出“五次不如三次”的原因不是精度，而是样本不足。如果只记单步误差，这个结论会被完全误读。</p>
+<p>还有一件事值得做：把每次拟合的 <span class="math inline">\boldsymbol A</span>、<span class="math inline">\boldsymbol B</span> 存成文件。本章脚本把全部结果写进 <code>results.npz</code>，事后可以复查任意一组；现场至少应该存最近三次的模型，方便对比“这次改动到底动了什么”。</p>
+<p>记录的价值在出问题时才显现。当闭环在某个初值上突然失效，你需要的不是“再调一调”，而是“上一次改动前后哪一项指标变了”。没有记录，这个问题只能靠重做实验回答。</p>
+<h3 id="数据质量的三个硬指标">77.8.7 数据质量的三个硬指标</h3>
+<p>调参之前先看数据。数据不合格，后面所有参数都是在拟合错误。以下三项是最低要求，每项都能用一个数说清。</p>
+<p><strong>第一，丢帧率。</strong> 时间戳间隔应恒为 <span class="math inline">T_s</span>，允许的偏差不超过 <span class="math inline">1\%</span>。丢帧会让“相邻样本”跨过两个采样周期，拟合出来的 <span class="math inline">\boldsymbol A</span> 相当于把动力学按 2 倍步长采样，谱会整体偏移。</p>
+<p>判断方法很直接：算相邻时间戳差的直方图，若出现 <span class="math inline">2T_s</span> 或 <span class="math inline">3T_s</span> 的峰，就是丢帧。少量丢帧可以插值补，超过 <span class="math inline">1\%</span> 必须重采。</p>
+<p><strong>第二，饱和占比。</strong> 输入贴着限幅的时间比例应低于 <span class="math inline">5\%</span>。饱和期间输入不再随控制律变化，<span class="math inline">\boldsymbol B</span> 的辨识缺少变化信息，等于人为削弱激励。</p>
+<p>本章 E9 的阶跃数据就是极端的例子：输入长时间恒定，条件数 <span class="math inline">138.53</span>，闭环代价 <span class="math inline">524.5593</span>。现场数据里如果饱和占比超过两成，先改激励幅值，别急着调字典。</p>
+<p><strong>第三，相邻样本跳变。</strong> 相邻两步的状态差不应超过物理可能的最大值。角度在 <span class="math inline">T_s=0.02</span> s 内最多变化 <span class="math inline">x_{2,\max}T_s</span>，超过这个数就是测量野点。</p>
+<p>野点的危害比噪声大得多：最小二乘对野点是平方敏感，一个野点可以把 <span class="math inline">\boldsymbol A</span> 的某一列拉偏。工程上先用中值滤波去掉，再考虑是否需要更复杂的处理。</p>
+<p>三项指标都合格，才可以进入 §77.8.1 的第一步。它们对应的是“数据能不能用”，而不是“数据好不好”——后者要靠 §77.10.2 的激励对比来判断。</p>
+<h2 id="优化与改进">77.9 优化与改进</h2>
+<h3 id="提升最值钱的地方把约束写成线性不等式">77.9.1 提升最值钱的地方：把约束写成线性不等式</h3>
+<p>§77.6 的结论是“提升没有带来明显性能收益”。这句话只对无约束的 LQR 成立。一旦有约束，情况就变了：<strong>提升把非线性对象的约束优化问题变成了线性约束的二次规划</strong>，这是它最有工程价值的地方。</p>
+<p>本章的约束有三条：输入限幅 <span class="math inline">|u|\le4</span>、速度限制 <span class="math inline">|x_2|\le1.2</span>、输入变化率 <span class="math inline">|\Delta u|\le1.5</span>。在原始的非线性状态空间里，第二条是“非线性约束”（因为 <span class="math inline">x_2</span> 是 <span class="math inline">\boldsymbol x</span> 的非线性函数），第三条是线性约束。在提升空间里，<span class="math inline">x_2</span> 恰好是 <span class="math inline">\boldsymbol z</span> 的第二个分量，于是所有约束都变成了对 <span class="math inline">\boldsymbol z</span> 与 <span class="math inline">u</span> 的线性不等式：</p>
+<p><span class="math display">
+\left|u_k\right|\le4,\qquad \left|\left[\boldsymbol A^k\boldsymbol z_0+\sum_{j=0}^{k-1}\boldsymbol A^{k-1-j}\boldsymbol B u_j\right]_2\right|\le1.2,\qquad \left|u_k-u_{k-1}\right|\le1.5
+\tag{77-29}
+</span></p>
+<p>式 (77-29) 的第二个约束里，<span class="math inline">x_2</span> 被展开成了 <span class="math inline">u_0,\dots,u_{k-1}</span> 的线性组合，所以整个问题是关于决策变量 <span class="math inline">(u_0,\dots,u_{N_h-1})</span> 的凸二次规划。这一步转换是 Koopman 方法的独特优势：<strong>它让“非线性 MPC”退化成“线性 MPC”，而后者有成熟的求解器与实时代码生成工具</strong>（详见第 58 章与第 80 章）。</p>
+<h3 id="优化问题的具体写法">77.9.2 优化问题的具体写法</h3>
+<p>本章的 Koopman-MPC 取预测时域 <span class="math inline">N_h=10</span>（0.2 s），代价函数是</p>
+<p><span class="math display">
+\min_{\{u_k\}}\ \sum_{k=1}^{N_h}\left(\boldsymbol z_k^\top\boldsymbol Q\boldsymbol z_k+Ru_k^2\right)+5\,\boldsymbol z_{N_h}^\top\boldsymbol Q\boldsymbol z_{N_h}
+\tag{77-30}
+</span></p>
+<p>终端项系数取 <span class="math inline">5</span>，是为了在没有终端约束时保证闭环稳定（这是 MPC 的标准技巧，见第 58 章）。<span class="math inline">\boldsymbol Q</span> 与 §77.7.6 相同，<span class="math inline">\epsilon=10^{-3}</span>。求解器用 OSQP：本章脚本实测，首次求解 <span class="math inline">60\sim65</span> ms（含求解器初始化与编译），热启动后单次中位数 <span class="math inline">2.5\sim2.8</span> ms。只有后者才能在 <span class="math inline">T_s=0.02</span> s 的周期内使用——<strong>实时部署必须热启动，不能每周期从头初始化</strong>。</p>
+<p>代码只有十几行，核心是把预测写成 <span class="math inline">\boldsymbol z</span> 的递推：</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>z <span class="op">=</span> [z0]</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> k <span class="kw">in</span> <span class="bu">range</span>(nh):</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    z.append(A <span class="op">@</span> z[<span class="op">-</span><span class="dv">1</span>] <span class="op">+</span> B[:, <span class="dv">0</span>] <span class="op">*</span> U[k])</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    cost <span class="op">+=</span> cp.quad_form(z[<span class="op">-</span><span class="dv">1</span>], Qz) <span class="op">+</span> R <span class="op">*</span> cp.square(U[k])</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    cons <span class="op">+=</span> [cp.<span class="bu">abs</span>(U[k]) <span class="op">&lt;=</span> U_LIM, cp.<span class="bu">abs</span>(z[<span class="op">-</span><span class="dv">1</span>][<span class="dv">1</span>]) <span class="op">&lt;=</span> <span class="fl">1.2</span>]</span></code></pre></div>
+<p>注意 <code>z[-1][1]</code> 就是 <span class="math inline">x_2</span>，因为字典的前两列固定为 <span class="math inline">x_1,x_2</span>。这个“前两列固定”的约定，让约束的写法不需要任何反投影运算，是本章脚本设计上的一个小技巧。</p>
+<h3 id="实测用-17-的代价换约束满足">77.9.3 实测：用 17% 的代价换约束满足</h3>
+<p>初始状态 <span class="math inline">x_1(0)=1.7</span> rad、<span class="math inline">x_2(0)=0</span>，仿真 80 步（1.6 s），两种方案的结果见表 77-8。</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">指标</th>
+<th style="text-align: right;">Koopman-MPC</th>
+<th style="text-align: right;">限幅 LQR</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">闭环代价 <span class="math inline">J</span></td>
+<td style="text-align: right;">2.9159</td>
+<td style="text-align: right;">2.4900</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">输入峰值</td>
+<td style="text-align: right;">0.547</td>
+<td style="text-align: right;">4.000</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">最大步间变化</td>
+<td style="text-align: right;">0.547</td>
+<td style="text-align: right;">4.000</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">速度峰值 (rad/s)</td>
+<td style="text-align: right;">1.081</td>
+<td style="text-align: right;">1.350</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">速度越界步数</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">27</td>
+</tr>
+</tbody>
+</table>
+<p>这张表的读法要小心。单看第一行，MPC 比 LQR 差 <span class="math inline">17.1\%</span>（<span class="math inline">(2.9159-2.4900)/2.4900=17.1\%</span>）。但 LQR 的输入一直顶在限幅 <span class="math inline">4.000</span> 上，<strong>速度越界 27 步</strong>；MPC 的输入峰值只有 <span class="math inline">0.547</span>，速度峰值 <span class="math inline">1.081</span>，全程没有越界。</p>
+<p>换句话说，LQR 的“低代价”是靠违反约束换来的。真实系统里 <span class="math inline">|x_2|&gt;1.2</span> 可能意味着机械限位、超速保护动作、或者工艺不允许的冲击，这些后果没有进入代价函数。如果把这些后果折算成代价，LQR 的 <span class="math inline">2.4900</span> 立刻变得不划算。</p>
+<p>还有一种更公平的比较方式：给 LQR 加上与 MPC 相同的输入变化率限制，再看代价。本章实测：不加限速时 <span class="math inline">J=2.4900</span>、越界 27 步；加 <span class="math inline">|\Delta u|\le1.5</span> 后 <span class="math inline">J=2.5074</span>、越界 28 步；收紧到 <span class="math inline">1.0</span> 也只到 <span class="math inline">J=2.5219</span>、越界 28 步。<strong>限速几乎不起作用</strong>，因为 LQR 的问题不是“动得太快”，而是“没有预见性”——它在速度已经接近上限时才开始收，收不住。MPC 之所以能压住，是因为它在 <span class="math inline">N_h=10</span> 步的预测里提前看到了越界，从而把输入分配到更早的时刻。这说明 <strong>MPC 的优势不在于“更优”，而在于“更会分配”</strong>：它把有限的输入预算花在最需要的地方，而不是一上来就饱和。</p>
+<figure>
+<img src="figs/ch077/fig_077_09_mpc_constraint.svg" alt="图 77-9 Koopman-MPC 与限幅 LQR 的对比：角度、速度与输入；MPC 主动压住速度，LQR 靠输入饱和硬顶" /><figcaption aria-hidden="true">图 77-9 Koopman-MPC 与限幅 LQR 的对比：角度、速度与输入；MPC 主动压住速度，LQR 靠输入饱和硬顶</figcaption>
+</figure>
+<p>图 77-9 的三个子图把这件事画得很清楚。左图角度轨迹几乎重合；中图速度轨迹上，LQR 的红虚线在最初 0.5 s 内冲到 <span class="math inline">1.35</span> 并越过 <span class="math inline">1.2</span> 的约束线，MPC 的黑线贴着 <span class="math inline">1.08</span> 走；右图输入上，LQR 直接跳到 <span class="math inline">4.0</span> 并保持，MPC 平滑地爬升到 <span class="math inline">0.547</span>。</p>
+<h3 id="另一条路不用模型也能整定">77.9.4 另一条路：不用模型也能整定</h3>
+<p>Koopman 不是数据驱动控制的唯一形态。如果控制器的结构已经定死（比如就是 PID），可以跳过“辨识模型”这一步，直接用闭环数据整定参数。本章实现了两种。</p>
+<p><strong>虚拟参考反馈整定（VRFT）。</strong> 思路是：先假设一个参考模型 <span class="math inline">M(s)</span>（这里取时间常数 <span class="math inline">\tau=0.35</span> s 的一阶惯性），再构造“虚拟参考”</p>
+<p><span class="math display">
+r_v(t)=y(t)+\tau\dot y(t)
+\tag{77-31}
+</span></p>
+<p>如果控制器 <span class="math inline">C</span> 能让 <span class="math inline">y</span> 跟随 <span class="math inline">r_v</span>，那么闭环就近似等于 <span class="math inline">M(s)</span>。于是整定问题变成“找 <span class="math inline">C</span> 使 <span class="math inline">u\approx C(r_v-y)</span>”，这是一个线性最小二乘：</p>
+<p><span class="math display">
+\boldsymbol\theta^\star=\arg\min_{\boldsymbol\theta}\sum_k\left[u_k-\boldsymbol\phi_k^\top\boldsymbol\theta\right]^2
+\tag{77-32}
+</span></p>
+<p>其中 <span class="math inline">\boldsymbol\phi_k=\left[e_k,\ \int e,\ \dot e_k\right]^\top</span> 是 PID 的回归向量。一次闭环实验的数据就够，不需要额外激励。</p>
+<p>本章实测：初始 PID（<span class="math inline">k_p=0.40</span>、<span class="math inline">k_i=0.15</span>、<span class="math inline">k_d=0</span>）的代价 <span class="math inline">231.2359</span>；VRFT 一次算出 <span class="math inline">k_p=2.849</span>、<span class="math inline">k_i=0.268</span>、<span class="math inline">k_d=0.054</span>，代价降到 <span class="math inline">134.4795</span>，<strong>降了 41.8%</strong>。整个过程只用了 6 s 的闭环数据，没有迭代。</p>
+<p><strong>迭代反馈整定（IFT）。</strong> 如果愿意做多次实验，可以沿代价的负梯度方向迭代。本章用中心差分近似梯度，带回溯步长衰减，迭代 8 轮：</p>
+<p><span class="math display">
+\boldsymbol\theta^{(i+1)}=\boldsymbol\theta^{(i)}-\eta\,\frac{\nabla J(\boldsymbol\theta^{(i)})}{1+\left|\nabla J(\boldsymbol\theta^{(i)})\right|}
+\tag{77-33}
+</span></p>
+<p>结果从 <span class="math inline">231.2359</span> 一路降到 <span class="math inline">100.6829</span>，<strong>比初始好 56.5%，比 VRFT 再好 25.1%</strong>。作为参照，本章用三起点 Nelder-Mead 求得的“参考最优”是 <span class="math inline">100.4719</span>，IFT 的终值与它只差 <span class="math inline">0.21\%</span>。</p>
+<figure>
+<img src="figs/ch077/fig_077_08_vrft_ift.svg" alt="图 77-8 VRFT 与 IFT：左为跟踪响应，右为代价随迭代的下降；VRFT 一次到位，IFT 逐轮逼近参考最优" /><figcaption aria-hidden="true">图 77-8 VRFT 与 IFT：左为跟踪响应，右为代价随迭代的下降；VRFT 一次到位，IFT 逐轮逼近参考最优</figcaption>
+</figure>
+<p>图 77-8 的右图是这组数据的直观版本。灰点线是参考最优 <span class="math inline">100.4719</span>，红虚线是 VRFT 的 <span class="math inline">134.4795</span>，黑实线是 IFT 的 8 轮迭代。IFT 从 <span class="math inline">231.2359</span> 起步，前三轮下降很快（<span class="math inline">194.8\to150.6\to141.2</span>），第 4 轮跨过 VRFT 的水平，后四轮进入 <span class="math inline">101</span> 附近的平台。</p>
+<p><strong>两种方法的取舍。</strong> VRFT 只需要一次实验，适合“设备不能停”的场合；IFT 需要 8 轮实验（每轮还要算梯度，实际是 8 组前后扰动共 16 次），适合“调试期可以停机”的场合。两者的共同前提是：<strong>控制器结构固定、闭环稳定、参考信号覆盖工作频段</strong>。如果结构本身选错了（比如该用前馈却只用 PID），整定得再好也补不上。</p>
+<h3 id="还能往哪里改">77.9.5 还能往哪里改</h3>
+<p>三个方向值得关注，但本章不展开，只说明它们各自解决什么问题。</p>
+<p><strong>深度 Koopman。</strong> 用神经网络代替手工字典，让网络自己学观测函数。优点是能处理高维对象（图像、分布参数系统），缺点是失去可解释性，且训练需要大量数据。工程上目前只在“手工字典明显不够”时才考虑。</p>
+<p><strong>鲁棒 Koopman。</strong> 在拟合时把模型误差当成有界扰动，设计控制器时保证在这个界内稳定。这需要先估计误差界，而误差界本身依赖数据覆盖，逻辑上有点循环，目前多在学术阶段。</p>
+<p><strong>字典自适应。</strong> 在线检测“当前状态是否落在训练域外”，若在外，则在线补充数据、局部重拟合。这条路在工程上最有前景，因为它直接对上了 §77.6.5 的失效一（外推爆炸）。</p>
+<h3 id="约束的可行性与松弛">77.9.6 约束的可行性与松弛</h3>
+<p>式 (77-29) 里的三条约束不是随手写的，每条都有自己的物理来源与失败方式。</p>
+<p><strong>输入限幅 <span class="math inline">|u|\le4</span></strong> 来自电机与驱动器。它是硬约束，不能软化：超过了要么驱动器限流，要么机械过载。</p>
+<p><strong>速度约束 <span class="math inline">|x_2|\le1.2</span></strong> 来自工艺或机械。它作用于提升向量的第二维，在 <span class="math inline">k=0</span> 时刻就直接生效——这一点很关键，因为初值本身可能已经越界。</p>
+<p><strong>变化率约束 <span class="math inline">|\Delta u|\le1.5</span></strong> 来自结构疲劳与电源容量。它约束的是相邻两拍之差，需要把上一拍的输入作为已知量传给优化问题。</p>
+<p><strong>可行性要在求解之前判断。</strong> 如果初值 <span class="math inline">x_2(0)=1.5</span>，已经超过 <span class="math inline">1.2</span>，那么第 0 步的约束无论如何都满足不了，QP 会返回不可行。</p>
+<p>现场遇到这种情况，求解器通常只报一个状态码，不告诉你原因。所以上线前必须做一次“初值体检”：把最坏初值代进去，检查速度约束是否已经违反；若违反，要么放宽约束，要么先用手动方式把状态拉回域内。</p>
+<p><strong>软约束是必备的兜底。</strong> 给速度约束加松弛变量 <span class="math inline">s_k\ge0</span>，代价里加一项大权重（比如 <span class="math inline">10^3s_k^2</span>），问题就总有解。软约束的代价是“约束可以被违反”，所以必须配合报警。</p>
+<p>一旦 <span class="math inline">s_k</span> 超过阈值，说明模型预测与真实状态已经脱节，应该切回安全控制器。软约束的意义不是“允许违反”，而是“违反时仍能给出可执行的输入”。</p>
+<p><strong>时域 <span class="math inline">N_h=10</span> 为什么够。</strong> 输入直接作用于 <span class="math inline">x_2</span>，从 <span class="math inline">x_2</span> 越过 <span class="math inline">1.2</span> 到被拉回，特征时间约 <span class="math inline">0.1</span> s，即 5 个采样周期。10 步（0.2 s）有两倍余量。</p>
+<p>时域再长，QP 规模线性增长，收益却很小；时域太短（比如 3 步），MPC 看不到越界，退化成一个带限速的 LQR——表 77-8 已经说明限速几乎不起作用。</p>
+<p><strong>求解失败时的兜底顺序。</strong> 第一选择是保持上一拍输入，第二选择是切线性化 LQR，第三选择是切手动。这个顺序要写进控制器代码，不能留给操作员临时判断。</p>
+<p><strong>约束之间的冲突要提前想。</strong> 如果初值既要求快速收敛、又要求速度不越界、还要求输入变化平缓，三者可能无解。这时要么放宽一条，要么延长收敛时间。MPC 不会替你解决这个矛盾，它只会诚实地报告不可行。</p>
+<p>这一小节的结论可以压成一句：<strong>MPC 的价值在于把约束显式化，而显式化的前提是你能说清每条约束从哪来、违反了怎么办。</strong></p>
+<h3 id="vrft-与-ift-的适用条件">77.9.7 VRFT 与 IFT 的适用条件</h3>
+<p>§77.9.4 的两个结果（<span class="math inline">134.4795</span> 与 <span class="math inline">100.6829</span>）看起来很好，但它们依赖四个前提，缺一个就不成立。</p>
+<p><strong>前提一：控制器结构固定。</strong> VRFT 把“闭环等于参考模型”反解成控制器参数的拟合问题，它只调参数，不改结构。如果该用前馈却只用 PID，整定到最优也补不上结构缺失。</p>
+<p><strong>前提二：闭环稳定。</strong> VRFT 用一次闭环实验的数据，实验本身必须稳定。如果初始 PID 就会振荡，采到的数据不能用；这时要先用手动或继电反馈把回路稳住。</p>
+<p><strong>前提三：参考信号覆盖工作频段。</strong> 本章的参考是周期 3 s 的 <span class="math inline">\tanh</span> 正弦，含基频与若干谐波，正好覆盖对象的动态。若参考是缓慢斜坡，高频段没有激励，整定出来的微分增益就不可信。</p>
+<p><strong>前提四：数据长度足够。</strong> 至少覆盖三到五个过渡过程，让积分项的作用显现。本章用 6 s，对应两个周期，偏短，所以 <span class="math inline">k_i</span> 的估计精度不如 <span class="math inline">k_p</span>。</p>
+<p><strong>参考模型选错会怎样？</strong> VRFT 的整定目标是“闭环接近 <span class="math inline">M(s)</span>”，参考模型定错，整定就会努力把一个错误的动态做出来。本章取 <span class="math inline">\tau=0.35</span> s，比对象自身的快模态慢、比慢模态快，是一个合理的折中。</p>
+<p>参考模型定得太快，整定出来的增益很大，输入饱和，实际响应达不到；定得太慢，整定出来的增益很小，性能浪费。工程上可以先按“比开环快 2 到 3 倍”来定 <span class="math inline">\tau</span>，再根据饱和情况微调。</p>
+<p><strong>IFT 的额外成本。</strong> 每轮要算梯度，中心差分意味着每个参数两次实验，三个参数就是六次，加一次基准共七次。本章 8 轮，实际实验次数在几十次量级。</p>
+<p>这也解释了为什么 IFT 的终值更好：它用的是真实闭环代价，而 VRFT 用的是“与参考模型的差”这个代理。代理与真目标不完全一致，VRFT 的 <span class="math inline">134.4795</span> 与参考最优 <span class="math inline">100.4719</span> 之间那 <span class="math inline">34\%</span> 的差距，主要来自这里。</p>
+<p><strong>什么时候选哪个。</strong> 设备不能停、只允许一次实验，用 VRFT；调试期可以反复跑，用 IFT；两者都可以时，先 VRFT 拿到一个不错的起点，再用 IFT 精修——本章的 IFT 从初始 PID 起步，如果从 VRFT 的结果起步，收敛会更快。</p>
+<p><strong>共同的局限。</strong> 两者都只能整定“已经选定的结构”，都无法发现“该换结构”。这一点与 §77.11 的选型讨论是同一件事：参数优化解决不了结构问题。</p>
+<h3 id="从-lqr-到-mpc-的迁移成本">77.9.8 从 LQR 到 MPC 的迁移成本</h3>
+<p>如果现场已经跑着 Koopman-LQR，想升级到 MPC，需要付出三部分成本。</p>
+<p><strong>第一是求解器。</strong> LQR 只需要一次矩阵乘法，MPC 每周期要解一次 QP。本章实测热启动后 <span class="math inline">2.5\sim2.8</span> ms，在 20 ms 周期内可以接受，但要求控制器平台有足够的算力余量。</p>
+<p><strong>第二是约束建模。</strong> 每条约束都要写成对 <span class="math inline">\boldsymbol z</span> 与 <span class="math inline">u</span> 的线性不等式，还要处理可行性、松弛与兜底。这部分工作量远大于写 LQR，也是 §77.9.6 花一整节讨论的原因。</p>
+<p><strong>第三是验证。</strong> LQR 的闭环行为由增益唯一决定，扫几个初值就够了；MPC 的行为还依赖时域、终端权、约束松紧，验证组合成倍增加。</p>
+<p>收益则集中在有约束的工况。本章的对比是：无约束时 MPC 的代价反而高 <span class="math inline">17.1\%</span>，有速度约束时它 0 步越界、LQR 越界 27 步。</p>
+<p>所以迁移的判断很直接：<strong>没有硬约束就不要迁；有硬约束且 LQR 靠饱和硬顶，就值得迁。</strong></p>
+<p>还有一条折中路线：保留 LQR，在它外面加一层“参考修正”，当预测到越界时提前减速。这相当于只实现 MPC 的预见性、不实现优化，工程量小得多，效果介于两者之间。</p>
+<p>本章没有做这组实验，但它是现场常见的做法。它的风险在于修正层的参数没有系统整定方法，往往靠试凑；而 MPC 至少把“要满足什么”写清楚了。</p>
+<p>一句话：<strong>MPC 贵在建模与验证，不贵在算力。</strong> 这一点与很多人的直觉相反——算力是三者中最容易解决的一项。</p>
+<h2 id="工程落地">77.10 工程落地</h2>
+<h3 id="一次完整的数据采集作业">77.10.1 一次完整的数据采集作业</h3>
+<p>把 §77.3 的流程落成现场可执行的作业指导书，分五步。</p>
+<p><strong>第一步：静态检查。</strong> 手动把执行器从 <span class="math inline">-30\%</span> 走到 <span class="math inline">+30\%</span>，记录稳态的输入—输出对应关系。这一步的目的是确认量程、死区、滞环，以及有没有卡涩。如果输入—输出关系严重非线性（比如某段完全不动），先修设备，不要急着做辨识。</p>
+<p><strong>第二步：安全边界确认。</strong> 确认角度、速度、力矩的硬限位，把这些值写进采集脚本的保护逻辑：一旦超限，立即切回手动并记录。这一步不能省——激励信号是“故意让设备动起来”，没有保护就是拿设备冒险。</p>
+<p><strong>第三步：激励试验。</strong> 本章推荐多正弦，四个频率覆盖 <span class="math inline">0.18\sim1.21</span> Hz，幅值从小到大逐步加（<span class="math inline">0.1\to0.2\to0.3</span>），每一档跑 30 s。如果设备在这些幅值下都平稳，取最大的一档做正式采集；如果出现异响或超限，退回上一档。</p>
+<p><strong>第四步：正式采集。</strong> 至少 6 段，每段 400 步（8 s），段间换初值（用不同的初始角度，覆盖工作域）。总样本 2400，满足 <span class="math inline">N\ge40n</span>（三次字典）。同步记录时间戳、输入、输出、以及当时的工况标签（负载、温度）。</p>
+<p><strong>第五步：数据质检。</strong> 检查三件事：有没有丢帧（时间戳间隔是否恒为 <span class="math inline">T_s</span>）、有没有饱和（输入是否长时间贴着限幅）、有没有异常跳变（相邻样本差是否超过物理可能）。任何一项不合格，重采。</p>
+<h3 id="激励信号的实测对比">77.10.2 激励信号的实测对比</h3>
+<p>本章 E9 用四种激励各采 4 段、每段 300 步，训练三次字典，结果见表 77-9。</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">激励</th>
+<th style="text-align: right;">条件数</th>
+<th style="text-align: right;">状态单步误差</th>
+<th style="text-align: right;">200 步 RMSE</th>
+<th style="text-align: right;">闭环代价 <span class="math inline">J</span></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">PRBS</td>
+<td style="text-align: right;">22.62</td>
+<td style="text-align: right;"><span class="math inline">1.395\times10^{-2}</span></td>
+<td style="text-align: right;">0.0273</td>
+<td style="text-align: right;">3.5662</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">多正弦</td>
+<td style="text-align: right;">12.14</td>
+<td style="text-align: right;"><span class="math inline">6.696\times10^{-3}</span></td>
+<td style="text-align: right;">0.0248</td>
+<td style="text-align: right;">3.5665</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">阶跃</td>
+<td style="text-align: right;">138.53</td>
+<td style="text-align: right;"><span class="math inline">2.661\times10^{-2}</span></td>
+<td style="text-align: right;">1.2862</td>
+<td style="text-align: right;">524.5593</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">闭环抖动</td>
+<td style="text-align: right;">120.36</td>
+<td style="text-align: right;"><span class="math inline">1.991\times10^{-4}</span></td>
+<td style="text-align: right;">0.0616</td>
+<td style="text-align: right;">3.5664</td>
+</tr>
+</tbody>
+</table>
+<p>这张表有三个值得琢磨的地方。</p>
+<p><strong>第一，阶跃是灾难。</strong> 条件数 <span class="math inline">138.53</span> 不是最高，但 200 步 RMSE 是 <span class="math inline">1.2862</span>，闭环代价 <span class="math inline">524.5593</span>——比正常值高 147 倍。原因是阶跃信号只在切换瞬间有能量，切换之间输入恒定，模型学不到“输入变化如何影响状态”的连续关系；更要命的是阶跃数据的轨迹集中在少数几条路径上，其他区域完全没有约束。</p>
+<p><strong>第二，闭环抖动的条件数很高，模型却很好用。</strong> 条件数 <span class="math inline">120.36</span> 与阶跃接近，但单步误差 <span class="math inline">1.991\times10^{-4}</span> 是四种里最好的，闭环代价 <span class="math inline">3.5664</span> 也正常。原因是抖动的激励虽然幅值小，但持续存在、方向随机，覆盖了状态空间的各个方向。<strong>条件数大只说明矩阵求逆时某些方向被放大，不说明这些方向对预测重要。</strong></p>
+<p><strong>第三，多正弦的单步误差中等，长时误差最好。</strong> 单步 <span class="math inline">6.696\times10^{-3}</span> 不如闭环抖动，但 200 步 RMSE <span class="math inline">0.0248</span> 是四种里最低的。原因是多正弦的频谱集中在四个频率上，覆盖了对象的主要动态频段，长时外推时不会激励高频伪模态。</p>
+<p><strong>现场建议。</strong> 如果设备允许，用多正弦；如果不敢大幅激励，用闭环抖动（本章的数据证明它够用）；不要用纯阶跃数据做辨识——这是本章最实用的一条结论。</p>
+<p>如果三种都不方便，退一步的选择是“正常运行数据加少量手动扰动”。手动扰动不必是规则信号，只要操作员在不同工况下做过几次明显的调节动作，数据里就有输入变化的信息。</p>
+<p>本章没有做这组实验，但从 E9 的结论可以推断：关键是输入要有变化，而不是变化多漂亮。闭环抖动的条件数是四种里第二高，模型却是四种里最好的，原因正是它的变化持续且方向随机。</p>
+<h3 id="字典的物理可解释性">77.10.3 字典的物理可解释性</h3>
+<p>工程上常有人问：“<span class="math inline">\varphi_i</span> 到底代表什么？”这个问题值得认真回答，因为它决定了你能不能信任模型。</p>
+<p><strong>前两维必须是状态本身。</strong> <span class="math inline">x_1,x_2</span> 是唯一有直接物理意义的坐标，也是约束与代价的作用对象。本章脚本把前两列固定为 <span class="math inline">x_1,x_2</span>，所有约束与反投影都靠这个约定。</p>
+<p><strong>二次项对应能量与耦合。</strong> <span class="math inline">x_1^2</span> 与 <span class="math inline">x_2^2</span> 正比于势能与动能，<span class="math inline">x_1x_2</span> 是两者的交叉项。如果拟合出的 <span class="math inline">\boldsymbol A</span> 中 <span class="math inline">x_1^2</span> 对 <span class="math inline">x_2</span> 的耦合系数显著，说明系统里有“位置影响速度”的机制。</p>
+<p><strong>三次及以上的项多数是“修正”。</strong> 它们补足非线性形状，单个系数没有明确物理意义，但它们的整体贡献可以检查：把三次项全部置零，看预测误差上升多少。如果上升很小，说明三次项只是在拟合噪声，应该降阶。</p>
+<p><strong>反对“给每个特征值编故事”。</strong> §77.6.2 已经说明 EDMD 会产生伪模态。工程报告里不应该写“这个极点对应某个物理模态”，除非它在多次辨识中稳定出现，且与已知的物理时间常数对得上。</p>
+<h3 id="上线检查清单">77.10.4 上线检查清单</h3>
+<p>表 77-10 是本章建议的上线前检查项，每项都有明确的通过标准。</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">检查项</th>
+<th style="text-align: left;">通过标准</th>
+<th style="text-align: left;">不通过怎么办</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">谱半径</td>
+<td style="text-align: left;"><span class="math inline">&lt;1</span></td>
+<td style="text-align: left;">加样本或加岭</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">200 步 RMSE</td>
+<td style="text-align: left;"><span class="math inline">&lt;5\%</span> 工作域</td>
+<td style="text-align: left;">换字典或补激励</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">初值扫描</td>
+<td style="text-align: left;">全部收敛</td>
+<td style="text-align: left;">扩训练域或限初值</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">输入峰值</td>
+<td style="text-align: left;">不长期贴限幅</td>
+<td style="text-align: left;">加大 <span class="math inline">R</span> 或降带宽</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">速度越界</td>
+<td style="text-align: left;">0 步</td>
+<td style="text-align: left;">上 MPC 或降增益</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">收敛时间</td>
+<td style="text-align: left;">满足工艺要求</td>
+<td style="text-align: left;">调 <span class="math inline">R</span>、调 <span class="math inline">\boldsymbol Q</span></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">回退通道</td>
+<td style="text-align: left;">一键切线性化</td>
+<td style="text-align: left;">补做</td>
+</tr>
+</tbody>
+</table>
+<p>最后一项经常被忽略。本章的实测显示 Koopman 相对线性化的收益只有 <span class="math inline">0.27\%</span>（§77.11），这意味着<strong>任何一次误动作的代价都远大于收益</strong>。所以回退通道不是“以防万一”，而是“必须存在”：控制器每周期比较提升模型与线性化模型的预测，若两者差异超过阈值，报警并切回线性化。</p>
+<h3 id="与既有控制系统的共存">77.10.5 与既有控制系统的共存</h3>
+<p>现场很少有空白的控制柜，Koopman 控制器通常要“插”进已有的 PID 或 MPC 回路里。三种可行的接法。</p>
+<p><strong>接法一：串联（外环）。</strong> Koopman 控制器输出参考值，原有 PID 做内环跟踪。优点是改动小、原有回路的安全性不变；缺点是外环带宽受内环限制，Koopman 的快动态用不上。</p>
+<p><strong>接法二：并联（权重切换）。</strong> 正常时用 PID，检测到工况进入“非线性显著区”时切到 Koopman。切换逻辑要有滞环，避免在两套控制之间反复跳（滞环的做法见第 76 章）。</p>
+<p><strong>接法三：替代。</strong> 直接替换原控制器，保留原控制器作为回退。这种接法要求 Koopman 控制器在全部工况下都验证过，验证成本最高。</p>
+<p>多数项目的合理选择是接法一或接法二。接法三只在“原控制器确实无法满足要求”时才考虑。</p>
+<h3 id="模型什么时候需要重辨识">77.10.6 模型什么时候需要重辨识</h3>
+<p>提升模型不是一劳永逸的。以下四种情形必须重辨识。</p>
+<p><strong>机械状态变化。</strong> 更换轴承、调整配重、改变连杆长度，都会改变 <span class="math inline">\boldsymbol A</span> 的结构。判断方法是定期做一次开环校验：给一个小激励，比较预测与实测，误差超过基线 3 倍就重辨识。</p>
+<p><strong>工况大幅偏移。</strong> 负载、温度、压力的变化会改变阻尼与刚度。如果这些量在训练数据里没有覆盖，模型在新工况下就是外推。</p>
+<p><strong>传感器更换。</strong> 换了量程或滤波参数，噪声特性变了，原来拟合的 <span class="math inline">\boldsymbol B</span> 与 <span class="math inline">\boldsymbol A</span> 的高阶项都会偏。这一条最容易漏，因为“只是换了个传感器”看起来无关紧要。</p>
+<p><strong>长期漂移。</strong> 即使机械与传感器都没变，磨损与老化也会慢慢改变动态。建议每 3 到 6 个月做一次校验，用同一套验证数据比较误差趋势。</p>
+<h3 id="算力与实时性预算">77.10.7 算力与实时性预算</h3>
+<p>实时性很容易被“算法正确”掩盖。本章的 MPC 在 Python 里跑，数字只能判断量级，但量级足够说明问题。</p>
+<p>周期是 <span class="math inline">T_s=0.02</span> s，即 20 ms。热启动后单次求解的中位数在 <span class="math inline">2.5\sim2.8</span> ms 之间，占周期的 <span class="math inline">12\%\sim14\%</span>，余量充足。</p>
+<p>首次求解是 <span class="math inline">60\sim65</span> ms，超过三个周期。这一次的开销来自求解器初始化与稀疏结构的首次分析，<strong>绝不能放在在线环节</strong>。工程上的做法是上电时用一个虚拟状态先解一次，把求解器预热，之后再进入实时循环。</p>
+<p><strong>算力的分配要分清在线与离线。</strong> 离线做的是采集、拟合、Riccati 求解、约束矩阵组装；在线只做三件事：算 <span class="math inline">\boldsymbol z=\boldsymbol\varphi(\boldsymbol x)</span>、解一次 QP、输出 <span class="math inline">u</span>。</p>
+<p>字典映射的成本常常被高估。20 列多项式只需要几十次乘法；27 列 RBF 要算 27 个指数，稍贵，但仍在微秒量级，与 QP 相比可以忽略。</p>
+<p><strong>移植到嵌入式时的三个注意点。</strong> 第一，OSQP 要用代码生成模式，把稀疏结构固定下来，否则每次运行都要重新分析矩阵。</p>
+<p>第二，浮点精度。单精度下约束矩阵的条件数会被放大，<span class="math inline">|x_2|\le1.2</span> 这种约束在边界附近可能反复触发，表现为输入抖动。要么用双精度，要么给约束留一点余量。</p>
+<p>第三，内存。时域 10 步、状态 9 维的 QP 规模很小，但代码生成会把中间变量静态分配，需要提前算好栈的用量。</p>
+<p><strong>监控什么。</strong> 上线后要记录每周期的求解时间与迭代次数。求解时间上升说明工况变难，迭代次数上升说明约束变紧，两者都是“模型与对象开始脱节”的早期信号。</p>
+<p><strong>超时怎么办。</strong> 如果某一拍没解完，不要等——直接用上一拍的输入，并在日志里记一次超时。连续超时要降级到 LQR，因为这说明优化问题在当前工况下已经病态。</p>
+<p>本章没有做硬实时测试，也不建议拿 Python 的耗时直接推算嵌入式性能。这里的数字只回答一个问题：<strong>这条路的计算量在不在“能实时”的量级内。</strong> 答案是肯定的。</p>
+<h3 id="从离线到投运的三个阶段">77.10.8 从离线到投运的三个阶段</h3>
+<p>数据驱动控制器最危险的地方，是它在仿真里看起来完美。投运必须分阶段，每一阶段有明确的准出条件。</p>
+<p><strong>阶段一：纯离线。</strong> 不接设备，只用采集好的数据做拟合与三重校验，再在仿真对象上跑闭环。准出条件有三条：谱半径小于 1、200 步 RMSE 低于工作域的 <span class="math inline">5\%</span>、初值扫描全部收敛。</p>
+<p>这一阶段最容易犯的错是“用训练数据验证”。本章的所有数字都在独立验证集上算，读者复现时也要这样。</p>
+<p><strong>阶段二：在线开环加建议模式。</strong> 控制器接上真实设备，但输出不直接驱动执行器，而是显示给操作员，由人决定是否采用。同时记录“控制器建议值”与“实际采用值”的差。</p>
+<p>这一阶段的目的不是验证性能，而是验证<strong>输入输出通道、符号、量纲、时延</strong>。符号错一位，闭环就成正反馈；时延差两拍，MPC 的预测就全错。这些问题在仿真里永远发现不了。</p>
+<p>准出条件是连续运行 8 小时，建议值与被采纳值的偏差在可解释范围内，且没有出现建议值长期贴着限幅的情况。</p>
+<p><strong>阶段三：闭环投运。</strong> 先在最小工况范围内闭合，比如初值只取 <span class="math inline">0.65</span> rad，稳定运行后再逐步扩大。每扩大一档，都要重新做一次初值扫描。</p>
+<p>表 77-5 显示，初值从 <span class="math inline">0.65</span> 到 <span class="math inline">2.60</span>，代价涨了近 18 倍，模型的外推程度完全不同。用 <span class="math inline">0.65</span> rad 的验证结果去支持 <span class="math inline">2.60</span> rad 的投运，是没有依据的。</p>
+<p><strong>任何时候都要保留一键回退。</strong> 回退不是“出问题才用”，而是每次投运前的必检项：按下回退，控制器要在一个人机周期内切到线性化 LQR，且切换过程无扰动。</p>
+<p>第 76 章的切换逻辑与滞环设计在这里可以直接借用。区别在于，那里的切换由工况驱动，这里的切换由“模型可信度”驱动，判据要更保守。</p>
+<h3 id="维护期要做的三件事">77.10.9 维护期要做的三件事</h3>
+<p>模型上线只是开始。数据驱动模型会随设备状态漂移而失效，维护期有三件事必须制度化。</p>
+<p><strong>第一，定期校验。</strong> 每 3 到 6 个月做一次小激励试验：幅值取正式采集的三分之一，采两段、每段 100 步，算单步误差与 200 步 RMSE，与基线比较。</p>
+<p>误差超过基线 3 倍就重辨识，超过 1.5 倍则缩短下一次校验的间隔。这个阈值不是理论推导的，而是按本章的误差量级定的：正常波动在 <span class="math inline">10\%</span> 量级，3 倍已经说明结构变了。</p>
+<p><strong>第二，异常数据回流。</strong> 每次闭环出现异常（越界、抖动、超时），自动保存前后 30 s 的输入输出数据，标注时间与工况。</p>
+<p>这些数据是最宝贵的：它们恰好落在模型失效的区域，补进训练集能直接改善覆盖。本章的“加覆盖”论（§77.5.4）在现场就靠这个机制落地。</p>
+<p><strong>第三，版本绑定。</strong> 模型文件必须与数据批次、字典定义、控制器参数绑定，任何一项变了就换版本号。回退时三者一起回退，不能只换模型不换参数。</p>
+<p>工程上常见的事故是“模型换了、<span class="math inline">\boldsymbol Q</span> 忘了换”，结果闭环带宽变了，操作员以为是模型的问题，查了几天才发现是参数。</p>
+<p><strong>还有一件容易被忽略的事：交接文档。</strong> 数据驱动控制器的知识高度集中在建模者身上，人一走，后面的人不知道“为什么选三次字典”“为什么激励取 <span class="math inline">0.30</span>”。</p>
+<p>§77.8.6 的调参记录就是交接文档的骨架。把它整理成“选型依据、验证结果、已知边界”三部分，后来者才有条件维护。</p>
+<h2 id="优缺点与适用边界">77.11 优缺点与适用边界</h2>
+<h3 id="它真正给了什么">77.11.1 它真正给了什么</h3>
+<p>把本章的实验结论收拢，Koopman 提升的收益可以归成四条，按可靠性从高到低排列。</p>
+<p><strong>第一，可分析性。</strong> 提升之后，非线性对象有了“矩阵 <span class="math inline">\boldsymbol A</span>、<span class="math inline">\boldsymbol B</span>”，可以算谱、算能控性、算能观性、算闭环极点。这些量在原始非线性系统里要么没有定义，要么只能靠仿真估计。本章用这套工具解释了线性字典为什么会给出错误的 <span class="math inline">-1.5174</span>（§77.4.2），这种解释能力是纯数据方法给不了的。</p>
+<p><strong>第二，约束的线性化。</strong> §77.9 已经展开：速度约束在状态空间里是非线性的，在提升空间里变成对 <span class="math inline">\boldsymbol z</span> 第二分量的线性不等式，于是整个 MPC 是一个凸二次规划。这是本章最实在的工程价值。</p>
+<p><strong>第三，逐点精度的能控性。</strong> 线性化只在工作点附近有效，提升可以在整个工作域上把单步误差压到 <span class="math inline">10^{-6}</span> 量级（表 77-2 的五次字典）。对于“工作域很宽、但又不值得上非线性 MPC”的场合，这是一个折中。</p>
+<p><strong>第四，与数据的直接对接。</strong> 不需要写物理方程，只需要采数据。对于模型难以建立的场合（复杂摩擦、多物理场耦合、批次差异大的设备），这是唯一可行的路。</p>
+<h3 id="它没给什么">77.11.2 它没给什么</h3>
+<p>四条限制同样要摆明。</p>
+<p><strong>第一，误差没有上界。</strong> 线性化至少有“工作点附近误差是二阶小量”的保证，提升没有。字典选错时（比如线性字典拟合对象 A），误差可以大到谱都错，而且不会报警。工程上只能用 §77.5.6 的清单反复验证。</p>
+<p><strong>第二，维数与数据量同步膨胀。</strong> <span class="math inline">n</span> 列字典至少需要 <span class="math inline">40n</span> 个样本，计算量随 <span class="math inline">n^3</span> 增长。二状态对象还看不出压力，六状态、十状态对象上，五次字典的列数可以到几百，此时矩阵求逆与 Riccati 求解都开始吃力。</p>
+<p><strong>第三，伪模态污染解释。</strong> §77.6.2 的 9 个极点里只有 1 个对应真实动态。如果工程师试图用全部极点做频域设计，会被伪模态误导。</p>
+<p><strong>第四，对激励的依赖。</strong> §77.10.2 显示，用阶跃数据辨识的模型闭环代价是正常值的 147 倍。这意味着 Koopman 方法要求“敢做激励”，而很多连续生产线不敢。</p>
+<h3 id="什么时候该用">77.11.3 什么时候该用</h3>
+<p>给四条判据，全部满足才考虑。</p>
+<ol type="1">
+<li><strong>线性化误差确实影响性能</strong>：把线性化控制器在真实对象上跑一遍，若某些工况下超调超过 <span class="math inline">20\%</span> 或收敛时间超要求，说明线性化不够。</li>
+<li><strong>对象状态维数不高</strong>：<span class="math inline">n_x\le6</span>。再高，字典列数会失控，不如直接上神经网络。</li>
+<li><strong>能采到带激励的数据</strong>：至少能做多正弦或闭环抖动试验，且设备允许状态在工作域内摆动。</li>
+<li><strong>有明确的约束要处理</strong>：如果没有任何约束，提升带来的收益通常小于 <span class="math inline">1\%</span>（本章 <span class="math inline">0.27\%</span>），不值得。</li>
+</ol>
+<h3 id="什么时候不该用">77.11.4 什么时候不该用</h3>
+<p>四种情形直接排除。</p>
+<p><strong>工作点固定、偏差很小。</strong> 比如恒温箱、稳压电源，线性化误差在 <span class="math inline">1\%</span> 以内，Koopman 纯粹增加复杂度。</p>
+<p><strong>对象本身是分段线性或带强切换。</strong> 这类对象用增益调度或切换控制更直接（见第 76 章），提升会把切换点抹平，反而丢失结构信息。</p>
+<p><strong>数据里有大量未建模的动态。</strong> 比如执行器有严重滞环、传感器有明显漂移。这些动态会被强行压进 <span class="math inline">\boldsymbol A</span>，识别出来的模型在别的工况下必然失效。先把硬件问题解决，再谈数据驱动。</p>
+<p><strong>安全等级要求极高、不允许试验。</strong> 提升模型的正确性依赖数据覆盖，没有数据就没有保证。这类场合应该用基于第一性原理的模型加鲁棒控制。</p>
+<h3 id="与其他方法的定位">77.11.5 与其他方法的定位</h3>
+<p>表 77-11 把本章方法与相邻章节的方法放在一起对比。</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">方法</th>
+<th style="text-align: left;">依赖</th>
+<th style="text-align: left;">非线性处理</th>
+<th style="text-align: left;">约束</th>
+<th style="text-align: left;">主要章节</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">PID</td>
+<td style="text-align: left;">无</td>
+<td style="text-align: left;">无（局部线性）</td>
+<td style="text-align: left;">靠限幅</td>
+<td style="text-align: left;">第 44、106 章</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">增益调度</td>
+<td style="text-align: left;">多个线性模型</td>
+<td style="text-align: left;">分段线性</td>
+<td style="text-align: left;">靠限幅</td>
+<td style="text-align: left;">第 76 章</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">反馈线性化</td>
+<td style="text-align: left;">精确模型</td>
+<td style="text-align: left;">坐标变换消去</td>
+<td style="text-align: left;">需另加</td>
+<td style="text-align: left;">第 41 章</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">线性 MPC</td>
+<td style="text-align: left;">线性模型</td>
+<td style="text-align: left;">无</td>
+<td style="text-align: left;">显式处理</td>
+<td style="text-align: left;">第 58、80 章</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Koopman-LQR</td>
+<td style="text-align: left;">数据</td>
+<td style="text-align: left;">提升后线性</td>
+<td style="text-align: left;">不处理</td>
+<td style="text-align: left;">本章</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Koopman-MPC</td>
+<td style="text-align: left;">数据</td>
+<td style="text-align: left;">提升后线性</td>
+<td style="text-align: left;">显式处理</td>
+<td style="text-align: left;">本章</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">神经网络控制</td>
+<td style="text-align: left;">大量数据</td>
+<td style="text-align: left;">隐式</td>
+<td style="text-align: left;">需另加</td>
+<td style="text-align: left;">第 82 章</td>
+</tr>
+</tbody>
+</table>
+<p>这张表的读法是“按依赖与能力排队”。PID 依赖最少、能力最弱；神经网络依赖最多、能力最强但最不可解释。Koopman 的位置在中间偏右：它比线性 MPC 多需要数据，但能处理非线性；比神经网络少需要数据，但只能处理“能被多项式或 RBF 逼近”的非线性。</p>
+<h3 id="本章的最终数字">77.11.6 本章的最终数字</h3>
+<p>把四种方案在同一个初值 <span class="math inline">[2.0,0]</span> 上跑 200 步，结果见表 77-12 与图 77-10。</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">方案</th>
+<th style="text-align: right;">闭环代价 <span class="math inline">J</span></th>
+<th style="text-align: right;">输入峰值</th>
+<th style="text-align: right;">最大步间变化</th>
+<th style="text-align: right;">末值范数</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">线性化 LQR</td>
+<td style="text-align: right;">3.5760</td>
+<td style="text-align: right;">4.000</td>
+<td style="text-align: right;">4.000</td>
+<td style="text-align: right;"><span class="math inline">3.30\times10^{-2}</span></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">DMD-LQR</td>
+<td style="text-align: right;">3.5680</td>
+<td style="text-align: right;">4.000</td>
+<td style="text-align: right;">4.000</td>
+<td style="text-align: right;"><span class="math inline">2.87\times10^{-2}</span></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">EDMD-LQR（三次）</td>
+<td style="text-align: right;">3.5664</td>
+<td style="text-align: right;">4.000</td>
+<td style="text-align: right;">4.000</td>
+<td style="text-align: right;"><span class="math inline">2.99\times10^{-2}</span></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">EDMD-LQR（五次）</td>
+<td style="text-align: right;">3.5669</td>
+<td style="text-align: right;">4.000</td>
+<td style="text-align: right;">4.000</td>
+<td style="text-align: right;"><span class="math inline">3.00\times10^{-2}</span></td>
+</tr>
+</tbody>
+</table>
+<p>四个方案的代价从 <span class="math inline">3.5760</span> 到 <span class="math inline">3.5664</span>，<strong>最大差距 <span class="math inline">0.27\%</span></strong>；输入峰值全部顶在 <span class="math inline">4.000</span>，说明约束在这组实验里没有被满足，四种方案都靠饱和硬顶。这个结果与 §77.6 的结论一致：无约束时，提升带来的收益可以忽略。</p>
+<figure>
+<img src="figs/ch077/fig_077_10_summary.svg" alt="图 77-10 四种方案的闭环代价：纵轴截断在 3.560–3.580，差距只有 0.27%" /><figcaption aria-hidden="true">图 77-10 四种方案的闭环代价：纵轴截断在 3.560–3.580，差距只有 0.27%</figcaption>
+</figure>
+<p>图 77-10 的纵轴是截断的，这一点必须说明——如果不截断，四根柱子几乎一样高。截断是为了让读者看到差异的方向（EDMD 三次最低），而不是夸大差异的量级。</p>
+<p><strong>这个结果该怎解读？</strong> 三条。</p>
+<p>第一，<strong>它不否定 Koopman 方法，而是否定“用 Koopman 换性能”这个动机</strong>。本章的对象在闭环带宽内接近线性，提升没有多少非线性可“赚”。</p>
+<p>第二，<strong>它说明选型要以任务为准</strong>。如果任务是“满足速度约束”，答案在表 77-8：MPC 用 17.1% 的代价换来 0 步越界。如果任务是“少花算力”，答案是线性化 LQR。</p>
+<p>第三，<strong>它提醒我们核实每一个“显著提升”的说法</strong>。文献里常见的“精度提升一个数量级”通常指开环预测误差（本章确实做到了：单步误差降 1728 倍），而不是闭环性能。两者不能混为一谈。</p>
+<h3 id="与相邻章节的分工">77.11.7 与相邻章节的分工</h3>
+<p>本章与几处内容有交叠，这里明确指向，避免重复。</p>
+<ul>
+<li><strong>PID 整定</strong>：§77.9.4 的 VRFT/IFT 是“用数据整定 PID”，与第 44 章、第 106 章的经典整定方法（Ziegler-Nichols、内模法、继电器法）是互补关系。经典方法只需要几次阶跃实验，VRFT 需要闭环数据但能直接优化指定代价。本章不重复经典方法的推导。</li>
+<li><strong>MPC</strong>：§77.9 的 Koopman-MPC 把非线性 MPC 转成线性 MPC，时域、终端代价、约束松弛、可行性处理全部沿用第 58 章与第 80 章，本章只讲“模型怎么来”。</li>
+<li><strong>Smith 预估与迟延</strong>：如果对象有大迟延，提升空间里会多出“迟延链”的模态，维数迅速膨胀。这类对象应先按第 47 章、第 107 章处理迟延，再考虑提升。</li>
+<li><strong>切换与混杂</strong>：第 76 章的增益调度可以看成“分段局部 Koopman”，如果对象的分段结构清楚，用第 76 章的方法比全局提升更省事。</li>
+</ul>
+<h3 id="三个常见误解">77.11.8 三个常见误解</h3>
+<p>读 Koopman 的文献时，有三个说法反复出现，每一个都需要打折扣。</p>
+<p><strong>误解一：“Koopman 能把任何非线性系统精确线性化。”</strong> 只在字典张成不变子空间时成立。对象 A 的三项字典是这种情形，单摆不是，工程对象几乎都不是。</p>
+<p>对一般对象，提升给的是“在数据覆盖范围内、在最小二乘意义下最好”的线性近似，没有误差上界。把它当成精确线性化，就会在超出训练域时毫无防备。</p>
+<p><strong>误解二：“字典越大越准。”</strong> 表 77-2 与表 77-3 已经给出反例。字典变大，单步误差可能降，但谱半径可能越过 1，长时误差反而上升。</p>
+<p>正确的说法是“字典要与数据量匹配”。<span class="math inline">N\ge40n</span> 这条经验就是匹配的量化版本。脱离数据量谈字典大小，没有意义。</p>
+<p><strong>误解三：“有了数据就不需要第一性原理模型。”</strong> 数据只能覆盖它去过的区域，第一性原理模型的价值恰恰在没去过的地方。</p>
+<p>工程上的合理分工是：用第一性原理定结构（有哪些状态、哪些非线性、量级多少），用数据定参数与修正项。本章的字典选择就是这种分工的体现——知道非线性来自 <span class="math inline">\sin x_1</span>，才会去试三次多项式。</p>
+<p>还有一个更隐蔽的误解：<strong>“闭环性能提升等于模型精度提升”</strong>。本章单步误差降了 1728 倍，闭环代价只降 <span class="math inline">0.27\%</span>。两者的关系不是线性的，取决于模型误差是否落在闭环带宽内（§77.6.4）。</p>
+<p>这条误解的危害最大，因为它是“用开环指标宣传闭环效果”的根源。看到“精度提升一个数量级”时，第一反应应该是问：这是开环还是闭环？在什么工况下？与哪个基准比？</p>
+<h3 id="一张选型决策流程">77.11.9 一张选型决策流程</h3>
+<p>把 §77.11.3 与 §77.11.4 的判据串起来，可以得到一条五问流程。每一问都能用本章的数据回答，不需要凭感觉。</p>
+<p><strong>第一问：线性化误差是否落在闭环带宽内？</strong> 把线性化控制器在真实对象上跑一遍，看超调与收敛时间。本章的答案是“不在”——闭环代价只差 <span class="math inline">0.27\%</span>，说明提升没有多少可赚。</p>
+<p><strong>第二问：有没有必须显式处理的约束？</strong> 本章有速度约束 <span class="math inline">|x_2|\le1.2</span>，线性化 LQR 越界 27 步。这一问的答案是“有”，而且这一条比第一问更重要。</p>
+<p><strong>第三问：能不能做激励？</strong> 能采多正弦或闭环抖动，答案是“能”；只能采正常运行数据，答案是“不能”，此时应转向免模型整定（§77.9.4）或经典 PID（第 44、106 章）。</p>
+<p><strong>第四问：状态维数是否不超过 6？</strong> 超过之后字典列数失控，计算与数据量都跟不上，应考虑神经网络方法（第 82 章）。</p>
+<p><strong>第五问：有没有回退条件？</strong> 没有回退通道，任何数据驱动控制器都不该上线，因为它的失效是“某工况突然发生”，不是渐变的。</p>
+<p>五个答案组合起来，落到四条路上。</p>
+<p>第一问否、第二问否：用线性化 LQR 或增益调度（第 76 章），不要引入提升。</p>
+<p>第一问否、第二问是：用线性 MPC（第 58、80 章），模型用线性化或辨识得到，不需要 Koopman。</p>
+<p>第一问是、第二问是，且第三、第四问都通过：用 Koopman-MPC，这是本章的主线。</p>
+<p>第三问否：用 VRFT/IFT 整定固定结构，或按第 44 章的经典方法整定 PID。</p>
+<p>这张流程的价值在于它把“方法选择”变成了“问题回答”。本章的单摆恰好落在“第一问否、第二问是”，所以最终选择是 Koopman-MPC，理由不是精度，而是约束。</p>
+<h3 id="本章没做的事">77.11.10 本章没做的事</h3>
+<p>一本书的可信度，一半来自说清了什么，一半来自承认没说什么。本章有四处明确的空白。</p>
+<p><strong>第一，全部实验都在仿真对象上完成。</strong> 三个对象都是常微分方程，没有传感器噪声的真实统计特性，没有执行器的死区与滞环，也没有通信时延。这些在 §77.10.8 的阶段二会被逐一暴露，但本章没有条件覆盖。</p>
+<p><strong>第二，没有给出误差上界。</strong> 提升模型的误差只能靠数据反复验证，没有“误差不超过多少”的解析结论。鲁棒 Koopman 是一个方向（§77.9.5），但还停留在研究阶段。</p>
+<p><strong>第三，只做了二状态对象。</strong> 十状态、二十状态的对象上，字典列数会到几百，<span class="math inline">N\ge40n</span> 意味着上万个样本，Riccati 与 QP 的规模都上了一个量级。本章的结论能否平移，需要单独验证。</p>
+<p><strong>第四，没有做在线自适应。</strong> 模型是离线辨识、上线后固定。设备漂移时靠重辨识（§77.10.6），而不是在线更新。在线更新涉及遗忘因子、数据筛选、稳定性保证，本章没有展开。</p>
+<p>这四处空白不是遗漏，而是范围界定。把它们写出来，是为了让读者知道哪些结论可以直接用、哪些需要在目标对象上重做一遍。</p>
+<p><strong>还有一处方法上的取舍值得说明。</strong> 本章始终用“多项式或 RBF 的固定字典”，没有用神经网络学字典。这样做牺牲了表达能力，换来了可解释性与可复现性——每个数字都能追溯到某一行代码、某一批数据。</p>
+<p>如果读者关心的是高维对象或图像输入，本章的方法不够用，应该转向第 82 章的思路。但如果关心的是“机械、过程对象上的非线性控制”，固定字典加上本章的校验流程，已经足够覆盖大多数场合。</p>
+<h2 id="python-仿真代码">77.12 Python 仿真代码</h2>
+<h3 id="文件与运行方式">77.12.1 文件与运行方式</h3>
+<p>本章两个脚本，都在 <code>book/code/</code> 下：</p>
+<ul>
+<li><code>ch077_sim.py</code>：全部数值实验（E1–E10）与数据缓存；</li>
+<li><code>ch077_figs.py</code>：只负责出图，从缓存读数。</li>
+</ul>
+<p>运行命令：</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="st">&quot;D:\Anaconda3\envs\py311\python.exe&quot;</span> code/ch077_sim.py</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="st">&quot;D:\Anaconda3\envs\py311\python.exe&quot;</span> code/ch077_figs.py</span></code></pre></div>
+<p>第一个脚本运行约十几秒（含一次 MPC 的 80 步求解），结束时在 <code>figs/ch077/results.npz</code> 写入全部曲线数据，并打印本文所有数字。第二个脚本读缓存，生成 10 张 SVG 与同名 PDF。两者都不依赖外部数据文件，换一台装有 numpy、scipy、matplotlib、cvxpy 的机器可以直接跑通。</p>
+<h3 id="代码结构">77.12.2 代码结构</h3>
+<p>表 77-13 是 <code>ch077_sim.py</code> 的函数清单与职责。</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">函数</th>
+<th style="text-align: left;">职责</th>
+<th style="text-align: left;">被谁调用</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><code>rk4_step</code></td>
+<td style="text-align: left;">定常输入的四阶 Runge-Kutta 单步</td>
+<td style="text-align: left;">所有仿真</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>c2d</code></td>
+<td style="text-align: left;">零阶保持离散化（增广矩阵指数）</td>
+<td style="text-align: left;"><code>lin_lqr</code></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><code>Dict</code></td>
+<td style="text-align: left;">字典：线性、多项式、RBF</td>
+<td style="text-align: left;">E1–E10</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>edmd</code></td>
+<td style="text-align: left;">带输入的 EDMD 最小二乘</td>
+<td style="text-align: left;">E1–E10</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><code>dlqr</code></td>
+<td style="text-align: left;">离散 Riccati 求解</td>
+<td style="text-align: left;">E6、E8、E9、E10</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>state_err</code></td>
+<td style="text-align: left;">状态空间单步误差</td>
+<td style="text-align: left;">E2–E5、E9</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><code>rollout</code></td>
+<td style="text-align: left;">开环提升预测</td>
+<td style="text-align: left;">E1–E5、E9</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>run_closed</code></td>
+<td style="text-align: left;">真实对象上的闭环仿真</td>
+<td style="text-align: left;">E6、E8、E10</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><code>collect_b</code></td>
+<td style="text-align: left;">分段采集（含激励与噪声）</td>
+<td style="text-align: left;">E2–E10</td>
+</tr>
+</tbody>
+</table>
+<p>脚本没有用 <code>simlib</code>，因为本章的字典与提升逻辑是独有的，复用它反而增加耦合。风格上仍遵循全书约定：绝对路径一律用 <code>Path(__file__).resolve().parents[1]</code> 推导，变量名全英文，注释中文。</p>
+<h3 id="三个关键片段">77.12.3 三个关键片段</h3>
+<p><strong>片段一：字典类。</strong> 前两列固定为 <span class="math inline">x_1,x_2</span>，这样所有约束与反投影都能直接取 <code>z[:2]</code>，不需要额外的映射函数。多项式部分把幂次排列显式存下来，便于 E1 构造“缺项”字典：</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> monomial_powers(<span class="va">self</span>):</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="va">self</span>.powers <span class="kw">is</span> <span class="kw">not</span> <span class="va">None</span>:</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="bu">list</span>(<span class="va">self</span>.powers)</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    powers <span class="op">=</span> [(<span class="dv">1</span>, <span class="dv">0</span>), (<span class="dv">0</span>, <span class="dv">1</span>)]</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="va">self</span>.kind <span class="op">==</span> <span class="st">&quot;lin&quot;</span>:</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> powers</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> total <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">2</span>, <span class="va">self</span>.deg <span class="op">+</span> <span class="dv">1</span>):</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> p <span class="kw">in</span> <span class="bu">range</span>(total, <span class="op">-</span><span class="dv">1</span>, <span class="op">-</span><span class="dv">1</span>):</span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>            powers.append((p, total <span class="op">-</span> p))</span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> powers</span></code></pre></div>
+<p><strong>片段二：EDMD。</strong> 核心只有四行。注意 <code>W</code> 是把字典与输入拼在一起，这正是“带输入”的含义：</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>Z1 <span class="op">=</span> np.vstack([dic(X[:<span class="op">-</span><span class="dv">1</span>]) <span class="cf">for</span> X <span class="kw">in</span> Xs])</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>Z2 <span class="op">=</span> np.vstack([dic(X[<span class="dv">1</span>:]) <span class="cf">for</span> X <span class="kw">in</span> Xs])</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>W <span class="op">=</span> np.vstack([np.hstack([dic(X[:<span class="op">-</span><span class="dv">1</span>]), U]) <span class="cf">for</span> X, U <span class="kw">in</span> <span class="bu">zip</span>(Xs, Us)])</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>Th, <span class="op">*</span>_ <span class="op">=</span> np.linalg.lstsq(W, Z2, rcond<span class="op">=</span><span class="va">None</span>)</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>A, B <span class="op">=</span> Th[:<span class="op">-</span><span class="dv">1</span>].T, Th[<span class="op">-</span><span class="dv">1</span>:].T</span></code></pre></div>
+<p><strong>片段三：状态空间误差。</strong> §77.5.3 的结论全靠这个函数。它只取预测结果的前两维，与真实状态比：</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> state_err(A, B, dic, Xs, Us):</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">&quot;&quot;&quot;状态空间单步预测误差：不同字典之间可直接比较。&quot;&quot;&quot;</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    err <span class="op">=</span> []</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> X, U <span class="kw">in</span> <span class="bu">zip</span>(Xs, Us):</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>        pred <span class="op">=</span> (A <span class="op">@</span> dic(X[:<span class="op">-</span><span class="dv">1</span>]).T <span class="op">+</span> B <span class="op">*</span> U.T).T[:, :<span class="dv">2</span>]</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>        err.append(rmse(pred, X[<span class="dv">1</span>:]))</span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="bu">float</span>(np.mean(err))</span></code></pre></div>
+<p>如果没有这个函数，E2 会得出“字典越大越差”的错误结论。这是本章代码里最重要的一处设计。</p>
+<h3 id="出图脚本">77.12.4 出图脚本</h3>
+<p><code>ch077_figs.py</code> 的结构是“一个函数一张图”，<code>main()</code> 里按顺序调用。数据全部从 <code>results.npz</code> 读，只有图 77-8 的时域响应是现场重算的（因为存轨迹会让缓存大一倍）。</p>
+<p>图 77-1 是唯一的框图，用 <code>block_styles</code> 的语义函数画；其余九张是数据图，统一走 <code>plot_styles</code> 的 <code>setup()</code>、<code>save()</code>、<code>SINGLE</code>、<code>DOUBLE</code>。图内中文用纯文本，公式用 <code>$...$</code>，两者不写进同一个字符串——这条规则在画图 77-9 的纵轴时踩过一次坑：<code>r"角度 $x_1$ (rad)"</code> 会让 STIX 字体找不到汉字字形，输出一串方框。改成 <code>"角度 (rad)"</code> 并把符号放进图注，问题消失。</p>
+<h3 id="复现时的常见问题">77.12.5 复现时的常见问题</h3>
+<p><strong>问题一：<code>cvxpy</code> 没装。</strong> E8 会直接报错。可以先注释掉 E8 与 <code>ch077_figs.py</code> 里的 <code>fig09_mpc</code>，其余九组实验不受影响。</p>
+<p><strong>问题二：OSQP 首次求解很慢。</strong> 本章实测首次 <span class="math inline">60\sim65</span> ms，属于正常的初始化开销。如果超过 <span class="math inline">1</span> s，通常是求解器在编译，第二次就正常了。</p>
+<p><strong>问题三：图里的中文变成方框。</strong> 说明系统没有 SimSun 或 SimHei。<code>plot_styles._pick_font</code> 会依次尝试几种中文字体，都找不到时只剩西文字体。装一个中文字体即可。</p>
+<p><strong>问题四：随机数不一致。</strong> 所有采集函数都接受 <code>seed</code> 参数，本章固定 seed（1、3、5、7、11、13、21），同一台机器上结果可复现。跨 numpy 版本时，<code>default_rng</code> 的流可能变化，这时需要固定 numpy 版本。</p>
+<p><strong>问题五：MPC 的结果与正文差一点。</strong> OSQP 是迭代求解器，终止精度默认 <span class="math inline">10^{-5}</span>，代价的最后一位可能波动。本章报四位小数，实测重复运行的差异在 <span class="math inline">10^{-4}</span> 量级，不影响结论。</p>
+<h3 id="建议的复现顺序">77.12.6 建议的复现顺序</h3>
+<p>脚本里 E1 到 E10 是按主题排的，复现时建议按下面的顺序跑，理由是先验证方法、再验证模型、最后验证控制。</p>
+<p><strong>先跑 E1。</strong> 看三项字典的单步残差是否在 <span class="math inline">10^{-16}</span> 量级、对角元是否与式 (77-14) 逐位一致。这一步不过，后面的数都不可信，先查字典构造与最小二乘的实现。</p>
+<p><strong>再跑 E5。</strong> 看 DMD 的两个复极点是否接近 <span class="math inline">-0.1\pm0.9950j</span>，EDMD 的 9 个实极点实部是否全为负。这一步验证“谱”这件事算对了。</p>
+<p><strong>然后 E2 与 E3。</strong> 前者看字典阶梯，后者看数据量。重点不是记数字，而是确认两条趋势：单步误差随字典下降、谱半径随样本数跨过 1。</p>
+<p><strong>接着 E4。</strong> 看噪声下三次与五次的排序反转。这一组最容易出现“结果与正文不一致”，因为它对噪声实现敏感；若不一致，先检查 seed。</p>
+<p><strong>再跑 E6，最后 E8。</strong> E6 是闭环初值扫描，E8 是 MPC。E8 依赖 cvxpy，没装就先跳过，不影响其他结论。</p>
+<p><strong>E9 与 E7 可以放最后。</strong> 前者是激励对比，后者是免模型整定，两者与主线相对独立。</p>
+<p><strong>E10 是汇总，必须最后跑</strong>，因为它要读前面几组缓存下来的模型。</p>
+<p>每组跑完，建议先看打印里的三个数：单步误差、谱半径、200 步 RMSE。这三个数一致，才继续下一组；不一致就先停下来查，不要一路跑到底再回头找原因。</p>
+<p>出图脚本与仿真脚本是分开的，改完仿真只需重跑仿真，再跑一次出图即可。缓存文件 <code>results.npz</code> 里的键名与图函数一一对应，加实验时记得同步更新。</p>
+<p>如果是第一次读这份代码，建议先只跑 E1：把三项字典的拟合矩阵打印出来，与式 (77-13) 的解析矩阵逐项对照，看清那个 <span class="math inline">0.01972207</span> 出现在什么位置。</p>
+<p>这一步做成之后，后面的实验都是“换字典、换数据量、换噪声”的重复，理解成本会低很多。反过来，跳过 E1 直接看闭环，很容易把实现细节的问题误当成方法的局限，这也是初学者最常走的弯路。</p>
+
+<nav class="footnav"><a href="ch076.html">← 上一章</a><a href="index.html">返回目录</a><a href="ch078.html">下一章 →</a></nav>
+</body>
+</html>

@@ -1,0 +1,1976 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="zh-CN" xml:lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>第 78 章　容错控制 · 控制大综合</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    span.underline{text-decoration: underline;}
+    div.column{display: inline-block; vertical-align: top; width: 50%;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    ul.task-list{list-style: none;}
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+  <link rel="stylesheet" href="assets/book.css" />
+  <script src="assets/katex/katex.min.js"></script>
+  <script>document.addEventListener("DOMContentLoaded", function () {
+   var mathElements = document.getElementsByClassName("math");
+   var macros = [];
+   for (var i = 0; i < mathElements.length; i++) {
+    var texText = mathElements[i].firstChild;
+    if (mathElements[i].tagName == "SPAN") {
+     katex.render(texText.data, mathElements[i], {
+      displayMode: mathElements[i].classList.contains('display'),
+      throwOnError: false,
+      macros: macros,
+      fleqn: false
+     });
+  }}});
+  </script>
+  <link rel="stylesheet" href="assets/katex/katex.min.css" />
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+  <link rel="stylesheet" href="assets/site.css" />
+</head>
+<body>
+<nav class="topnav"><a class="home" href="index.html">目录</a><span class="pos">078 / 115</span><span class="pager"><a href="ch077.html">上一章</a><a href="ch079.html">下一章</a></span></nav>
+
+<nav id="TOC" role="doc-toc">
+<ul>
+<li><a href="#第78章-容错控制">第78章 容错控制</a>
+<ul>
+<li><a href="#动机与直观理解">78.1 动机与直观理解</a></li>
+<li><a href="#数学原理">78.2 数学原理</a></li>
+<li><a href="#设计步骤">78.3 设计步骤</a></li>
+<li><a href="#连续情形">78.4 连续情形</a></li>
+<li><a href="#离散情形">78.5 离散情形</a></li>
+<li><a href="#稳定性与性能">78.6 稳定性与性能</a></li>
+<li><a href="#参数意义与作用">78.7 参数意义与作用</a></li>
+<li><a href="#调参方法与经验">78.8 调参方法与经验</a></li>
+<li><a href="#优化与改进">78.9 优化与改进</a></li>
+<li><a href="#工程落地">78.10 工程落地</a></li>
+<li><a href="#优缺点与适用边界">78.11 优缺点与适用边界</a></li>
+<li><a href="#python-仿真代码">78.12 Python 仿真代码</a></li>
+</ul></li>
+</ul>
+</nav>
+<h1 id="第78章-容错控制">第78章 容错控制</h1>
+<h2 id="动机与直观理解">78.1 动机与直观理解</h2>
+<h3 id="一台松手就掉的平台">78.1.1 一台松手就掉的平台</h3>
+<p>前面的章节里，控制器面对的对象大多是“自己不跑”的：给它一个扰它才动，把控制器关掉它顶多停在原地。本章的对象不是这样。取一台单轴磁悬浮平台，只保留竖直方向一个自由度，用上下两个电磁铁把一根导磁轴悬浮在中间。在工作点附近线性化之后，它的运动方程可以写成</p>
+<p><span class="math display">
+\dot x_1=x_2,\qquad
+\dot x_2=\omega^2x_1-2\zeta\omega x_2+g_1u_1+g_2x_3,\qquad
+\dot x_3=\frac{u_2-x_3}{\tau}
+\tag{78-1}
+</span></p>
+<p>其中 <span class="math inline">x_1</span> 是轴相对工作点的位移，<span class="math inline">x_2</span> 是速度，<span class="math inline">x_3</span> 是备份执行器的内部状态，<span class="math inline">u_1</span> 是主执行器（工作线圈的电流指令），<span class="math inline">u_2</span> 是备份执行器（辅助线圈）的指令。参数取 <span class="math inline">\omega=1.2</span> rad/s、<span class="math inline">\zeta=0.15</span>、<span class="math inline">g_1=1.0</span>、<span class="math inline">g_2=0.6</span>、<span class="math inline">\tau=0.15</span> s，采样周期 <span class="math inline">T_s=0.02</span> s，两路输入限幅 <span class="math inline">|u_1|\le 5</span>、<span class="math inline">|u_2|\le 6</span>。</p>
+<p>请注意式 (78-1) 里 <span class="math inline">x_1</span> 前面的符号：<span class="math inline">+\omega^2</span>，不是 <span class="math inline">-\omega^2</span>。这是磁悬浮与弹簧-质量系统最根本的差别——电磁吸力随气隙减小而增大，负刚度。线性化之后，开环极点是 <span class="math inline">+1.033</span>、<span class="math inline">-1.393</span> 与 <span class="math inline">-6.667</span>，三个都在实轴上，其中第一个落在右半平面。这意味着<strong>没有控制器时，任何微小偏移都会纯指数地涨上去</strong>：时间常数 <span class="math inline">1/1.033\approx0.97</span> s，每过 0.97 s 偏差就涨到 <span class="math inline">e</span> 倍，2.5 s 涨 13 倍，几秒之内轴就吸死到一侧。</p>
+<p>同一个符号也决定了本章的全部困难。对一个开环稳定的对象，执行器失效只是“控制变差”；对一个本质不稳定的对象，执行器失效是“系统发散”。第 44 章与第 106 章里的 PID 整定、第 58 章与第 80 章里的模型预测控制，讨论的都是“怎样把性能做好”；本章讨论的是更前置的一件事：<strong>当控制器赖以出力的那个部件坏了，闭环还能不能活着</strong>。</p>
+<p>控制任务是跟踪一条正弦参考</p>
+<p><span class="math display">
+r(t)=A_r\left(1-e^{-t/T_r}\right)\sin\frac{2\pi t}{T_p}
+\tag{78-2}
+</span></p>
+<p>幅值 <span class="math inline">A_r=0.30</span>、周期 <span class="math inline">T_p=12</span> s、起幅包络时间常数 <span class="math inline">T_r=0.8</span> s。包络的作用是让 <span class="math inline">t=0</span> 处的参考导数从零开始，避免前馈项在第一步就给出一个跳变。仿真总长 12 s（600 步），故障在 <span class="math inline">t_f=2.0</span> s 注入。</p>
+<h3 id="故障从哪里来">78.1.2 故障从哪里来</h3>
+<p>“故障”不是一个抽象名词，它在硬件上有明确的来源。本章只考虑主执行器通道的三类故障，因为它们覆盖了电磁执行机构最常见的失效形态：</p>
+<p><strong>效率下降</strong>。线圈局部匝间短路、功放管开通电阻变大、供电电压跌落，都会让同一句电流指令产生更小的实际电流。设实际作用量是指令的 <span class="math inline">\rho</span> 倍，<span class="math inline">\rho\in[0,1)</span>。<span class="math inline">\rho=1</span> 表示健康，<span class="math inline">\rho=0</span> 表示完全失效。</p>
+<p><strong>卡死</strong>。功率管击穿短路、驱动级被保护电路钳位、D/A 输出保持在上一次的值，都会让线圈电流不再受指令控制，而是停在一个常值 <span class="math inline">c</span> 上。这时无论控制器怎么喊，实际作用量都是 <span class="math inline">c</span>。</p>
+<p><strong>偏置</strong>。电流传感器的零点漂移、前级运放的失调电压、PWM 占空比的系统性偏差，会让实际电流比指令多出一个常数 <span class="math inline">c</span>。通道仍然是“可控”的，只是控制器的每一句话都被翻译错了一点。</p>
+<p>三类故障可以写成一个统一的式子：</p>
+<p><span class="math display">
+u_1^{\mathrm{eff}}=\rho u_1+c,\qquad
+(\rho,c)\in\{(\rho,0)\}\cup\{(0,c)\}\cup\{(1,c)\}
+\tag{78-3}
+</span></p>
+<p>效率下降是 <span class="math inline">\rho&lt;1</span>、<span class="math inline">c=0</span> 的那一支；卡死是 <span class="math inline">\rho=0</span>、<span class="math inline">c\ne0</span> 的那一支；偏置是 <span class="math inline">\rho=1</span>、<span class="math inline">c\ne0</span> 的那一支。把它们塞进同一个参数对 <span class="math inline">(\rho,c)</span>，后面就可以用同一套辨识算法去估计，而不必先猜是哪种故障。</p>
+<p>这个统一写法有一个直接的好处：<strong>故障诊断变成了参数估计</strong>。观测器给出残差，残差里含着 <span class="math inline">(\rho,c)</span> 的信息，用一段数据做最小二乘就能把这两个数估出来，估出来之后再按数值大小分类。本章第 78.7 节会看到，三条分类边界 <span class="math inline">0.12</span>、<span class="math inline">0.88</span>、<span class="math inline">0.35</span> 都是从物理意义出发定的，不是拍脑袋。</p>
+<h3 id="三条路线不处理被动主动">78.1.3 三条路线：不处理、被动、主动</h3>
+<p>面对故障，工程上有三条路，代价依次上升。</p>
+<p><strong>第一条是不处理</strong>。控制器照常工作，假装什么都没发生。这在开环稳定的对象上勉强可以接受——性能退化，但系统还在。在本章的平台上不行。取 <span class="math inline">\rho=0.4</span>（主执行器只剩四成力气），12 s 的闭环代价是</p>
+<p><span class="math display">
+J=\int_0^{12}\left(e^2+0.1x_2^2+0.02u_1^2+0.02u_2^2\right)\mathrm{d}t=0.8115
+\tag{78-4}
+</span></p>
+<p>而健康时的同一个指标是 <span class="math inline">0.0473</span>，差了 17 倍。故障后位置误差的峰值是 <span class="math inline">0.2481</span>，末段均方根误差 <span class="math inline">2.32\times10^{-1}</span>——注意这不是“收敛得慢”，而是<strong>根本没有收敛</strong>：误差在末段仍然和故障刚发生时一样大。原因很简单，控制器以为自己给出了 <span class="math inline">u_1</span>，实际只得到 <span class="math inline">0.4u_1</span>，它按缺省四成的力气去算平衡点，稳态必然偏。</p>
+<p>如果 <span class="math inline">\rho</span> 再小一点，事情就不是“偏”而是“飞”了。<span class="math inline">\rho=0</span> 时，不处理的闭环代价是 <span class="math inline">8.63\times10^{6}</span>，位置峰值 <span class="math inline">3970</span>，末段均方根 <span class="math inline">1.96\times10^{3}</span>，轨迹已经彻底发散。</p>
+<p><strong>第二条是被动容错</strong>。既然最坏情况是效率掉到某个下限，那就干脆按那个下限设计一套固定增益，全工况不切换。取最坏效率 <span class="math inline">\rho=0.5</span>，用有效输入矩阵</p>
+<p><span class="math display">
+\boldsymbol B_{\mathrm{pass}}=\begin{bmatrix}0.5\boldsymbol b_1 &amp; \boldsymbol b_2\end{bmatrix}
+\tag{78-5}
+</span></p>
+<p>重算一次 LQR，得到</p>
+<p><span class="math display">
+\boldsymbol K_{\mathrm{pass}}=\begin{bmatrix}
+85.729 &amp; 31.309 &amp; 0.2946\\
+4.3685 &amp; 1.6605 &amp; 4.7476
+\end{bmatrix}
+\tag{78-6}
+</span></p>
+<p>而标称增益是</p>
+<p><span class="math display">
+\boldsymbol K_0=\begin{bmatrix}
+72.6904 &amp; 25.1846 &amp; 0.2216\\
+1.5263 &amp; 0.5577 &amp; 4.7365
+\end{bmatrix}
+\tag{78-7}
+</span></p>
+<p>对比两套增益，被动容错的思路一目了然：主通道的第一行增益从 <span class="math inline">72.69</span> 抬到 <span class="math inline">85.73</span>，抬高约 18%，用“平时多使劲”来换取“坏的时候还够用”。</p>
+<p>这条路的问题也在数字里：<span class="math inline">\rho=0.4</span> 时，被动容错的代价是 <span class="math inline">0.8104</span>，与不处理的 <span class="math inline">0.8115</span> 几乎一模一样。道理不难想：按 <span class="math inline">\rho=0.5</span> 设计的增益，在 <span class="math inline">\rho=0.4</span> 时仍然欠 20% 的力，稳态误差照旧存在；而在健康工况下，它又多使了 18% 的力，白付了控制能量。<strong>被动容错把最坏情况当成常态来设计，代价是全程都在为未必发生的故障买单，而且一旦实际故障比预设的更严重，它一样救不了。</strong></p>
+<p><strong>第三条是主动容错</strong>。让系统自己发现“我不对劲”，判断是哪种不对劲，然后换一套对应的控制律。同一次 <span class="math inline">\rho=0.4</span> 的故障，主动容错的闭环代价是 <span class="math inline">0.2344</span>，故障后峰值 <span class="math inline">0.0558</span>，末段均方根 <span class="math inline">2.28\times10^{-3}</span>——比不处理低了 3.5 倍，末段误差低了两个数量级。<span class="math inline">\rho=0</span> 时差距更悬殊：不处理与被动容错分别发散到 <span class="math inline">8.63\times10^{6}</span> 与 <span class="math inline">4.30\times10^{6}</span>，主动容错是 <span class="math inline">0.2151</span>，位置峰值只有 <span class="math inline">0.1647</span>，稳稳地活了下来。</p>
+<p>三者放在一起，关系的轮廓就出来了：</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">方案</th>
+<th style="text-align: right;"><span class="math inline">\rho=0.4</span> 的 <span class="math inline">J</span></th>
+<th style="text-align: right;"><span class="math inline">\rho=0</span> 的 <span class="math inline">J</span></th>
+<th style="text-align: right;">末段误差（<span class="math inline">\rho=0.4</span>）</th>
+<th style="text-align: left;">是否发散（<span class="math inline">\rho=0</span>）</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">不处理</td>
+<td style="text-align: right;">0.8115</td>
+<td style="text-align: right;"><span class="math inline">8.63\times10^{6}</span></td>
+<td style="text-align: right;"><span class="math inline">2.32\times10^{-1}</span></td>
+<td style="text-align: left;">是</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">被动容错</td>
+<td style="text-align: right;">0.8104</td>
+<td style="text-align: right;"><span class="math inline">4.30\times10^{6}</span></td>
+<td style="text-align: right;"><span class="math inline">2.36\times10^{-1}</span></td>
+<td style="text-align: left;">是</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">主动容错</td>
+<td style="text-align: right;">0.2344</td>
+<td style="text-align: right;">0.2151</td>
+<td style="text-align: right;"><span class="math inline">2.28\times10^{-3}</span></td>
+<td style="text-align: left;">否</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">健康基准</td>
+<td style="text-align: right;">0.0473</td>
+<td style="text-align: right;">—</td>
+<td style="text-align: right;"><span class="math inline">1.60\times10^{-3}</span></td>
+<td style="text-align: left;">—</td>
+</tr>
+</tbody>
+</table>
+<p>这张表就是本章要解释的全部内容。为什么主动容错能把误差压回 <span class="math inline">10^{-3}</span> 量级？因为它做了三件事，而这三件事每一件都有代价：<strong>检测</strong>要时间，<strong>辨识</strong>要数据，<strong>重构</strong>要一套能落地的切换逻辑。任何一环没做好，主动容错就会退化成“和不处理差不多”，甚至更糟——切换瞬间的冲击可能把本来还能维持的系统推出发散边界。</p>
+<h3 id="主动容错的三段式">78.1.4 主动容错的三段式</h3>
+<p>主动容错的骨架可以用三个时刻切开。设故障发生在 <span class="math inline">t_f</span>，检测算法在 <span class="math inline">t_d</span> 时刻报警，隔离算法在 <span class="math inline">t_i</span> 时刻给出故障参数，控制律在 <span class="math inline">t_s</span> 时刻完成切换。三段分别是：</p>
+<ul>
+<li><strong>检测段</strong> <span class="math inline">[t_f,t_d]</span>：故障已经发生，控制器还不知道，闭环带着错误的模型继续跑。这一段的长短由残差的信噪比和阈值共同决定。</li>
+<li><strong>隔离段</strong> <span class="math inline">[t_d,t_i]</span>：知道出事了，但还不知道是什么事。系统在这段时间里采集故障后的数据，做参数辨识。这一段的长短由辨识窗长决定，本质上是“用时间换精度”。</li>
+<li><strong>决策与执行段</strong> <span class="math inline">[t_i,t_s]</span>：参数有了，算新增益、检查切换条件、把新控制律接上去。这一段的长短由计算量和安全联锁决定。</li>
+</ul>
+<p>图 78-1 画出了这套结构。上面一行是物理回路：参考 <span class="math inline">r</span> 进求和点，经增益 <span class="math inline">\boldsymbol K</span> 产生两路指令，主执行器出力经故障环节（虚线块）后进入磁悬浮轴，备份执行器经一阶惯性环节 <span class="math inline">\frac{1}{\tau s+1}</span> 后也进入同一根轴。下面一行是容错支路：观测器拿 <span class="math inline">u</span> 与 <span class="math inline">y</span> 算出残差，检测模块判断“是否超阈”，隔离模块估计 <span class="math inline">(\hat\rho,\hat c)</span>，重构模块算出新增益，再用虚线把新增益送回 <span class="math inline">\boldsymbol K</span>。</p>
+<figure>
+<img src="figs/ch078/fig_078_01_structure.svg" alt="图 78-1 容错控制的总体结构：主/备份双执行器、主通道上的故障注入点，以及由观测器、检测、隔离辨识、重构组成的容错支路" /><figcaption aria-hidden="true">图 78-1 容错控制的总体结构：主/备份双执行器、主通道上的故障注入点，以及由观测器、检测、隔离辨识、重构组成的容错支路</figcaption>
+</figure>
+<p>这张图里有两处容易被忽略、但在工程上决定成败的细节。</p>
+<p>第一处是<strong>观测器的输入必须与对象的实际作用量一致</strong>。图里观测器的输入标着 <span class="math inline">u,\ y</span>，这个 <span class="math inline">u</span> 不是控制器算出来的指令，而是执行器真正作用到对象上的量。故障前两者相同，故障后就分叉了：效率下降时真实作用量是 <span class="math inline">\rho u_1</span>，卡死时是 <span class="math inline">c</span>，偏置时是 <span class="math inline">u_1+c</span>。如果观测器仍然用指令 <span class="math inline">u_1</span> 推进，它就是在用一个错的模型去解释一个对的测量，残差会一直很大，检测会一直报警，而重构后的控制律会建立在一个错误的估计上。本章的仿真里，这一条曾经让主动容错的效果从“降低 3 倍代价”退化到“几乎没有改善”，修正之后才恢复正常。</p>
+<p>第二处是<strong>备份执行器不是免费的</strong>。它有自己的惯性（时间常数 <span class="math inline">\tau=0.15</span> s，相当于 7.5 个采样周期）和自己的限幅（<span class="math inline">|u_2|\le6</span>）。这两条限制了它能顶多少事。第 78.2 节末尾会给出一个只用两个数就能算清楚的判据：故障占去多少权限，剩下多少权限还够不够镇定这个本质不稳定的对象。这个判据解释了为什么本章的注入测试里，“卡死 2.0”这一行连主动容错也过不去，而“卡死 1.0”能过。</p>
+<h3 id="本章路线">78.1.5 本章路线</h3>
+<p>后面的内容按“原理—设计—实现—评估—落地”展开。</p>
+<p>第 78.2 节把上面的直观说法写成公式：对象、故障、观测器、残差、检测统计量、辨识方程、重构增益，以及那个决定“救不救得回来”的权限判据。第 78.3 节给出一套可以照做的设计步骤，七步，每步都有明确的输入输出。第 78.4 节与第 78.5 节分别讨论连续时间与离散时间的实现，重点在两者在残差统计特性与阈值标定上的差别。第 78.6 节用极点、代价、峰值、末段误差四组指标回答“容错之后系统到底稳不稳、性能剩多少”。第 78.7 节逐个解释参数的意义——阈值系数 <span class="math inline">k</span>、滑动平均窗长、辨识窗长、切换延迟、淡入时间、再分配权重——并说明每一个参数拧大拧小会发生什么。第 78.8 节给调参经验，包括本章实测的阈值扫描与故障幅值扫描。第 78.9 节讨论优化方向，第 78.10 节讲工程落地（故障注入测试、冗余配置、切换瞬态），第 78.11 节讲适用边界，第 78.12 节给出完整可运行的代码。</p>
+<p>读这一章时请始终记住一个对照关系：<strong>容错的收益是“故障后还能活”，容错的成本是“健康时多付的检测开销与切换风险”</strong>。第 78.7 节与第 78.8 节的每一个参数，都是在这两者之间挪动位置。</p>
+<h2 id="数学原理">78.2 数学原理</h2>
+<h3 id="从连续对象到离散模型">78.2.1 从连续对象到离散模型</h3>
+<p>把式 (78-1) 写成状态空间形式，<span class="math inline">\boldsymbol x=[x_1,x_2,x_3]^{\mathsf T}</span>，<span class="math inline">\boldsymbol u=[u_1,u_2]^{\mathsf T}</span>：</p>
+<p><span class="math display">
+\dot{\boldsymbol x}=\boldsymbol A_c\boldsymbol x+\boldsymbol B_c\boldsymbol u,\qquad
+\boldsymbol A_c=\begin{bmatrix}
+0 &amp; 1 &amp; 0\\
+\omega^2 &amp; -2\zeta\omega &amp; g_2\\
+0 &amp; 0 &amp; -1/\tau
+\end{bmatrix},\qquad
+\boldsymbol B_c=\begin{bmatrix}
+0 &amp; 0\\
+g_1 &amp; 0\\
+0 &amp; 1/\tau
+\end{bmatrix}
+\tag{78-8}
+</span></p>
+<p>控制器以 <span class="math inline">T_s=0.02</span> s 周期运行，输入在一个周期内保持不变，所以用零阶保持器离散化。标准做法是把矩阵指数作用在增广矩阵上：</p>
+<p><span class="math display">
+\exp\left(\begin{bmatrix}\boldsymbol A_c &amp; \boldsymbol B_c\\ \boldsymbol 0 &amp; \boldsymbol 0\end{bmatrix}T_s\right)
+=\begin{bmatrix}\boldsymbol A &amp; \boldsymbol B\\ \boldsymbol 0 &amp; \boldsymbol I\end{bmatrix}
+\tag{78-9}
+</span></p>
+<p>于是对象模型变为</p>
+<p><span class="math display">
+\boldsymbol x_{k+1}=\boldsymbol A\boldsymbol x_k+\boldsymbol B\boldsymbol u_k,\qquad
+\boldsymbol B=\begin{bmatrix}\boldsymbol b_1 &amp; \boldsymbol b_2\end{bmatrix}
+\tag{78-10}
+</span></p>
+<p>这一步在第 5 章与第 20 章已经反复用过，这里只强调一个与容错有关的细节：<strong>离散化把连续时间的“通道”变成了离散时间的“列”</strong>。主执行器对应 <span class="math inline">\boldsymbol B</span> 的第一列 <span class="math inline">\boldsymbol b_1</span>，备份执行器对应第二列 <span class="math inline">\boldsymbol b_2</span>。后面所有的故障辨识、权限分析、增益重构，都是在这两列上做文章。</p>
+<p><span class="math inline">\boldsymbol b_1</span> 与 <span class="math inline">\boldsymbol b_2</span> 的形状值得看一眼：<span class="math inline">\boldsymbol b_1</span> 只有第二个分量非零（力直接作用在速度上），<span class="math inline">\boldsymbol b_2</span> 的第一个分量为零、第二个分量是 <span class="math inline">\tau</span> 的一阶惯性响应折算过来的小量、第三个分量非零。也就是说，<strong>主执行器是“直连”的，备份执行器是“绕道”的</strong>。直连通道坏了，绕道通道能不能顶上，取决于它的带宽与权限，这两件事第 78.2.7 节会算清楚。</p>
+<h3 id="故障下的闭环等效输入偏差">78.2.2 故障下的闭环：等效输入偏差</h3>
+<p>把式 (78-3) 代入式 (78-10)，故障后的对象是</p>
+<p><span class="math display">
+\boldsymbol x_{k+1}=\boldsymbol A\boldsymbol x_k+\boldsymbol b_1\left(\rho u_{1,k}+c\right)+\boldsymbol b_2u_{2,k}
+\tag{78-11}
+</span></p>
+<p>控制器仍然按标称模型计算，认为作用量是 <span class="math inline">\boldsymbol b_1u_{1,k}+\boldsymbol b_2u_{2,k}</span>。两者之差是一个只沿 <span class="math inline">\boldsymbol b_1</span> 方向的输入偏差：</p>
+<p><span class="math display">
+\Delta\boldsymbol u_k=\boldsymbol b_1\left[(\rho-1)u_{1,k}+c\right]
+\tag{78-12}
+</span></p>
+<p>式 (78-12) 是本章所有检测与辨识的出发点。它说明三件事。</p>
+<p>第一，<strong>故障在状态方程里表现为“沿 <span class="math inline">\boldsymbol b_1</span> 方向的未知输入”</strong>，而不是“状态矩阵变了”。这个区别很重要：状态矩阵变了会改变系统的稳定性结构，所有极点一起漂移；输入偏差只是在原有动力学上叠加一个推动项，系统的“性格”没变，只是被推着走。</p>
+<p>第二，<strong>偏差的大小依赖 <span class="math inline">u_{1,k}</span></strong>。效率下降时偏差正比于当前指令，控制器出力越大、偏差越大；卡死时偏差是 <span class="math inline">c-\rho u_{1,k}</span> 里的常数项占主导；偏置时偏差是常数 <span class="math inline">c</span>。这就是为什么辨识要在 <span class="math inline">\boldsymbol b_1</span> 方向上对 <span class="math inline">(u_1,1)</span> 两列做回归——一个回归量是“随指令变化的部分”，另一个是“不随指令变化的部分”。</p>
+<p>第三，<strong>偏差的方向固定、幅值未知</strong>。方向固定意味着只要 <span class="math inline">\boldsymbol b_1</span> 与输出矩阵的零空间不重合，偏差就一定会体现在测量上，这是可检测性的几何基础；幅值未知意味着必须用数据估计，这是辨识存在的理由。</p>
+<h3 id="观测器与残差">78.2.3 观测器与残差</h3>
+<p>检测需要一个“应当是什么”的参照。本章用 Luenberger 观测器（对偶地也可看作稳态卡尔曼滤波器），其形式为</p>
+<p><span class="math display">
+\hat{\boldsymbol x}_{k+1}=\boldsymbol A\hat{\boldsymbol x}_k+\boldsymbol B\boldsymbol u_k^{\mathrm{obs}}+\boldsymbol L\left(\boldsymbol y_k-\hat{\boldsymbol x}_k\right)
+\tag{78-13}
+</span></p>
+<p>三个状态全部可测（位置由位移传感器、速度由差分或速度传感器、备份执行器内部状态由电流环给出），所以 <span class="math inline">\boldsymbol C=\boldsymbol I</span>。观测器增益 <span class="math inline">\boldsymbol L</span> 由对偶 Riccati 方程解出，取过程噪声 <span class="math inline">\mathrm{diag}(10^{-8},10^{-6},10^{-6})</span>、量测噪声 <span class="math inline">\mathrm{diag}(\sigma_1^2,\sigma_2^2,\sigma_3^2)</span>，三个通道的噪声标准差取 <span class="math inline">\sigma=[5\times10^{-3},2\times10^{-2},1\times10^{-2}]</span>。解出的增益是</p>
+<p><span class="math display">
+\boldsymbol L=\begin{bmatrix}
+0.0636 &amp; 0.0073 &amp; 0.0001\\
+0.1170 &amp; 0.0372 &amp; 0.0017\\
+0.0003 &amp; 0.0004 &amp; 0.0367
+\end{bmatrix}
+\tag{78-14}
+</span></p>
+<p>矩阵的非对角元很小，说明三个通道的估计基本解耦：位置残差主要修位置估计，速度残差主要修速度估计，第三通道自己修自己。这一点在实现上很省事，但在故障时会带来一个副作用——<strong>故障引起的残差主要落在第二行</strong>，因为 <span class="math inline">\boldsymbol b_1</span> 的力作用在速度上。第 78.7 节的归一化就是为这件事准备的。</p>
+<p>定义残差</p>
+<p><span class="math display">
+\boldsymbol r_k=\boldsymbol y_k-\hat{\boldsymbol x}_k
+\tag{78-15}
+</span></p>
+<p>把式 (78-11) 与式 (78-13) 相减，并注意 <span class="math inline">\boldsymbol y_k=\boldsymbol x_k+\boldsymbol v_k</span>，得到残差的递推</p>
+<p><span class="math display">
+\boldsymbol r_{k+1}=\left(\boldsymbol A-\boldsymbol L\right)\boldsymbol r_k+\boldsymbol b_1\left[(\rho-1)u_{1,k}+c\right]-\boldsymbol L\boldsymbol v_k+\boldsymbol v_{k+1}
+\tag{78-16}
+</span></p>
+<p>式 (78-16) 是本章的核心方程。它把残差分成了三部分：<strong>衰减的记忆</strong> <span class="math inline">(\boldsymbol A-\boldsymbol L)\boldsymbol r_k</span>、<strong>故障的驱动</strong> <span class="math inline">\boldsymbol b_1[\cdot]</span>、<strong>噪声的驱动</strong> <span class="math inline">-\boldsymbol L\boldsymbol v_k+\boldsymbol v_{k+1}</span>。检测要做的，就是在噪声驱动的那一项之上，把故障驱动的那一项认出来。</p>
+<p>健康时 <span class="math inline">\rho=1</span>、<span class="math inline">c=0</span>，方括号里为零，残差只剩噪声项。故障后方括号非零，残差被“顶”起来，顶起来的幅度与 <span class="math inline">\boldsymbol b_1</span> 以及 <span class="math inline">(\rho-1)u_1+c</span> 成正比。这就解释了一个在第 78.8 节会反复出现的现象：<strong>故障越轻、指令越小，残差越接近噪声，检测越慢</strong>。<span class="math inline">\rho=0.9</span> 时检测要 <span class="math inline">1.24</span> s，<span class="math inline">\rho=0.4</span> 时只要 <span class="math inline">0.24</span> s，差别不在算法，在信噪比。</p>
+<h3 id="归一化与检测统计量">78.2.4 归一化与检测统计量</h3>
+<p>残差是三维向量，三个通道的噪声标准差差了 4 倍（<span class="math inline">5\times10^{-3}</span> 对 <span class="math inline">2\times10^{-2}</span>）。如果直接取欧氏范数，噪声大的通道会主导统计量，等于把另外两个通道的信息浪费掉。所以先逐通道归一化：</p>
+<p><span class="math display">
+\tilde{\boldsymbol r}_k=\mathrm{diag}^{-1}(\boldsymbol\sigma)\,\boldsymbol r_k
+</span></p>
+<p>再做 <span class="math inline">w</span> 点因果滑动平均，压掉高频噪声，最后取范数作为检测统计量：</p>
+<p><span class="math display">
+S_k=\left\|\frac{1}{w}\sum_{i=0}^{w-1}\tilde{\boldsymbol r}_{k-i}\right\|_2,\qquad w=5
+\tag{78-17}
+</span></p>
+<p>滑动平均的窗长 <span class="math inline">w=5</span> 对应 <span class="math inline">0.1</span> s。选 5 而不是 20，理由是<strong>平均会引入延迟</strong>：<span class="math inline">w</span> 点平均的等效群延迟是 <span class="math inline">(w-1)/2</span> 步，<span class="math inline">w=5</span> 时是 2 步（<span class="math inline">0.04</span> s），<span class="math inline">w=20</span> 时是 9.5 步（<span class="math inline">0.19</span> s）。在本质不稳定对象上，检测延迟直接换算成故障后的峰值，所以这里的取舍偏向“少平均、快响应”，把噪声抑制的活儿交给阈值。</p>
+<p>阈值按健康统计量的均值与标准差设定：</p>
+<p><span class="math display">
+\theta=\mu_S+k\,\sigma_S
+\tag{78-18}
+</span></p>
+<p>其中 <span class="math inline">\mu_S</span> 与 <span class="math inline">\sigma_S</span> 由健康数据标定，<span class="math inline">k</span> 是阈值系数。本章实测 30 组健康轨迹、每组取后 500 步，得到 <span class="math inline">\mu_S=0.6860</span>、<span class="math inline">\sigma_S=0.2966</span>。按式 (78-18) 算出的阈值与对应的单步误报率是：</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: right;"><span class="math inline">k</span></th>
+<th style="text-align: right;">阈值 <span class="math inline">\theta</span></th>
+<th style="text-align: right;">单步误报率</th>
+<th style="text-align: right;">每 500 步期望误报次数</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">1.2791</td>
+<td style="text-align: right;">0.03627</td>
+<td style="text-align: right;">18.1</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">1.5756</td>
+<td style="text-align: right;">0.00560</td>
+<td style="text-align: right;">2.8</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">1.8722</td>
+<td style="text-align: right;">0.00047</td>
+<td style="text-align: right;">0.24</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">5</td>
+<td style="text-align: right;">2.1688</td>
+<td style="text-align: right;">0.00000</td>
+<td style="text-align: right;">0</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">6</td>
+<td style="text-align: right;">2.4653</td>
+<td style="text-align: right;">0.00000</td>
+<td style="text-align: right;">0</td>
+</tr>
+</tbody>
+</table>
+<p>这张表是后面所有讨论的基准。<span class="math inline">k=2</span> 时每 500 步会误报 18 次，系统基本上一直在“报警—复位—再报警”之间抖动；<span class="math inline">k=4</span> 时 500 步里期望误报 0.24 次，折算到 12 s 的仿真长度上是“多数情况下不误报”；<span class="math inline">k=5</span> 与 <span class="math inline">k=6</span> 在 15000 个健康样本里一次都没误报。本章默认取 <span class="math inline">k=4</span>，阈值 <span class="math inline">\theta=1.8722</span>。</p>
+<p>把阈值与信噪比放在一起看，就得到本章的第一个工程结论：<strong>误报率与检测延迟是一根绳子的两端</strong>。<span class="math inline">k</span> 从 4 降到 2，误报率涨 77 倍，检测延迟只从 <span class="math inline">0.20</span> s 缩到 <span class="math inline">0.16</span> s；<span class="math inline">k</span> 从 4 升到 6，误报率归零，检测延迟从 <span class="math inline">0.20</span> s 涨到 <span class="math inline">0.30</span> s。第 78.8 节会用闭环代价把这条曲线算完，结论是 <span class="math inline">k\in[3,5]</span> 之间代价几乎不变，两端才明显变坏。</p>
+<h3 id="可检测性残差往哪个方向跑">78.2.5 可检测性：残差往哪个方向跑</h3>
+<p>式 (78-16) 里故障项是 <span class="math inline">\boldsymbol b_1[(\rho-1)u_1+c]</span>。如果 <span class="math inline">\boldsymbol b_1</span> 恰好落在 <span class="math inline">(\boldsymbol A-\boldsymbol L)</span> 的某个不变子空间里，残差就可能沿着“看不见”的方向增长，检测会失效。本章的 <span class="math inline">\boldsymbol b_1</span> 与 <span class="math inline">\boldsymbol C=\boldsymbol I</span> 保证了这一点不会发生——三状态全测时，任何非零输入偏差都会立刻在残差里出现。</p>
+<p>但“能看见”与“能分辨”是两件事。要同时估出 <span class="math inline">\rho</span> 与 <span class="math inline">c</span>，需要一个持续的激励条件。把式 (78-16) 的故障项写成参数形式：</p>
+<p><span class="math display">
+\boldsymbol b_1\left[(\rho-1)u_{1,k}+c\right]=\boldsymbol b_1\begin{bmatrix}u_{1,k} &amp; 1\end{bmatrix}\begin{bmatrix}\rho-1\\ c\end{bmatrix}
+\tag{78-19}
+</span></p>
+<p>两个未知数、一个方程，单步无解。把 <span class="math inline">N</span> 步叠起来：</p>
+<p><span class="math display">
+\begin{bmatrix}\boldsymbol b_1u_{1,k_0}\\ \vdots\\ \boldsymbol b_1u_{1,k_0+N-1}\end{bmatrix}
+\begin{bmatrix}\rho-1\\ c\end{bmatrix}
+=\begin{bmatrix}\boldsymbol d_{k_0}\\ \vdots\\ \boldsymbol d_{k_0+N-1}\end{bmatrix}
+</span></p>
+<p>其中 <span class="math inline">\boldsymbol d_k=\boldsymbol x_{k+1}-\boldsymbol A\boldsymbol x_k-\boldsymbol b_2u_{2,k}</span> 是“用标称模型算出来的残差”。可辨识的条件是回归矩阵满秩，也就是<strong>在这段窗口里 <span class="math inline">u_1</span> 必须有变化</strong>：</p>
+<p><span class="math display">
+\sum_{k=k_0}^{k_0+N-1}\left(u_{1,k}-\bar u_1\right)^2&gt;0
+\tag{78-20}
+</span></p>
+<p>这一条看起来是废话，工程上却经常踩。如果故障恰好发生在参考信号过零点附近、控制器输出几乎不变，那么 <span class="math inline">u_1</span> 在窗口里近似常数，<span class="math inline">\rho</span> 与 <span class="math inline">c</span> 就无法分离——一组 <span class="math inline">(\rho,c)</span> 和另一组 <span class="math inline">(\rho&#39;,c&#39;)</span> 可以给出同样的残差。本章的实测给出了这个现象的量化版本：<span class="math inline">\rho=0.4</span> 时正常参考幅值 <span class="math inline">0.30</span> 下检测延迟 <span class="math inline">0.24</span> s，把参考幅值压到 <span class="math inline">0.02</span>（激励几乎消失）后，检测延迟变成 <span class="math inline">1.24</span> s，是原来的 5 倍多。</p>
+<p><strong>这就是“故障诊断依赖激励”的确切含义</strong>：不是算法不够好，是数据里没有信息。工程上的对策有两个，一是保证运行轨迹有足够丰富的频率成分（第 78.9 节会提到注入探测信号），二是承认“激励不足时只能等”，并在等待期间用保守策略兜住。</p>
+<h3 id="辨识两列最小二乘">78.2.6 辨识：两列最小二乘</h3>
+<p>检测到故障后，系统在 <span class="math inline">[t_d,t_d+T_{\mathrm{est}}]</span> 这段时间里采集数据，做参数辨识。辨识窗必须整段落在故障之后，这一点是硬约束——如果窗口跨过故障时刻，前半段是健康数据、后半段是故障数据，最小二乘会把两者平均，估出来的 <span class="math inline">\hat\rho</span> 偏向 1，<span class="math inline">\hat c</span> 偏向 0，故障被判成“健康”。</p>
+<p>把式 (78-19) 沿 <span class="math inline">\boldsymbol b_1</span> 方向投影，得到一个标量回归：</p>
+<p><span class="math display">
+y_k=\rho\,u_{1,k}+c+\varepsilon_k,\qquad
+y_k=\frac{\boldsymbol b_1^{\mathsf T}\left(\boldsymbol x_{k+1}-\boldsymbol A\boldsymbol x_k-\boldsymbol b_2u_{2,k}\right)}{\boldsymbol b_1^{\mathsf T}\boldsymbol b_1}
+\tag{78-21}
+</span></p>
+<p>投影的作用是把三维的方程压成一维：既然故障只沿 <span class="math inline">\boldsymbol b_1</span> 一个方向作用，那就只看那个方向上的分量，其余方向上是模型误差与噪声，投影掉反而更干净。<span class="math inline">\varepsilon_k</span> 里包含量测噪声与离散化误差。</p>
+<p>对 <span class="math inline">N</span> 个样本，最小二乘的解是</p>
+<p><span class="math display">
+\begin{bmatrix}\hat\rho\\ \hat c\end{bmatrix}
+=\left(\boldsymbol\Phi^{\mathsf T}\boldsymbol\Phi\right)^{-1}\boldsymbol\Phi^{\mathsf T}\boldsymbol y,\qquad
+\boldsymbol\Phi=\begin{bmatrix}u_{1,k_0} &amp; 1\\ \vdots &amp; \vdots\\ u_{1,k_0+N-1} &amp; 1\end{bmatrix}
+\tag{78-22}
+</span></p>
+<p><span class="math inline">\boldsymbol\Phi^{\mathsf T}\boldsymbol\Phi</span> 的条件数直接反映辨识问题的病态程度。本章的实现里对它做了一次检查：条件数超过 <span class="math inline">10^{8}</span> 就放弃本次辨识、保持原控制律不变——这是一个必要的保护，因为病态时解出的 <span class="math inline">\hat\rho</span> 可能落在 <span class="math inline">[0,1]</span> 之外，按它重构会得到一套荒谬的增益。正常情况下条件数远小于这个门限，实测 7 类故障都能把 <span class="math inline">(\rho,c)</span> 估到三位小数：<span class="math inline">\rho=0.6</span> 估成 <span class="math inline">0.600</span>、<span class="math inline">0.4</span> 估成 <span class="math inline">0.400</span>、<span class="math inline">0.2</span> 估成 <span class="math inline">0.200</span>，卡死 <span class="math inline">c=2.0</span> 估成 <span class="math inline">\hat\rho=0.000</span>、<span class="math inline">\hat c=+2.000</span>，卡死 <span class="math inline">c=-1.5</span> 估成 <span class="math inline">\hat c=-1.500</span>，偏置 <span class="math inline">c=0.8</span> 估成 <span class="math inline">\hat\rho=1.000</span>、<span class="math inline">\hat c=+0.800</span>，偏置 <span class="math inline">c=-0.5</span> 估成 <span class="math inline">\hat c=-0.500</span>。健康时估成 <span class="math inline">\hat\rho=1.000</span>、<span class="math inline">\hat c=+0.000</span>，与真值一致。</p>
+<p>辨识精度这么高，原因不难理解：式 (78-21) 是一个线性回归，噪声是零均值的高斯白噪声，<span class="math inline">N=20</span> 个样本足以把两个参数估到 <span class="math inline">10^{-3}</span> 量级。<strong>主动容错真正的难点不在辨识精度，而在辨识所花的时间</strong>。<span class="math inline">N=20</span> 对应 <span class="math inline">0.4</span> s，在这 <span class="math inline">0.4</span> s 里系统是带着故障、用着旧增益在跑的，本质不稳定的对象每多跑一步，偏差就多积累一点。第 78.3 节把这段时间称为“隔离窗”，第 78.7 节会看到它如何决定“救得回来”与“救不回来”的分界。</p>
+<h3 id="重构把故障塞回设计模型">78.2.7 重构：把故障塞回设计模型</h3>
+<p>辨识出 <span class="math inline">(\hat\rho,\hat c)</span> 之后，重构分三种情况。</p>
+<p><strong>效率下降</strong>。主通道还有 <span class="math inline">\hat\rho</span> 的力气，只是变小了。最直接的做法是把有效输入矩阵改成</p>
+<p><span class="math display">
+\boldsymbol B_{\mathrm{eff}}=\begin{bmatrix}\hat\rho\,\boldsymbol b_1 &amp; \boldsymbol b_2\end{bmatrix}
+\tag{78-23}
+</span></p>
+<p>然后按同一组权重重算 LQR：</p>
+<p><span class="math display">
+\hat{\boldsymbol K}=\mathrm{dlqr}\left(\boldsymbol A,\boldsymbol B_{\mathrm{eff}},\boldsymbol Q,\boldsymbol R\right)
+\tag{78-24}
+</span></p>
+<p>本章取 <span class="math inline">\boldsymbol Q=\mathrm{diag}(100,10,1)</span>、<span class="math inline">\boldsymbol R=\mathrm{diag}(0.01,0.01)</span>。<span class="math inline">\hat\rho</span> 越小，<span class="math inline">\boldsymbol B_{\mathrm{eff}}</span> 的第一列越“虚”，LQR 会自动把更多权重压到第二列上，同时把第一列的增益抬高以补偿。<span class="math inline">\hat\rho=0.4</span> 时，重算出的增益与标称增益相比，第一行明显变大——这正是“力气小了就多喊几声”的数学表达。</p>
+<p><strong>卡死</strong>。主通道完全不受控，<span class="math inline">\hat\rho=0</span>，<span class="math inline">\boldsymbol B_{\mathrm{eff}}</span> 的第一列几乎为零。这时如果仍用两输入 LQR，会得到一个第一行极大、第二行也不合理的增益矩阵，因为算法在试图用一个不存在的通道去镇定系统。正确的做法是把主通道整行置零，只对备份通道做单输入 LQR：</p>
+<p><span class="math display">
+\hat{\boldsymbol K}=\begin{bmatrix}\boldsymbol 0\\ \boldsymbol k_2^{\mathsf T}\end{bmatrix},\qquad
+\boldsymbol k_2=\mathrm{dlqr}\left(\boldsymbol A,\boldsymbol b_2,\boldsymbol Q,R_{\mathrm{back}}\right)
+\tag{78-25}
+</span></p>
+<p><span class="math inline">R_{\mathrm{back}}</span> 是备份通道的控力权重，本章取 <span class="math inline">0.1</span>。这个值比标称的 <span class="math inline">0.01</span> 大一个数量级，原因有两个：备份通道经过一阶惯性，带宽低，高增益只会带来饱和与振荡；备份通道的权限本来就紧张，必须省着用。</p>
+<p>与“整行置零”配套的还有前馈项的改写。主通道卡死在 <span class="math inline">c</span> 上，这个 <span class="math inline">c</span> 是一个持续的力，必须由备份通道抵消。稳态时 <span class="math inline">x_2=0</span>、<span class="math inline">\dot x_2=0</span>，从式 (78-1) 得到备份执行器应处的平衡点</p>
+<p><span class="math display">
+x_{3,\mathrm{eq}}=-\frac{\omega^2r-2\zeta\omega\dot r+g_1\hat c}{g_2}
+\tag{78-26}
+</span></p>
+<p>注意分子里的三项：位置项、速度项、以及卡死常值项。前两项在健康时也有（它们是跟踪正弦所需的稳态力），第三项是故障额外加进来的。<span class="math inline">c=2.0</span> 时，<span class="math inline">x_{3,\mathrm{eq}}</span> 的典型值在 <span class="math inline">-3.3</span> 附近——这已经用掉了备份执行器限幅 <span class="math inline">6</span> 的一半以上，第 78.2.8 节会说明这意味着什么。</p>
+<p><strong>偏置</strong>。主通道仍然可控，只是每一句指令都被加了一个常数。这种情况下不需要换增益（<span class="math inline">\hat\rho\approx1</span>，<span class="math inline">\hat{\boldsymbol K}</span> 与 <span class="math inline">\boldsymbol K_0</span> 几乎相同），只需要在指令上把这个常数减掉：</p>
+<p><span class="math display">
+u_1=\frac{-\left(\omega^2r-2\zeta\omega\dot r\right)}{g_1\hat\rho}-\hat c-\boldsymbol K[0,:]\,\boldsymbol e
+\tag{78-27}
+</span></p>
+<p>式 (78-27) 里的 <span class="math inline">-\hat c</span> 就是“前馈补偿”：既然执行器会多加 <span class="math inline">c</span>，那就先少给 <span class="math inline">c</span>。这一项看起来简单，效果却很明显：偏置 <span class="math inline">0.8</span> 时，不处理的故障后峰值是 <span class="math inline">0.160</span>，主动容错是 <span class="math inline">0.083</span>，压掉近一半；而如果错把偏置当成卡死处理（把 <span class="math inline">u_1</span> 整行置零），备份通道要独自承担全部稳态力，故障后峰值会冲到 <span class="math inline">0.294</span> 以上，反而更差。</p>
+<p>三种情况对应三套动作，这个对应关系必须在代码里写清楚。本章的实现用一个三态标志（正常、效率下降、卡死、偏置）来区分，第 78.12 节会给出完整代码。</p>
+<h3 id="权限判据救不救得回来">78.2.8 权限判据：救不救得回来</h3>
+<p>前面所有推导都假设“只要估得准、切得快，就能救回来”。这个假设有边界，边界由权限决定。</p>
+<p>备份执行器能提供的最大稳态力是</p>
+<p><span class="math display">
+F_{\max}=g_2U_{2,\max}=0.6\times6=3.6
+\tag{78-28}
+</span></p>
+<p>卡死故障会占去 <span class="math inline">g_1|c|=|c|</span> 的力（本章 <span class="math inline">g_1=1</span>）。剩下的可用力是</p>
+<p><span class="math display">
+F_{\mathrm{rem}}=F_{\max}-g_1|c|=3.6-|c|
+\tag{78-29}
+</span></p>
+<p>而对象是本质不稳定的，要把偏差 <span class="math inline">x_1</span> 拉住，至少需要抵抗不稳定项 <span class="math inline">\omega^2x_1=1.44x_1</span>。于是“在偏差发展到多大之前必须完成切换”的条件是</p>
+<p><span class="math display">
+1.44\left|x_1\right|&lt;3.6-|c|
+\quad\Longrightarrow\quad
+\left|x_1\right|&lt;\frac{3.6-|c|}{1.44}
+\tag{78-30}
+</span></p>
+<p>按式 (78-30) 算三个数：<span class="math inline">c=0.5</span> 时边界是 <span class="math inline">2.15</span>，<span class="math inline">c=1.0</span> 时是 <span class="math inline">1.81</span>，<span class="math inline">c=2.0</span> 时是 <span class="math inline">1.11</span>。这三条边界解释了第 78.10 节注入矩阵里的全部现象。</p>
+<p><span class="math inline">c=0.5</span> 与 <span class="math inline">c=1.0</span> 时，边界分别 <span class="math inline">2.15</span> 与 <span class="math inline">1.81</span>，远大于切换时刻的实际偏差（本章实测主动容错的故障后峰值分别是 <span class="math inline">0.294</span> 与 <span class="math inline">0.507</span>），所以救得回来。<span class="math inline">c=2.0</span> 时边界只有 <span class="math inline">1.11</span>，而备份通道还需要 <span class="math inline">0.4</span> s 的辨识窗才能拿到 <span class="math inline">\hat c</span>，在这 <span class="math inline">0.4</span> s 里偏差已经越过边界，此后无论怎么切都拉不回来——实测主动容错的故障后峰值是 <span class="math inline">6598.832</span>，与不处理的 <span class="math inline">24131.973</span> 同属发散，只是慢一点。</p>
+<p>式 (78-30) 的价值在于它把“能不能容错”从一句定性判断变成了一个可以提前算的数。设计阶段拿到执行器限幅与故障谱，就可以算出哪些故障在能力范围内、哪些必须靠“预防”而不是“容错”来解决。第 78.10 节会把这条判据写进故障注入测试的判读规则里。</p>
+<h3 id="代价指标">78.2.9 代价指标</h3>
+<p>为了横向比较不同方案，本章用一个与控制器权重解耦的二次代价：</p>
+<p><span class="math display">
+J=\int_0^{t_f}\left(e^2+0.1x_2^2+0.02u_1^2+0.02u_2^2\right)\mathrm{d}t,\qquad e=x_1-r
+\tag{78-31}
+</span></p>
+<p>注意控制器的权重是 <span class="math inline">\boldsymbol Q=\mathrm{diag}(100,10,1)</span>、<span class="math inline">\boldsymbol R=\mathrm{diag}(0.01,0.01)</span>，与式 (78-31) 的系数不同。这是有意为之：<strong>控制器按自己的权重设计，评价按另一套权重打分</strong>，否则“用 A 的标准评价 A”会天然偏向 A，比较失去意义。式 (78-31) 里位置误差的权重是 1，速度权重 0.1，两路控制量权重都是 0.02，反映的是“跟踪精度优先、能量次要”的工程偏好。</p>
+<p>除了 <span class="math inline">J</span>，本章还统计三个指标：故障后峰值 <span class="math inline">\max|e|</span>（考核瞬态冲击与机械间隙）、故障后前 150 步的均方根（考核恢复过程）、末 100 步的均方根（考核稳态）。四个指标各有各的用途，第 78.6 节会看到它们有时给出不一致的排序——某个方案峰值最小但恢复最慢，另一个方案反之。这种不一致不是数据有问题，而是“容错”本身就是多目标问题。</p>
+<p><strong>三项权重与三项状态并不一一对应，这一点容易误读</strong>。式 (78-31) 的积分里有四项：位置误差、速度、<span class="math inline">u_1</span>、<span class="math inline">u_2</span>。它在离散实现里对应 <span class="math inline">\boldsymbol Q_{\mathrm{cost}}=\mathrm{diag}(1,0.1,0)</span> 与 <span class="math inline">\boldsymbol R_{\mathrm{cost}}=[0.02,0.02]</span>。第三项的状态权重是 <span class="math inline">0</span>，也就是<strong>备份执行器的内部状态 <span class="math inline">x_3</span> 不进代价</strong>。这不是漏写。<span class="math inline">x_3</span> 是执行器的内部变量，不是工艺量，它偏大偏小本身不构成“性能差”；它的影响已经通过 <span class="math inline">g_2x_3</span> 体现在速度与位置上了，再计一次等于重复惩罚。更实际的原因是：如果把 <span class="math inline">x_3</span> 计进代价，那么“多用备份通道”这个动作本身就会被扣分，容错方案会被系统性地判差——而这恰恰是容错控制要鼓励的动作。</p>
+<p><strong>两路控制量的权重相同，也是有意的</strong>。<span class="math inline">\boldsymbol R_{\mathrm{cost}}</span> 的两个分量都是 <span class="math inline">0.02</span>，不因为备份通道“平时不用”就给它更小的权重。原因是评价要回答的问题是“这套方案总共花了多少执行器代价”，而不是“这套方案是否公平地使用了两个执行器”。如果给备份通道更低的权重，主动容错会因为“它敢用备份通道”而自动占便宜，横比就失去意义。<strong>评价函数的中立性，比评价函数的精细度更重要。</strong></p>
+<p><strong>位置误差用 <span class="math inline">e</span> 而不是 <span class="math inline">x_1</span></strong>。这条看似琐碎，实则决定了所有数字的量级。若用 <span class="math inline">x_1</span>，跟踪一条幅值 <span class="math inline">0.30</span> 的正弦，即使完美跟踪，代价里也含有 <span class="math inline">\int x_1^2\mathrm{d}t\approx0.3^2\times12/2=0.54</span> 的“参考本身的能量”，方案之间的差异会被这个大数淹没。用 <span class="math inline">e=x_1-r</span> 之后，健康工况的 <span class="math inline">J</span> 只有 <span class="math inline">0.0475</span>，故障方案是 <span class="math inline">0.81</span> 或 <span class="math inline">0.23</span>，差异一目了然。<strong>评价指标的偏移量选择，决定了它能不能分辨差异</strong>，这是所有横比实验都要先解决的事。</p>
+<h2 id="设计步骤">78.3 设计步骤</h2>
+<p>把前面的公式串起来，一套主动容错控制器可以按七步做出来。每一步都有明确的输入与输出，做完一步就能验证一步，不必等到最后才发现哪里不对。</p>
+<p>这七步的顺序不是随意排的，而是按“依赖关系”排的：后一步用到的量必须由前一步产出。第一步给出模型与两套增益，第二步给出阈值，第三步给出“容错能力到哪为止”的判据，第四步给出“越过判据之后怎么改结构”，第五步给出“改结构需要多久”，第六步给出“怎么改才不震”，第七步给出“改完到底行不行”。任何一步想跳过，都会在后面某一步变成无法解释的数字。实际工程里最常见的失败不是算法写错，而是第二步的阈值与第五步的延迟分别按不同工况标定，最后在第七步发现故障谱中间那一段怎么调都过不了——回头一看，是两个环节的时间基准不一致。</p>
+<p>七步的时间成本也值得先说清楚：前四步是纸面工作，不需要跑仿真；后三步必须跑闭环。所以真正决定“这套方案能不能用”的是第三步的边界算得对不对，而不是第七步的曲线漂不漂亮。第三步算错方向，第七步只会跑出一堆看起来收敛、实际靠运气的结果。</p>
+<h3 id="第一步标称模型与观测器">78.3.1 第一步：标称模型与观测器</h3>
+<p>输入是对象的物理参数与采样周期，输出是离散矩阵 <span class="math inline">\boldsymbol A,\boldsymbol B</span>、标称增益 <span class="math inline">\boldsymbol K_0</span> 与观测器增益 <span class="math inline">\boldsymbol L</span>。</p>
+<p>这一步与常规状态反馈设计没有区别：按式 (78-9) 做零阶保持离散化，按 <span class="math inline">\boldsymbol Q</span>、<span class="math inline">\boldsymbol R</span> 解离散 Riccati 方程得到 <span class="math inline">\boldsymbol K_0</span>，按噪声强度解对偶 Riccati 方程得到 <span class="math inline">\boldsymbol L</span>。本章的结果是式 (78-7) 与式 (78-14)。</p>
+<p><strong>离散矩阵要能与物理参数对上</strong>。这不是形式检查，而是排查符号错误最有效的手段。本章的 <span class="math inline">\boldsymbol A</span> 第一行是 <span class="math inline">[1.000287,\ 0.019930,\ 0.000115]</span>，可以逐项用手算核对：<span class="math inline">(1,1)</span> 元约等于 <span class="math inline">1+\omega^2T_s^2/2=1+1.44\times4\times10^{-4}/2=1.000288</span>；<span class="math inline">(1,2)</span> 元约等于 <span class="math inline">T_s-2\zeta\omega T_s^2/2=0.02-0.36\times4\times10^{-4}/2</span>，落在 <span class="math inline">0.01993</span>；<span class="math inline">(1,3)</span> 元约等于 <span class="math inline">g_2T_s^2/2=0.6\times4\times10^{-4}/2=1.2\times10^{-4}</span>，与 <span class="math inline">0.000115</span> 同量级。第二行的 <span class="math inline">(2,1)</span> 元是 <span class="math inline">\omega^2T_s=0.0288</span> 减去阻尼修正后的 <span class="math inline">0.028699</span>。第三行只有 <span class="math inline">(3,3)</span> 元非零，它是 <span class="math inline">e^{-T_s/\tau}=e^{-0.1333}=0.875173</span>——这个数一定要单独核，因为它是唯一一个由时间常数直接决定的元，符号或单位错一位就会立刻显形。</p>
+<p><strong>离散极点要与连续极点按 <span class="math inline">z=e^{sT_s}</span> 对上</strong>。连续域的三个特征值是 <span class="math inline">+1.033</span>、<span class="math inline">-1.393</span> 与 <span class="math inline">-6.667</span>，映射到离散域应分别是 <span class="math inline">e^{1.033\times0.02}=1.0209</span>、<span class="math inline">e^{-1.393\times0.02}=0.9725</span>、<span class="math inline">e^{-6.667\times0.02}=0.8752</span>；本章实算的 <span class="math inline">\mathrm{eig}(\boldsymbol A)</span> 是 <span class="math inline">1.020884</span>、<span class="math inline">0.972516</span>、<span class="math inline">0.875173</span>，四位小数完全吻合。这一步检查的价值在于：如果离散化时把 <span class="math inline">\boldsymbol B</span> 的增广块放错位置，<span class="math inline">\boldsymbol A</span> 往往仍然是对的，极点检查通不出问题，但 <span class="math inline">\boldsymbol B</span> 会错，而 <span class="math inline">\boldsymbol B</span> 错了之后所有重构增益都会错。</p>
+<p><strong>两列 <span class="math inline">\boldsymbol B</span> 的形状决定了后面所有的容错策略</strong>。本章 <span class="math inline">\boldsymbol b_1=[1.9953\times10^{-4},\ 1.9930\times10^{-2},\ 0]^{\mathsf T}</span>，<span class="math inline">\boldsymbol b_2=[5.1510\times10^{-6},\ 7.6378\times10^{-4},\ 1.2483\times10^{-1}]^{\mathsf T}</span>。第一列的第二分量是 <span class="math inline">1.9930\times10^{-2}</span>，第二列的第二分量只有 <span class="math inline">7.6378\times10^{-4}</span>，两者差 <span class="math inline">26.1</span> 倍；第二列的第二分量与第一列的第二分量之比只有 <span class="math inline">3.8\%</span>。这说明同一拍里主通道对加速度的作用是备份通道的二十六倍。但反过来看第三行，<span class="math inline">\boldsymbol b_2</span> 的第三分量是 <span class="math inline">0.1248</span>，<span class="math inline">\boldsymbol b_1</span> 的第三分量是 <span class="math inline">0</span>——备份通道真正的作用点不在“当拍推力”，而在“把 <span class="math inline">x_3</span> 这个内部状态推起来”，再经 <span class="math inline">g_2=0.6</span> 折算成力。这就解释了为什么备份通道的稳态能力反而是主通道的 <span class="math inline">72\%</span>：稳态时 <span class="math inline">x_3</span> 可以积累到接近 <span class="math inline">u_2</span>，<span class="math inline">0.6\times6=3.6</span>，而主通道被限在 <span class="math inline">1.0\times5=5.0</span>。<strong>主通道快而直接，备份通道慢而有力</strong>，这八个字是后面每一条重构规则的物理依据。</p>
+<p><strong>观测器增益要检查噪声放大</strong>。本章 <span class="math inline">\boldsymbol L</span> 的三行是 <span class="math inline">[0.0636,\ 0.0073,\ 0.0001]</span>、<span class="math inline">[0.1170,\ 0.0372,\ 0.0017]</span>、<span class="math inline">[0.0003,\ 0.0004,\ 0.0367]</span>。第一列（对应位置量测）的系数最大，第二列次之，第三列最小，这与三个量测通道的噪声标准差 <span class="math inline">5\times10^{-3}</span>、<span class="math inline">2\times10^{-2}</span>、<span class="math inline">10^{-2}</span> 的方向一致：噪声越小的通道，观测器越敢用。若某一列的系数与噪声水平反着来，多半是 <span class="math inline">\boldsymbol R_v</span> 的对角元写反了。</p>
+<p>有一个容易被忽略的检查项：<strong>标称闭环的稳定裕度</strong>。容错控制要在故障后切换到一套新增益，新增益的稳定裕度通常比标称的差（因为有效输入矩阵“变虚”了）。如果标称闭环本身只有很小的裕度，切换后几乎没有余量可用。本章标称闭环的极点是 <span class="math inline">0.9385</span>、<span class="math inline">0.5371</span>、<span class="math inline">0.2848</span>，谱半径 <span class="math inline">0.9385</span>。这个数看着离 <span class="math inline">1</span> 不远，但换算成时间常数是 <span class="math inline">T_s/|\ln\rho_{\mathrm{cl}}|=0.02/0.0635=0.315</span> s，也就是说偏差每 <span class="math inline">0.315</span> s 衰减到 <span class="math inline">37\%</span>，五十步（<span class="math inline">1</span> s）衰减到 <span class="math inline">4.2\%</span>。对本章 <span class="math inline">12</span> s 的仿真时长来说，这个收敛速度够用；但如果参考信号周期只有 <span class="math inline">2</span> s，<span class="math inline">0.315</span> s 的时间常数就会显得拖沓。<strong>谱半径不是越小越好，它要与参考信号的带宽匹配</strong>，这一点在第 78.6 节会用四套增益的横比再说明一次。</p>
+<h3 id="第二步健康残差标定">78.3.2 第二步：健康残差标定</h3>
+<p>输入是健康工况下的若干条轨迹，输出是 <span class="math inline">\mu_S</span>、<span class="math inline">\sigma_S</span> 与阈值 <span class="math inline">\theta</span>。</p>
+<p>这一步是整个设计中唯一“必须用数据”的环节，也是最容易做得草率的一步。需要注意三点。</p>
+<p>其一，<strong>标定数据要覆盖工作范围</strong>。如果标定只在参考幅值 <span class="math inline">0.30</span> 下做，而实际运行会到 <span class="math inline">0.10</span>，那么标定出的 <span class="math inline">\sigma_S</span> 偏大（因为大幅值下控制量大、残差大），阈值会偏高，轻故障漏报。本章的标定用 30 条不同随机种子的轨迹，参考幅值固定 <span class="math inline">0.30</span>，与后续实验条件一致。</p>
+<p>其二，<strong>要丢掉起始瞬态</strong>。仿真从零状态起步，前 100 步有起幅过程，残差统计量与稳态不同。本章取每条轨迹的第 100 步之后共 500 步参与统计，30 条合计 15000 个样本，得到 <span class="math inline">\mu_S=0.6860</span>、<span class="math inline">\sigma_S=0.2966</span>。</p>
+<p>其三，<strong>要同时记录误报率曲线</strong>，而不只是记一个阈值。下面的 <span class="math inline">k</span>–误报率对照表，是后面调参时判断“能不能再降一点”的依据。只记一个数，等于放弃了这条信息。</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">系数 <span class="math inline">k</span></th>
+<th style="text-align: left;">阈值 <span class="math inline">\theta</span></th>
+<th style="text-align: left;">误报步数 / 15000</th>
+<th style="text-align: left;">误报率</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><span class="math inline">2</span></td>
+<td style="text-align: left;"><span class="math inline">1.2791</span></td>
+<td style="text-align: left;"><span class="math inline">544</span></td>
+<td style="text-align: left;"><span class="math inline">0.03627</span></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><span class="math inline">3</span></td>
+<td style="text-align: left;"><span class="math inline">1.5756</span></td>
+<td style="text-align: left;"><span class="math inline">84</span></td>
+<td style="text-align: left;"><span class="math inline">0.00560</span></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><span class="math inline">4</span></td>
+<td style="text-align: left;"><span class="math inline">1.8722</span></td>
+<td style="text-align: left;"><span class="math inline">7</span></td>
+<td style="text-align: left;"><span class="math inline">0.00047</span></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><span class="math inline">5</span></td>
+<td style="text-align: left;"><span class="math inline">2.1688</span></td>
+<td style="text-align: left;"><span class="math inline">0</span></td>
+<td style="text-align: left;"><span class="math inline">0</span></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><span class="math inline">6</span></td>
+<td style="text-align: left;"><span class="math inline">2.4653</span></td>
+<td style="text-align: left;"><span class="math inline">0</span></td>
+<td style="text-align: left;"><span class="math inline">0</span></td>
+</tr>
+</tbody>
+</table>
+<p>这张表最值得看的是最后两行：<span class="math inline">k=5</span> 与 <span class="math inline">k=6</span> 的误报都是 <span class="math inline">0</span>。但“<span class="math inline">0</span>”不等于“不会有”，它只说明在 <span class="math inline">15000</span> 个样本里没发生。按“零事件”的置信上限估计，<span class="math inline">15000</span> 个样本零误报对应的误报率上界大致是 <span class="math inline">3/15000=2\times10^{-4}</span>。所以 <span class="math inline">k</span> 从 <span class="math inline">5</span> 再加到 <span class="math inline">6</span> 时，阈值从 <span class="math inline">2.1688</span> 抬到 <span class="math inline">2.4653</span>，抬了 <span class="math inline">13.7\%</span>，换来的是“实际误报率可能低一点”这个无法验证的承诺——代价却是检测延迟实实在在变长（第 78.8 节实测从 <span class="math inline">0.28</span> s 变到 <span class="math inline">0.30</span> s）。<strong>在零误报区间里继续加 <span class="math inline">k</span> 是在为统计噪声付费</strong>。</p>
+<p>本章最终取 <span class="math inline">k=4</span>，阈值 <span class="math inline">1.8722</span>、误报率 <span class="math inline">0.00047</span>。这个选择看着“不那么干净”——毕竟 <span class="math inline">k=5</span> 能做到零误报——但零误报的代价是延迟，而延迟在本对象上是硬约束（第 78.2.8 节的权限边界只有 <span class="math inline">1.11</span> 到 <span class="math inline">2.15</span>）。<span class="math inline">k=4</span> 每 <span class="math inline">2000</span> 步大约误报一次，配合“报一次警只做一次辨识、判不通过就维持原状态”的保守逻辑，误报的实际后果是“多算了一次，什么也没改”，可以接受。<strong>阈值不是选出来的最优解，是选出来的可交付解</strong>，这条在第 78.8 节还会展开。</p>
+<p>其四，<strong>标定集与验证集要分开</strong>。用同一批轨迹既算 <span class="math inline">\mu_S</span>、<span class="math inline">\sigma_S</span> 又统计误报率，得到的误报率一定偏乐观，因为阈值就是被这批数据的统计量“定制”出来的。正确做法是：用一部分种子算统计量，再用另一部分种子算误报率。本章的标定用了 30 条轨迹，误报统计在健康工况的长跑里单独做（表里的 15000 步来自标定集；第 78.6 节的方案横比用的是另一条 <span class="math inline">12</span> s 的轨迹，两者不重叠）。</p>
+<p>其五，<strong>参考幅值必须与运行工况一致</strong>。残差的统计量不是对象的固有属性，它随工况走：参考幅值变了，控制量跟着变，残差的均值与方差都跟着变，同一个阈值在另一个幅值下的含义完全不同。本章有一组对比可以说明这个量级：参考幅值 <span class="math inline">0.30</span> 时，<span class="math inline">\rho=0.9</span> 的轻故障在这条 <span class="math inline">12</span> s 轨迹里一次都没能顶穿阈值；把参考幅值压到 <span class="math inline">0.02</span> 后，同一条故障要 <span class="math inline">1.24</span> s 才被检出。前者不是“更灵敏”，后者也不是“更迟钝”——两者的噪声实现、起始瞬态、阈值相对残差的裕度都不同，<strong>跨幅值比较检测延迟本身就没有意义</strong>。</p>
+<p>真正有意义的区分在故障是乘性还是加性。效率下降是乘性的，实际作用量是 <span class="math inline">\rho u_1</span>，偏差是 <span class="math inline">(\rho-1)u_1</span>，指令小了偏差也小；偏置与卡死是加性的，实际作用量是 <span class="math inline">u_1+c</span> 或 <span class="math inline">c</span>，偏差与指令无关。所以在小指令工况下，加性故障的相对可见度更高，乘性故障更低。标定集如果不覆盖运行时的幅值范围，这两类故障的检测性能就会在标定工况之外悄悄劣化，而误报率又恰好在标定工况下最好看。<strong>这条区别决定了标定集必须覆盖运行幅值范围，而不能只取一个典型值</strong>。</p>
+<p>输出怎么验：拿一批没参与标定的健康轨迹过一遍检测器，误报率应当落在表里的区间内；再把 <span class="math inline">\rho=0.9</span> 的轻故障注进去，若一次都检不出，说明阈值偏松或窗长太短，与第二步的 <span class="math inline">\sigma_S</span> 估计没有关系——这一点要分清楚，否则会去反复改阈值，越改越糟。</p>
+<h3 id="第三步故障谱与权限边界">78.3.3 第三步：故障谱与权限边界</h3>
+<p>输入是执行器限幅、故障类型清单，输出是“哪些故障在容错能力之内”的判据。</p>
+<p>这一步用式 (78-30)。先算备份通道的最大稳态力 <span class="math inline">F_{\max}=g_2U_{2,\max}</span>，再按故障谱里最严重的卡死值 <span class="math inline">c_{\max}</span> 算剩余力，最后算出容许的最大偏差。三个数一摆，设计者立刻知道：本平台能容 <span class="math inline">c\le1.0</span> 的卡死，容不了 <span class="math inline">c=2.0</span> 的卡死。</p>
+<p>如果算出来的边界太小、不能接受，有两条路可走：加大备份执行器的限幅或增益（硬件改动），或者缩短辨识窗（软件改动，代价是辨识方差变大）。本章的辨识窗取 <span class="math inline">0.4</span> s，比最初的 <span class="math inline">0.8</span> s 短一半，正是为了让 <span class="math inline">c=1.0</span> 的卡死能落在边界之内——实测 <span class="math inline">0.8</span> s 窗下 <span class="math inline">c=1.0</span> 的故障后峰值是 <span class="math inline">2577.838</span>（发散），改成 <span class="math inline">0.4</span> s 后降到 <span class="math inline">0.507</span>（收敛）。<strong>同一个算法、同一个故障，只改一个窗长，结果从发散变成收敛</strong>，这就是第三步的意义：在写代码之前先把边界算清楚。</p>
+<p><strong>这个判据是必要条件，不是充分条件</strong>。式 (78-30) 只比较了“剩余力”与“不稳定项”，隐含两个假设：备份通道能立刻出满力，以及故障发生在偏差为零的时刻。两个假设在真实系统里都不成立。</p>
+<p>第一个假设的问题出在惯性环节。备份通道要经过 <span class="math inline">1/(\tau s+1)</span> 才把 <span class="math inline">u_2</span> 变成作用力，<span class="math inline">\tau=0.15</span> s。要在 <span class="math inline">0.15</span> s 内把 <span class="math inline">x_3</span> 从 <span class="math inline">0</span> 推到 <span class="math inline">u_2</span> 的 <span class="math inline">63\%</span>，前提是这期间 <span class="math inline">u_2</span> 一直给到限幅；要在 <span class="math inline">0.45</span> s（三个时间常数）内推到 <span class="math inline">95\%</span>，才能说“稳态力”真的到手。而偏差在这 <span class="math inline">0.45</span> s 里不是站着不动的，它按开环增长率 <span class="math inline">1.033</span> /s 往上走，<span class="math inline">0.45</span> s 涨 <span class="math inline">e^{0.465}=1.59</span> 倍。所以式 (78-30) 解出的边界应当再除以一个 <span class="math inline">1.6</span> 左右的安全系数才敢用。本章 <span class="math inline">c=1.0</span> 的边界 <span class="math inline">1.81</span> 除以 <span class="math inline">1.6</span> 是 <span class="math inline">1.13</span>，而实测故障后峰值 <span class="math inline">0.507</span> 仍在 <span class="math inline">1.13</span> 之内，说明这个保守化没有保守过头。</p>
+<p>第二个假设的问题出在故障时刻的相位。本章的故障固定在 <span class="math inline">t=2.0</span> s 注入，这个时刻参考信号刚起步不久（起幅时间常数 <span class="math inline">0.8</span> s，<span class="math inline">t=2.0</span> s 时包络已到 <span class="math inline">1-e^{-2.5}=91.8\%</span>），偏差与速度都不大。如果故障发生在参考信号的峰值附近，速度项 <span class="math inline">x_2</span> 大，同样的 <span class="math inline">c</span> 会推出更大的峰值。<strong>故障注入测试不能只在一个相位上做</strong>，第 78.10 节能看到，本章的注入矩阵只扫了故障幅值、没扫相位，这是本章验证工作的一个已知缺口；工程上补这个缺口不需要新算法，只需要把注入时刻从 <span class="math inline">2.0</span> s 改成一组分散的值重跑。</p>
+<p>第三个容易被忽略的量是<strong>切换前的偏差是否已经在增长</strong>。式 (78-30) 给的是“偏差发展到多大之前必须完成切换”，而偏差在检测与辨识这两段时间里一直在长。本章实测的检测延迟是 <span class="math inline">0.04</span> 到 <span class="math inline">0.30</span> s，辨识窗固定 <span class="math inline">0.4</span> s，两者相加是 <span class="math inline">0.44</span> 到 <span class="math inline">0.70</span> s。按 <span class="math inline">1.033</span> /s 粗估，这段真空期里偏差涨 <span class="math inline">e^{0.45}</span> 到 <span class="math inline">e^{0.72}</span>，即 <span class="math inline">1.57</span> 到 <span class="math inline">2.06</span> 倍。<span class="math inline">c=1.0</span> 时若切换瞬间偏差是 <span class="math inline">0.25</span>，真空期末尾就是 <span class="math inline">0.51</span>，离边界 <span class="math inline">1.81</span> 还有三倍余量；<span class="math inline">c=2.0</span> 时边界只有 <span class="math inline">1.11</span>，同样的增长倍数下起点必须低于 <span class="math inline">0.54</span>，而卡死 <span class="math inline">2.0</span> 的故障会让偏差在检测延迟内就冲出这个范围。<strong>同样的算法、同样的窗长，<span class="math inline">c=1.0</span> 有富余而 <span class="math inline">c=2.0</span> 没有，差别全在这一条边界上。</strong></p>
+<h3 id="第四步重构规则">78.3.4 第四步：重构规则</h3>
+<p>输入是故障类型，输出是新增益与前馈项。</p>
+<p>这一步对应式 (78-23) 至式 (78-27)。实现上建议做成一张表，每行一个故障类型，列出“增益怎么算、前馈怎么改、哪一路输入要置零”：</p>
+<table>
+<colgroup>
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">故障类型</th>
+<th style="text-align: left;">判据</th>
+<th style="text-align: left;">新增益</th>
+<th style="text-align: left;">前馈/平衡点</th>
+<th style="text-align: left;">输入处理</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">健康</td>
+<td style="text-align: left;"><span class="math inline">\hat\rho&gt;0.88</span>，<span class="math inline">\lvert\hat c\rvert\le0.35</span></td>
+<td style="text-align: left;"><span class="math inline">\boldsymbol K_0</span></td>
+<td style="text-align: left;">标称前馈</td>
+<td style="text-align: left;">两路正常</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">效率下降</td>
+<td style="text-align: left;"><span class="math inline">0.12\le\hat\rho\le0.88</span></td>
+<td style="text-align: left;"><span class="math inline">\mathrm{dlqr}(\boldsymbol A,[\hat\rho\boldsymbol b_1,\boldsymbol b_2],\boldsymbol Q,\boldsymbol R)</span></td>
+<td style="text-align: left;">前馈除以 <span class="math inline">\hat\rho</span></td>
+<td style="text-align: left;">两路正常</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">卡死</td>
+<td style="text-align: left;"><span class="math inline">\hat\rho&lt;0.12</span></td>
+<td style="text-align: left;">主通道整行置零，备份通道单输入 LQR</td>
+<td style="text-align: left;">式 (78-26) 的 <span class="math inline">x_{3,\mathrm{eq}}</span></td>
+<td style="text-align: left;">主通道置零</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">偏置</td>
+<td style="text-align: left;"><span class="math inline">\hat\rho&gt;0.80</span>，<span class="math inline">\lvert\hat c\rvert&gt;0.35</span></td>
+<td style="text-align: left;"><span class="math inline">\boldsymbol K_0</span></td>
+<td style="text-align: left;">前馈减 <span class="math inline">\hat c</span></td>
+<td style="text-align: left;">两路正常</td>
+</tr>
+</tbody>
+</table>
+<p>这张表里最容易被写错的是“卡死”那一行的输入处理。主通道卡死时，控制器给出的 <span class="math inline">u_1</span> 完全不起作用，但如果不显式置零，控制律仍会算出一个很大的 <span class="math inline">u_1</span>（因为它以为自己在出力），这个数会通过前馈项和观测器影响其他量。显式置零有两个好处：一是让控制量的记录与实际作用量一致，二是避免前馈项里的 <span class="math inline">1/\hat\rho</span> 在 <span class="math inline">\hat\rho\to0</span> 时爆掉。</p>
+<p><strong>四行分别对应四种结构，不是四组参数</strong>。健康行与偏置行的增益都是 <span class="math inline">\boldsymbol K_0</span>，看起来像是“没做事”，但两者的前馈项不同；效率下降行的增益是重解的，控制结构没变；卡死行连输入维度都变了，是真正的结构重构。这四种情况在代码里应当走四个分支，而不是用一个带权系数的公式统一算。原因是 <span class="math inline">\hat\rho\to0</span> 时 <span class="math inline">\boldsymbol B_{\mathrm{eff}}</span> 的第一列趋于零矩阵，Riccati 方程的条件数发散，解出来的增益在数值上不可信；即使强行算出来，前馈项里的 <span class="math inline">1/\hat\rho</span> 也会把控制量推到限幅之外。<strong>用“连续过渡”的方式处理从效率下降到卡死的过程，在数学上是连续化一个奇点，在工程上是给自己埋雷。</strong></p>
+<p><strong>卡死那一行的具体增益值得单独看</strong>。主通道整行置零后，剩下的控制问题是单输入（只有 <span class="math inline">u_2</span>）三状态，控制权重取 <span class="math inline">\boldsymbol R_{\mathrm{back}}=0.1</span>——比标称的 <span class="math inline">0.01</span> 大十倍，意思是“备份通道更贵，少用一点”。解出的增益是 <span class="math inline">\boldsymbol k_{\mathrm{back}}=[34.9505,\ 19.2561,\ 2.3382]</span>，闭环极点是 <span class="math inline">0.6456</span> 与 <span class="math inline">0.9581\pm0.0226j</span>，谱半径 <span class="math inline">0.9584</span>。这个谱半径比标称的 <span class="math inline">0.9385</span> 更靠近单位圆，符合“能力下降后性能必然变差”的预期。值得注意的是那一对共轭极点：单输入控制三状态时，有两个模态要靠同一条通道压制，很容易出现振铃。把 <span class="math inline">0.9581\pm0.0226j</span> 换算成连续域的阻尼比：模长 <span class="math inline">0.9584</span>，<span class="math inline">|\ln 0.9584|=0.04249</span>，辐角 <span class="math inline">0.0236</span> rad，阻尼比是 <span class="math inline">0.04249/\sqrt{0.04249^2+0.0236^2}=0.874</span>。<strong>阻尼比 <span class="math inline">0.87</span> 并不差，振铃不是这套增益的主要问题</strong>；卡死分支真正的问题是慢——谱半径 <span class="math inline">0.9584</span> 对应时间常数 <span class="math inline">0.02/0.0425=0.47</span> s，比标称的 <span class="math inline">0.32</span> s 慢了近五成。图 78-6 里主动容错在卡死情形下的波形之所以显得“拖”，拖的是这个时间常数，不是阻尼。</p>
+<p><strong>观测器的输入也要跟着改，这是最容易漏的一步</strong>。检测器用的残差由式 (78-16) 生成，而式里的 <span class="math inline">\boldsymbol u^{\mathrm{obs}}</span> 是“观测器以为的实际作用量”。故障发生后，它不再等于控制器给出的 <span class="math inline">\boldsymbol u</span>：卡死时应当喂 <span class="math inline">[\hat c,\ u_2]</span>，偏置时应当喂 <span class="math inline">[u_1+\hat c,\ u_2]</span>，效率下降时应当喂 <span class="math inline">[\hat\rho u_1,\ u_2]</span>。如果不改，观测器会一直用一个错误的输入做预测，残差里会残留一个与故障同量级的稳态偏移；这个偏移不会被检测逻辑重新判读（因为已经报过警了），但会污染观测器状态，让重构后的控制律基于错误的 <span class="math inline">\hat{\boldsymbol x}</span> 出力。实测的表现是切换后偏差不收敛、缓慢爬升，看起来像“新增益不够强”，实际是状态估计偏了。</p>
+<p><strong>前馈项的三处修改要分清对象</strong>。效率下降是“除以 <span class="math inline">\hat\rho</span>”，卡死是“换成平衡点 <span class="math inline">x_{3,\mathrm{eq}}</span>”，偏置是“减 <span class="math inline">\hat c</span>”。三者不要混用：给效率下降套平衡点公式，会把一个本来能靠主通道补回来的偏差硬塞给备份通道；给偏置套 <span class="math inline">1/\hat\rho</span>，会在 <span class="math inline">\hat\rho\approx1</span> 时几乎不起作用，偏置原封不动地留在系统里。本章的分类边界（<span class="math inline">\hat\rho&lt;0.12</span> 为卡死、<span class="math inline">\hat\rho&lt;0.88</span> 为效率下降、<span class="math inline">|\hat c|&gt;0.35</span> 且 <span class="math inline">\hat\rho&gt;0.80</span> 为偏置）就是为了让这四种处理互不重叠、也没有空档。</p>
+<p><strong>重构的频率要限制</strong>。如果每一拍都根据当前的 <span class="math inline">\hat\rho</span>、<span class="math inline">\hat c</span> 重解一次 Riccati 方程，计算量不说，增益会随辨识噪声抖动，闭环变成一个时变系统，稳定性分析全部失效。本章的做法是“一次辨识、一次重构、之后锁死”，除非残差再次越过阈值才重新辨识。这个“锁死”策略有代价：故障若继续恶化（效率从 <span class="math inline">0.4</span> 掉到 <span class="math inline">0.2</span>），系统不会自动跟进，需要二次报警触发。第 78.9 节会讨论用无扰过渡与多模型方法改进这一点，但在基础版本里，宁可漏跟一次也不要每拍都动。</p>
+<h3 id="第五步窗长与延迟">78.3.5 第五步：窗长与延迟</h3>
+<p>输入是噪声水平与对象的不稳定程度，输出是滑动平均窗长 <span class="math inline">w</span>、辨识窗长 <span class="math inline">N</span>、切换延迟 <span class="math inline">d</span>。</p>
+<p>三个参数各管一段：<span class="math inline">w</span> 管检测的平滑程度，<span class="math inline">N</span> 管辨识的精度，<span class="math inline">d</span> 管“决策到执行”的等待。三者的共同点是<strong>都在消耗时间，而时间在这个对象上是稀缺资源</strong>。</p>
+<p>本章的取值是 <span class="math inline">w=5</span>（<span class="math inline">0.1</span> s）、<span class="math inline">N=20</span>（<span class="math inline">0.4</span> s）、<span class="math inline">d=0</span>（立即执行）。<span class="math inline">d=0</span> 不是偷懒，而是因为本章的仿真里没有计算延迟与安全联锁；实际系统中 <span class="math inline">d</span> 至少要覆盖一次控制周期加一次通信周期，第 78.10 节会讨论。<span class="math inline">d</span> 加大后的代价在第 78.6 节有完整的扫描：<span class="math inline">d</span> 从 0 加到 <span class="math inline">0.8</span> s，闭环代价从 <span class="math inline">0.2344</span> 涨到 <span class="math inline">0.3144</span>；加到 <span class="math inline">2.4</span> s 时涨到 <span class="math inline">0.4726</span>；加到 <span class="math inline">4.0</span> s 时是 <span class="math inline">0.4809</span>，已经接近“完全不切换”的 <span class="math inline">0.8171</span> 的一半以上。</p>
+<p><strong><span class="math inline">w</span> 的取值是“延迟与平滑”的直接兑换</strong>。<span class="math inline">w</span> 点因果滑动平均的群延迟是 <span class="math inline">(w-1)T_s/2</span>，<span class="math inline">w=5</span> 时是 <span class="math inline">0.04</span> s；噪声标准差被压到原来的 <span class="math inline">1/\sqrt{w}=1/2.24=44.7\%</span>。如果把 <span class="math inline">w</span> 加到 <span class="math inline">9</span>，群延迟变 <span class="math inline">0.08</span> s，噪声压到 <span class="math inline">33.3\%</span>——多花 <span class="math inline">0.04</span> s 只换来噪声再降一成，而阈值可以少加一点点。这笔交易在本平台上不划算，因为 <span class="math inline">0.04</span> s 的延迟作用在增长率 <span class="math inline">1.033</span> /s 的偏差上，等于多放 <span class="math inline">4.2\%</span> 的幅度，而噪声那一成的改善在 <span class="math inline">k=5</span> 已经是零误报的前提下毫无意义。<strong>当误报率已经降到零，继续加窗只买到延迟</strong>。</p>
+<p><span class="math inline">w</span> 还有一条下限不能破：<span class="math inline">w\ge3</span>。<span class="math inline">w=1</span> 等价于不平滑，残差直接与阈值比，实测 <span class="math inline">k=2</span> 时误报率 <span class="math inline">0.03627</span> 会进一步恶化；<span class="math inline">w=2</span> 的群延迟只有 <span class="math inline">0.01</span> s，但方差只降 <span class="math inline">29\%</span>，起不到“把噪声从故障信号里分出来”的作用。本章取 <span class="math inline">5</span>，是在“至少三倍方差压缩”与“不超过两个控制周期的延迟”之间取的中间值。</p>
+<p><strong><span class="math inline">N</span> 是被故障谱逼出来的，不是自由参数</strong>。辨识要解的是两列最小二乘：<span class="math inline">\boldsymbol b_1</span> 方向投影后对 <span class="math inline">(u_1,1)</span> 两列回归，未知数两个（<span class="math inline">\rho</span> 与 <span class="math inline">c</span> 的可辨识组合），方程数等于窗长 <span class="math inline">N</span>。从纯估计理论看，<span class="math inline">N</span> 越大方差越小，<span class="math inline">N=20</span> 与 <span class="math inline">N=40</span> 的方差差一倍。但 <span class="math inline">N</span> 同时在消耗权限边界里的时间预算，而 <span class="math inline">c=1.0</span> 这条故障的预算总共只有 <span class="math inline">1.81</span> 的偏差额度。本章最初用 <span class="math inline">N=40</span>（<span class="math inline">0.8</span> s），实测 <span class="math inline">c=1.0</span> 的故障后峰值 <span class="math inline">2577.838</span>，完全发散；改成 <span class="math inline">N=20</span> 后降到 <span class="math inline">0.507</span>。<strong><span class="math inline">N</span> 的选择不是“精度够不够”，而是“精度换来的时间是否还在边界之内”</strong>，这一点与常规的系统辨识思路正好相反：常规辨识追求参数精度，容错辨识追求“在对象飞走之前拿到一个够用的参数”。</p>
+<p><span class="math inline">N</span> 也不能太小。<span class="math inline">N=10</span>（<span class="math inline">0.2</span> s）时方程数等于未知数，最小二乘退化成一个精确解，噪声被原封不动地搬进 <span class="math inline">\hat\rho</span> 与 <span class="math inline">\hat c</span>；具体表现是同一个故障在不同噪声实现下被判成不同类型，第 78.8 节的七类故障辨识表就不再成立。经验下限是 <span class="math inline">N\ge3</span> 倍未知数个数，本章的未知数在两个左右，所以 <span class="math inline">N\ge6</span> 是硬下限，<span class="math inline">N=20</span> 留了三倍余量。</p>
+<p><strong><span class="math inline">d</span> 在仿真里取零，在实机上不可能取零</strong>。<span class="math inline">d</span> 的物理含义是“决策算完到新增益真正生效”的等待，它至少包含三部分：控制周期（本章 <span class="math inline">0.02</span> s）、通信周期（现场总线上一到两拍）、安全联锁确认（通常要求连续两拍一致，再 <span class="math inline">0.04</span> s）。所以实机上 <span class="math inline">d</span> 的合理下限是 <span class="math inline">0.08</span> s 左右，按整步取就是四到五步。对照第 78.6 节的扫描，<span class="math inline">d=0.1</span> s（五步）对应的代价是 <span class="math inline">0.2420</span>，比 <span class="math inline">d=0</span> 的 <span class="math inline">0.2344</span> 高 <span class="math inline">3.2\%</span>——这个代价是可以接受的。真正危险的是 <span class="math inline">d</span> 到 <span class="math inline">1.6</span> s 以上（八十步，代价 <span class="math inline">0.4112</span>）甚至 <span class="math inline">4.0</span> s（两百步，<span class="math inline">0.4809</span>），后者已经是“完全不切换”的 <span class="math inline">0.8171</span> 的 <span class="math inline">59\%</span>，主动容错退化成了一个只是“少亏一点”的方案。<strong><span class="math inline">d</span> 的预算应当从“通信与联锁的真实耗时”倒推，而不是从“我想多快”正推</strong>。</p>
+<p>三个参数之间还有一条隐性约束：<span class="math inline">w</span> 的群延迟必须小于 <span class="math inline">d</span>。否则检测结果还没稳定，切换动作已经执行，等于用一个抖动的判决去改结构。本章 <span class="math inline">w=5</span> 的群延迟 <span class="math inline">0.04</span> s 与实机 <span class="math inline">d=0.08</span> s 的关系满足这条约束，但如果为了压噪声把 <span class="math inline">w</span> 加到 <span class="math inline">9</span>（群延迟 <span class="math inline">0.08</span> s），就必须把 <span class="math inline">d</span> 同步抬到 <span class="math inline">0.10</span> s 以上。</p>
+<h3 id="第六步切换逻辑">78.3.6 第六步：切换逻辑</h3>
+<p>输入是新增益，输出是一段可以安全执行的控制律切换。</p>
+<p>最朴素的做法是硬切换：检测到故障、算好增益，下一拍直接换。本章实测硬切换的闭环代价 <span class="math inline">0.2329</span>，故障后峰值 <span class="math inline">0.0541</span>，切换瞬间 <span class="math inline">u_1</span> 的最大跳变 <span class="math inline">1.024</span>。</p>
+<p>跳变 <span class="math inline">1.024</span> 相对于 <span class="math inline">u_1</span> 的正常幅值（健康时峰值 <span class="math inline">0.66</span>）不算小，对执行器是一个冲击。改进的办法是淡入：在 <span class="math inline">T_b</span> 秒内把增益从旧值线性过渡到新值，</p>
+<p><span class="math display">
+\boldsymbol K_j=(1-\alpha_j)\boldsymbol K_{\mathrm{from}}+\alpha_j\boldsymbol K_{\mathrm{to}},\qquad
+\alpha_j=\min\left(1,\frac{j\,T_s}{T_b}\right)
+\tag{78-32}
+</span></p>
+<p>本章实测 <span class="math inline">T_b=1.0</span> s 时，跳变从 <span class="math inline">1.024</span> 降到 <span class="math inline">0.880</span>，代价从 <span class="math inline">0.2329</span> 涨到 <span class="math inline">0.2339</span>——用 <span class="math inline">0.4\%</span> 的性能换取 <span class="math inline">14\%</span> 的冲击下降，这笔交易在多数场合是划算的。第 78.10 节会结合图 78-7 细看切换前后的波形。</p>
+<p><strong>淡入长度不是越长越好</strong>。本章扫了四个取值，<span class="math inline">T_b=0</span>（硬切换）、<span class="math inline">0.2</span> s、<span class="math inline">0.5</span> s、<span class="math inline">1.0</span> s，对应的代价是 <span class="math inline">0.2329</span>、<span class="math inline">0.2333</span>、<span class="math inline">0.2337</span>、<span class="math inline">0.2339</span>，跳变是 <span class="math inline">1.024</span>、<span class="math inline">0.892</span>、<span class="math inline">0.883</span>、<span class="math inline">0.880</span>。这组数说明两件事。第一，代价随 <span class="math inline">T_b</span> 单调上升，但幅度极小，从 <span class="math inline">0</span> 到 <span class="math inline">1.0</span> s 只涨 <span class="math inline">0.43\%</span>——淡入几乎不要钱。第二，<strong>跳变的下降集中在前 <span class="math inline">0.2</span> s</strong>：<span class="math inline">T_b=0.2</span> s 就吃掉了从 <span class="math inline">1.024</span> 到 <span class="math inline">0.892</span> 的绝大部分，再往上加只从 <span class="math inline">0.892</span> 挪到 <span class="math inline">0.880</span>，边际收益趋零。所以合理的取值在 <span class="math inline">0.2</span> 到 <span class="math inline">0.5</span> s 之间，本章的 <span class="math inline">1.0</span> s 偏保守，是为了让图 78-7 的过渡段看得清楚。</p>
+<p>跳变的机理值得说清：硬切换瞬间，新旧两套增益对同一个状态 <span class="math inline">\hat{\boldsymbol x}</span> 给出两个不同的 <span class="math inline">u_1</span>，差值就是跳变。这个差值与 <span class="math inline">\hat{\boldsymbol x}</span> 成正比，而切换时刻 <span class="math inline">\hat{\boldsymbol x}</span> 恰好因为故障而偏离标称值，所以跳变最大的时刻正是最不该有冲击的时刻。淡入把这个差值摊到 <span class="math inline">T_b</span> 内的若干拍上，每拍的增量从 <span class="math inline">1.024</span> 降到 <span class="math inline">1.024\times T_s/T_b</span> 量级。<strong>这就是“用时间换冲击”最朴素的一个例子</strong>：不改变任何增益、不改变任何判据，只是把同一件事分几步做完。</p>
+<p><strong>不要用指数淡入</strong>。指数淡入 <span class="math inline">\alpha_j=1-e^{-jT_s/T_b}</span> 在起点斜率最大，跳变几乎全集中在第一拍，等于把硬切换的冲击削掉一半就没了后劲；线性淡入的斜率恒定，冲击被均匀分摊。更不能用“指数趋近”，因为它永远到不了 <span class="math inline">1</span>，控制律始终混着一点旧增益，闭环极点无法用任何一套增益的极点来界定，稳定性分析失去依据。</p>
+<p><strong>切换时不要重置观测器</strong>。一个很自然的想法是“既然故障变了，观测器状态也该重新初始化”。这是错的。观测器状态 <span class="math inline">\hat{\boldsymbol x}</span> 是连续的物理量估计，它不因为执行器故障而跳变；重置它等于在控制律里人为制造一个阶跃，效果比不淡入还差。真正需要重置的只有“观测器用的输入”（见第 78.3.4 节），而那是换一个信号源，不是改状态。</p>
+<p><strong>多处修改要有固定顺序</strong>。一次切换涉及四件事：换增益、换前馈、改观测器输入、可能置零某一路。四件事如果在同一拍内以不同顺序执行，中间态会被记录进日志，也可能被其他逻辑读到。本章的做法是先在局部变量里算好全部新值，再一次性提交，提交的边界就是控制周期的边界。这个习惯在仿真里看不出差别，在实机上决定了日志能不能复盘。</p>
+<h3 id="第七步验证">78.3.7 第七步：验证</h3>
+<p>输入是整套控制器，输出是“能不能交付”的结论。</p>
+<p>验证至少包含三件事：<strong>故障注入测试</strong>（把故障谱里每一类故障、每一个幅值都注入一次，看闭环是否收敛）、<strong>误报统计</strong>（在健康工况下长时间跑，统计误报次数）、<strong>边界扫描</strong>（把故障幅值从 0 扫到超出权限，找到实际的可容错边界，与第三步算出的理论边界对照）。第 78.10 节会给出本章的注入矩阵，它的形状就是这三件事的合并结果。</p>
+<p>三件事都需要一个明确的<strong>通过判据</strong>，否则“看曲线觉得还行”会变成唯一的结论。本章用的是双判据：故障后峰值 <span class="math inline">\max|e|&lt;1.0</span> 且末 100 步均方根 <span class="math inline">&lt;0.05</span>。前者管“别撞坏”，后者管“真的稳住了”。两条缺一不可，因为只卡峰值会放过“有界但不收敛”的情形，只卡末段会放过“收敛前先冲出去”的情形。实测这两种情形在本平台上都出现过：<span class="math inline">c=2.0</span> 的卡死在主动容错下的峰值是 <span class="math inline">6598.832</span>，两条都不过；而 <span class="math inline">\rho=0.2</span> 的效率下降在主动容错下并没有发散，闭环代价却是 <span class="math inline">0.9359</span>，是 <span class="math inline">\rho=0.4</span> 时 <span class="math inline">0.2337</span> 的四倍，属于“稳住了但精度已经掉下去”，只看“有没有发散”就会把它判成通过。</p>
+<p>第三个判据是<strong>重复性</strong>。同一个工况换三个随机种子跑，三条轨迹的结论必须一致，否则说明结果依赖某一次噪声实现，不能交付。本章的十八格注入矩阵就是按“三个种子全过才算过”统计的，这也是为什么矩阵里会出现“部分通过”这种中间状态——不是判据模糊，而是三种子之间不一致，这本身就是需要排查的信号。</p>
+<p><strong>边界扫描要双向做</strong>。从 <span class="math inline">0</span> 往大扫能找出“实际能容到哪”，从大往小扫能找出“哪一段是假通过”。本章实测的实际边界与理论边界（<span class="math inline">c=0.5</span> 对应 <span class="math inline">2.15</span>、<span class="math inline">c=1.0</span> 对应 <span class="math inline">1.81</span>、<span class="math inline">c=2.0</span> 对应 <span class="math inline">1.11</span>）在方向上一致：<span class="math inline">c=0.5</span> 与 <span class="math inline">c=1.0</span> 都能救回来（峰值 <span class="math inline">0.294</span> 与 <span class="math inline">0.507</span>），<span class="math inline">c=2.0</span> 救不回来（峰值 <span class="math inline">6598.832</span>）。数值上实际边界比理论值紧，原因就是第 78.3.3 节讲的“备份通道的惯性延迟”与“故障相位”两条。<strong>理论边界给方向，实测边界给数字，两者都要有，缺一个就无法判断偏差是来自模型还是来自实现。</strong></p>
+<p>图 78-2 把七步里涉及时间的那部分画成了一条时间轴：故障时刻 <span class="math inline">t_f</span>、检测时刻 <span class="math inline">t_d</span>、隔离完成时刻 <span class="math inline">t_i</span>、切换时刻 <span class="math inline">t_s</span>。三段矩形分别是检测延迟、辨识窗、决策与执行。下方是误差包络的示意：不处理的轨迹在 <span class="math inline">t_s</span> 之后继续指数上升，主动容错的轨迹在 <span class="math inline">t_s</span> 之后转入衰减。</p>
+<figure>
+<img src="figs/ch078/fig_078_02_timeline.svg" alt="图 78-2 主动容错的三段时间线：检测延迟、辨识窗、决策与执行，以及两条误差包络的对比" /><figcaption aria-hidden="true">图 78-2 主动容错的三段时间线：检测延迟、辨识窗、决策与执行，以及两条误差包络的对比</figcaption>
+</figure>
+<p>一个常见的设计错误是把这三段时间当成可以独立优化的三件事。实际上它们互相牵制：把检测阈值调低能缩短第一段，但误报率上升；把辨识窗缩短能缩短第二段，但参数方差变大、可能判错故障类型；把切换延迟设为零能缩短第三段，但没有时间做安全联锁。<strong>七步设计的核心不是把每一段都压到最短，而是让三段之和落在权限边界之内</strong>。</p>
+<h3 id="七步的交付物">78.3.8 七步的交付物</h3>
+<p>七步走完，手中应当留下七份可以独立复述的东西。它们不是文档形式主义，而是“下一个接手的人能不能在不问你任何问题的前提下重跑一遍”的最低标准。</p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">步骤</th>
+<th style="text-align: left;">交付物</th>
+<th style="text-align: left;">关键数字</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">一</td>
+<td style="text-align: left;">离散模型、两套增益、观测器增益</td>
+<td style="text-align: left;"><span class="math inline">\mathrm{eig}(\boldsymbol A)=1.020884,\ 0.972516,\ 0.875173</span></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">二</td>
+<td style="text-align: left;">健康残差统计与 <span class="math inline">k</span>–误报率表</td>
+<td style="text-align: left;"><span class="math inline">\mu_S=0.6860</span>、<span class="math inline">\sigma_S=0.2966</span>、<span class="math inline">\theta=2.1688</span></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">三</td>
+<td style="text-align: left;">故障谱与权限边界</td>
+<td style="text-align: left;"><span class="math inline">c=0.5/1.0/2.0</span> → <span class="math inline">2.15/1.81/1.11</span></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">四</td>
+<td style="text-align: left;">四种故障的处理表与新增益</td>
+<td style="text-align: left;"><span class="math inline">\boldsymbol k_{\mathrm{back}}=[34.9505,\ 19.2561,\ 2.3382]</span></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">五</td>
+<td style="text-align: left;">三个时间参数的取值与依据</td>
+<td style="text-align: left;"><span class="math inline">w=5</span>、<span class="math inline">N=20</span>、<span class="math inline">d=0</span></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">六</td>
+<td style="text-align: left;">切换方式与淡入长度</td>
+<td style="text-align: left;"><span class="math inline">T_b=1.0</span> s，跳变 <span class="math inline">1.024\to0.880</span></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">七</td>
+<td style="text-align: left;">注入矩阵、误报统计、边界扫描</td>
+<td style="text-align: left;">十八格，三种子全过为通过</td>
+</tr>
+</tbody>
+</table>
+<p>这七份东西里最有价值的是第三份和第五份，因为它们最难事后补。模型错了可以重算，增益错了可以重解，但“为什么把辨识窗定在 <span class="math inline">0.4</span> s”这件事，只在当时知道边界是 <span class="math inline">1.81</span>、峰值是 <span class="math inline">0.507</span>、旧窗长下是 <span class="math inline">2577.838</span> 的时候才说得清；半年后回头看代码里一个 <code>EST_WIN = 20</code>，谁也不知道它是不是随手写的。<strong>容错控制的可维护性，几乎全部取决于这些“为什么”有没有被记下来。</strong></p>
+<h2 id="连续情形">78.4 连续情形</h2>
+<h3 id="连续时间观测器与残差">78.4.1 连续时间观测器与残差</h3>
+<p>实际控制器是数字的，但理解容错机理用连续时间更方便。把式 (78-13) 写成连续形式：</p>
+<p><span class="math display">
+\dot{\hat{\boldsymbol x}}=\boldsymbol A_c\hat{\boldsymbol x}+\boldsymbol B_c\boldsymbol u^{\mathrm{obs}}+\boldsymbol L_c\left(\boldsymbol y-\hat{\boldsymbol x}\right)
+\tag{78-33}
+</span></p>
+<p>残差的动态是</p>
+<p><span class="math display">
+\dot{\boldsymbol r}=\left(\boldsymbol A_c-\boldsymbol L_c\right)\boldsymbol r+\boldsymbol b_{1c}\left[(\rho-1)u_1+c\right]-\boldsymbol L_c\boldsymbol v+\dot{\boldsymbol v}
+\tag{78-34}
+</span></p>
+<p>与离散版本式 (78-16) 相比，结构完全一样，只是“衰减记忆”从矩阵幂变成了矩阵指数。<span class="math inline">\boldsymbol A_c-\boldsymbol L_c</span> 的特征值决定了残差对故障的响应速度：特征值越靠左，残差越快跟上故障，但噪声放大越厉害。</p>
+<p>本章的 <span class="math inline">\boldsymbol A_c</span> 有三个实特征值 <span class="math inline">+1.033</span>、<span class="math inline">-1.393</span> 与 <span class="math inline">-6.667</span>。观测器必须比对象快，但不能快得离谱。本章按稳态卡尔曼滤波设计出的观测器，在连续域的等效极点是 <span class="math inline">-2.731\pm1.689j</span> 与 <span class="math inline">-8.809</span>：主导对的实部 <span class="math inline">-2.731</span>，相当于把不稳定的 <span class="math inline">+1.033</span> 沿实轴推到左侧 3.76 的位置，是它原来到虚轴距离的 3.6 倍；快极点 <span class="math inline">-8.809</span> 只比对象的 <span class="math inline">-6.667</span> 快一点，没有强行拉开——采样周期 <span class="math inline">T_s=0.02</span> s 对应的奈奎斯特频率是 <span class="math inline">157</span> rad/s，观测器再快就只是在放大量测噪声。这条“2 到 5 倍”的经验在这里落到了 3.6 倍。</p>
+<p><strong>式 (78-34) 里有一个离散域看不见的东西</strong>：<span class="math inline">\dot{\boldsymbol v}</span>。量测噪声 <span class="math inline">\boldsymbol v</span> 在连续域是白噪声，它不可微，<span class="math inline">\dot{\boldsymbol v}</span> 只能理解为广义导数。这一项的存在说明“连续时间的残差方程”本身是形式化的，它的严格含义要用随机微分方程表述。工程上不必纠缠这一点，但要知道后果：连续域的残差方差是无穷大（白噪声求导），任何“用连续域算阈值”的尝试都会得到无意义的结果。离散域没有这个问题，因为差分把不可微变成了可加的高斯项，方差有限。<strong>这不是数学上的吹毛求疵，而是第 78.4.5 节“阈值必须在离散域标定”的第一条理由。</strong></p>
+<p><strong>观测器极点的三个约束可以写成一句话</strong>：比对象快、比噪声慢、比采样慢。三条都满足，观测器才有用。</p>
+<p>比对象快，是为了让残差在故障后迅速偏离零。本章的快慢比是 3.6 倍，落在常用的 2 到 5 倍区间；低于 2 倍，残差跟不上故障，检测延迟会被观测器本身拖长；高于 5 倍，残差对噪声的放大倍数会从“几倍”跳到“十几倍”，阈值不得不抬高，反而更慢。</p>
+<p>比噪声慢，是指观测器带宽不能超过量测噪声的相关带宽。本章的噪声是逐点独立的高斯白噪声（在离散域看是这样），它的带宽就是奈奎斯特频率的一半，所以这条约束在本章不成问题；但实机上量测往往经过模拟低通滤波，噪声带宽只有几十赫兹，观测器极点若超过这个带宽，就会把滤波器的高频衰减“补回来”，等于自己造噪声。</p>
+<p>比采样慢，是指最快极点对应的 <span class="math inline">|s|T_s</span> 要远小于 <span class="math inline">1</span>。本章 <span class="math inline">-8.809\times0.02=0.176</span>，还算安全；如果观测器极点做到 <span class="math inline">-50</span>，<span class="math inline">|s|T_s=1</span>，离散化后的极点会跑到 <span class="math inline">e^{-1}=0.368</span> 附近，与连续域的对应关系开始失真，增益也对不上。</p>
+<p><strong>3.6 倍这个数不是设计时指定的，是算出来的</strong>。本章没有用“极点配置到 <span class="math inline">-3.6\times1.033</span>”这种方式，而是按噪声强度解对偶 Riccati 方程，让权重的相对大小自然决定极点位置。这样做的结果是极点位置与噪声水平绑定：噪声变大，观测器自动变慢；噪声变小，自动变快。手配极点做不到这一点，一旦换传感器就要重配。<strong>用 Riccati 而不是极点配置，换来的正是这种“跟着硬件走”的自适应性。</strong></p>
+<h3 id="残差的频域解释">78.4.2 残差的频域解释</h3>
+<p>对式 (78-34) 做拉普拉斯变换，从故障项到残差的传递关系是</p>
+<p><span class="math display">
+\boldsymbol r(s)=\left(s\boldsymbol I-\boldsymbol A_c+\boldsymbol L_c\right)^{-1}\boldsymbol b_{1c}\,d(s),
+\qquad d(t)=(\rho-1)u_1(t)+c
+\tag{78-35}
+</span></p>
+<p>这个式子在频域里说清了一件事：<strong>故障在残差里的“可见度”取决于 <span class="math inline">d(t)</span> 的频率成分与观测器带宽的相对位置</strong>。<span class="math inline">d(t)</span> 若是常数（卡死、偏置），它的能量集中在零频，残差里表现为一个稳态偏移；<span class="math inline">d(t)</span> 若随指令变化（效率下降），它的能量分布在指令的频段上，残差里表现为与指令同频的波动。</p>
+<p>本章的参考周期 <span class="math inline">12</span> s，主频约 <span class="math inline">0.083</span> Hz，远低于观测器带宽，所以效率下降的故障在残差里表现为“缓慢的、与参考同相的偏移”。这解释了一个实测现象：在低幅值工况下，<span class="math inline">\rho=0.9</span> 的轻故障要 <span class="math inline">1.24</span> s 才被检出，而卡死 <span class="math inline">c=2.0</span> 只要 <span class="math inline">0.04</span> s——常数故障在零频处的幅值大，一步就能顶穿阈值。</p>
+<p><strong>这两类故障的差别不只是“快慢”，而是“可不可累积”</strong>。卡死是一个阶跃，残差在故障后的第一拍就跳到一个明显非零的值，检测器只需要判断“这个值是不是噪声”。效率下降是一个与指令成比例的偏差，指令本身在缓慢变化（周期 <span class="math inline">12</span> s，起幅常数 <span class="math inline">0.8</span> s），残差跟着指令走，检测器要区分“残差变大是因为故障”还是“残差变大是因为指令本身在变大”。后者需要等，等到偏差积累到阈值之上。<strong>所以检测延迟不是由观测器决定的，是由“故障信号与正常信号的可分性”决定的</strong>，这是一条与观测器带宽无关的下界。</p>
+<p><strong>零频处的稳态残差可以用终值定理估计</strong>。式 (78-35) 在 <span class="math inline">s=0</span> 处的值决定了常值故障的稳态偏移，它等于 <span class="math inline">(\boldsymbol L_c-\boldsymbol A_c)^{-1}\boldsymbol b_{1c}</span> 乘以故障幅值。这个矩阵是有限维的、可求逆的，所以常值故障一定会在残差里留下一个非零的稳态分量——只要这个分量不被观测器的积分作用吃掉。<strong>这也是为什么本章的观测器故意不带积分器</strong>：带积分器的观测器会把常值故障当成模型偏差吸收掉，残差回到零，故障就“消失”了。容错控制与鲁棒控制在这里有一个根本分歧：鲁棒控制希望残差对扰动不敏感，容错控制恰恰要求残差对故障敏感。</p>
+<p><strong>频率视角还解释了一个调参上的陷阱</strong>。如果参考信号周期缩短到接近观测器带宽，效率下降的故障信号会落在观测器的通带边缘，残差里的幅值被衰减，检测会变慢甚至失效；反之，如果参考信号周期很长（本章 <span class="math inline">12</span> s 已经算长），故障信号几乎就是准静态的，残差幅值接近稳态值，检测主要受噪声限制。<strong>同一套阈值，换一个参考周期就换了性能</strong>，这一点在第 78.8 节的调参经验里还会再提一次。</p>
+<h3 id="连续时间的重构">78.4.3 连续时间的重构</h3>
+<p>连续时间的 LQR 重构与离散版本一一对应，只是 Riccati 方程换成连续形式：</p>
+<p><span class="math display">
+\boldsymbol A_c^{\mathsf T}\boldsymbol P+\boldsymbol P\boldsymbol A_c-\boldsymbol P\boldsymbol B_{\mathrm{eff}}\boldsymbol R^{-1}\boldsymbol B_{\mathrm{eff}}^{\mathsf T}\boldsymbol P+\boldsymbol Q=\boldsymbol 0,\qquad
+\hat{\boldsymbol K}=\boldsymbol R^{-1}\boldsymbol B_{\mathrm{eff}}^{\mathsf T}\boldsymbol P
+\tag{78-36}
+</span></p>
+<p>其中 <span class="math inline">\boldsymbol B_{\mathrm{eff}}</span> 按式 (78-23) 构造。连续域的好处是“有效增益”的物理意义更直观：<span class="math inline">\hat\rho</span> 变小时，<span class="math inline">\boldsymbol B_{\mathrm{eff}}</span> 的第一列变小，Riccati 方程解出的 <span class="math inline">\boldsymbol P</span> 在第一分量上变大，最终 <span class="math inline">\hat{\boldsymbol K}</span> 的第一行变大。这条链条在连续域里可以逐项追踪，在离散域里则被矩阵指数“糊”在一起，不容易看清。</p>
+<p><strong>“第一行变大”这句话要限定在哪个方向变大</strong>。<span class="math inline">\boldsymbol B_{\mathrm{eff}}</span> 的第一列是 <span class="math inline">[0,\hat\rho,0]^{\mathsf T}</span>，它只作用于速度方程，所以 <span class="math inline">\hat\rho</span> 变小时，控制器对速度的“话语权”变弱，Riccati 方程为了让同一个速度误差得到同样的加速度，必须提高增益——但这个提高不是均匀的，而是集中在能“借力”的通道上。具体到本章，<span class="math inline">\hat\rho</span> 变小时增益的第一列（对应位置）涨得最快，第二列（对应速度）涨得慢一些，第三列（对应备份执行器状态）几乎不动。这是因为它可以走两条路：加大 <span class="math inline">u_1</span>，或者把备份通道用起来。前者的效率已经打了折，所以最优解会越来越偏向后者。<strong>这就是“再分配”在连续域里的自然解释：不是额外加的逻辑，而是 Riccati 方程在效率下降后自动做出的权衡。</strong></p>
+<p><strong>再分配该不该显式打开，是一个可以算的判据</strong>。本章的实测是：<span class="math inline">\hat\rho=0.6</span> 不做再分配，闭环极点 <span class="math inline">0.9381</span>、<span class="math inline">0.6870</span>、<span class="math inline">0.2848</span>，谱半径 <span class="math inline">0.9381</span>；<span class="math inline">\hat\rho=0.4</span> 不做再分配是 <span class="math inline">0.9373</span>、<span class="math inline">0.7794</span>、<span class="math inline">0.2848</span>，谱半径 <span class="math inline">0.9373</span>——效率掉三分之一，谱半径只从 <span class="math inline">0.9381</span> 降到 <span class="math inline">0.9373</span>，几乎没动，因为 Riccati 方程已经自动把增益加上去了。真正开再分配时，<span class="math inline">\hat\rho=0.4</span> 的极点变成 <span class="math inline">0.8298</span> 与 <span class="math inline">0.9623\pm0.0208j</span>，谱半径升到 <span class="math inline">0.9626</span>；<span class="math inline">\hat\rho=0.2</span> 时更极端，谱半径 <span class="math inline">0.9635</span>。<strong>再分配不是“多做一点总比不做好”，它在效率中等时收益被 Riccati 的自动补偿吃掉，在效率很低时又会把主导极点从实轴推成一对低阻尼共轭极点，代价是振铃。</strong>这条结论在连续域看不出来，必须逐点算离散极点，第 78.7 节会把它写成一条可直接用的判据。</p>
+<p><strong>连续 LQR 与离散 LQR 的解不是“差不多”</strong>。两者的差别来自“控制量在一个采样周期内是否变化”这个假设：连续 LQR 假设 <span class="math inline">u</span> 连续可调，离散 LQR 假设 <span class="math inline">u</span> 在周期内恒定。当对象的时间常数远大于采样周期时，两者趋于一致；本章最快的模态是 <span class="math inline">-6.667</span>（时间常数 <span class="math inline">0.15</span> s），采样周期 <span class="math inline">0.02</span> s，比值 <span class="math inline">7.5</span>，不算“远大于”。用矩阵指数的二阶项粗估修正量：<span class="math inline">|s|T_s=0.133</span>，二阶项 <span class="math inline">(0.133)^2/2=0.0088</span>，即约 <span class="math inline">0.9\%</span>。这个量级在增益上不算大，但<strong>它集中作用在快模态上，而快模态正是备份执行器的内部状态 <span class="math inline">x_3</span></strong>——也就是容错最关心的那个通道。所以“整体差 <span class="math inline">1\%</span>”这种说法会掩盖“关键通道差得更多”的事实。</p>
+<h3 id="连续时间的可检测性">78.4.4 连续时间的可检测性</h3>
+<p>连续域还有一个离散域不方便表达的性质：<strong>故障方向与观测器零点的关系</strong>。式 (78-35) 的传递函数在某个频率处若出现传输零点，故障在该频率上的分量就传不到残差。对于三状态全测的对象，<span class="math inline">\boldsymbol C=\boldsymbol I</span>，传递函数是 <span class="math inline">3\times1</span> 的向量，其零点由 <span class="math inline">(\boldsymbol A_c-\boldsymbol L_c,\boldsymbol b_{1c})</span> 决定。只要 <span class="math inline">\boldsymbol b_{1c}</span> 不与 <span class="math inline">\boldsymbol L_c</span> 的某个特征向量正交，就不存在“完全看不见”的频率。</p>
+<p>本章的 <span class="math inline">\boldsymbol b_{1c}=[0,g_1,0]^{\mathsf T}</span>，与三个观测器特征向量都不正交，所以三类故障在整个频段上都可见。这是“三状态全测”带来的便利；如果只有位置可测（<span class="math inline">\boldsymbol C=[1,0,0]</span>），速度与备份执行器状态要靠观测器推断，<span class="math inline">\boldsymbol b_{1c}</span> 的可见性就会变差，轻故障的检测会明显变慢。</p>
+<p><strong>“不正交”这件事要分开看是哪个分量</strong>。故障只进速度方程，<span class="math inline">\boldsymbol b_{1c}</span> 只有第二个分量非零。它在残差里的投影强度取决于观测器的第二行——也就是观测器对速度误差的修正力度。本章 <span class="math inline">\boldsymbol L</span> 的第二行是 <span class="math inline">[0.1170,\ 0.0372,\ 0.0017]</span>，三个分量都不为零，所以故障在这一行上的投影不为零；如果某一列的系数恰好为零，那么对应的量测通道就完全看不到这个故障。<strong>这就是“故障可检测性”在三状态全测下唯一的漏洞：不是看不见故障本身，而是某一个量测通道的修正系数恰好被设计成零。</strong></p>
+<p><strong>这也解释了为什么 <span class="math inline">\boldsymbol C=\boldsymbol I</span> 是一个“便宜”的假设</strong>。全状态可测意味着观测器不需要“推断”，残差直接等于状态误差加上噪声，故障的可见性只由 <span class="math inline">\boldsymbol b_{1c}</span> 决定，不受观测器结构的二次影响。一旦换成部分状态可测，<span class="math inline">\boldsymbol b_{1c}</span> 先要经过观测器的“传播”才到达残差，传播过程中可能被衰减、被相移、被零点挡住，可检测性就从“看 <span class="math inline">\boldsymbol b_{1c}</span> 是否为零”变成“看传递函数在关注频段上是否接近零”。后者难判得多，也更容易在某个特定频率上翻车。<strong>实机上位置传感器最可靠、速度靠差分、备份执行器状态几乎不可测，所以真实系统的可检测性通常远不如本章的仿真乐观。</strong></p>
+<p><strong>一个具体的退化路径</strong>。假设只测位置，<span class="math inline">\boldsymbol C=[1,0,0]</span>。观测器的第三行（对应 <span class="math inline">x_3</span>）只能靠模型外推，而模型里 <span class="math inline">x_3</span> 的动态是 <span class="math inline">1/(\tau s+1)</span>，时间常数 <span class="math inline">0.15</span> s。这意味着任何关于 <span class="math inline">x_3</span> 的推断都至少滞后 <span class="math inline">0.15</span> s，故障在 <span class="math inline">x_3</span> 通道上的信息要经过这段滞后才反映到位置量测上。表现就是：<span class="math inline">c</span> 的辨识会变慢，<span class="math inline">\hat c</span> 的方差会变大，分类边界（<span class="math inline">\hat\rho&lt;0.12</span> 判卡死）附近的故障会被反复改判。<strong>本章之所以敢把分类边界定得很窄，前提就是三状态全测；换一个传感器配置，这套边界必须重新标定。</strong></p>
+<h3 id="连续与离散的取舍">78.4.5 连续与离散的取舍</h3>
+<p>既然连续域的分析更清楚，为什么实现要用离散？原因有三个，都在工程侧。</p>
+<p>第一，控制器本来就是数字的。采样、保持、量化、通信延迟，这些环节在连续域里只能近似成“纯延迟”，而在离散域里是精确的。</p>
+<p>第二，阈值标定必须在离散域做。式 (78-18) 的 <span class="math inline">\mu_S</span> 与 <span class="math inline">\sigma_S</span> 是离散统计量的均值与方差，它们依赖采样率、滑动平均窗长、噪声的离散化方式。用连续域的方差去推离散阈值，会差一个与采样率有关的系数。</p>
+<p>第三，重构后的稳定性判据在离散域更直接。离散闭环的稳定性看极点是否在单位圆内，这是一个可以逐点检查的条件；连续域要看右半平面，虽然等价，但数值上不如单位圆直观。</p>
+<p>三条理由里，第二条最容易被低估。式 (78-18) 里的 <span class="math inline">\mu_S</span> 与 <span class="math inline">\sigma_S</span> 不是普适常数，它们由四件事共同决定：采样周期（决定积分窗的等效带宽）、滑动平均窗长（决定噪声的压缩比）、噪声是否经过抗混叠滤波、以及参考信号的频率成分。任何一项变了，统计量就变。用连续域的方差公式去推阈值，等于假设“采样足够快、平均窗足够长、噪声是白的”，这三个假设在实机上都不严格成立。<strong>阈值只能测，不能推</strong>，这是本章反复强调的一句话，它的根据就在这里。</p>
+<p>还有第四条理由，属于数值层面：离散 Riccati 方程的解在 <span class="math inline">\boldsymbol B</span> 的列接近线性相关时条件数会急剧变差。本章卡死重构时要把主通道整列置零，等价于把 <span class="math inline">\boldsymbol B</span> 从 <span class="math inline">3\times2</span> 降成 <span class="math inline">3\times1</span>；如果偷懒不降维、只把那一列改成一个极小的数，<span class="math inline">\boldsymbol R+\boldsymbol B^{\mathsf T}\boldsymbol P\boldsymbol B</span> 的条件数会到 <span class="math inline">10^{12}</span> 量级，解出的增益完全不可信。<strong>“置零”必须是真的删列，不是填一个 <span class="math inline">10^{-12}</span></strong>，这条在离散实现里是硬要求。</p>
+<p>另外要承认一点：连续域的分析在本章并没有被“用尽”。真正被用上的只有三处——观测器极点的位置解释、故障在频域里的可见性、以及 <span class="math inline">\hat\rho</span> 变小时增益怎么变。剩下的工作全部在离散域完成。之所以保留这一节，不是因为连续设计更好，而是因为<strong>“为什么这样做”的答案通常只在连续域里说得清楚，而“怎么做对”的答案只在离散域里验证得了</strong>。</p>
+<h3 id="把离散极点折回连续域">78.4.6 把离散极点折回连续域</h3>
+<p>既然两套语言都要用，就必须有一个可靠的换算。对采样系统的极点，换算是 <span class="math inline">s=\ln(z)/T_s</span>；对连续系统离散化后的极点，换算是 <span class="math inline">z=e^{sT_s}</span>。两个公式互为反函数，但只在 <span class="math inline">z</span> 位于右半平面映射区内、且 <span class="math inline">T_s</span> 足够小时才有物理意义。本章用它做了两次往返核对。</p>
+<p>第一次是对象极点。连续域 <span class="math inline">+1.033</span>、<span class="math inline">-1.393</span>、<span class="math inline">-6.667</span> 映射到离散域是 <span class="math inline">1.020884</span>、<span class="math inline">0.972516</span>、<span class="math inline">0.875173</span>，与 <span class="math inline">\mathrm{eig}(\boldsymbol A)</span> 逐位吻合。</p>
+<p>第二次是观测器极点。离散域实算是 <span class="math inline">0.946299\pm0.031967j</span> 与 <span class="math inline">0.838468</span>，折回连续域：</p>
+<p><span class="math display">
+s=\frac{\ln z}{T_s}
+\quad\Longrightarrow\quad
+-2.731\pm1.689j,\ \ -8.809
+</span></p>
+<p>这两个数就是第 78.4.1 节用的连续等效极点。往返一次没有信息损失，说明这套观测器在连续域与离散域的描述是一致的——<strong>一致性本身就是一条验收条件</strong>：如果两次换算对不上，说明离散化时用了近似（例如把 <span class="math inline">\boldsymbol B</span> 写成 <span class="math inline">\boldsymbol B_cT_s</span> 而丢掉了高阶项），误差会在重构增益上放大。</p>
+<p>折回连续域还有一个实用价值：判断“观测器是否快得离谱”用连续域的 rad/s 最直观。<span class="math inline">|-8.809|</span> 与奈奎斯特频率 <span class="math inline">157</span> rad/s 差 <span class="math inline">17.8</span> 倍，一眼就知道安全；如果只看离散极点 <span class="math inline">0.838468</span>，很难说出它“快不快”。</p>
+<p>反过来，从连续域往离散域折时要注意<strong>采样保持的相位</strong>。零阶保持会引入半个采样周期的等效延迟，即 <span class="math inline">e^{-sT_s/2}</span>。这项在 <span class="math inline">|s|T_s</span> 很小时可以忽略，在本章 <span class="math inline">|s|T_s=0.176</span> 时对应相位滞后 <span class="math inline">0.088</span> rad，约 <span class="math inline">5^\circ</span>。对观测器极点来说这 <span class="math inline">5^\circ</span> 无关紧要，但对闭环相位裕度来说，<span class="math inline">5^\circ</span> 是要算进预算的。<strong>同一个 <span class="math inline">T_s</span>，对观测器是“无所谓”，对稳定性裕度是“必须算”</strong>，这是离散化误差容易被双标的地方。</p>
+<p>所以本章的做法是：<strong>用连续域理解机理，用离散域实现与标定</strong>。第 78.5 节专门讨论离散实现里的几个坑。</p>
+<h2 id="离散情形">78.5 离散情形</h2>
+<h3 id="两列的形状主备通道差多少">78.5.1 两列的形状：主备通道差多少</h3>
+<p>零阶保持离散化的结果，本章的具体数值是</p>
+<p><span class="math display">
+\boldsymbol A=\begin{bmatrix}
+1.000287 &amp; 0.019930 &amp; 0.000115\\
+0.028699 &amp; 0.993113 &amp; 0.011194\\
+0 &amp; 0 &amp; 0.875173
+\end{bmatrix},\qquad
+\boldsymbol B=\begin{bmatrix}
+1.9953\times10^{-4} &amp; 5.1510\times10^{-6}\\
+1.9930\times10^{-2} &amp; 7.6378\times10^{-4}\\
+0 &amp; 1.2483\times10^{-1}
+\end{bmatrix}
+\tag{78-37}
+</span></p>
+<p><span class="math inline">\boldsymbol A</span> 的三个特征值是 <span class="math inline">1.020884</span>、<span class="math inline">0.972516</span> 与 <span class="math inline">0.875173</span>，与连续极点的对应关系是 <span class="math inline">z=e^{sT_s}</span>：<span class="math inline">e^{1.033\times0.02}=1.020884</span>、<span class="math inline">e^{-1.393\times0.02}=0.972516</span>、<span class="math inline">e^{-6.667\times0.02}=0.875173</span>。在离散域里，“不稳定”只有一个判据——极点模是否大于 1。这里第一个模是 <span class="math inline">1.020884</span>，另外两个都小于 1，一眼就能看出这个对象有一个方向会自己跑掉。</p>
+<p>真正需要盯住的是 <span class="math inline">\boldsymbol B</span> 的两列。按第一步的加速度增量比较，<span class="math inline">\boldsymbol b_1</span> 的第二分量是 <span class="math inline">0.019930</span>，<span class="math inline">\boldsymbol b_2</span> 的第二分量是 <span class="math inline">7.6378\times10^{-4}</span>，两者相差 <span class="math inline">26.1</span> 倍。也就是说，备份通道在第一个采样周期里只能给出主通道 <span class="math inline">3.8\%</span> 的加速度。<strong>指望“切过去就顶上”是不成立的。</strong></p>
+<p>但稳态的结论完全不同。设 <span class="math inline">u_2</span> 恒定，<span class="math inline">x_3</span> 的稳态值就等于 <span class="math inline">u_2</span>，它作用在速度上的力是 <span class="math inline">g_2u_2=0.6u_2</span>；主通道是 <span class="math inline">g_1u_1=1.0u_1</span>。按限幅算，备份是 <span class="math inline">0.6\times6=3.6</span>，主通道是 <span class="math inline">1.0\times5=5.0</span>，备份能达到主通道的 <span class="math inline">72\%</span>。</p>
+<p>同一对通道，瞬态上差 26 倍，稳态上只差 1.4 倍，差别全在时间常数 <span class="math inline">\tau=0.15</span> s 上：<span class="math inline">\boldsymbol b_2</span> 的能量先灌进 <span class="math inline">x_3</span>（这一项是 <span class="math inline">0.1248</span>，比 <span class="math inline">\boldsymbol b_1</span> 的任何分量都大），再由 <span class="math inline">x_3</span> 通过 <span class="math inline">\boldsymbol A</span> 的 <span class="math inline">(2,3)</span> 元 <span class="math inline">0.011194</span> 慢慢推到速度上，需要 7.5 个采样周期才走完 <span class="math inline">63\%</span>。</p>
+<p>这就给出了本章最重要的一句工程判断：<strong>主通道是“快而直接”的，备份通道是“慢而有力”的</strong>。慢通道能修稳态，不能救瞬态。第 78.2.8 节的权限判据、第 78.9 节卡死 <span class="math inline">c=2.0</span> 救不回来的案例，根子都在这里。</p>
+<h3 id="观测器的离散极点与残差时间常数">78.5.2 观测器的离散极点与残差时间常数</h3>
+<p>观测器的离散闭环矩阵是 <span class="math inline">\boldsymbol A-\boldsymbol L</span>，代入式 (78-14) 的 <span class="math inline">\boldsymbol L</span>，它的特征值是</p>
+<p><span class="math display">
+z_{1,2}=0.946299\pm0.031967j,\qquad z_3=0.838468
+\tag{78-38}
+</span></p>
+<p>主导对的模是 <span class="math inline">0.946838</span>，折算成连续域的实部是 <span class="math inline">\ln(0.946838)/0.02=-2.731</span>，时间常数 <span class="math inline">0.366</span> s；第三个极点的等效实部是 <span class="math inline">-8.809</span>，时间常数 <span class="math inline">0.114</span> s。</p>
+<p>这三个数决定了残差在故障后“爬多快”。把式 (78-16) 看成以故障项为输入、以残差为输出的系统，分母就是这些极点。模 <span class="math inline">0.9468</span> 的那一对管包络上升，大约三个时间常数（<span class="math inline">1.1</span> s）之后残差才贴近它的稳态值。可是检测并不需要等它到稳态——只要越过阈值就够了。这正是后面“检测延迟下限 <span class="math inline">0.16</span> s”与“观测器时间常数 <span class="math inline">0.366</span> s”不矛盾的原因：残差在头几步就能爬到阈值附近，后面那一段爬升只是富余。</p>
+<p><strong>这对共轭极点的阻尼比约 <span class="math inline">0.53</span></strong>。模 <span class="math inline">0.946838</span>、辐角 <span class="math inline">\arctan(0.031967/0.946299)=0.03375</span> rad，折算成连续域的阻尼比是 <span class="math inline">0.03375/\sqrt{0.03375^2+0.05464^2}=0.526</span>——注意这里要用连续域的换算，直接用离散域的模做除法会得到错误答案。这个阻尼比说明残差在故障后会有大约一成多的过冲，不是单调爬升。过冲对检测是好事还是坏事，取决于阈值的位置：阈值压在稳态值以下时，过冲让残差更早越过；阈值压在稳态值附近时，过冲会造成“越过后又回落到阈值以下”的抖动，检测逻辑若要求连续两拍超限，延迟会突然变长。本章的检测只要求单拍超限，所以避开了这个问题。</p>
+<p><strong>离散极点不能按 <span class="math inline">z\approx1+sT_s</span> 简单换算</strong>。这条线性近似在 <span class="math inline">|s|T_s</span> 小时好用，但主导对是复数，<span class="math inline">s=-2.731\pm1.689j</span>，<span class="math inline">|s|T_s=0.257</span>，线性近似的误差已经到 <span class="math inline">(0.257)^2/2=3.3\%</span>，模长会算成 <span class="math inline">1-0.0546=0.9454</span>，而真值是 <span class="math inline">0.946838</span>，差了 <span class="math inline">0.15\%</span>；实部则差得更多，因为复数极点的实部还要受虚部的二阶影响。<strong>要准确折回，只能用 <span class="math inline">s=\ln(z)/T_s</span>，不能用一阶近似</strong>，这是第 78.4.6 节那条换算公式存在的实际理由。</p>
+<p><strong>残差时间常数与检测延迟是两件事</strong>。前者是“残差自己爬”，后者是“残差爬过阈值”，两者之间差一个“阈值有多高”的因子。本章阈值的稳态值比例大约是 <span class="math inline">2.169/0.686=3.16</span> 倍均值，而稳态值本身由故障幅值决定，所以真正的“爬升时间”随故障幅值变化：故障大，稳态值高，阈值相对低，爬得快；故障小，稳态值可能与阈值同量级，永远爬不过去——<span class="math inline">\rho=0.9</span> 在 <span class="math inline">12</span> s 内没被检出，就是这个原因，不是“慢”，是“最终也到不了”。</p>
+<h3 id="阈值只能在离散域标定">78.5.3 阈值只能在离散域标定</h3>
+<p>图 78-3 是健康状态下残差统计量 <span class="math inline">S_k</span> 的直方图，以及 <span class="math inline">k=2</span> 到 <span class="math inline">6</span> 对应的五条阈值线。</p>
+<figure>
+<img src="figs/ch078/fig_078_03_residual_hist.svg" alt="图 78-3 健康残差统计量的分布与五条阈值线" /><figcaption aria-hidden="true">图 78-3 健康残差统计量的分布与五条阈值线</figcaption>
+</figure>
+<p>分布明显右偏，长尾一直拖到 <span class="math inline">2.1</span> 以上，这与“三个归一化残差取范数”的结构一致：范数不为负，质量堆在 <span class="math inline">0</span> 附近，右侧拖一条尾巴。实测均值 <span class="math inline">\mu_S=0.6860</span>、标准差 <span class="math inline">\sigma_S=0.2966</span>、最大值 <span class="math inline">2.1326</span>。最右边的 <span class="math inline">k=5</span> 阈值 <span class="math inline">2.169</span> 恰好压在这条尾巴的外面，所以 <span class="math inline">k\ge5</span> 时 500 步内一次误报都没有；<span class="math inline">k=4</span> 的阈值 <span class="math inline">1.873</span> 切进尾巴，误报率 <span class="math inline">0.00047</span>。</p>
+<p>为什么这个标定不能在连续域完成？因为 <span class="math inline">\sigma_S</span> 由三件事共同决定：量测噪声 <span class="math inline">\sigma</span>、滑动平均窗长 <span class="math inline">w</span>、以及模型与对象之间的失配。前两项可以解析算，第三项只能实测。本章的 <span class="math inline">\mu_S=0.6860</span> 比“纯噪声”推算出来的值大不少，多出来的部分就是失配——线性化残差、RK4 与零阶保持的差异、限幅引入的非线性——这些东西在连续域的方差公式里没有位置。</p>
+<p>还有一层依赖容易被忽略：<span class="math inline">\mu_S</span> 与 <span class="math inline">\sigma_S</span> 都依赖采样周期。把 <span class="math inline">T_s</span> 减半，同样 <span class="math inline">w=5</span> 的滑动平均只覆盖 <span class="math inline">0.05</span> s 的物理时间，平滑变差，<span class="math inline">\sigma_S</span> 上升，误报率跟着上升。<strong>换采样率必须重新标定阈值，不能沿用旧数</strong>。</p>
+<h3 id="检测延迟的量化台阶">78.5.4 检测延迟的量化台阶</h3>
+<p>图 78-4 的左侧子图是故障幅值 <span class="math inline">\rho</span> 与检测延迟的关系，右侧子图是同一个 <span class="math inline">\rho</span> 与闭环代价的关系。</p>
+<figure>
+<img src="figs/ch078/fig_078_04_rho_delay.svg" alt="图 78-4 故障幅值对检测延迟与闭环代价的影响：左为检测延迟，右为闭环代价（对数纵轴）" /><figcaption aria-hidden="true">图 78-4 故障幅值对检测延迟与闭环代价的影响：左为检测延迟，右为闭环代价（对数纵轴）</figcaption>
+</figure>
+<p>实测的延迟序列是：<span class="math inline">\rho=0.9</span> 时 12 s 内根本没超阈值；<span class="math inline">\rho=0.8</span> 时 <span class="math inline">0.46</span> s；<span class="math inline">0.7</span> 时 <span class="math inline">0.38</span> s；<span class="math inline">0.6</span> 时 <span class="math inline">0.28</span> s；<span class="math inline">0.5</span> 与 <span class="math inline">0.4</span> 都是 <span class="math inline">0.24</span> s；<span class="math inline">0.3</span> 与 <span class="math inline">0.2</span> 都是 <span class="math inline">0.20</span> s；<span class="math inline">\rho=0</span> 时 <span class="math inline">0.16</span> s。</p>
+<p>所有值都是 <span class="math inline">0.02</span> s 的整数倍——<span class="math inline">23</span>、<span class="math inline">19</span>、<span class="math inline">14</span>、<span class="math inline">12</span>、<span class="math inline">10</span>、<span class="math inline">8</span> 步。台阶由三段组成：量测与计算延迟 1 步；滑动平均窗填满需要 <span class="math inline">w-1=4</span> 步；剩下的是“残差爬到阈值”所需的若干步。下限 <span class="math inline">8</span> 步就是这三段在最理想情况下的和。</p>
+<p>想再往下压，只有两条路。一是减小 <span class="math inline">w</span>，但 <span class="math inline">\sigma_S</span> 随之上升，为了不误报又必须加大 <span class="math inline">k</span>，反而更慢——这是第 78.7 节要展开的循环。二是减小 <span class="math inline">T_s</span>，那是硬件与算力的事。所以延迟不是调出来的，是买出来的。</p>
+<p>右侧子图有一个反直觉的点：<span class="math inline">\rho=0.2</span> 的代价 <span class="math inline">0.9397</span> 比 <span class="math inline">\rho=0</span> 的 <span class="math inline">0.2111</span> 还高。原因是 <span class="math inline">\rho=0</span> 会被判成卡死、直接切到备份通道；而 <span class="math inline">\rho=0.2</span> 被判成效率下降，前馈项按 <span class="math inline">1/\hat\rho</span> 放大五倍（式 (78-27) 的 <span class="math inline">\hat\rho</span> 折回），指令频繁撞上 <span class="math inline">|u_1|\le5</span> 的限幅，实际作用量反而跟不上一段。<strong>中等故障比重故障更难处理</strong>，这是容错控制里一个反复出现的现象。</p>
+<h3 id="辨识的条件数持续激励">78.5.5 辨识的条件数：持续激励</h3>
+<p>式 (78-21) 的最小二乘要解一个 <span class="math inline">2\times2</span> 方程组，矩阵是 <span class="math inline">\sum_k\boldsymbol\phi_k\boldsymbol\phi_k^{\mathsf T}</span>，回归量 <span class="math inline">\boldsymbol\phi_k=[u_{1,k},1]^{\mathsf T}</span>。它的条件数有一个直白的物理含义：<strong>辨识窗内 <span class="math inline">u_1</span> 是否在变</strong>。</p>
+<p>如果 <span class="math inline">u_1</span> 在窗内近似恒定，<span class="math inline">\rho</span> 与 <span class="math inline">c</span> 就分不开——一个恒定的作用量既可以解释成“效率乘了一个系数”，也可以解释成“指令加了偏置”。这就是容错控制里的持续激励条件，与第 30 章讲系统辨识时的要求是同一件事。代码里对此有一道保护：条件数超过 <span class="math inline">10^8</span> 时放弃本次辨识，返回中立值 <span class="math inline">(\hat\rho,\hat c)=(1,0)</span>，等下一窗数据。这比给出一个病态的估计安全得多——病态估计会让重构增益飞掉。</p>
+<p>反过来看第 78.8 节的一个实测：把参考幅值从 <span class="math inline">0.30</span> 压到 <span class="math inline">0.02</span>，<span class="math inline">\rho=0.9</span> 的轻故障从“<span class="math inline">12</span> s 内检不出”变成“要 <span class="math inline">1.24</span> s 才检出”。指令变小，信噪比变差只是原因之一，更关键的是 <span class="math inline">u_1</span> 的摆幅跟着变小，条件数迅速恶化，辨识窗经常判不通过。<strong>激励不足的系统，容错诊断是做不动的。</strong></p>
+<p>条件数恶化还有一个隐蔽的后果：它不是“估计不准”，而是“估计会跳变”。同一个故障，<span class="math inline">u_1</span> 在某一段窗内恰好走平，<span class="math inline">\hat\rho</span> 与 <span class="math inline">\hat c</span> 会沿一条近乎退化的直线滑动——两个参数的组合几乎不变，但各自的取值可以差很多。这时如果按 <span class="math inline">\hat\rho</span> 去分类，可能上一窗判成效率下降、下一窗判成偏置。本章的对策是“条件数超限就整窗作废”，宁可保持上一次的结论，也不接受一次退化方向上的估计。代价是响应变慢，收益是分类不会来回跳。</p>
+<p>还有一条对策是主动的：在参考信号里叠加一点小幅高频抖动，专门用来“喂”辨识。这在理论上很漂亮（持续激励的标准做法），在本平台上却不能用——抖动会直接体现在位置误差里，与“跟踪精度优先”的代价权重冲突，而且 <span class="math inline">0.02</span> s 的采样周期下可用的抖动频率范围很窄，容易被观测器滤掉。<strong>主动激励是“辨识友好”与“控制友好”之间的正面冲突</strong>，本章选择了后者，只在参考本身变化足够时辨识。</p>
+<h3 id="卡死重构的离散实现">78.5.6 卡死重构的离散实现</h3>
+<p>卡死是三类故障里唯一必须“换控制结构”的一种：主通道彻底不受控，只能把它整条关掉。离散实现的三行核心是</p>
+<p><span class="math display">
+\boldsymbol K_{\mathrm{to}}=\begin{bmatrix}\boldsymbol 0_{1\times3}\\ \boldsymbol k_{\mathrm{back}}^{\mathsf T}\end{bmatrix},\qquad
+\boldsymbol k_{\mathrm{back}}^{\mathsf T}=\mathrm{dlqr}\left(\boldsymbol A,\boldsymbol b_2,\boldsymbol Q,\;R_{\mathrm{back}}\right),\qquad
+u_{1,k}=0
+\tag{78-39}
+</span></p>
+<p>配合备份通道的平衡点前移</p>
+<p><span class="math display">
+x_{3,\mathrm{eq}}=-\frac{\omega^2r-2\zeta\omega\dot r+g_1\hat c}{g_2}
+\tag{78-40}
+</span></p>
+<p>这里有三个离散实现上的坑，都是踩过才知道的。</p>
+<p>第一，<strong>不能先按两输入 LQR 算完再砍掉第一行</strong>。那样得到的第二行是“与一个不存在的通道协同”算出来的，它会把备份通道的力气用在补偿一个它补不了的方向上。本章的实现改成对 <span class="math inline">\boldsymbol b_2</span> 单列做 LQR，主通道那一行恒为零。</p>
+<p>第二，<strong>备份通道要独立的控力权重</strong>。主通道的 <span class="math inline">R=0.01</span>，备份通道取 <span class="math inline">R_{\mathrm{back}}=0.1</span>，大一个数量级。理由还是 78.5.1 那条：备份通道力气小、惯性大，用主通道的权重会逼它做力所不及的事，结果是控制量顶到限幅、轴还是往下掉。</p>
+<p>第三，<strong>前馈平衡点必须把 <span class="math inline">\hat c</span> 折进去</strong>。若不折，备份通道要在稳态额外承担 <span class="math inline">g_1c/g_2</span> 的偏差：<span class="math inline">c=0.5</span> 时是 <span class="math inline">0.833</span>，已占掉限幅 <span class="math inline">6</span> 的 <span class="math inline">13.9\%</span>。这个偏差不会自己消失，会一直表现为位置上的常值偏移。</p>
+<p>还有一件容易漏的事：<strong>观测器必须与对象同步重构</strong>。切换之后，送进观测器的应当是 <span class="math inline">\boldsymbol u^{\mathrm{obs}}=[\hat c,\;u_2]^{\mathsf T}</span>，而不是 <span class="math inline">[0,\;u_2]^{\mathsf T}</span>。否则观测器以为主通道一点力都不出，残差里会持续存在一个 <span class="math inline">g_1\hat c</span> 的偏差，辨识出的 <span class="math inline">\hat c</span> 越走越偏，重构增益跟着错。三种故障对应三种作用量，正好是式 (78-3) 的三种取法，代码里就是三个分支，没有第四种。</p>
+<p>辨识窗长 <span class="math inline">N=20</span>（<span class="math inline">0.4</span> s）这个取值也是被卡死逼出来的。<span class="math inline">N</span> 越长估计越准，但辨识窗必须整段落在故障之后，窗口越长，重构完成得越晚。本章实测：<span class="math inline">c=1.0</span> 在 <span class="math inline">0.4</span> s 窗下，故障后峰值 <span class="math inline">0.507</span>；如果把窗拉到 <span class="math inline">0.8</span> s，辨识还没结束，轴已经在限幅上撞死了。<strong>在本质不稳定对象上，辨识精度永远要给时间让路。</strong></p>
+<h3 id="上机前的五个检查">78.5.7 上机前的五个检查</h3>
+<p>把上面几节压成一张检查表，实现完之后逐条过：</p>
+<ol type="1">
+<li>离散极点是否与连续极点按 <span class="math inline">z=e^{sT_s}</span> 对得上？对不上说明离散化写错了，后面所有设计都建在错模型上。</li>
+<li>观测器极点是否比对象的不稳定极点快 2 到 5 倍？本章是 3.6 倍。太慢跟不上故障，太快放大量测噪声。</li>
+<li>阈值是否用本采样率下的健康数据重新标定过？沿用别的采样率的 <span class="math inline">\mu_S</span>、<span class="math inline">\sigma_S</span> 是最常见的误报来源。</li>
+<li>辨识的条件数保护是否打开？没有保护的除法在 <span class="math inline">u_1</span> 恒定时会给出离谱的 <span class="math inline">\hat\rho</span>。</li>
+<li>卡死分支是否用了单输入 LQR、独立 <span class="math inline">R_{\mathrm{back}}</span>、折算 <span class="math inline">\hat c</span> 的平衡点，并且把 <span class="math inline">\hat c</span> 同步送进观测器？四条缺一条，卡死就救不回来。</li>
+</ol>
+<p>这五条都不涉及新理论，全是实现细节。容错控制的失败案例里，绝大多数不是算法想错了，而是这几条里漏了一条。</p>
+<h2 id="稳定性与性能">78.6 稳定性与性能</h2>
+<h3 id="每一套增益都是稳定的">78.6.1 每一套增益都是稳定的</h3>
+<p>容错控制的第一道门槛是：<strong>重构之后的闭环必须还是稳定的</strong>。这句话听起来像废话，但它是可以逐套验证的。离散闭环的稳定性看 <span class="math inline">\boldsymbol A-\boldsymbol B_{\mathrm{eff}}\boldsymbol K</span> 的谱半径</p>
+<p><span class="math display">
+\rho_{\mathrm{cl}}=\max_i\left|\lambda_i\left(\boldsymbol A-\boldsymbol B_{\mathrm{eff}}\boldsymbol K\right)\right|&lt;1
+\tag{78-41}
+</span></p>
+<p>把本章用到的五套增益代进去，实测结果如下。</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">分支</th>
+<th style="text-align: left;">闭环极点</th>
+<th style="text-align: right;">谱半径</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">标称 <span class="math inline">\boldsymbol K_0</span></td>
+<td style="text-align: left;"><span class="math inline">0.9385</span>、<span class="math inline">0.5371</span>、<span class="math inline">0.2848</span></td>
+<td style="text-align: right;"><span class="math inline">0.9385</span></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">被动 <span class="math inline">\boldsymbol K_{\mathrm{pass}}</span></td>
+<td style="text-align: left;"><span class="math inline">0.9378</span>、<span class="math inline">0.7315</span>、<span class="math inline">0.2848</span></td>
+<td style="text-align: right;"><span class="math inline">0.9378</span></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">效率 <span class="math inline">\hat\rho=0.6</span>（不分配）</td>
+<td style="text-align: left;"><span class="math inline">0.9381</span>、<span class="math inline">0.6870</span>、<span class="math inline">0.2848</span></td>
+<td style="text-align: right;"><span class="math inline">0.9381</span></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">效率 <span class="math inline">\hat\rho=0.4</span>（不分配）</td>
+<td style="text-align: left;"><span class="math inline">0.9373</span>、<span class="math inline">0.7794</span>、<span class="math inline">0.2848</span></td>
+<td style="text-align: right;"><span class="math inline">0.9373</span></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">效率 <span class="math inline">\hat\rho=0.4</span>（再分配）</td>
+<td style="text-align: left;"><span class="math inline">0.8298</span>、<span class="math inline">0.9623\pm0.0208j</span></td>
+<td style="text-align: right;"><span class="math inline">0.9626</span></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">卡死（单输入备份）</td>
+<td style="text-align: left;"><span class="math inline">0.6456</span>、<span class="math inline">0.9581\pm0.0226j</span></td>
+<td style="text-align: right;"><span class="math inline">0.9584</span></td>
+</tr>
+</tbody>
+</table>
+<p>三条规律藏在表里。</p>
+<p>第一，<strong>最慢的极点始终是 <span class="math inline">0.938</span> 那一个</strong>，它对应位置通道。改增益改得动速度通道的极点（<span class="math inline">0.537\to0.779</span>），改不动位置通道的——因为位置回路的带宽受限于对象本身的不稳定程度，增益再大也只是把它推到 <span class="math inline">0.93</span> 附近。这就是“闭环时间常数约 <span class="math inline">0.32</span> s”的来源（<span class="math inline">\ln0.938/0.02=-3.2</span>）。</p>
+<p>第二，<strong>再分配会把谱半径推大</strong>。<span class="math inline">\hat\rho=0.4</span> 时，不加权再分配的谱半径是 <span class="math inline">0.9373</span>，加上 <span class="math inline">R_{11}=1/\hat\rho^2=6.25</span> 的再分配之后变成 <span class="math inline">0.9626</span>。原因是再分配本质上是“少用主通道、多用备份通道”，而备份通道慢，慢通道必然把闭环拖慢。代价换稳定裕度，这是第 78.9 节要算的账。</p>
+<p>第三，<strong>卡死分支的谱半径是五套里最大的 <span class="math inline">0.9584</span></strong>，而且有一对复数极点。这是必然的：只剩下一个慢通道，闭环必然更迟钝、更容易振荡。它仍然小于 1，所以能活；但余量只剩 <span class="math inline">4\%</span>，这就是为什么第 78.9 节里 <span class="math inline">c=2.0</span> 会失手——余量本来就不多，故障再大一点就吃光了。</p>
+<h3 id="切换本身会不会引入不稳定">78.6.2 切换本身会不会引入不稳定</h3>
+<p>每套增益各自稳定，不等于“在它们之间切换”也稳定。这是切换系统理论里最经典的反例来源：两套稳定增益，按某个坏时序来回切，可以让状态发散。</p>
+<p>本章的运气好，因为这是一个<strong>监督式切换</strong>：切换由检测事件单向触发，检测到故障才切，而且切过去之后不会自己切回来。这种结构下，切换次数是有限的（理论上最多三次：检测、辨识、执行），每次切换后闭环都在一个稳定系统里运行，所以稳定性由“每套稳定 + 切换次数有限 + 切换时刻状态有界”三条保证。</p>
+<p>真正需要担心的是<strong>误报导致的来回切</strong>。如果阈值定得太低，健康时也会报警，系统会切到一套为故障设计的增益上，性能变差；如果这时又因为残差回落而切回标称增益，就会出现极限环式的反复切换。本章的实现里没有“切回”这条路径，就是为了避开这件事——<strong>容错控制默认故障不可逆，宁可停在保守的一侧</strong>。这个选择有代价（瞬时扰动会被当成永久故障），但它把稳定性问题简化成了一句话：切一次，之后一直用新增益。</p>
+<h3 id="四种方案的代价横比">78.6.3 四种方案的代价横比</h3>
+<p>图 78-6 是 <span class="math inline">\rho=0.4</span> 时四种方案的位置跟踪与主执行器出力。</p>
+<figure>
+<img src="figs/ch078/fig_078_06_time.svg" alt="图 78-6 四种方案在 \rho=0.4 下的位置跟踪与主执行器出力" /><figcaption aria-hidden="true">图 78-6 四种方案在 <span class="math inline">\rho=0.4</span> 下的位置跟踪与主执行器出力</figcaption>
+</figure>
+<p>上图里参考是灰色点线，四条彩色曲线分别是健康、不处理、被动容错、主动容错。故障注入在 <span class="math inline">t=2.0</span> s 的竖虚线处。健康曲线几乎贴着参考；不处理与被动容错在故障后明显偏离，而且偏离之后再也不回来；主动容错在故障后抖一下，随后重新贴回参考。</p>
+<p>下图是主执行器指令 <span class="math inline">u_1</span>。不处理的 <span class="math inline">u_1</span> 在故障后继续按标称逻辑出力，看起来“很正常”——这正是问题所在，它不知道自己只出了四成力。主动容错的 <span class="math inline">u_1</span> 在检测到故障后整体抬高，把缺的那部分补回来，然后随着辨识完成再回落到一个新的工作点。</p>
+<p>对应的闭环代价（式 (78-4) 的指标，12 s 积分）是：</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">配置</th>
+<th style="text-align: right;"><span class="math inline">J</span></th>
+<th style="text-align: right;">相对健康</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">健康</td>
+<td style="text-align: right;"><span class="math inline">0.0473</span></td>
+<td style="text-align: right;"><span class="math inline">1.0</span></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">故障 + 不处理</td>
+<td style="text-align: right;"><span class="math inline">0.8115</span></td>
+<td style="text-align: right;"><span class="math inline">17.2</span></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">故障 + 被动容错</td>
+<td style="text-align: right;"><span class="math inline">0.8104</span></td>
+<td style="text-align: right;"><span class="math inline">17.1</span></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">故障 + 主动容错</td>
+<td style="text-align: right;"><span class="math inline">0.2344</span></td>
+<td style="text-align: right;"><span class="math inline">5.0</span></td>
+</tr>
+</tbody>
+</table>
+<p>主动容错把代价压到不处理的 <span class="math inline">29\%</span>，但仍然比健康高 <span class="math inline">4</span> 倍。这个“还剩 4 倍”很重要：容错控制不是“修好”，是“止损”。故障通道的物理能力已经没了，闭环不可能回到健康时的性能，能做到的只是不让你掉下去。</p>
+<p>换成 <span class="math inline">\rho=0</span>（主执行器完全失效），差距变成数量级：不处理 <span class="math inline">8.63\times10^{6}</span>，被动 <span class="math inline">4.30\times10^{6}</span>，主动 <span class="math inline">0.2151</span>。前两者已经发散，后者不但没发散，代价还比 <span class="math inline">\rho=0.4</span> 时的 <span class="math inline">0.2344</span> 更低——因为完全失效判得准、切得果断。</p>
+<p>第 78.10 节会用另一组种子重跑同一组对比，健康 <span class="math inline">0.0477</span>、不处理 <span class="math inline">0.8180</span>、被动 <span class="math inline">0.8170</span>、主动 <span class="math inline">0.2294</span>，与上表一致。<strong>换了随机种子结论不变，说明这不是某一次仿真的巧合。</strong></p>
+<h3 id="峰值与末段误差是两个指标">78.6.4 峰值与末段误差是两个指标</h3>
+<p>只看积分代价会把两件不同的事混在一起。故障后的瞬态峰值说明“最坏能坏到什么程度”，末段均方根说明“最后稳在哪儿”，两者对应的物理后果完全不同：峰值决定会不会撞限位、会不会触发保护，末段误差决定稳态精度。</p>
+<p><span class="math inline">\rho=0.4</span> 时三组数字：不处理峰值 <span class="math inline">0.2481</span>、末段均方根 <span class="math inline">2.32\times10^{-1}</span>；主动容错峰值 <span class="math inline">0.0558</span>、末段均方根 <span class="math inline">2.28\times10^{-3}</span>。峰值差 <span class="math inline">4.4</span> 倍，末段误差差 <span class="math inline">100</span> 倍。<strong>瞬态靠检测速度救，稳态靠辨识精度救</strong>，这两件事的瓶颈不一样，调参时不能一起调。</p>
+<h3 id="延迟如何吃掉性能">78.6.5 延迟如何吃掉性能</h3>
+<p>图 78-8 把“决策到执行”的延迟从 <span class="math inline">0</span> 一路加到 <span class="math inline">4.0</span> s，看闭环代价与故障后峰值怎么变。</p>
+<figure>
+<img src="figs/ch078/fig_078_08_delay_cost.svg" alt="图 78-8 切换延迟对闭环代价与故障后峰值的影响，虚线为完全不切换的水平" /><figcaption aria-hidden="true">图 78-8 切换延迟对闭环代价与故障后峰值的影响，虚线为完全不切换的水平</figcaption>
+</figure>
+<p>实测数据：</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: right;">延迟（步）</th>
+<th style="text-align: right;">延迟（s）</th>
+<th style="text-align: right;"><span class="math inline">J</span></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;"><span class="math inline">0.2344</span></td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">5</td>
+<td style="text-align: right;">0.1</td>
+<td style="text-align: right;"><span class="math inline">0.2420</span></td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">10</td>
+<td style="text-align: right;">0.2</td>
+<td style="text-align: right;"><span class="math inline">0.2504</span></td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">20</td>
+<td style="text-align: right;">0.4</td>
+<td style="text-align: right;"><span class="math inline">0.2693</span></td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">40</td>
+<td style="text-align: right;">0.8</td>
+<td style="text-align: right;"><span class="math inline">0.3144</span></td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">80</td>
+<td style="text-align: right;">1.6</td>
+<td style="text-align: right;"><span class="math inline">0.4112</span></td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">120</td>
+<td style="text-align: right;">2.4</td>
+<td style="text-align: right;"><span class="math inline">0.4726</span></td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">200</td>
+<td style="text-align: right;">4.0</td>
+<td style="text-align: right;"><span class="math inline">0.4809</span></td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">不切换</td>
+<td style="text-align: right;">—</td>
+<td style="text-align: right;"><span class="math inline">0.8171</span></td>
+</tr>
+</tbody>
+</table>
+<p>曲线是单调上升的，但形状值得注意：前 <span class="math inline">0.4</span> s 只涨了 <span class="math inline">15\%</span>，<span class="math inline">0.8</span> s 涨 <span class="math inline">34\%</span>，<span class="math inline">1.6</span> s 涨 <span class="math inline">75\%</span>；再往后就压平了，<span class="math inline">2.4</span> s 到 <span class="math inline">4.0</span> s 只多涨了 <span class="math inline">0.008</span>。压平的原因是<strong>故障瞬态已经过去了</strong>：轴被推到某个偏置位置后停在那儿，再晚切换也只是从这个位置把系统拉回来，代价主要由“拉了多远”决定，不再由“什么时候开始拉”决定。</p>
+<p>这条曲线给了工程上一个明确的预算感：延迟在 <span class="math inline">0.2</span> s 以内的代价几乎可以忽略，<span class="math inline">0.4</span> s 开始明显，<span class="math inline">1</span> s 以上就要重新评估方案了。而本章的检测延迟本身就在 <span class="math inline">0.16</span> 到 <span class="math inline">0.46</span> s 之间，加上决策与执行，很容易落到 <span class="math inline">0.4</span> s 这一档。<strong>所以第 78.10 节讲落地时，通信周期的预算要按 <span class="math inline">0.1</span> s 的量级去争，不能按“反正秒级也能切”去想。</strong></p>
+<h3 id="阈值系数的代价曲线">78.6.6 阈值系数的代价曲线</h3>
+<p>阈值系数 <span class="math inline">k</span> 是容错控制里最“便宜”的一个旋钮，也是最容易被随手定死的一个。图 78-9 是它的两侧：左边误报率，右边闭环代价。</p>
+<figure>
+<img src="figs/ch078/fig_078_09_threshold.svg" alt="图 78-9 阈值系数对误报率与闭环代价的影响" /><figcaption aria-hidden="true">图 78-9 阈值系数对误报率与闭环代价的影响</figcaption>
+</figure>
+<p><span class="math inline">\rho=0.5</span> 时，<span class="math inline">k</span> 从 <span class="math inline">2</span> 加到 <span class="math inline">6</span>，误报率从 <span class="math inline">0.03505</span> 一路降到 <span class="math inline">0</span>，而闭环代价只从 <span class="math inline">0.1493</span> 涨到 <span class="math inline">0.1535</span>——只涨了 <span class="math inline">2.8\%</span>。</p>
+<p>这个结果有点反直觉：阈值抬高会拖慢检测，按理代价应该涨得更快。原因在故障幅值上：<span class="math inline">\rho=0.5</span> 的残差很大，即使 <span class="math inline">k=6</span> 也只需要多等一两步就越过阈值，检测延迟对 <span class="math inline">k</span> 不敏感。真正对 <span class="math inline">k</span> 敏感的是轻故障——<span class="math inline">\rho=0.8</span> 那种，<span class="math inline">k</span> 每加 <span class="math inline">1</span>，延迟可能多好几步。</p>
+<p>所以 <span class="math inline">k</span> 的选法不该是“取中间值 <span class="math inline">4</span>”，而该是：<strong>先按最轻的必须检出的故障定 <span class="math inline">k</span> 的上限，再按可接受的误报率定下限，两者夹出来的区间通常只剩一两档</strong>。本章取 <span class="math inline">k=4</span>，误报率 <span class="math inline">0.00047</span>。检测延迟对种子敏感：第 78.5.4 节那组（种子 <span class="math inline">1</span>）在 <span class="math inline">\rho=0.5</span> 时是 <span class="math inline">0.24</span> s，本节这组（种子 <span class="math inline">7</span>）是 <span class="math inline">0.20</span> s。同一个 <span class="math inline">k</span>、同一套参数，换一个噪声实现就差 <span class="math inline">0.04</span> s，这个量级的不确定性在调参时必须算进去。</p>
+<h3 id="故障程度的全谱一张表看清边界">78.6.7 故障程度的全谱：一张表看清边界</h3>
+<p>前面各节都是固定一个 <span class="math inline">\rho</span> 看方案差异，下面这张表反过来：固定方案，扫故障程度。</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: right;"><span class="math inline">\rho</span></th>
+<th style="text-align: right;">不处理</th>
+<th style="text-align: right;">被动容错</th>
+<th style="text-align: right;">主动容错</th>
+<th style="text-align: right;">主动 + 再分配</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">0.6</td>
+<td style="text-align: right;"><span class="math inline">0.1807</span></td>
+<td style="text-align: right;"><span class="math inline">0.1811</span></td>
+<td style="text-align: right;"><span class="math inline">0.1083</span></td>
+<td style="text-align: right;"><span class="math inline">0.1025</span></td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">0.4</td>
+<td style="text-align: right;"><span class="math inline">0.8109</span></td>
+<td style="text-align: right;"><span class="math inline">0.8100</span></td>
+<td style="text-align: right;"><span class="math inline">0.2337</span></td>
+<td style="text-align: right;"><span class="math inline">0.1848</span></td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">0.2</td>
+<td style="text-align: right;"><span class="math inline">66223</span></td>
+<td style="text-align: right;"><span class="math inline">12320</span></td>
+<td style="text-align: right;"><span class="math inline">0.9359</span></td>
+<td style="text-align: right;"><span class="math inline">0.5635</span></td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">0</td>
+<td style="text-align: right;"><span class="math inline">8.97\times10^{6}</span></td>
+<td style="text-align: right;"><span class="math inline">4.48\times10^{6}</span></td>
+<td style="text-align: right;"><span class="math inline">0.2061</span></td>
+<td style="text-align: right;"><span class="math inline">0.2061</span></td>
+</tr>
+</tbody>
+</table>
+<p>这张表能读出四件事。</p>
+<p>第一，<strong>主动容错是唯一在 <span class="math inline">\rho\le0.4</span> 之后还能保持有界的方案</strong>。<span class="math inline">\rho=0.2</span> 时不处理与被动分别是 <span class="math inline">66223</span> 与 <span class="math inline">12320</span>，已经发散；主动是 <span class="math inline">0.9359</span>。</p>
+<p>第二，<strong>再分配在中等故障上最有用</strong>。<span class="math inline">\rho=0.4</span> 时它把 <span class="math inline">0.2337</span> 压到 <span class="math inline">0.1848</span>（降 <span class="math inline">21\%</span>），<span class="math inline">\rho=0.2</span> 时把 <span class="math inline">0.9359</span> 压到 <span class="math inline">0.5635</span>（降 <span class="math inline">40\%</span>）。故障越重，把控制权往备份通道挪的收益越大。</p>
+<p>第三，<strong><span class="math inline">\rho=0</span> 时再分配与主动完全一样</strong>（都是 <span class="math inline">0.2061</span>）。因为 <span class="math inline">\rho=0</span> 被判成卡死，走的是单输入备份分支，这条分支本身就是“完全把主通道让出去”，再分配没有额外空间。</p>
+<p>第四，<strong>被动容错在 <span class="math inline">\rho=0.6</span> 时与不处理几乎相同</strong>（<span class="math inline">0.1811</span> 对 <span class="math inline">0.1807</span>）。它按 <span class="math inline">\rho=0.5</span> 设计，遇到比预设更好的工况只是白费力气；遇到更差的工况则一起垮掉。<strong>被动容错的性能曲线是“平移”而不是“重塑”</strong>，这是它与主动容错最本质的差别。</p>
+<h3 id="三个指标为什么不总是一致">78.6.8 三个指标为什么不总是一致</h3>
+<p>前面出现过好几次“某个方案峰值更小但代价更大”的情形。这不是数据矛盾，而是三个指标度量的东西不同，把它们混着看必然得出互相打架的结论。</p>
+<p><strong><span class="math inline">J</span> 是积分量，对短暂的大偏差不敏感</strong>。<span class="math inline">\rho=0.5</span> 时 <span class="math inline">k</span> 从 <span class="math inline">2</span> 加到 <span class="math inline">6</span>，检测延迟从 <span class="math inline">0.16</span> s 拉到 <span class="math inline">0.30</span> s，几乎翻倍，而 <span class="math inline">J</span> 只从 <span class="math inline">0.1493</span> 涨到 <span class="math inline">0.1535</span>，涨 <span class="math inline">2.8\%</span>。原因很直白：<span class="math inline">12</span> s 的积分窗里，多出来的 <span class="math inline">0.14</span> s 只占 <span class="math inline">1.2\%</span>，而这段时间里的偏差平方虽然是健康时的几十倍，乘上 <span class="math inline">1.2\%</span> 之后仍然微不足道。<strong>积分会把“拖延”稀释掉，所以只看 <span class="math inline">J</span> 会低估延迟的危害。</strong></p>
+<p><strong>峰值对延迟极其敏感，对稳态完全不敏感</strong>。同样这组数据里，延迟从 <span class="math inline">0.16</span> 到 <span class="math inline">0.30</span> s，偏差在这段时间按 <span class="math inline">e^{1.033t}</span> 增长，多涨 <span class="math inline">e^{0.145}=1.16</span> 倍；如果检测时偏差已经接近权限边界，这 <span class="math inline">16\%</span> 就是“救得回来”与“救不回来”的分界。峰值恰恰是这类“临界失败”的唯一可见指标。</p>
+<p><strong>末段均方根对两者都不敏感，它只管“最后稳在哪儿”</strong>。<span class="math inline">\rho=0.4</span> 时主动容错的末段均方根是 <span class="math inline">2.28\times10^{-3}</span>，健康时是同一个量级；而不处理是 <span class="math inline">2.32\times10^{-1}</span>，差一百倍。这个指标看得出“有没有真正恢复跟踪”，看不出“恢复得多惊险”。</p>
+<p>所以三个指标的正确用法是分工，而不是求和：</p>
+<ul>
+<li>用<strong>峰值</strong>做准入判断（会不会撞限位、会不会触发保护），它是硬约束；</li>
+<li>用<strong>末段均方根</strong>判断是否真的恢复了稳态精度，它区分“稳住了”与“停在那儿了”；</li>
+<li>用 <span class="math inline">J</span> 做方案之间的<strong>总体排序</strong>，它适合比较量级差异（<span class="math inline">0.23</span> 对 <span class="math inline">0.81</span>），不适合比较同量级内的细微差别。</li>
+</ul>
+<p>硬切换与淡入的对比正好说明最后一条。硬切换 <span class="math inline">J=0.2329</span>、跳变 <span class="math inline">1.024</span>；淡入 <span class="math inline">1.0</span> s 后 <span class="math inline">J=0.2339</span>、跳变 <span class="math inline">0.880</span>。按 <span class="math inline">J</span> 排，硬切换赢 <span class="math inline">0.4\%</span>；按跳变排，淡入赢 <span class="math inline">14\%</span>。<strong>如果只报 <span class="math inline">J</span>，会得出“淡入没必要”的错误结论</strong>，而实际上执行器承受的冲击差了七分之一。指标选错，结论就反了。</p>
+<h2 id="参数意义与作用">78.7 参数意义与作用</h2>
+<h3 id="参数全景">78.7.1 参数全景</h3>
+<p>本章一共有九个可调的量，散落在检测、辨识、重构、执行四段里。先把它们摆在一起，后面逐个说。</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">参数</th>
+<th style="text-align: left;">符号</th>
+<th style="text-align: right;">本章取值</th>
+<th style="text-align: left;">管什么</th>
+<th style="text-align: left;">拧大的后果</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">阈值系数</td>
+<td style="text-align: left;"><span class="math inline">k</span></td>
+<td style="text-align: right;"><span class="math inline">4</span></td>
+<td style="text-align: left;">报警门限</td>
+<td style="text-align: left;">误报少、检测慢</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">滑动平均窗</td>
+<td style="text-align: left;"><span class="math inline">w</span></td>
+<td style="text-align: right;"><span class="math inline">5</span></td>
+<td style="text-align: left;">残差平滑</td>
+<td style="text-align: left;">噪声小、延迟大</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">辨识窗长</td>
+<td style="text-align: left;"><span class="math inline">N</span></td>
+<td style="text-align: right;"><span class="math inline">20</span></td>
+<td style="text-align: left;">参数估计精度</td>
+<td style="text-align: left;">估计准、切换晚</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">决策延迟</td>
+<td style="text-align: left;"><span class="math inline">d</span></td>
+<td style="text-align: right;"><span class="math inline">0</span></td>
+<td style="text-align: left;">联锁与确认</td>
+<td style="text-align: left;">更安全、代价高</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">淡入时间</td>
+<td style="text-align: left;"><span class="math inline">T_b</span></td>
+<td style="text-align: right;"><span class="math inline">0</span> 或 <span class="math inline">1.0</span> s</td>
+<td style="text-align: left;">切换平滑度</td>
+<td style="text-align: left;">跳变小、过渡长</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">备份控力权重</td>
+<td style="text-align: left;"><span class="math inline">R_{\mathrm{back}}</span></td>
+<td style="text-align: right;"><span class="math inline">0.1</span></td>
+<td style="text-align: left;">备份通道的“吝啬度”</td>
+<td style="text-align: left;">更保守、更迟钝</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">再分配权重</td>
+<td style="text-align: left;"><span class="math inline">R_{11}</span></td>
+<td style="text-align: right;"><span class="math inline">1/\hat\rho^2</span></td>
+<td style="text-align: left;">主备用力比例</td>
+<td style="text-align: left;">更省主通道、更慢</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">卡死判据</td>
+<td style="text-align: left;"><span class="math inline">\rho_{\mathrm{th}}</span></td>
+<td style="text-align: right;"><span class="math inline">0.12</span></td>
+<td style="text-align: left;">效率/卡死分界</td>
+<td style="text-align: left;">卡死误判为效率</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">偏置判据</td>
+<td style="text-align: left;"><span class="math inline">c_{\mathrm{th}}</span></td>
+<td style="text-align: right;"><span class="math inline">0.35</span></td>
+<td style="text-align: left;">偏置/效率分界</td>
+<td style="text-align: left;">偏置误判为效率</td>
+</tr>
+</tbody>
+</table>
+<p>这张表里有一个隐含的结构：<strong>前五个参数都在“时间”上做交易，后四个在“权限”上做交易</strong>。时间类的参数都遵循同一条规律——更平滑就更慢，更慢就更贵；权限类的参数都遵循另一条——更保守就更容易活，但性能更差。</p>
+<p>这个二分不是分类癖，它对应两套完全不同的调试手法。时间类的参数可以<strong>离线算</strong>：给定 <span class="math inline">k</span>、<span class="math inline">w</span>、<span class="math inline">N</span>、<span class="math inline">d</span>、<span class="math inline">T_b</span>，检测延迟、辨识方差、闭环代价都能通过一次扫描画成曲线（第 78.6 节的几张图就是这么来的），调参时是在曲线上找点。权限类的参数必须<strong>在线验</strong>：<span class="math inline">R_{\mathrm{back}}</span> 与 <span class="math inline">R_{11}</span> 改变的是“故障时谁出力”，这个只有把故障注进去、看轨迹才知道；两个判据 <span class="math inline">\rho_{\mathrm{th}}</span>、<span class="math inline">c_{\mathrm{th}}</span> 更是只有在故障谱上扫一遍才知道分得开不开。<strong>离线能算的别在线试，在线才能验的别拿公式推</strong>，这是九参数调起来不至于乱的前提。</p>
+<p>九个参数之间还有三条硬耦合，动一个必须检查另外两个：</p>
+<ul>
+<li><span class="math inline">w</span> 与 <span class="math inline">d</span>：<span class="math inline">w</span> 的群延迟必须小于 <span class="math inline">d</span>，否则判决还没稳定就执行了（第 78.3.5 节）。</li>
+<li><span class="math inline">k</span> 与 <span class="math inline">w</span>：<span class="math inline">w</span> 变大、<span class="math inline">\sigma_S</span> 变小，同一个 <span class="math inline">k</span> 对应的阈值会自动降低，等于隐式地放松了 <span class="math inline">k</span>；改 <span class="math inline">w</span> 必须重标定 <span class="math inline">\mu_S</span>、<span class="math inline">\sigma_S</span>。</li>
+<li><span class="math inline">N</span> 与 <span class="math inline">T_b</span>：两者相加构成“故障到新增益完全生效”的总时长，而这段时长要落在权限边界之内；<span class="math inline">N</span> 拉长就必须把 <span class="math inline">T_b</span> 压短，反之亦然。</li>
+</ul>
+<p>三条耦合里最容易被忽略的是第二条。很多实现把 <span class="math inline">w</span> 写死在代码里、把 <span class="math inline">\theta</span> 写死在配置里，改 <span class="math inline">w</span> 时忘了改 <span class="math inline">\theta</span>，结果阈值相对残差的位置悄悄变了，误报率翻倍而没人知道原因。</p>
+<h3 id="阈值系数-k误报与漏报的分配器">78.7.2 阈值系数 <span class="math inline">k</span>：误报与漏报的分配器</h3>
+<p><span class="math inline">k</span> 决定“多大的残差才算故障”。它同时控制两个错误率：误报（健康时报警）与漏报（故障时不报警）。这两个错误在容错控制里的代价不对称：</p>
+<ul>
+<li>误报的代价是“白切一次”，系统切到保守增益，性能掉一截，但还活着。</li>
+<li>漏报的代价是“该切不切”，对本质不稳定对象，这可能直接意味着发散。</li>
+</ul>
+<p>不对称的代价意味着 <span class="math inline">k</span> 不该取在误报率与漏报率的平衡点上，而应该<strong>偏向漏报一侧</strong>，也就是 <span class="math inline">k</span> 取小一点、宁可多误报。本章的实测支持这个判断：<span class="math inline">k=2</span> 时误报率 <span class="math inline">0.03505</span>（每 500 步约 18 次），但闭环代价只比 <span class="math inline">k=6</span> 高 <span class="math inline">2.8\%</span>（<span class="math inline">0.1493</span> 对 <span class="math inline">0.1535</span>）。误报的代价在这个对象上意外地低，因为它切到的是一套“仍然稳定、只是保守”的增益。</p>
+<p>那为什么不干脆取 <span class="math inline">k=2</span>？因为误报会污染辨识。健康时的误报会让系统去做一次本来不该做的辨识，估出来的 <span class="math inline">(\hat\rho,\hat c)</span> 是噪声的产物，可能落到某个奇怪的分区里，触发一次莫名其妙的重构。本章取 <span class="math inline">k=4</span>，误报率 <span class="math inline">0.00047</span>，即每 2000 步一次，正好落在“能容忍但不至于频繁”的位置。</p>
+<h3 id="滑动平均窗-w把噪声换成时间">78.7.3 滑动平均窗 <span class="math inline">w</span>：把噪声换成时间</h3>
+<p><span class="math inline">w</span> 的作用是把 <span class="math inline">w</span> 个归一化残差平均后再取范数。对白噪声，平均能把标准差压到 <span class="math inline">1/\sqrt{w}</span>；对本章这种有模型失配的情形，压缩比达不到理论值，但方向是对的。</p>
+<p>代价是群延迟 <span class="math inline">(w-1)/2</span> 步。<span class="math inline">w=5</span> 时是 2 步（<span class="math inline">0.04</span> s），<span class="math inline">w=20</span> 时是 9.5 步（<span class="math inline">0.19</span> s）。这 <span class="math inline">0.19</span> s 在本质不稳定对象上不是小数：按时间常数 <span class="math inline">0.97</span> s 算，<span class="math inline">e^{0.19/0.97}=1.22</span>，偏差在这段时间里要多涨 <span class="math inline">22\%</span>。</p>
+<p>所以 <span class="math inline">w</span> 的选择标准和一般滤波问题相反。一般滤波追求“在给定延迟下把噪声压到最小”，这里追求“在给定误报率下把延迟压到最小”——<strong>噪声抑制不是目的，只是手段，目的是让阈值定得住</strong>。<span class="math inline">w=5</span> 是这两者的折中：再小，<span class="math inline">\sigma_S</span> 撑不住 <span class="math inline">k=4</span> 的阈值；再大，延迟吃掉的钱比省下的误报更贵。</p>
+<h3 id="辨识窗-n精度与时间的正面对撞">78.7.4 辨识窗 <span class="math inline">N</span>：精度与时间的正面对撞</h3>
+<p><span class="math inline">N</span> 是唯一一个“越大越好、但不能大”的参数。它越大，最小二乘的样本越多，<span class="math inline">(\hat\rho,\hat c)</span> 的方差越小；但辨识窗必须整段落在故障之后，窗口越长，重构完成得越晚，而这段时间系统正在发散。</p>
+<p>本章取 <span class="math inline">N=20</span>（<span class="math inline">0.4</span> s）。这个值不是算出来的，是试出来的：<span class="math inline">N</span> 再大，卡死 <span class="math inline">c=1.0</span> 会在辨识完成前撞上限幅；<span class="math inline">N</span> 再小，<span class="math inline">\hat c</span> 的估计抖动会大到让 <span class="math inline">x_{3,\mathrm{eq}}</span> 跟着抖，备份通道的指令跟着抖。</p>
+<p>这里有一个容易被忽略的耦合：<strong><span class="math inline">N</span> 的下限由最轻的故障决定，上限由最重的故障决定</strong>。轻故障残差小，需要更长的窗才能估准；重故障留给你的时间短，窗必须短。如果这两个要求打架，说明这套诊断方案覆盖不了这么宽的故障谱，得回到传感器配置上想办法，而不是继续调 <span class="math inline">N</span>。</p>
+<h3 id="决策延迟-d-与淡入时间-t_b">78.7.5 决策延迟 <span class="math inline">d</span> 与淡入时间 <span class="math inline">T_b</span></h3>
+<p><span class="math inline">d</span> 是“辨识完成到真正切换”之间刻意等的步数，用于联锁确认、执行器切换准备、上位机握手。<span class="math inline">d=0</span> 是理想情况，第 78.6.5 节的扫描说明它每增加 <span class="math inline">0.2</span> s，代价涨约 <span class="math inline">7\%</span>。</p>
+<p><span class="math inline">T_b</span> 是切换的平滑度。图 78-7 是切换点附近的 <span class="math inline">u_1</span>：硬切换（<span class="math inline">T_b=0</span>）在切换瞬间有一个明显的台阶，淡入 <span class="math inline">1.0</span> s 则是一条斜坡。</p>
+<figure>
+<img src="figs/ch078/fig_078_07_switch.svg" alt="图 78-7 硬切换与 1.0 s 淡入在切换点附近的控制量" /><figcaption aria-hidden="true">图 78-7 硬切换与 1.0 s 淡入在切换点附近的控制量</figcaption>
+</figure>
+<p>实测四种淡入时间的结果：</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: right;"><span class="math inline">T_b</span>（s）</th>
+<th style="text-align: right;"><span class="math inline">J</span></th>
+<th style="text-align: right;"><span class="math inline">u_1</span> 最大跳变</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">0（硬切换）</td>
+<td style="text-align: right;"><span class="math inline">0.2329</span></td>
+<td style="text-align: right;"><span class="math inline">1.024</span></td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">0.2</td>
+<td style="text-align: right;"><span class="math inline">0.2333</span></td>
+<td style="text-align: right;"><span class="math inline">0.892</span></td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">0.5</td>
+<td style="text-align: right;"><span class="math inline">0.2337</span></td>
+<td style="text-align: right;"><span class="math inline">0.883</span></td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">1.0</td>
+<td style="text-align: right;"><span class="math inline">0.2339</span></td>
+<td style="text-align: right;"><span class="math inline">0.880</span></td>
+</tr>
+</tbody>
+</table>
+<p>两列数字讲了两件事。第一，<strong>淡入几乎不要钱</strong>：<span class="math inline">1.0</span> s 的淡入只让代价涨 <span class="math inline">0.4\%</span>（<span class="math inline">0.2329\to0.2339</span>）。第二，<strong>收益在 <span class="math inline">0.2</span> s 就基本吃完了</strong>：跳变从 <span class="math inline">1.024</span> 降到 <span class="math inline">0.892</span>（降 <span class="math inline">13\%</span>），再拉长到 <span class="math inline">1.0</span> s 只多降到 <span class="math inline">0.880</span>（再降 <span class="math inline">1.3\%</span>）。</p>
+<p>所以 <span class="math inline">T_b</span> 的选法是“取拐点”：<span class="math inline">0.2</span> s 附近。本章的图 78-7 特意画了 <span class="math inline">1.0</span> s 的对比，是为了让“斜坡”看得清楚；工程上没有必要拉这么长。跳变从 <span class="math inline">1.024</span> 降到 <span class="math inline">0.89</span> 这个量级，已经足够让功放和机械结构接受——真正的冲击来自切换前后增益矩阵的差异，而那个差异被线性插值抹平的速度，只取决于插值的前几步。</p>
+<h3 id="再分配权重把主备用力比例写成矩阵">78.7.6 再分配权重：把主备用力比例写成矩阵</h3>
+<p>再分配是在重算 LQR 时，把主通道的控力权重按效率放大：</p>
+<p><span class="math display">
+\boldsymbol R_{\mathrm{eff}}=\mathrm{diag}\left(\frac{1}{\hat\rho^2},\;1\right)
+\tag{78-42}
+</span></p>
+<p><span class="math inline">\hat\rho=0.4</span> 时 <span class="math inline">R_{11}=6.25</span>，是标称 <span class="math inline">0.01</span> 的 <span class="math inline">625</span> 倍。这等于告诉 LQR：“主通道现在很贵，能不用就不用”。它会把更多控制量分给备份通道，同时接受一个更慢的闭环——78.6.1 的表里，谱半径从 <span class="math inline">0.9373</span> 涨到 <span class="math inline">0.9626</span>。</p>
+<p>这笔交易的收益在 78.6.7 的表里：<span class="math inline">\rho=0.4</span> 时代价从 <span class="math inline">0.2337</span> 降到 <span class="math inline">0.1848</span>，<span class="math inline">\rho=0.2</span> 时从 <span class="math inline">0.9359</span> 降到 <span class="math inline">0.5635</span>。<strong>用稳定裕度换性能，在故障不重的时候是划算的；故障很重的时候，裕度本身就是稀缺资源，这笔交易就该停手。</strong> 本章的做法是把它做成选项，默认关闭，由 78.9 节的判据决定什么时候打开。</p>
+<h3 id="两条分类边界0.12-与-0.88">78.7.7 两条分类边界：<span class="math inline">0.12</span> 与 <span class="math inline">0.88</span></h3>
+<p><span class="math inline">\hat\rho&lt;0.12</span> 判卡死，<span class="math inline">\hat\rho&lt;0.88</span> 判效率下降。为什么是这两个数？</p>
+<p><span class="math inline">0.12</span> 这一侧的依据是权限。<span class="math inline">\hat\rho=0.12</span> 意味着主通道只剩 <span class="math inline">12\%</span> 的力气，按 <span class="math inline">u_1</span> 限幅 <span class="math inline">5</span> 算，最大出力 <span class="math inline">0.6</span>，已经低于备份通道的 <span class="math inline">3.6</span>。这时继续用主通道不但没用，还会因为前馈放大 <span class="math inline">1/0.12\approx8</span> 倍而频繁饱和。所以 <span class="math inline">0.12</span> 是“主通道还有没有资格参与控制”的门槛，不是“估计准不准”的门槛。</p>
+<p><span class="math inline">0.88</span> 这一侧的依据是噪声。健康时辨识根本不启动，<span class="math inline">\hat\rho</span> 保持初值 <span class="math inline">1</span>；这条线的作用是防止“被噪声意外触发的那一次辨识”把系统判成效率下降，同时给真实效率的估计误差留出安全带。如果取得太靠近 <span class="math inline">1</span>（比如 <span class="math inline">0.97</span>），一次估计偏差就会被当成轻故障，系统白白切到一套放大前馈的增益上。</p>
+<p>偏置的判据 <span class="math inline">\hat\rho&gt;0.80</span> 且 <span class="math inline">|\hat c|&gt;0.35</span> 是另一回事：它要求“效率基本没掉，但指令被平移了”。两个条件必须同时满足，否则一个效率掉到 <span class="math inline">0.7</span> 且带小偏置的故障会被误判成纯偏置，欠下的效率就没人补了。</p>
+<p>这几条边界把 <span class="math inline">(\hat\rho,\hat c)</span> 平面切成四块——健康、效率下降、卡死、偏置，第 78.8 节会用一张实测散点图检查这四块切得对不对。</p>
+<h2 id="调参方法与经验">78.8 调参方法与经验</h2>
+<h3 id="五步流程顺序不能颠倒">78.8.1 五步流程，顺序不能颠倒</h3>
+<p>容错控制的可调参数多，容易一上来就盯着 <span class="math inline">k</span> 和阈值反复试。正确的顺序是按“上游决定下游”排的：</p>
+<ol type="1">
+<li><strong>标称模型与观测器</strong>。先把 <span class="math inline">\boldsymbol A</span>、<span class="math inline">\boldsymbol B</span>、<span class="math inline">\boldsymbol L</span> 定下来。这一步错了，后面所有统计量的意义都不成立。</li>
+<li><strong>健康数据标定</strong>。用没有故障的轨迹算出 <span class="math inline">\mu_S</span>、<span class="math inline">\sigma_S</span>，画出分布，看尾巴有多长。</li>
+<li><strong>故障谱扫描</strong>。把要覆盖的故障逐个跑一遍，记录检测延迟、辨识结果、闭环代价。</li>
+<li><strong>定阈值与窗口</strong>。由第 3 步的最轻故障定 <span class="math inline">k</span> 的上限，由最重故障定 <span class="math inline">N</span> 的上限。</li>
+<li><strong>重构与切换</strong>。最后才调 <span class="math inline">R_{\mathrm{back}}</span>、<span class="math inline">R_{\mathrm{eff}}</span>、<span class="math inline">T_b</span> 这些“性能旋钮”。</li>
+</ol>
+<p>颠倒顺序的典型症状是：先调好了 <span class="math inline">T_b</span> 觉得切换很平滑，回头改 <span class="math inline">k</span> 之后发现检测晚了 <span class="math inline">0.1</span> s，峰值翻倍，前面调的全都白费。</p>
+<h3 id="先把健康状态标定清楚">78.8.2 先把健康状态标定清楚</h3>
+<p>第 2 步是整章里最枯燥、也最容易被跳过的一步。本章用 30 组健康轨迹、每组取后 500 步，共 15000 个样本，得到 <span class="math inline">\mu_S=0.6860</span>、<span class="math inline">\sigma_S=0.2966</span>、最大值 <span class="math inline">2.1326</span>。对应的误报步数是：<span class="math inline">k=2</span> 时 <span class="math inline">544/15000</span>，<span class="math inline">k=3</span> 时 <span class="math inline">84/15000</span>，<span class="math inline">k=4</span> 时 <span class="math inline">7/15000</span>，<span class="math inline">k=5</span> 与 <span class="math inline">k=6</span> 都是 <span class="math inline">0</span>。</p>
+<p>这组数字的价值在于它给出了“阈值能定多低”的硬边界。<span class="math inline">k=4</span> 的阈值 <span class="math inline">1.8722</span> 只被越过了 7 次，<span class="math inline">k=3</span> 越过 84 次，差了一位数。如果只跑一组轨迹、只取 500 步，很可能一个误报都看不到，然后误以为 <span class="math inline">k=3</span> 是安全的。<strong>15000 个样本不是为了算得准，是为了让尾巴露出来。</strong></p>
+<h3 id="故障谱扫描七类故障的辨识结果">78.8.3 故障谱扫描：七类故障的辨识结果</h3>
+<p>第 3 步的核心是“我能不能把每种故障都认出来”。下表是七类故障加健康的辨识结果。</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">注入故障</th>
+<th style="text-align: right;"><span class="math inline">\hat\rho</span></th>
+<th style="text-align: right;"><span class="math inline">\hat c</span></th>
+<th style="text-align: left;">判定</th>
+<th style="text-align: right;">检测延迟</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">效率 <span class="math inline">0.6</span></td>
+<td style="text-align: right;"><span class="math inline">0.600</span></td>
+<td style="text-align: right;"><span class="math inline">0.000</span></td>
+<td style="text-align: left;">效率下降</td>
+<td style="text-align: right;"><span class="math inline">0.30</span> s</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">效率 <span class="math inline">0.4</span></td>
+<td style="text-align: right;"><span class="math inline">0.400</span></td>
+<td style="text-align: right;"><span class="math inline">-0.000</span></td>
+<td style="text-align: left;">效率下降</td>
+<td style="text-align: right;"><span class="math inline">0.14</span> s</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">效率 <span class="math inline">0.2</span></td>
+<td style="text-align: right;"><span class="math inline">0.200</span></td>
+<td style="text-align: right;"><span class="math inline">-0.000</span></td>
+<td style="text-align: left;">效率下降</td>
+<td style="text-align: right;"><span class="math inline">0.12</span> s</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">卡死 <span class="math inline">2.0</span></td>
+<td style="text-align: right;"><span class="math inline">0.000</span></td>
+<td style="text-align: right;"><span class="math inline">+2.000</span></td>
+<td style="text-align: left;">卡死</td>
+<td style="text-align: right;"><span class="math inline">0.04</span> s</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">卡死 <span class="math inline">-1.5</span></td>
+<td style="text-align: right;"><span class="math inline">0.000</span></td>
+<td style="text-align: right;"><span class="math inline">-1.500</span></td>
+<td style="text-align: left;">卡死</td>
+<td style="text-align: right;"><span class="math inline">0.10</span> s</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">偏置 <span class="math inline">0.8</span></td>
+<td style="text-align: right;"><span class="math inline">1.000</span></td>
+<td style="text-align: right;"><span class="math inline">+0.800</span></td>
+<td style="text-align: left;">偏置</td>
+<td style="text-align: right;"><span class="math inline">0.08</span> s</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">偏置 <span class="math inline">-0.5</span></td>
+<td style="text-align: right;"><span class="math inline">1.000</span></td>
+<td style="text-align: right;"><span class="math inline">-0.500</span></td>
+<td style="text-align: left;">偏置</td>
+<td style="text-align: right;"><span class="math inline">0.14</span> s</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">健康</td>
+<td style="text-align: right;"><span class="math inline">1.000</span></td>
+<td style="text-align: right;"><span class="math inline">0.000</span></td>
+<td style="text-align: left;">健康</td>
+<td style="text-align: right;">未检出</td>
+</tr>
+</tbody>
+</table>
+<p>七类故障全部判对，两个估计几乎打在中点上（误差在第三位小数）。这个结果比预期好，原因有两个：本章的故障是常值或常系数，不含时变；量测噪声也不大（位置 <span class="math inline">5\times10^{-3}</span>、速度 <span class="math inline">2\times10^{-2}</span>）。真实系统里故障参数会漂、噪声会更大，辨识误差通常要到第二位小数。</p>
+<p>延迟那一列值得单看：卡死 <span class="math inline">2.0</span> 只用了 <span class="math inline">0.04</span> s 就检出，效率 <span class="math inline">0.6</span> 用了 <span class="math inline">0.30</span> s，差 7.5 倍。故障越大，残差顶得越高，越过阈值越快——这条规律贯穿全章。</p>
+<p>图 78-5 把这些点画在 <span class="math inline">(\hat\rho,\hat c)</span> 平面上，同时画出四条分类边界。</p>
+<figure>
+<img src="figs/ch078/fig_078_05_plane.svg" alt="图 78-5 辨识得到的故障参数在平面上的落点与四条分类边界" /><figcaption aria-hidden="true">图 78-5 辨识得到的故障参数在平面上的落点与四条分类边界</figcaption>
+</figure>
+<p>八个点分得很开：三个效率点沿横轴排在 <span class="math inline">0.2</span>、<span class="math inline">0.4</span>、<span class="math inline">0.6</span>；两个卡死点贴着纵轴、分别在 <span class="math inline">\pm2</span> 附近；两个偏置点在 <span class="math inline">1.0</span> 的竖线上；健康点落在右上角 <span class="math inline">(1,0)</span>。没有点落在边界附近——这是分类能全对的原因，也说明本章选的那几条边界留了足够余量。<strong>如果某个点贴着边界，那才是需要回头改传感器或改窗长的信号。</strong></p>
+<h3 id="最轻的故障决定整套参数">78.8.4 最轻的故障决定整套参数</h3>
+<p>调参时最容易犯的错，是拿一个“典型故障”（比如 <span class="math inline">\rho=0.4</span>）调到底，然后宣布完工。真正的约束来自最轻的那一端。</p>
+<p><span class="math inline">\rho=0.9</span> 时，12 s 内残差根本没越过阈值，检测延迟记为“未检出”。这不是算法不好，是信噪比不够：主通道只掉了 <span class="math inline">10\%</span>，残差里的故障分量被噪声与失配淹了。<span class="math inline">\rho=0.8</span> 勉强能检出，要 <span class="math inline">0.46</span> s，是 <span class="math inline">\rho=0.4</span> 的将近两倍。</p>
+<p>更极端的一个实验：把参考幅值从 <span class="math inline">0.30</span> 压到 <span class="math inline">0.02</span>，同样 <span class="math inline">\rho=0.4</span> 的故障，检测延迟从 <span class="math inline">0.24</span> s 拖到 <span class="math inline">1.24</span> s。参考幅值只剩原来的 <span class="math inline">1/15</span>，延迟涨了五倍。这说明<strong>检测能力不只取决于故障多大，还取决于系统平时“动得多不多”</strong>——一个长期在稳态附近小幅度运行的系统，容错诊断天然迟钝。</p>
+<p>所以第 3 步扫描时，必须把“最轻故障 + 最小指令”这一格单独跑一遍。它的结果才是 <span class="math inline">k</span> 与 <span class="math inline">w</span> 的真正约束。</p>
+<h3 id="中等故障的估计误差会被放大">78.8.5 中等故障的估计误差会被放大</h3>
+<p>还有一个反直觉的规律，值得单独拿出来讲：<strong>效率越低，估计误差对前馈的影响越大</strong>。</p>
+<p>前馈项里有 <span class="math inline">1/\hat\rho</span>，它对 <span class="math inline">\hat\rho</span> 的敏感度是</p>
+<p><span class="math display">
+\frac{\partial}{\partial\hat\rho}\left(\frac{1}{\hat\rho}\right)=-\frac{1}{\hat\rho^2}
+\tag{78-43}
+</span></p>
+<p><span class="math inline">\hat\rho=0.6</span> 时这个系数是 <span class="math inline">2.8</span>，<span class="math inline">\hat\rho=0.2</span> 时是 <span class="math inline">25</span>。同样是 <span class="math inline">0.01</span> 的估计误差，在 <span class="math inline">\rho=0.6</span> 上只造成 <span class="math inline">2.8\%</span> 的前馈偏差，在 <span class="math inline">\rho=0.2</span> 上造成 <span class="math inline">25\%</span>。这就是 78.5.4 里 <span class="math inline">\rho=0.2</span> 的代价 <span class="math inline">0.9397</span> 比 <span class="math inline">\rho=0</span> 的 <span class="math inline">0.2111</span> 还高的另一半原因：<span class="math inline">\rho=0</span> 走卡死分支，前馈不除 <span class="math inline">\hat\rho</span>，反而躲开了这个放大。</p>
+<p>工程含义：<strong>中等偏重的效率故障（<span class="math inline">\rho</span> 在 <span class="math inline">0.2</span> 到 <span class="math inline">0.4</span> 之间）是这套方案最脆的一段</strong>。要么把辨识窗拉长提高精度（但会拖慢），要么给 <span class="math inline">\hat\rho</span> 设一个下限（比如 <span class="math inline">\hat\rho\ge0.15</span> 时才允许 <span class="math inline">1/\hat\rho</span> 折回），要么干脆把这一段并入卡死分支、直接切备份。本章代码里用的是 <span class="math inline">\max(\hat\rho,0.05)</span> 的下限保护，只防除了零，没有防放大。</p>
+<h3 id="阈值系数的选法">78.8.6 阈值系数的选法</h3>
+<p>综合 78.6.6 与 78.7.2，<span class="math inline">k</span> 的选法可以写成三步：</p>
+<ol type="1">
+<li>用健康数据算出 <span class="math inline">\mu_S</span>、<span class="math inline">\sigma_S</span>，画出直方图，找到最大值 <span class="math inline">S_{\max}</span>。可接受的最小 <span class="math inline">k</span> 是 <span class="math inline">(S_{\max}-\mu_S)/\sigma_S</span> 向上取整再加 <span class="math inline">1</span>。本章 <span class="math inline">S_{\max}=2.1326</span>，算出 <span class="math inline">4.88</span>，取 <span class="math inline">5</span> 就没有误报；取 <span class="math inline">4</span> 则有 <span class="math inline">7/15000</span> 的误报，这个量级可以接受。</li>
+<li>用最轻的必须检出的故障跑一遍，看延迟能不能接受。<span class="math inline">\rho=0.8</span> 时 <span class="math inline">k=4</span> 的延迟是 <span class="math inline">0.46</span> s，若能接受就往下走。</li>
+<li>在这两点之间取小的一侧，因为漏报比误报贵。</li>
+</ol>
+<p>本章最终取 <span class="math inline">k=4</span>，落在“有极少量误报、检测尽量快”的位置。这个选择是本章这套参数下合理的，换一个噪声水平、换一个采样率，第 1 步算出来的数就变了，不能照搬。</p>
+<h3 id="六条踩过的坑">78.8.7 六条踩过的坑</h3>
+<p>把这一节的经验压成六条，都是本章实现过程中真实撞过的：</p>
+<ol type="1">
+<li><strong>辨识窗不能长于“系统撑得住的时间”</strong>。<span class="math inline">N=40</span>（<span class="math inline">0.8</span> s）时卡死 <span class="math inline">c=1.0</span> 在辨识完成前就发散了，改成 <span class="math inline">N=20</span> 才活。</li>
+<li><strong>卡死必须单输入重设计</strong>。两输入 LQR 算完再砍第一行，得到的第二行会把备份通道用错方向，<span class="math inline">c=1.0</span> 时直接发散。</li>
+<li><strong>备份通道要有自己的控力权重</strong>。沿用主通道的 <span class="math inline">R=0.01</span>，备份通道会把自己顶到限幅，效果比不用还差。</li>
+<li><strong>观测器必须跟着故障模型改</strong>。卡死后仍按 <span class="math inline">[0,u_2]</span> 送观测器，辨识出的 <span class="math inline">\hat c</span> 会一路漂，重构增益跟着错。</li>
+<li><strong>偏置不能当卡死处理</strong>。偏置 <span class="math inline">0.8</span> 时按卡死处理，峰值会从 <span class="math inline">0.083</span> 冲到 <span class="math inline">0.294</span> 以上。</li>
+<li><strong>阈值不能跨采样率沿用</strong>。<span class="math inline">T_s</span> 一变，<span class="math inline">\sigma_S</span> 就变，旧阈值不是偏保守就是狂误报。</li>
+</ol>
+<p>这六条没有一条是理论问题，全是“知道该怎么做、但实现时漏了”的类型。容错控制的调试时间，八成花在这类地方。</p>
+<h2 id="优化与改进">78.9 优化与改进</h2>
+<p>前面八节给的是一个能跑、能验、边界清楚的最小方案。这一节讨论往上加什么。每一条都标清楚“本章实测过的”与“只是提案、没有实测”，不含糊。</p>
+<h3 id="再分配该不该开一笔明账">78.9.1 再分配该不该开：一笔明账</h3>
+<p>78.6.7 的表已经把收益摆出来了：<span class="math inline">\rho=0.4</span> 时再分配把代价从 <span class="math inline">0.2337</span> 压到 <span class="math inline">0.1848</span>（降 <span class="math inline">21\%</span>），<span class="math inline">\rho=0.2</span> 时从 <span class="math inline">0.9359</span> 压到 <span class="math inline">0.5635</span>（降 <span class="math inline">40\%</span>）。收益随故障加重而变大，看起来“越坏越该开”。</p>
+<p>但 78.6.1 的极点表给了另一半：<span class="math inline">\rho=0.4</span> 时谱半径从 <span class="math inline">0.9373</span> 涨到 <span class="math inline">0.9626</span>，<span class="math inline">\rho=0.2</span> 时涨到 <span class="math inline">0.9635</span>。稳定裕度从“离单位圆 <span class="math inline">6.3\%</span>”变成“离单位圆 <span class="math inline">3.7\%</span>”。</p>
+<p>把两件事放在一起，判据就出来了：<strong>再分配只在“还有裕度可花”的时候开</strong>。本章的建议是</p>
+<p><span class="math display">
+\rho_{\mathrm{cl}}\left(\hat{\boldsymbol K}_{\mathrm{realloc}}\right)&lt;0.96
+\quad\text{且}\quad
+\left|\hat c\right|&lt;0.5
+\tag{78-44}
+</span></p>
+<p>第一条防的是“为了性能把稳定性花光”；第二条防的是“卡死故障下还去分配”——卡死走的是单输入分支，压根没有分配空间。<span class="math inline">\rho=0.4</span> 与 <span class="math inline">\rho=0.6</span> 满足，<span class="math inline">\rho=0.2</span> 不满足（<span class="math inline">0.9635&gt;0.96</span>），这与“<span class="math inline">\rho=0.2</span> 本来就更脆”的判断一致。</p>
+<p>这条判据是本章从数据里读出来的，没有做过闭环验证。真要上机，应当在 <span class="math inline">\rho=0.2</span> 附近做一组对比实验，看 <span class="math inline">0.96</span> 这条线该画在 <span class="math inline">0.96</span> 还是 <span class="math inline">0.97</span>。</p>
+<h3 id="自适应阈值让门限跟着指令走">78.9.2 自适应阈值：让门限跟着指令走</h3>
+<p>78.8.4 暴露的问题很清楚：参考幅值从 <span class="math inline">0.30</span> 压到 <span class="math inline">0.02</span>，检测延迟从 <span class="math inline">0.24</span> s 涨到 <span class="math inline">1.24</span> s。固定阈值在这种工况下必然失效——因为残差里故障分量的幅度正比于 <span class="math inline">|u_1|</span>，而阈值是固定的。</p>
+<p>一个自然的改法是让阈值随最近的指令幅度缩放：</p>
+<p><span class="math display">
+\theta_k=\mu_S+k\,\sigma_S+\kappa\cdot\overline{\left|u_{1}\right|}_{k}
+\tag{78-45}
+</span></p>
+<p>其中 <span class="math inline">\overline{|u_1|}_k</span> 是最近一段的指令绝对值均值，<span class="math inline">\kappa</span> 是一个正常数。指令大时门限抬高（防止大指令下的模型失配误报），指令小时门限回落（保持对小故障的灵敏）。</p>
+<p>这个改法有一个风险：<strong>门限跟着指令走，等于把“故障引起的 <span class="math inline">u_1</span> 变化”也算进了门限</strong>。故障后控制器通常会加大 <span class="math inline">u_1</span>（式 (78-27) 的 <span class="math inline">1/\hat\rho</span> 折回），门限跟着抬高，可能把故障“藏”起来。所以 <span class="math inline">\overline{|u_1|}</span> 必须取故障前的滑动窗，或者干脆用参考幅值 <span class="math inline">A_r</span> 代进去——后者更稳，因为它不受故障影响。</p>
+<p>这一条同样只是提案。要做实，得在 <span class="math inline">\rho=0.4</span>、<span class="math inline">A_r=0.02</span> 这一格上跑一组 <span class="math inline">\kappa</span> 的扫描，看延迟能不能从 <span class="math inline">1.24</span> s 压下来，同时看健康工况的误报率有没有涨。</p>
+<h3 id="多模型假设检验">78.9.3 多模型假设检验</h3>
+<p>本章的辨识是“一段数据、一次最小二乘、一个结论”。它的三个弱点都在 78.5.5 与 78.7.4 里露过：要等窗满、需要持续激励、条件数不好时会放弃。</p>
+<p>多模型自适应估计（MMAE）是另一条路。开跑之前先摆好一组假设模型——健康、<span class="math inline">\rho=0.8</span>、<span class="math inline">0.6</span>、<span class="math inline">0.4</span>、<span class="math inline">0.2</span>、卡死 <span class="math inline">c=\pm0.5</span>、<span class="math inline">\pm1.0</span>、<span class="math inline">\pm2.0</span>、偏置 <span class="math inline">\pm0.5</span>、<span class="math inline">\pm0.8</span>——每个模型配一个卡尔曼滤波器，逐拍算残差的似然，再归一化成概率：</p>
+<p><span class="math display">
+p_k^{(i)}=\frac{p_{k-1}^{(i)}\,L_k^{(i)}}{\sum_j p_{k-1}^{(j)}\,L_k^{(j)}},\qquad
+L_k^{(i)}=\frac{1}{\sqrt{\left|2\pi\boldsymbol\Sigma_i\right|}}
+\exp\left(-\frac12\boldsymbol r_k^{(i)\mathsf T}\boldsymbol\Sigma_i^{-1}\boldsymbol r_k^{(i)}\right)
+\tag{78-46}
+</span></p>
+<p>取概率最大的那个当结论，或者干脆按概率加权融合各模型的增益。</p>
+<p>MMAE 的好处是不用等窗满：故障发生后几步之内，与故障最匹配的那个模型的似然就会跳起来，概率从均匀分布迅速集中。代价是算力——十几个模型并行跑，每个都要做一次 <span class="math inline">3\times3</span> 的协方差更新，在 <span class="math inline">0.02</span> s 的周期里仍然宽裕（十几个 <span class="math inline">3\times3</span> 矩阵乘法在微秒量级），但对多点悬挂、多轴联动的平台，模型数会乘上去。</p>
+<p>MMAE 的坏处是“假设集里没有真值”时就尴尬：真故障是 <span class="math inline">\rho=0.5</span>，假设集里只有 <span class="math inline">0.6</span> 与 <span class="math inline">0.4</span>，它会在这两个之间来回跳，概率都不高。本章的最小二乘反而没有这个问题，它估的是连续值。<strong>实践中的折中是：先用 MMAE 快速分类，再用最小二乘在分类附近细化。</strong></p>
+<h3 id="切换的无扰过渡">78.9.4 切换的无扰过渡</h3>
+<p>78.7.5 的淡入解决的是“增益跳变”，还有两个跳变源没处理。</p>
+<p>第一个是<strong>观测器状态</strong>。切换前后，观测器用的是不同的输入模型（<span class="math inline">[\hat c,u_2]</span> 与 <span class="math inline">[\hat\rho u_1,u_2]</span>），<span class="math inline">\hat{\boldsymbol x}</span> 会在切换瞬间带上一个偏差。因为本章 <span class="math inline">\boldsymbol C=\boldsymbol I</span>、三个状态全测，最省事的做法是切换瞬间直接把 <span class="math inline">\hat{\boldsymbol x}</span> 重置成 <span class="math inline">\boldsymbol y_k</span>，让观测器从真值重新起步。这一步只要一行代码，能省掉一段几十毫秒的观测器重新收敛。</p>
+<p>第二个是<strong>积分或前馈项的累积</strong>。本章的控制器没有积分器，所以没有这个问题；如果换成一个带积分的结构（第 44 章与第 106 章讨论过），切换时积分项必须一起重置，否则它会带着“旧故障下的偏差”继续积，产生一个缓慢的过冲。</p>
+<p>第三个是<strong>执行器本身的动态</strong>。指令跳变再平滑，线圈电流也有自己的响应时间；如果功放有速率限制，实际作用量的过渡会比指令更慢。这一点在仿真里看不到，只有在台架上加电流环才能观察到。</p>
+<h3 id="主动探测给诊断加激励">78.9.5 主动探测：给诊断加激励</h3>
+<p>78.5.5 说过，辨识需要持续激励；78.8.4 说过，指令小的时候检测会变慢。两条合起来指向一个大胆的想法：<strong>当系统怀疑有故障、但残差还没到门限时，主动往指令里加一点探测信号。</strong></p>
+<p>探测信号可以是一个小幅正弦（比如幅值 <span class="math inline">0.05</span>、频率 <span class="math inline">3</span> Hz）、一段伪随机序列、或者一次短促的阶跃。它的作用是把 <span class="math inline">u_1</span> 的摆幅撑起来，让最小二乘的回归矩阵条件数变好，从而把“未检出”变成“可检出”。</p>
+<p>代价是显而易见的：探测信号本身会激励对象，产生额外的位置波动。在一个要求亚微米定位的平台上，<span class="math inline">0.05</span> 的探测幅值可能已经超过精度预算。所以这条路只适合“精度要求不高、但必须知道有没有坏”的场合，比如姿态控制、悬浮间隙的粗定位。</p>
+<p>本章没有实现主动探测，只在 78.8.4 的实验里看到了它的必要性：<span class="math inline">A_r=0.02</span> 时检测延迟 <span class="math inline">1.24</span> s，这个数字基本等于“没有激励就没有诊断”。</p>
+<h3 id="数据驱动方法能放在哪">78.9.6 数据驱动方法能放在哪</h3>
+<p>近几年故障诊断的论文大量用深度学习：把残差序列喂进 LSTM 或 Transformer，直接输出故障类别。这些方法在基准数据集上指标很漂亮，但在本章这个场景里，位置很有限。</p>
+<p>原因有三个。第一，<strong>样本不平衡</strong>。健康数据要多少有多少，卡死 <span class="math inline">c=2.0</span> 这种故障可能一辈子遇不到一次，训练集里只有仿真出来的几百条。第二，<strong>可解释性</strong>。容错控制的输出要驱动执行器切换，出了事故要能说清“为什么在 <span class="math inline">t=3.42</span> s 切了”，一个黑箱给不出这个交代。第三，<strong>认证</strong>。航空、医疗、核电这些真正需要容错的领域，都要求算法行为可以被形式化验证，神经网络目前过不了这一关。</p>
+<p>数据驱动真正能发挥作用的位置是<strong>残差的上游</strong>：用自编码器学健康工况的流形，把“偏离流形”的程度当作残差。这相当于把本章的线性观测器换成一个非线性观测器，后面的检测、辨识、重构逻辑完全不用改。这是一个务实的接口——<strong>换掉感知，保留决策</strong>。</p>
+<h3 id="本章没做的三件事">78.9.7 本章没做的三件事</h3>
+<p>最后诚实列一下边界。</p>
+<p>第一，<strong>没有做故障的时变与间歇</strong>。本章所有故障都是“某一时刻注入、之后一直存在”。真实故障可能是渐进的（匝间短路一步步恶化）、可能是间歇的（接触不良时好时坏）。渐进故障适合用漂移检测（CUSUM、GLR），间歇故障需要额外的“故障确认/撤销”逻辑，本章的“切了不回头”结构处理不了。</p>
+<p>第二，<strong>没有做多点故障</strong>。主通道坏了、备份通道也坏了，这套方案只能保证“识别出无解”，不能保证“给出最优的降级策略”。多点故障需要的是故障树与权限的联合分析，属于系统工程的范畴。</p>
+<p>第三，<strong>没有做执行器动力学的高保真建模</strong>。本章的备份通道是一个一阶惯性，真实线圈还有电流环、磁饱和、涡流损耗。这些非线性在故障后会放大——因为故障后的工作点离标称更远。上台架的第一件事应该是辨识这些非线性，而不是继续调 <span class="math inline">k</span>。</p>
+<h3 id="如果坏的是传感器">78.9.8 如果坏的是传感器</h3>
+<p>本章从头到尾假设执行器坏、传感器好。这个假设一旦反过来，整套推理要重做，不能照搬。原因在于残差的定义方式：残差是“量测减去模型预测”，执行器故障会让预测偏低，残差<strong>指向故障的方向</strong>；传感器故障会让量测本身偏，残差同样非零，但它<strong>指向的不是对象，是量测</strong>。用同一套逻辑去解释，会把“传感器在撒谎”误判成“执行器没出力”，然后加大指令去补一个根本不存在的缺口——这是容错控制里最危险的误动作之一。</p>
+<p>要区分这两类，必须靠<strong>冗余的观测</strong>而不是更聪明的算法。本章的 <span class="math inline">\boldsymbol C=\boldsymbol I</span> 是幸运的特例：三个状态全测，任意一个通道坏掉，另外两个通道的残差会给出矛盾的信息，矛盾本身就是“传感器坏了”的指纹。具体做法是给每个量测通道单独算一份残差，检查它们在故障方向上是否一致：执行器故障会让三份残差都朝 <span class="math inline">\boldsymbol b_1</span> 方向偏，传感器故障只让其中一份偏。</p>
+<p>如果只有单套传感器、没有冗余，那么执行器故障与传感器故障在数学上不可分——这是结构性不可分，不是算法不够好。此时唯一的出路是加硬件（三取二，第 78.10.3 节的可用度是 <span class="math inline">0.9997</span>），或者接受“只能检测到异常、无法隔离位置”，把所有异常都按最保守的方式处理（停机或降级）。</p>
+<p>本章没有实现传感器故障的处理，也没有实测数据支持上面这段推理。把它写在这里，是因为读者很容易把“容错控制”当成一个通用框架，以为换个观测器就能覆盖所有故障类型。<strong>故障可隔离性的前提是信息冗余，不是算法复杂度</strong>，这条边界比任何一条调参经验都更硬。</p>
+<h2 id="工程落地">78.10 工程落地</h2>
+<h3 id="故障注入测试怎么设计">78.10.1 故障注入测试怎么设计</h3>
+<p>仿真里“能活”不算数，要按测试矩阵逐格验。本章的做法是六种故障乘三种策略，每格跑三个随机种子，判据是</p>
+<p><span class="math display">
+\max_{t&gt;t_f}\left|x_1(t)-r(t)\right|&lt;1.0
+\quad\text{且}\quad
+\sqrt{\frac{1}{N_t}\sum_{t&gt;T-3}^{T}\left(x_1-r\right)^2}&lt;0.05
+\tag{78-47}
+</span></p>
+<p>第一条管瞬态，第二条管稳态（末段 3 s 的均方根）。为什么要两个判据而不是只看“有没有发散”？因为“发散”是个二值判断，很多情况是<strong>没发散但已经废了</strong>：轴被推到一个偏置位置、停在那里不动，数值有界，但精度全丢。单看有界性会把这种情况判成“通过”。</p>
+<p>这两个阈值是工程约定，不是从硬件参数推出来的。<span class="math inline">1.0</span> 对应“不超过机械限位的一半”，<span class="math inline">0.05</span> 对应“末段误差不超过参考幅值的 <span class="math inline">1/6</span>”。换一台平台，这两个数要按它的行程与精度要求重定。</p>
+<h3 id="十八格矩阵里只有五格通过">78.10.2 十八格矩阵里只有五格通过</h3>
+<p>图 78-10 是这张矩阵的热图，格内标注的是三个种子里的最大峰值。</p>
+<figure>
+<img src="figs/ch078/fig_078_10_matrix.svg" alt="图 78-10 六种故障乘三种策略的注入测试矩阵，格内为故障后峰值" /><figcaption aria-hidden="true">图 78-10 六种故障乘三种策略的注入测试矩阵，格内为故障后峰值</figcaption>
+</figure>
+<p>逐行看：</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">故障</th>
+<th style="text-align: right;">不处理峰值</th>
+<th style="text-align: right;">被动峰值</th>
+<th style="text-align: right;">主动峰值</th>
+<th style="text-align: left;">主动是否通过</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">效率 <span class="math inline">0.5</span></td>
+<td style="text-align: right;"><span class="math inline">0.142</span></td>
+<td style="text-align: right;"><span class="math inline">0.143</span></td>
+<td style="text-align: right;"><span class="math inline">0.047</span></td>
+<td style="text-align: left;">通过</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">效率 <span class="math inline">0.2</span></td>
+<td style="text-align: right;"><span class="math inline">348.9</span></td>
+<td style="text-align: right;"><span class="math inline">148.8</span></td>
+<td style="text-align: right;"><span class="math inline">0.091</span></td>
+<td style="text-align: left;">通过</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">卡死 <span class="math inline">0.5</span></td>
+<td style="text-align: right;"><span class="math inline">8888</span></td>
+<td style="text-align: right;"><span class="math inline">6744</span></td>
+<td style="text-align: right;"><span class="math inline">0.294</span></td>
+<td style="text-align: left;">通过</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">卡死 <span class="math inline">1.0</span></td>
+<td style="text-align: right;"><span class="math inline">13860</span></td>
+<td style="text-align: right;"><span class="math inline">10993</span></td>
+<td style="text-align: right;"><span class="math inline">0.507</span></td>
+<td style="text-align: left;">通过</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">卡死 <span class="math inline">2.0</span></td>
+<td style="text-align: right;"><span class="math inline">24132</span></td>
+<td style="text-align: right;"><span class="math inline">20235</span></td>
+<td style="text-align: right;"><span class="math inline">6598.832</span></td>
+<td style="text-align: left;">不通过</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">偏置 <span class="math inline">0.8</span></td>
+<td style="text-align: right;"><span class="math inline">0.160</span></td>
+<td style="text-align: right;"><span class="math inline">0.163</span></td>
+<td style="text-align: right;"><span class="math inline">0.083</span></td>
+<td style="text-align: left;">通过</td>
+</tr>
+</tbody>
+</table>
+<p>这张表比任何一段文字都能说明问题。</p>
+<p>效率 <span class="math inline">0.5</span> 那一行：不处理的峰值只有 <span class="math inline">0.142</span>，看起来“没什么事”，但它末段均方根超了 <span class="math inline">0.05</span>，所以判不通过。这就是双判据的价值——<strong>它抓住了“有界但精度已失”这一类</strong>。</p>
+<p>效率 <span class="math inline">0.2</span> 那一行：不处理 <span class="math inline">348.9</span>、被动 <span class="math inline">148.8</span>，两者都很大；主动 <span class="math inline">0.091</span>。差三个数量级。</p>
+<p>卡死 <span class="math inline">0.5</span> 与 <span class="math inline">1.0</span>：不处理与被动都在万的数量级，主动分别是 <span class="math inline">0.294</span> 与 <span class="math inline">0.507</span>。注意 <span class="math inline">0.507</span> 已经接近 <span class="math inline">1.0</span> 的判据边界，说明卡死 <span class="math inline">1.0</span> 是这套方案“勉强够用”的位置。</p>
+<p>卡死 <span class="math inline">2.0</span>：三列全不通过，主动的峰值 <span class="math inline">6598.832</span> 与不处理的 <span class="math inline">24132</span> 同属发散，只是慢一点。这就是 78.2.8 的权限判据 <span class="math inline">|x_1|&lt;(3.6-2.0)/1.44=1.11</span> 在起作用——<span class="math inline">0.4</span> s 的辨识窗里偏差已经越过 <span class="math inline">1.11</span>，之后无论怎么切都拉不回来。</p>
+<p>偏置 <span class="math inline">0.8</span>：三列都没发散，但主动的 <span class="math inline">0.083</span> 比不处理的 <span class="math inline">0.160</span> 好一倍。偏置是最“温和”的故障，因为通道还完全可控。</p>
+<p>十八格里主动列通过五格、其余两列零格。<strong>被动容错在这张表里一格都没通过</strong>，这个结果值得单独说一句：它并不是“更差”，而是它按 <span class="math inline">\rho=0.5</span> 设计，遇到比 <span class="math inline">0.5</span> 好的工况（效率 <span class="math inline">0.5</span>、偏置 <span class="math inline">0.8</span>）时性能与不处理几乎相同（<span class="math inline">0.143</span> 对 <span class="math inline">0.142</span>，<span class="math inline">0.163</span> 对 <span class="math inline">0.160</span>），遇到比 <span class="math inline">0.5</span> 差的工况时与不处理一起垮掉。<strong>没有辨识，就没有针对性的补偿，这是被动容错的天花板。</strong></p>
+<h3 id="冗余配置与可用度">78.10.3 冗余配置与可用度</h3>
+<p>容错控制的另一半是硬件：有没有第二套东西可用。假设单个执行器的任务成功率是 <span class="math inline">0.98</span>（失效率 <span class="math inline">2\%</span>），不同冗余拓扑的结果是：</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">配置</th>
+<th style="text-align: right;">成功率</th>
+<th style="text-align: left;">说明</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">单执行器 1oo1</td>
+<td style="text-align: right;"><span class="math inline">0.9800</span></td>
+<td style="text-align: left;">一个坏了就完</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">热备份 1oo2</td>
+<td style="text-align: right;"><span class="math inline">0.9995</span></td>
+<td style="text-align: left;">两个同时坏才完，理论值 <span class="math inline">1-0.02^2=0.9996</span></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">休眠备份 1oo2</td>
+<td style="text-align: right;"><span class="math inline">0.9970</span></td>
+<td style="text-align: left;">备份平时不工作，唤醒有 <span class="math inline">15\%</span> 失败率</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">单传感器 1oo1</td>
+<td style="text-align: right;"><span class="math inline">0.9900</span></td>
+<td style="text-align: left;">失效率 <span class="math inline">1\%</span></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">三取二 2oo3</td>
+<td style="text-align: right;"><span class="math inline">0.9997</span></td>
+<td style="text-align: left;">允许一个传感器坏</td>
+</tr>
+</tbody>
+</table>
+<p>这张表里最值得注意的是热备份与休眠备份的差距：<span class="math inline">0.9995</span> 对 <span class="math inline">0.9970</span>。差别全在“备份平时是否通电运转”。热备份随时可用，但备份本身也在磨损、也在发热、也可能坏；休眠备份寿命长，但唤醒需要时间，而且唤醒机构本身有 <span class="math inline">15\%</span> 的失败率。</p>
+<p>本章的对象是磁悬浮，备份线圈必须预通电才能维持悬浮，所以本质上只能是热备份。如果换成液压或气动执行机构，休眠备份就变得可行——<strong>冗余拓扑不是算法选择，是执行机构决定的</strong>。</p>
+<p>三取二传感器的 <span class="math inline">0.9997</span> 说明一件事：<strong>冗余的收益是乘性的，成本是线性的</strong>。从 <span class="math inline">0.99</span> 到 <span class="math inline">0.9997</span> 只多了两个传感器，但失败概率降了 33 倍。这笔账在关键系统上永远划算；在不关键的系统上永远不划算。所以冗余要加在“最弱的那一环”——先看哪个环节的失效率最高，再决定在哪加。</p>
+<h3 id="切换瞬态与执行器保护">78.10.4 切换瞬态与执行器保护</h3>
+<p>仿真里切换是一行赋值，实机上有三道坎。</p>
+<p>第一道是<strong>速率限制</strong>。指令从旧值跳到新值，功放和机械结构都要吃这一下。78.7.5 用淡入解决，工程上更常用的写法是逐拍限幅：</p>
+<p><span class="math display">
+\left|u_{1,k}-u_{1,k-1}\right|\le \Delta u_{\max}
+\tag{78-48}
+</span></p>
+<p><span class="math inline">\Delta u_{\max}</span> 由功放的电流上升率与线圈电感决定。它比淡入更“硬”，但实现更简单，而且能顺带保护所有非切换时刻的指令跳变。本章的淡入是它的平滑版本，两者可以叠加使用。</p>
+<p>第二道是<strong>切换确认</strong>。真机上切换要动继电器或接触器，动作时间 <span class="math inline">10</span> 到 <span class="math inline">50</span> ms，而且可能抖动。这意味着第 78.6.5 节里 <span class="math inline">d=0</span> 的那一档在实机上不存在，至少要按 <span class="math inline">d=1</span> 到 <span class="math inline">d=3</span> 步（<span class="math inline">0.02</span> 到 <span class="math inline">0.06</span> s）来预算。对应的代价增量约 <span class="math inline">1\%</span> 到 <span class="math inline">2\%</span>，不大，但必须算进去。</p>
+<p>第三道是<strong>备份通道预热</strong>。热备份本来就在运转，没有这个问题；如果备份是“冷”的（比如需要预充电的电容、需要预励磁的线圈），切换后它需要一段建立时间。这段时间里主通道已经失效、备份还没起来，系统处于“真空期”。</p>
+<p>真空期的长度必须小于权限允许的时间。按式 (78-30)，<span class="math inline">c=0.5</span> 时边界是 <span class="math inline">2.15</span>，偏差从 <span class="math inline">0.1</span> 涨到这条线，按 <span class="math inline">e^{1.033t}</span> 算需要 <span class="math inline">\ln(21.5)/1.033\approx3.0</span> s；<span class="math inline">c=1.0</span> 时边界 <span class="math inline">1.81</span>，需要 <span class="math inline">2.8</span> s。这两个数看起来余量很大，但它们只是“轴还没飞出去”的时间，不是“还救得回来”的时间——偏差越大，切换后要拉回来的行程越长，末段均方根越难满足判据。工程上把真空期控制在 <span class="math inline">0.2</span> s 以内才算稳妥，超过 <span class="math inline">0.5</span> s 就应该重新设计冗余拓扑。</p>
+<h3 id="时序与算力预算">78.10.5 时序与算力预算</h3>
+<p>控制周期 <span class="math inline">T_s=0.02</span> s，<span class="math inline">20</span> ms 里要干完这些活：</p>
+<ol type="1">
+<li>采样三路状态，做一次符号与量纲检查；</li>
+<li>观测器更新：一次 <span class="math inline">3\times3</span> 矩阵乘向量，约 <span class="math inline">27</span> 次乘加；</li>
+<li>残差归一化、5 点滑动平均、取范数、比阈值；</li>
+<li>若报警：填辨识窗、解 <span class="math inline">2\times2</span> 最小二乘、分类、查表取增益；</li>
+<li>算控制量、限幅、限速率、下发。</li>
+</ol>
+<p>前四步里唯一有变量的是第 4 步。本章的实现没有在线上解 Riccati 方程——<strong>所有重构增益都是离线算好、按 <span class="math inline">\hat\rho</span> 网格存表的</strong>，线上只做查表与插值。这是工程上的标准做法：LQR 的增益是 <span class="math inline">\boldsymbol B_{\mathrm{eff}}</span> 的光滑函数，<span class="math inline">0.05</span> 的网格足够，插值误差远小于辨识误差。</p>
+<p>真正要盯的不是平均耗时，是<strong>最坏执行时间</strong>。第 4 步在辨识窗刚好填满那一拍要解一个小方程组，耗时是平时的几倍。如果控制周期用满，那一拍就可能超时。留 <span class="math inline">50\%</span> 余量是底线。</p>
+<p>最坏执行时间要在两个维度上分别测：<strong>单拍最坏</strong>与<strong>单故障最坏</strong>。单拍最坏出现在“辨识窗刚好填满、条件数判过、查表命中一个需要插值的网格点”这一拍，是三者叠加；单故障最坏出现在卡死分支，因为它要改控制结构、要算平衡点、还要同步改观测器输入。两者不一定是同一拍，预算必须取它们的最大值，而不是平均值乘以某个系数。</p>
+<p>还有一处容易被忽略的开销：<strong>日志写入</strong>。第 78.10.7 节要求每拍记五六个字段，如果这些字段同步写 Flash 或走慢速总线，一次写入可能就是几百微秒，比整个控制律还贵。工程上的做法是双缓冲：控制周期内只写 RAM 环形缓冲，后台任务慢慢落盘；环形缓冲满了就丢最旧的，绝不在控制周期里等 I/O。</p>
+<p>最后要说清一件事：<span class="math inline">0.02</span> s 的周期对本章这套算法是宽裕的，但这不构成“容错控制很便宜”的结论。真正贵的是<strong>标定与验证</strong>——15000 个健康样本、十八格注入矩阵、每格三个种子，这些离线工作的量级远大于线上那几十微秒。<strong>容错控制的成本在开发期，不在运行期</strong>，这是它与普通控制器在投入结构上最大的不同。</p>
+<h3 id="安全联锁与降级运行">78.10.6 安全联锁与降级运行</h3>
+<p>容错控制有个前提假设：<strong>故障之后系统还值得救</strong>。这个假设不总成立。</p>
+<p>按式 (78-30)，<span class="math inline">c=2.0</span> 时权限边界只有 <span class="math inline">1.11</span>。如果辨识完成时偏差已经过了这条线，正确的动作不是“切换”，而是“降级”——切断主通道、让轴落到机械限位上、或者启动受控降落程序。<strong>继续尝试切换只会让系统在更大的偏差上发散，损失更大。</strong></p>
+<p>所以完整的逻辑应该是三段，而不是两段：</p>
+<ol type="1">
+<li>检测到故障 → 尝试重构（本章的全部内容）；</li>
+<li>重构后偏差仍在扩大 → 判断是否越过权限边界；</li>
+<li>越过 → 执行降级程序（fail-safe），不再试图维持悬浮。</li>
+</ol>
+<p>第 3 段必须由<strong>独立的硬件回路</strong>实现，不能依赖软件诊断。因为最需要它的场景恰恰是“软件已经算错了”的场景。常见的做法是一个独立的间隙开关或过流继电器，直接切断功放，不走 CPU。</p>
+<p>这里还有一个概念要分清：<strong>fail-safe 与 fail-operational</strong>。前者是“坏了就安全停机”，后者是“坏了还要继续工作”。本章做的是 fail-operational（切到备份继续悬浮），但它的兜底必须是 fail-safe（实在救不了就停）。两套逻辑要同时存在，不能只有一套。</p>
+<h3 id="诊断日志为下一次标定留数据">78.10.7 诊断日志：为下一次标定留数据</h3>
+<p>上线之后，最有价值的产出不是“这次没出事”，而是“出过什么事、当时的数字是多少”。建议每一拍至少落这些字段：</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">字段</th>
+<th style="text-align: left;">用途</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><span class="math inline">S_k</span> 与 <span class="math inline">\theta</span></td>
+<td style="text-align: left;">事后看余量，判断阈值是否偏紧</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><span class="math inline">\hat\rho</span>、<span class="math inline">\hat c</span></td>
+<td style="text-align: left;">故障的真实幅值，用于修订分类边界</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">条件数</td>
+<td style="text-align: left;">判断那次辨识是否可信</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">决策码（健康/效率/卡死/偏置）</td>
+<td style="text-align: left;">统计各类故障的发生频次</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">切换时刻与切换前后增益</td>
+<td style="text-align: left;">复盘切换瞬态</td>
+</tr>
+</tbody>
+</table>
+<p>有了这些数据，<span class="math inline">\mu_S</span>、<span class="math inline">\sigma_S</span> 可以按真实工况重新标定，<span class="math inline">k</span> 可以按真实误报率调整，分类边界可以按真实故障分布修订。<strong>容错控制不是一次设计完就结束的，它是靠运行数据不断收紧的。</strong></p>
+<h3 id="上台架前的检查清单">78.10.8 上台架前的检查清单</h3>
+<p>把这一节压成一张清单：</p>
+<ol type="1">
+<li>故障注入矩阵跑满了吗？六个故障、三个种子，一格不漏。</li>
+<li>双判据（峰值 + 末段均方根）都设了吗？只看发散会漏掉“有界但废了”的情况。</li>
+<li>权限边界算了吗？<span class="math inline">c</span> 最大时边界是多少，辨识窗结束时偏差在哪。</li>
+<li>降级程序有吗？它是不是独立的硬件回路。</li>
+<li>切换延迟按实机的继电器时间算了吗？不是仿真的 <span class="math inline">d=0</span>。</li>
+<li>备份通道的预热时间算进权限预算了吗？</li>
+<li>最坏执行时间留了 <span class="math inline">50\%</span> 余量吗？</li>
+<li>诊断日志的字段够不够支撑下一次标定？</li>
+</ol>
+<p>这八条里，第 3、4、6 条是安全相关的，其余是性能相关的。安全相关的三条不过，系统不该上电。</p>
+<h2 id="优缺点与适用边界">78.11 优缺点与适用边界</h2>
+<h3 id="优点">78.11.1 优点</h3>
+<p><strong>第一，它把“能不能活”从运气变成设计。</strong> 不处理的 <span class="math inline">\rho=0</span> 是 <span class="math inline">8.63\times10^{6}</span>，主动容错是 <span class="math inline">0.2151</span>。这不是调参调出来的差距，是“有没有一套机制去发现并补偿”的差距。对本质不稳定对象，这条差距就是“在轨”与“坠毁”的差别。</p>
+<p><strong>第二，代价是可控的、可预算的。</strong> 健康时的 <span class="math inline">J</span> 是 <span class="math inline">0.0473</span>，容错机制全程在线也只是让它在故障后涨到 <span class="math inline">0.2344</span>。检测、辨识、重构三段的开销都在 <span class="math inline">10^{-1}</span> s 量级，对 <span class="math inline">T_s=0.02</span> s 的控制周期完全不构成负担。</p>
+<p><strong>第三，故障信息被显式地估出来。</strong> <span class="math inline">\hat\rho</span> 与 <span class="math inline">\hat c</span> 不只是中间变量，它们是可读的诊断输出。有了它们，维护人员知道“坏了多少”，而不是只知道“坏了”。这一点在 78.10.7 的日志设计里体现得最清楚。</p>
+<p><strong>第四，模块化好，接口清楚。</strong> 观测器、检测、辨识、重构四块可以分别替换：换成 MMAE 只动辨识，换成非线性观测器只动第一块，换成 MPC 只动重构。78.9.6 说的“换掉感知、保留决策”能成立，就是因为这个分层。</p>
+<p><strong>第五，对故障幅值是连续的、不需要枚举。</strong> 最小二乘估的是连续值，<span class="math inline">\rho=0.37</span> 这种“不在任何预设档位上”的故障也能处理。这是它相对查表式方案（包括 MMAE）的实质优势。</p>
+<h3 id="缺点">78.11.2 缺点</h3>
+<p><strong>第一，依赖模型的准确性。</strong> 观测器、辨识、重构三处都用标称模型。模型失配会同时抬高 <span class="math inline">\mu_S</span>（检测变钝）和污染 <span class="math inline">\hat\rho</span>（重构偏移）。本章的失配来自线性化与离散化，可以接受；如果对象有明显非线性（磁饱和、间隙），失配会大得多，这套方案需要重新标定甚至重构。</p>
+<p><strong>第二，检测有不可消除的延迟下限。</strong> 78.5.4 测到的 <span class="math inline">0.16</span> s 是“1 步量测 + 4 步平滑 + 3 步裕度”，想再快要动硬件。对时间常数更小的对象（比如 <span class="math inline">0.05</span> s 级的），这个下限可能已经等于对象的时间常数，方案直接失效。</p>
+<p><strong>第三，中等故障最难，恰好是最常见的区间。</strong> <span class="math inline">\rho=0.2</span> 的代价 <span class="math inline">0.9397</span> 高于 <span class="math inline">\rho=0</span> 的 <span class="math inline">0.2111</span>，<span class="math inline">1/\hat\rho</span> 的放大（78-43）在 <span class="math inline">\rho=0.2</span> 时是 <span class="math inline">25</span> 倍。真实故障多数落在“效率掉了一半”这种区间，而不是“彻底卡死”。</p>
+<p><strong>第四，多点故障与间歇故障处理不了。</strong> 78.9.7 已经列过。这套方案的结构是“一次判定、单向切换”，对“好了又坏、坏了又好”没有对策。</p>
+<p><strong>第五，参数多，标定工作量大。</strong> 九个参数，其中四个（<span class="math inline">k</span>、<span class="math inline">w</span>、<span class="math inline">N</span>、判定边界）都依赖实测数据。78.8 整节的篇幅都在讲怎么标，这本身就是成本。</p>
+<p><strong>第六，它是“止损”不是“修复”。</strong> 故障后的性能最好也只有健康的 <span class="math inline">1/5</span>（<span class="math inline">0.2344</span> 对 <span class="math inline">0.0473</span>）。所有“容错之后跟没坏一样”的说法都是不成立的，能承诺的只是“不散架”。</p>
+<h3 id="适用边界">78.11.3 适用边界</h3>
+<p>把上面的优缺点化成一张判断表：</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">维度</th>
+<th style="text-align: left;">适合</th>
+<th style="text-align: left;">不适合</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">对象稳定性</td>
+<td style="text-align: left;">开环不稳定、失效即发散</td>
+<td style="text-align: left;">开环稳定、失效只是变差</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">故障类型</td>
+<td style="text-align: left;">执行器效率/卡死/偏置，常值或慢漂</td>
+<td style="text-align: left;">传感器故障、对象参数突变、间歇故障</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">时间尺度</td>
+<td style="text-align: left;">故障后有几倍时间常数可周旋</td>
+<td style="text-align: left;">故障后一步就失稳</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">传感器</td>
+<td style="text-align: left;">状态全测或至少关键状态可测</td>
+<td style="text-align: left;">只有输出可测、状态全靠推断</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">冗余</td>
+<td style="text-align: left;">有备份执行器或备份通道</td>
+<td style="text-align: left;">单通道、无冗余</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">算力</td>
+<td style="text-align: left;">有 <span class="math inline">10</span> 倍以上余量</td>
+<td style="text-align: left;">算力已用满、无余量做诊断</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">安全等级</td>
+<td style="text-align: left;">可接受“降级运行”</td>
+<td style="text-align: left;">要求“故障后性能不变”</td>
+</tr>
+</tbody>
+</table>
+<p>其中“时间尺度”这一行最容易被误判。本章的检测下限 <span class="math inline">0.16</span> s，而对象的时间常数 <span class="math inline">0.97</span> s，比值 <span class="math inline">1/6</span>，所以来得及。如果对象的时间常数是 <span class="math inline">0.1</span> s，同样的检测延迟就是 <span class="math inline">1.6</span> 倍时间常数，切换完成时轴早就飞了。<strong>判断能不能用容错控制，先算这个比值，而不是先看算法多先进。</strong></p>
+<h3 id="与相邻章的分工">78.11.4 与相邻章的分工</h3>
+<p>这一章反复用到 LQR 与观测器，但它们不是本章的主题，只是构件。</p>
+<ul>
+<li><strong>PID</strong> 见第 44 章与第 106 章。本章的控制器如果换成 PID，容错框架完全不变——检测、辨识、重构三段与控制器形式无关。反过来说，PID 那两章讲的“怎样把跟踪做好”，在本章是健康时的基线，不是重点。</li>
+<li><strong>MPC</strong> 见第 58 章与第 80 章。MPC 天然带约束处理，把它放进重构环节是 78.9 提过的方向；但 MPC 的在线优化会吃掉 78.10.5 的算力余量，所以本章选了查表 LQR。</li>
+<li><strong>Smith 预估</strong> 见第 47 章与第 107 章。Smith 预估处理的是“纯延迟”，本章处理的是“执行器失效”，两者都会破坏“控制器以为的对象”，但破坏的方式不同：前者是相位滞后，后者是增益与偏置。同一个观测器框架可以同时挂这两种补偿，但诊断逻辑要分开写，否则残差里两种原因混在一起，谁也认不出来。</li>
+</ul>
+<p>一句话概括分工：<strong>前面的章解决“正常情况下怎么控制好”，本章解决“不正常时怎么不死”。</strong></p>
+<h3 id="什么时候不该用容错控制">78.11.5 什么时候不该用容错控制</h3>
+<p>有四种情形，容错控制是错的选择。</p>
+<p><strong>第一种，对象开环稳定、故障只导致性能下降。</strong> 这时容错机制的复杂度、误报风险、标定成本，都超过它带来的收益。一个温度回路的热电偶坏了，换个传感器就行，不需要在线辨识与重构。</p>
+<p><strong>第二种，故障率极低且失效后果可控。</strong> 如果设备的失效率是 <span class="math inline">10^{-6}</span>/h、失效后只是停机检修，加一套容错系统的成本（设计、验证、认证）远高于停机损失。</p>
+<p><strong>第三种，没有冗余可用。</strong> 单执行器、单传感器、无备份通道，主动容错能做的只有“识别出无解”，那是诊断问题，不是控制问题。这时应该把精力放在诊断与降级上（78.10.6），而不是重构。</p>
+<p><strong>第四种，安全等级要求“故障后性能不变”。</strong> 容错控制做不到这一点，它只能做到“不散架”。要求性能不变的系统，需要的是物理冗余（两套完整的执行机构并联），不是算法容错。</p>
+<h3 id="三条收束">78.11.6 三条收束</h3>
+<p>把整章压成三句话。</p>
+<p><strong>第一，容错控制的本质是“用模型的一致性换时间”。</strong> 观测器提供一个“应该是什么”的参照，残差度量“实际偏离了多少”，辨识把偏离翻译成参数，重构把参数翻译成新的控制律。整个过程消耗的是时间，换来的是“知道自己坏了”这个信息。</p>
+<p><strong>第二，时间的价值由对象的不稳定程度决定。</strong> 同一个 <span class="math inline">0.16</span> s 的检测延迟，在时间常数 <span class="math inline">0.97</span> s 的对象上是富余，在 <span class="math inline">0.1</span> s 的对象上是灾难。所以评价一套容错方案，第一件事是算“检测延迟 / 对象时间常数”这个比值，而不是看它的算法有多复杂。</p>
+<p><strong>第三，边界要提前算清楚，不要等故障来了再算。</strong> 式 (78-30) 的 <span class="math inline">|x_1|&lt;(3.6-|c|)/1.44</span> 在健康时就该算好，写进联锁表。<span class="math inline">c=2.0</span> 的故障救不回来，这件事在仿真阶段就能知道；真机上遇到它时，正确的动作是降级，不是硬撑。</p>
+<h2 id="python-仿真代码">78.12 Python 仿真代码</h2>
+<h3 id="文件与运行方式">78.12.1 文件与运行方式</h3>
+<p>本章两个脚本，都在 <code>book/code/</code> 下：</p>
+<ul>
+<li><code>ch078_sim.py</code>：十组数值实验与数据缓存；</li>
+<li><code>ch078_figs.py</code>：只负责出图，从缓存读数。</li>
+</ul>
+<p>运行命令：</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="st">&quot;D:\Anaconda3\envs\py311\python.exe&quot;</span> code/ch078_sim.py</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="st">&quot;D:\Anaconda3\envs\py311\python.exe&quot;</span> code/ch078_figs.py</span></code></pre></div>
+<p>第一个脚本跑完全部实验约半分钟，结束时在 <code>figs/ch078/results.npz</code> 写入曲线数据，并把本章所有数字打印到标准输出。第二个脚本读缓存，生成 10 张 SVG 与同名 PDF。两者都不依赖外部数据文件，装有 numpy、scipy、matplotlib 的机器可以直接跑通。</p>
+<h3 id="代码结构">78.12.2 代码结构</h3>
+<p><code>ch078_sim.py</code> 的函数清单与职责见下表。</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">函数</th>
+<th style="text-align: left;">职责</th>
+<th style="text-align: left;">被谁调用</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><code>rk4_step</code></td>
+<td style="text-align: left;">定常输入的四阶 Runge-Kutta 单步</td>
+<td style="text-align: left;"><code>simulate</code></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>c2d</code></td>
+<td style="text-align: left;">零阶保持离散化（增广矩阵指数）</td>
+<td style="text-align: left;">模块加载时</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><code>f_plant</code></td>
+<td style="text-align: left;">磁悬浮平台的连续动力学</td>
+<td style="text-align: left;"><code>rk4_step</code></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>dlqr</code></td>
+<td style="text-align: left;">离散 Riccati 求解</td>
+<td style="text-align: left;">三处重构分支</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><code>kalman_gain</code></td>
+<td style="text-align: left;">稳态卡尔曼增益（对偶 Riccati）</td>
+<td style="text-align: left;">观测器设计</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>moving_average</code></td>
+<td style="text-align: left;">因果滑动平均</td>
+<td style="text-align: left;">残差统计量</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><code>estimate_fault</code></td>
+<td style="text-align: left;">在辨识窗上同时估 <span class="math inline">(\rho,c)</span></td>
+<td style="text-align: left;">隔离环节</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>classify</code></td>
+<td style="text-align: left;">按估计值给出故障标签</td>
+<td style="text-align: left;">重构环节</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><code>reference</code>／<code>reference_dot</code></td>
+<td style="text-align: left;">参考及其导数</td>
+<td style="text-align: left;"><code>simulate</code></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>simulate</code></td>
+<td style="text-align: left;">一次完整闭环（含故障注入与切换）</td>
+<td style="text-align: left;">E1–E10</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><code>exp1</code>–<code>exp10</code></td>
+<td style="text-align: left;">十组实验</td>
+<td style="text-align: left;"><code>main</code></td>
+</tr>
+</tbody>
+</table>
+<p>结构上只有一个循环，就是 <code>simulate</code> 里的那一层。所有实验都是它的不同参数组合，这样“改一个参数看结果”不会因为代码路径不同而产生混淆。</p>
+<h3 id="三个关键片段">78.12.3 三个关键片段</h3>
+<p><strong>片段一：离散化。</strong> 用增广矩阵的指数一次算出 <span class="math inline">\boldsymbol A</span> 与 <span class="math inline">\boldsymbol B</span>，避免用前向差分近似带来的稳定性偏差：</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> c2d(A, B, h):</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">&quot;&quot;&quot;零阶保持离散化（增广矩阵指数）。&quot;&quot;&quot;</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    n, m <span class="op">=</span> B.shape</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    M <span class="op">=</span> np.zeros((n <span class="op">+</span> m, n <span class="op">+</span> m))</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    M[:n, :n] <span class="op">=</span> A</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    M[:n, n:] <span class="op">=</span> B</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    E <span class="op">=</span> expm(M <span class="op">*</span> h)</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> E[:n, :n], E[:n, n:]</span></code></pre></div>
+<p><strong>片段二：故障辨识。</strong> 把残差投影到 <span class="math inline">\boldsymbol b_1</span> 方向后，回归量只有 <span class="math inline">[u_1,1]</span> 两列，两列系数就是 <span class="math inline">\rho</span> 与 <span class="math inline">c</span>。条件数保护写在解方程之前：</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> estimate_fault(X, U, k0, k1):</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">&quot;&quot;&quot;在 [k0,k1) 上同时辨识效率 rho 与常值偏置 c。&quot;&quot;&quot;</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    b1 <span class="op">=</span> BD[:, <span class="dv">0</span>]</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    num <span class="op">=</span> np.zeros(<span class="dv">2</span>)</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    den <span class="op">=</span> np.zeros((<span class="dv">2</span>, <span class="dv">2</span>))</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> k <span class="kw">in</span> <span class="bu">range</span>(k0, k1):</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>        tgt <span class="op">=</span> X[k <span class="op">+</span> <span class="dv">1</span>] <span class="op">-</span> AD <span class="op">@</span> X[k] <span class="op">-</span> BD[:, <span class="dv">1</span>] <span class="op">*</span> U[k, <span class="dv">1</span>]</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>        phi <span class="op">=</span> np.array([U[k, <span class="dv">0</span>], <span class="fl">1.0</span>])</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>        val <span class="op">=</span> <span class="bu">float</span>(b1 <span class="op">@</span> tgt) <span class="op">/</span> <span class="bu">float</span>(b1 <span class="op">@</span> b1)</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>        num <span class="op">+=</span> val <span class="op">*</span> phi</span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>        den <span class="op">+=</span> np.outer(phi, phi)</span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>    cond <span class="op">=</span> <span class="bu">float</span>(np.linalg.cond(den))</span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> cond <span class="op">&gt;</span> <span class="fl">1e8</span>:</span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="fl">1.0</span>, <span class="fl">0.0</span>, cond</span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>    theta <span class="op">=</span> np.linalg.solve(den, num)</span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="bu">float</span>(np.clip(theta[<span class="dv">0</span>], <span class="fl">0.0</span>, <span class="fl">1.2</span>)), <span class="bu">float</span>(theta[<span class="dv">1</span>]), cond</span></code></pre></div>
+<p><strong>片段三：卡死分支的重构。</strong> 主通道整行置零，备份通道单输入重设计，控力权重用独立的 <code>R_BACK</code>：</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> stuck_next:</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>                <span class="co"># 主通道彻底失效：只剩备份执行器，按单输入重新设计，</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>                <span class="co"># 主通道那一行增益恒为零（否则会去驱动一个已经失效的通道）</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>                K_to <span class="op">=</span> np.zeros((<span class="dv">2</span>, <span class="dv">3</span>))</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>                K_to[<span class="dv">1</span>, :] <span class="op">=</span> dlqr(AD, BD[:, <span class="dv">1</span>:<span class="dv">2</span>], Q_LQR,</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>                                  np.array([[R_BACK]]))[<span class="dv">0</span>, :]</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>            <span class="cf">else</span>:</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>                K_to <span class="op">=</span> dlqr(AD, B_eff, Q_LQR, R_eff)</span></code></pre></div>
+<p>配套的观测器同步重构是三个分支，与式 (78-3) 的三种取法一一对应：</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>        <span class="co"># 观测器同步重构：模型里用的必须是与对象一致的作用量</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> stuck:</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>            u_obs <span class="op">=</span> np.array([c_hat, u[<span class="dv">1</span>]])</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>        <span class="cf">elif</span> bias_mode:</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>            u_obs <span class="op">=</span> np.array([u[<span class="dv">0</span>] <span class="op">+</span> c_hat, u[<span class="dv">1</span>]])</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>        <span class="cf">else</span>:</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>            u_obs <span class="op">=</span> np.array([eff <span class="op">*</span> u[<span class="dv">0</span>], u[<span class="dv">1</span>]])</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>        xhat <span class="op">=</span> AD <span class="op">@</span> xhat <span class="op">+</span> BD <span class="op">@</span> u_obs <span class="op">+</span> L_OBS <span class="op">@</span> r_obs</span></code></pre></div>
+<p>这三段合起来不到 40 行，但 78.8.7 里六条坑有三条落在这里。<strong>容错控制的代码量不大，难的是每行背后的取舍。</strong></p>
+<h3 id="十组实验各自回答什么">78.12.4 十组实验各自回答什么</h3>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">实验</th>
+<th style="text-align: left;">回答的问题</th>
+<th style="text-align: left;">结果去哪</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">E1</td>
+<td style="text-align: left;">健康残差多大？阈值怎么定？</td>
+<td style="text-align: left;">78.2.4 的阈值表、图 78-3</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">E2</td>
+<td style="text-align: left;">故障越轻，检测越慢多少？</td>
+<td style="text-align: left;">图 78-4</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">E3</td>
+<td style="text-align: left;">三类故障能不能认出来？</td>
+<td style="text-align: left;">图 78-5、78.8.3 的表</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">E4</td>
+<td style="text-align: left;">三种方案差多少？</td>
+<td style="text-align: left;">图 78-6、78.6.3 的表</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">E5</td>
+<td style="text-align: left;">硬切换与淡入差多少？</td>
+<td style="text-align: left;">图 78-7、78.7.5 的表</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">E6</td>
+<td style="text-align: left;">延迟值多少钱？</td>
+<td style="text-align: left;">图 78-8、78.6.5 的表</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">E7</td>
+<td style="text-align: left;">阈值系数的两侧代价</td>
+<td style="text-align: left;">图 78-9、78.6.6</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">E8</td>
+<td style="text-align: left;">再分配该不该开？</td>
+<td style="text-align: left;">78.6.7 的表、78.9.1</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">E9</td>
+<td style="text-align: left;">冗余拓扑与注入矩阵</td>
+<td style="text-align: left;">图 78-10、78.10.2、78.10.3</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">E10</td>
+<td style="text-align: left;">换一组种子还成立吗？</td>
+<td style="text-align: left;">78.6.3 末段的复核</td>
+</tr>
+</tbody>
+</table>
+<p>E10 是专门为“结论不是巧合”设的。它把 E4 的四种配置换一组随机种子重跑，数字略有出入（<span class="math inline">0.0477</span> 对 <span class="math inline">0.0473</span>，<span class="math inline">0.2294</span> 对 <span class="math inline">0.2344</span>），但排序与量级完全一致。</p>
+<h3 id="改参数的入口">78.12.5 改参数的入口</h3>
+<p>所有可调量都在文件头部的常量区，集中一处：</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">常量</th>
+<th style="text-align: left;">含义</th>
+<th style="text-align: right;">本章取值</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><code>DT</code></td>
+<td style="text-align: left;">采样周期</td>
+<td style="text-align: right;"><span class="math inline">0.02</span> s</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>MA_WIN</code></td>
+<td style="text-align: left;">滑动平均窗</td>
+<td style="text-align: right;"><span class="math inline">5</span></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><code>EST_WIN</code></td>
+<td style="text-align: left;">辨识窗</td>
+<td style="text-align: right;"><span class="math inline">20</span></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>SIGMA</code></td>
+<td style="text-align: left;">三路量测噪声</td>
+<td style="text-align: right;"><span class="math inline">[5\times10^{-3},2\times10^{-2},10^{-2}]</span></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><code>Q_LQR</code>／<code>R_LQR</code></td>
+<td style="text-align: left;">控制器权重</td>
+<td style="text-align: right;"><span class="math inline">\mathrm{diag}(100,10,1)</span>／<span class="math inline">\mathrm{diag}(0.01,0.01)</span></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>R_BACK</code></td>
+<td style="text-align: left;">备份通道控力权重</td>
+<td style="text-align: right;"><span class="math inline">0.1</span></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><code>Q_COST</code>／<code>R_COST</code></td>
+<td style="text-align: left;">评价指标权重</td>
+<td style="text-align: right;"><span class="math inline">\mathrm{diag}(1,0.1,0)</span>／<span class="math inline">[0.02,0.02]</span></td>
+</tr>
+</tbody>
+</table>
+<p>注意 <code>Q_COST</code> 与 <code>Q_LQR</code> 是分开的两套。前者只用于算 <span class="math inline">J</span>，后者用于设计控制器。把两者混在一起是常见的错误——一旦混用，“换权重”就同时改变了控制器和评价标准，结果没法解释。</p>
+<h3 id="复现注意事项">78.12.6 复现注意事项</h3>
+<p>第一，<strong>随机种子</strong>。所有实验都显式指定种子（E1 用 <span class="math inline">0</span> 到 <span class="math inline">29</span>，E2 用 <span class="math inline">1</span>，E4 用 <span class="math inline">3</span>，E5 用 <span class="math inline">4</span>，E6 用 <span class="math inline">5</span>，E7 用 <span class="math inline">7</span>，E8 用 <span class="math inline">8</span>，E9 用 <span class="math inline">0</span> 到 <span class="math inline">2</span>）。改动种子会让末尾几位数字变化，量级与结论不变。</p>
+<p>第二，<strong>版本</strong>。<code>scipy.linalg.solve_discrete_are</code> 在不同版本里对病态矩阵的处理略有差异。如果 <code>dlqr</code> 报收敛失败，先检查 <span class="math inline">\boldsymbol B_{\mathrm{eff}}</span> 是否已经接近奇异——那正是 <span class="math inline">\hat\rho\to0</span> 时的正常现象，应该在分类阶段就切到卡死分支，而不是硬解。</p>
+<p>第三，<strong>耗时</strong>。E1 要跑 30 组、E9 要跑 18 格乘 3 个种子，是主要开销。若只想看单条轨迹，直接调 <code>simulate(rho=0.4, fault="loe", mode="active", th=...)</code> 即可，单次几十毫秒。</p>
+<p>第四，<strong>图与数的对应</strong>。<code>ch078_figs.py</code> 只读 <code>results.npz</code>，不重跑仿真。若要改图而数值不变，只跑第二个脚本即可；若改了 <code>ch078_sim.py</code> 的任何常量，必须重跑第一个脚本，否则图与正文的数字会对不上。这条约定在全书所有章节里都一样。</p>
+<h3 id="四个可以自己动手的实验">78.12.7 四个可以自己动手的实验</h3>
+<p>下面四个实验各自只改一个常量，改完重跑第一个脚本，就能把正文里的某条结论从“读来的”变成“验过的”。不要同时改两处，否则归因不了。</p>
+<p><strong>实验一：把 <code>MA_WIN</code> 从 <span class="math inline">5</span> 改成 <span class="math inline">9</span>。</strong> 预期 <span class="math inline">\sigma_S</span> 下降（噪声被压得更狠），同一个 <span class="math inline">k=4</span> 的阈值也跟着下降，误报率与检测延迟同时变化。对照第 78.3.5 节的算术：群延迟从 <span class="math inline">0.04</span> s 变 <span class="math inline">0.08</span> s，按 <span class="math inline">e^{1.033t}</span> 折算，故障后偏差要多涨 <span class="math inline">4.2\%</span>。如果 <span class="math inline">\sigma_S</span> 几乎没变，说明残差里的主导成分不是噪声而是模型失配——那第 78.5.3 节“<span class="math inline">\mu_S</span> 比纯噪声推算值大不少”这句话就在你手上得到了验证。</p>
+<p><strong>实验二：把 <code>EST_WIN</code> 从 <span class="math inline">20</span> 改成 <span class="math inline">40</span>。</strong> 这是第 78.3.3 与 78.5.6 两节反复提到的那个改动。预期卡死 <span class="math inline">c=1.0</span> 的故障后峰值从 <span class="math inline">0.507</span> 跳到千的量级，注入矩阵里那一格从“通过”变成“不通过”；而卡死 <span class="math inline">c=0.5</span> 可能仍然通过，因为它的权限边界 <span class="math inline">2.15</span> 比 <span class="math inline">1.81</span> 宽。这个实验最能说明“辨识精度要给时间让路”不是一句口号。</p>
+<p><strong>实验三：把 <code>R_BACK</code> 从 <span class="math inline">0.1</span> 改成 <span class="math inline">0.02</span>。</strong> 备份通道的控力权重降五倍，等于允许它更“用力”。预期卡死分支的闭环极点往单位圆内移动、谱半径下降，但 <span class="math inline">u_2</span> 的峰值上升、饱和更容易发生。若谱半径没怎么变而 <span class="math inline">u_2</span> 峰值明显上升，说明这套对象的瓶颈不在权重上，而在备份通道的惯性——回到第 78.5.1 节那张 <span class="math inline">\boldsymbol B</span> 两列对比，答案在那里。</p>
+<p><strong>实验四：把 <code>T_FAULT</code> 从 <span class="math inline">2.0</span> 改成 <span class="math inline">4.5</span>。</strong> 这填的是第 78.3.3 节自己承认的缺口：故障相位没扫。<span class="math inline">t=4.5</span> s 时参考接近峰值、速度项最大，同样的 <span class="math inline">c</span> 会推出更大的峰值。预期卡死 <span class="math inline">c=1.0</span> 那一格的峰值明显高于 <span class="math inline">0.507</span>。如果这一格因此变成“不通过”，那本章的结论应当修正为“这套方案在参考峰值附近遇到 <span class="math inline">c=1.0</span> 的卡死时余量不足”，而不是“能容 <span class="math inline">c\le1.0</span>”。<strong>一个没做过的实验，足以改写一条已经写进正文的结论——这正是第 78.3.7 节把“边界扫描要双向做”单列出来的原因。</strong></p>
+
+<nav class="footnav"><a href="ch077.html">← 上一章</a><a href="index.html">返回目录</a><a href="ch079.html">下一章 →</a></nav>
+</body>
+</html>

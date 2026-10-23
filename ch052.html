@@ -1,0 +1,1458 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="zh-CN" xml:lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>第 52 章　Lyapunov稳定性理论 · 控制大综合</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    span.underline{text-decoration: underline;}
+    div.column{display: inline-block; vertical-align: top; width: 50%;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    ul.task-list{list-style: none;}
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+  <link rel="stylesheet" href="assets/book.css" />
+  <script src="assets/katex/katex.min.js"></script>
+  <script>document.addEventListener("DOMContentLoaded", function () {
+   var mathElements = document.getElementsByClassName("math");
+   var macros = [];
+   for (var i = 0; i < mathElements.length; i++) {
+    var texText = mathElements[i].firstChild;
+    if (mathElements[i].tagName == "SPAN") {
+     katex.render(texText.data, mathElements[i], {
+      displayMode: mathElements[i].classList.contains('display'),
+      throwOnError: false,
+      macros: macros,
+      fleqn: false
+     });
+  }}});
+  </script>
+  <link rel="stylesheet" href="assets/katex/katex.min.css" />
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+  <link rel="stylesheet" href="assets/site.css" />
+</head>
+<body>
+<nav class="topnav"><a class="home" href="index.html">目录</a><span class="pos">052 / 115</span><span class="pager"><a href="ch051.html">上一章</a><a href="ch053.html">下一章</a></span></nav>
+
+<nav id="TOC" role="doc-toc">
+<ul>
+<li><a href="#第52章-lyapunov稳定性理论">第52章 Lyapunov稳定性理论</a>
+<ul>
+<li><a href="#动机与直观理解">52.1 动机与直观理解</a></li>
+<li><a href="#数学原理">52.2 数学原理</a></li>
+<li><a href="#设计步骤">52.3 设计步骤</a></li>
+<li><a href="#连续情形">52.4 连续情形</a></li>
+<li><a href="#离散情形">52.5 离散情形</a></li>
+<li><a href="#稳定性与性能">52.6 稳定性与性能</a></li>
+<li><a href="#参数意义与作用">52.7 参数意义与作用</a></li>
+<li><a href="#调参方法与经验">52.8 调参方法与经验</a></li>
+<li><a href="#优化与改进">52.9 优化与改进</a></li>
+<li><a href="#工程落地">52.10 工程落地</a></li>
+<li><a href="#优缺点与适用边界">52.11 优缺点与适用边界</a></li>
+<li><a href="#python-仿真代码">52.12 Python 仿真代码</a></li>
+</ul></li>
+</ul>
+</nav>
+<h1 id="第52章-lyapunov稳定性理论">第52章 Lyapunov稳定性理论</h1>
+<h2 id="动机与直观理解">52.1 动机与直观理解</h2>
+<h3 id="极点判据在什么地方失效">52.1.1 极点判据在什么地方失效</h3>
+<p>第 41 章用极点位置判断稳定性：对线性定常系统，极点全在左半平面等价于渐近稳定。这条结论太成功，以至于很多工程师把它当成稳定性的定义。它有一个前提——系统必须近似线性，而且要始终待在设计的那个工作点附近。</p>
+<p>单摆是最好的反例。取重力加速度 <span class="math inline">g=9.81</span>、摆长 <span class="math inline">l=1</span>、阻尼系数 <span class="math inline">b=0.3</span>，在 <span class="math inline">\theta=0</span> 处线性化，得到</p>
+<p><span class="math display">
+\ddot\theta=-9.81\,\theta-0.3\,\dot\theta
+\tag{52-1}
+</span></p>
+<p>极点是 <span class="math inline">-0.15\pm3.13\mathrm{j}</span>，全在左半平面。按极点判据，这个系统稳定，而且“对任意初值都稳定”——线性系统没有初值大小的概念。真实单摆却有两条完全不同的命运：初值取 <span class="math inline">2.5</span> rad（143°）时，脚本算出初始能量 <span class="math inline">17.67</span> J/kg，低于翻越顶点所需的 <span class="math inline">19.62</span> J/kg，摆最终停在下方，进入 <span class="math inline">\pm0.05</span> rad 带用 <span class="math inline">25.1</span> s；初值取 <span class="math inline">3.0</span> rad、角速度 <span class="math inline">1.469</span> rad/s（能量 <span class="math inline">20.60</span> J/kg）时，摆越过顶点，最大摆角 <span class="math inline">8.318</span> rad，末态停在 <span class="math inline">2\pi</span> 附近——它转起来了，永远不会回到原点。</p>
+<p>同一个线性化模型、同一组极点，对这两个初值给出同一个“稳定”结论。差别不在极点里，而在“离平衡点多远”这件事上。<strong>线性判据回答的是局部问题，工程问的却常常是全局问题。</strong></p>
+<p>这类分歧在工程上出现得比想象中频繁。液压阀在小开度时流量增益高、大开度时饱和，线性化只能描述小开度；飞行器在小迎角下气动系数近似线性，接近失速时导数急剧变化；电力电子在额定负载附近可以线性化，空载时进入断续模式。所有这些系统的共同点是：设计工作点附近的极点很漂亮，一旦偏离，模型就不再成立。用极点判据得出的“稳定”，实际上只覆盖了工作点周围一小块，而这一块有多大，极点判据本身说不出来。</p>
+<p>线性化失效有三种典型方式。第一种是<strong>增益漂移</strong>，非线性环节的等效增益随幅值变化，极点跟着移动，可能从左半平面穿过虚轴。第二种是<strong>结构改变</strong>，例如摩擦从黏滞变成库仑、电感电流从连续变成断续，方程的形式都变了。第三种是<strong>多平衡点</strong>，系统在不同初值下收敛到不同位置，线性化只描述其中一个点附近的局部行为。</p>
+<p>Lyapunov 方法对这三种情况各有对策。增益漂移可以通过参数化的 <span class="math inline">V</span> 覆盖一个范围；结构改变需要分段分析；多平衡点则要靠吸引域划分。三种对策的共同点是不依赖“在工作点附近”这个假设，代价是必须构造一个全局或半全局的函数。</p>
+<p>还有一层现实约束：工程上真正需要的往往不是“是否稳定”，而是“在预期的最恶劣工况下是否稳定”。这句话里既有全局性（最恶劣工况可能离工作点很远），也有定量性（多远算远）。极点判据两条都答不了，Lyapunov 方法至少能把第二条变成一个有单位的数。</p>
+<h3 id="能量为什么能当判据">52.1.2 能量为什么能当判据</h3>
+<p>单摆的能量是动能加势能：</p>
+<p><span class="math display">
+V(x)=\tfrac12x_2^{2}+g\left(1-\cos x_1\right)
+\tag{52-2}
+</span></p>
+<p>对时间求导，代入运动方程，阻尼项之外的部分正好抵消，剩下</p>
+<p><span class="math display">
+\dot V=-b\,x_2^{2}\le 0
+\tag{52-3}
+</span></p>
+<p>也就是说，能量只会减少，减少的速率由阻尼与角速度决定。这条不等式不需要线性化，对任意摆角都成立。脚本给出的数值验证是：从 <span class="math inline">2.5</span> rad 出发，<span class="math inline">80</span> s 内能量的最大“上升”是 <span class="math inline">-4.5\times10^{-15}</span>，即数值精度内严格单调；无阻尼对照组的能量漂移只有 <span class="math inline">4.6\times10^{-7}</span>，说明积分器本身没有引入可见的耗散。</p>
+<p>图 52-2 把两条能量曲线画在一起。有阻尼那条一路下降，最后贴到零；无阻尼那条始终停在 <span class="math inline">17.6692</span> 附近，几乎是一条水平线。两条曲线的分岔点就在阻尼项上，而这一项正是 <span class="math inline">\dot V</span> 的唯一来源。</p>
+<figure>
+<img src="figs/ch052/fig_052_02_energy.svg" alt="图 52-2　有阻尼与无阻尼单摆的能量演化" /><figcaption aria-hidden="true">图 52-2　有阻尼与无阻尼单摆的能量演化</figcaption>
+</figure>
+<p>这就是 Lyapunov 方法的核心思想：<strong>不去解方程，而是找一个沿轨迹单调下降的标量函数。</strong> 找到了，稳定性就得到证明；找不到，什么也不能说明。前者是充分条件，后者不是否定——这个不对称是本章所有保守性问题的根源。</p>
+<h3 id="三种稳定性不是一回事">52.1.3 三种稳定性不是一回事</h3>
+<p>工程口语里的“稳定”至少混着三个不同的意思，必须分开。</p>
+<p>第一种是<strong>稳定</strong>（Lyapunov 意义）：初值足够靠近平衡点，轨迹就永远不跑远。它只要求有界，不要求收敛。无阻尼单摆属于这一类：能量守恒，摆幅不变，但不会发散。</p>
+<p>第二种是<strong>渐近稳定</strong>：不仅不跑远，还最终回到平衡点。有阻尼单摆属于这一类。注意“最终”没有时间表，理论上可以是无穷慢。</p>
+<p>第三种是<strong>指数稳定</strong>：存在常数 <span class="math inline">a&gt;0</span> 与 <span class="math inline">M</span>，使 <span class="math inline">\|x(t)\|\le M\|x(0)\|e^{-at}</span>。它给出了明确的收敛速率，控制器设计真正需要的是这一档。</p>
+<p>三者层层加强，差别在实际系统中非常具体。考虑 <span class="math inline">x&#39;=-x^{3}</span>：<span class="math inline">V=x^{2}</span> 的导数是 <span class="math inline">-2x^{4}</span>，负定，所以原点全局渐近稳定。但脚本算出，从 <span class="math inline">1</span> 降到 <span class="math inline">0.1</span> 需要 <span class="math inline">49.5</span> s，从 <span class="math inline">0.1</span> 再降到 <span class="math inline">0.01</span> 需要 <span class="math inline">4950</span> s——每多一位精度，时间乘一百。作为对照，线性系统 <span class="math inline">x&#39;=-x</span> 从 <span class="math inline">1</span> 到 <span class="math inline">0.1</span> 只要 <span class="math inline">2.303</span> s。前者是代数收敛，后者是指数收敛，两者都能叫“渐近稳定”，工程含义却天差地别。</p>
+<p>三个概念是严格的包含关系：指数稳定必渐近稳定，渐近稳定必稳定，反过来都不成立。稳定但不渐近的例子是无阻尼单摆，能量守恒，轨迹在一个闭轨上绕圈，永远不回原点。渐近但不指数的例子就是上面的 <span class="math inline">x&#39;=-x^{3}</span>，收敛但越来越慢，没有任何一个正数 <span class="math inline">a</span> 能让 <span class="math inline">\|x\|e^{at}</span> 保持有界。</p>
+<p>把这三个词对应到工程指标，关系会更清楚。“稳定”对应“不发散”，是最低要求，振动台、悬浮系统都至少要满足它。“渐近稳定”对应“能回到设定值”，位置伺服、恒温控制需要它。“指数稳定”对应“有确定的调节时间”，凡是要写进技术协议的响应指标，背后都隐含这一档。协议里写“阶跃响应 <span class="math inline">2</span> s 内进入 <span class="math inline">\pm2\%</span>”，翻译过来就是“衰减率不小于某个值”，而衰减率只对指数稳定有定义。</p>
+<p>这也解释了一个常见的沟通错位。控制工程师说“系统稳定”，客户理解成“会回到设定值”，实际可能只是“不会散架”。把稳定性等级写清楚，比争论“稳不稳定”有用得多。</p>
+<h3 id="线性情形找函数变成解方程">52.1.4 线性情形：找函数变成解方程</h3>
+<p>对线性系统 <span class="math inline">\dot x=Ax</span>，二次型 <span class="math inline">V=x^{\mathsf T}Px</span> 是最自然的候选。求导得 <span class="math inline">\dot V=x^{\mathsf T}(A^{\mathsf T}P+PA)x</span>。若能让括号里的矩阵等于某个负定矩阵 <span class="math inline">-Q</span>，就有 <span class="math inline">\dot V=-x^{\mathsf T}Qx&lt;0</span>。</p>
+<p>于是“找一个正定矩阵 <span class="math inline">P</span> 使 <span class="math inline">A^{\mathsf T}P+PA</span> 负定”变成了一道线性方程：</p>
+<p><span class="math display">
+A^{\mathsf T}P+PA=-Q
+\tag{52-4}
+</span></p>
+<p>给定任意正定 <span class="math inline">Q</span>，解出 <span class="math inline">P</span>，再检查 <span class="math inline">P</span> 是否正定。这个方程叫 Lyapunov 方程，它是本章唯一需要真正求解的数学对象，也是第 51 章 Gramian 的一般形式——把 <span class="math inline">Q</span> 取成 <span class="math inline">BB^{\mathsf T}</span> 或 <span class="math inline">C^{\mathsf T}C</span>，解出来的就是能控、能观 Gramian。</p>
+<p>以本章的质量-弹簧-阻尼对象（<span class="math inline">m=1</span>、<span class="math inline">k=4</span>、<span class="math inline">c=0.4</span>）为例，取 <span class="math inline">Q=I</span> 解得</p>
+<p><span class="math display">
+P=\begin{bmatrix}6.3&amp;0.125\\0.125&amp;1.5625\end{bmatrix}
+\tag{52-5}
+</span></p>
+<p>特征值 <span class="math inline">1.559</span> 与 <span class="math inline">6.303</span>，都为正，条件数 <span class="math inline">4.04</span>；代回方程的相对残差 <span class="math inline">1.8\times10^{-15}</span>，与直接用 Kronecker 展开求解的结果相差 <span class="math inline">9.2\times10^{-16}</span>。这组数字说明：对小规模、良态的系统，Lyapunov 方程可以解得很干净。</p>
+<h3 id="本章路线">52.1.5 本章路线</h3>
+<p>§52.2 给出定义与三个基本定理，包括 LaSalle 不变原理；§52.3 把它固化成一套可执行步骤；§52.4 与 §52.5 分别在连续域与离散域把流程走一遍；§52.6 讨论稳定性与性能的关系——收敛速率界有多保守，为什么保守；§52.7 分析 <span class="math inline">Q</span> 与 <span class="math inline">P</span> 的参数意义；§52.8 给出调参经验；§52.9 讲改进手段，包括区域估计与基于优化的构造；§52.10 是工程落地；§52.11 说明这套方法的边界；§52.12 是全部代码。</p>
+<p>读本章要始终记住一件事：<strong>Lyapunov 方法证明的是“充分”，不是“必要”。</strong> 一个系统稳定，未必存在你手上这个形式的 <span class="math inline">V</span>；找不到 <span class="math inline">V</span> 不等于不稳定。所有工程判断都必须带着这句限定。</p>
+<h3 id="一个工程场景">52.1.6 一个工程场景</h3>
+<p>把单摆的例子换成一个更贴近现场的版本：一台吊车把重物吊到空中，重物相当于一个挂在钢丝绳下的摆。操作员关心的问题有三个，恰好对应本章的三层内容。</p>
+<p>第一个问题是“会不会荡起来收不住”。这是稳定性问题，答案是“有阻尼就不会”，但前提是摆角不超过某个范围。超出范围之后，重物可能绕卷筒转圈，钢丝绳缠绕，事故就此发生。稳定性分析要给出的是这个“前提”，而不是一句“稳定”。</p>
+<p>第二个问题是“多大的扰动才会出事”。这是吸引域问题。脚本给的数字很具体：<span class="math inline">0.95</span> 倍分界能量对应的初值是 <span class="math inline">(2.691,0)</span>，能回来；<span class="math inline">1.05</span> 倍对应 <span class="math inline">(3.0,1.469)</span>，回不来。两者之间只差 <span class="math inline">5\%</span> 的能量，命运完全不同。工程上把这个边界写成操作规程：起吊角不得超过某个度数，风速超过某个值就停止作业。</p>
+<p>第三个问题是“出事先有没有预警”。这是在线监测问题。把 <span class="math inline">V</span> 算在控制器里，当 <span class="math inline">V</span> 连续上升并逼近边界时报警，操作员还有时间降速或反向纠正。这一步不需要任何新理论，只需要在控制器里算一次二次型（§52.10.5）。</p>
+<p>三个问题层层递进，但都建立在同一个函数上。这也是本章值得花篇幅的原因：<strong>一个 <span class="math inline">V</span> 同时回答了“稳不稳、范围多大、离边界多远”</strong>，而极点判据只能回答第一个，而且还只在工作点附近有效。</p>
+<p>工业现场还有一层复杂性：参数会漂移。钢丝绳的等效长度随卷扬变化，阻尼随润滑状态变化，负载质量随货物变化。<span class="math inline">V</span> 的等值面要跟着这些参数走，§52.3.2 讲的“平衡点平移”与这里的“等值面随参数平移”是同一类问题。做法是每隔一段时间用当前参数重算一次 <span class="math inline">P</span>，或者用一个参数化的 <span class="math inline">V</span> 覆盖整个工作范围——后者更稳，但构造难度大得多。</p>
+<h2 id="数学原理">52.2 数学原理</h2>
+<p>本节把“稳定”从直觉变成可以逐条核对的定义与定理。读的时候请留意每个定理的前提：Lyapunov 方法的几乎所有误用，都来自前提被悄悄放宽。</p>
+<h3 id="定义从-ε-δ-到三种稳定">52.2.1 定义：从 ε-δ 到三种稳定</h3>
+<p>考虑自治系统 <span class="math inline">\dot x=f(x)</span>，<span class="math inline">f(0)=0</span>，即原点是一个平衡点。</p>
+<p><strong>稳定</strong>：对任意 <span class="math inline">\varepsilon&gt;0</span>，存在 <span class="math inline">\delta&gt;0</span>，使得只要 <span class="math inline">\|x(0)\|&lt;\delta</span>，就有对一切 <span class="math inline">t\ge0</span> 成立 <span class="math inline">\|x(t)\|&lt;\varepsilon</span>。</p>
+<p><span class="math display">
+\forall\varepsilon&gt;0,\ \exists\delta&gt;0:\ \|x(0)\|&lt;\delta\ \Rightarrow\ \sup_{t\ge0}\|x(t)\|&lt;\varepsilon
+\tag{52-6}
+</span></p>
+<p>这个定义里没有“收敛”，只有“不越界”。<span class="math inline">\delta</span> 一般依赖 <span class="math inline">\varepsilon</span>，也可能依赖初始时刻（非自治系统）。自治系统里 <span class="math inline">\delta</span> 只依赖 <span class="math inline">\varepsilon</span>，因此叫一致稳定。</p>
+<p><strong>渐近稳定</strong>：稳定，且存在 <span class="math inline">\delta_0&gt;0</span>，使 <span class="math inline">\|x(0)\|&lt;\delta_0</span> 时 <span class="math inline">\lim_{t\to\infty}x(t)=0</span>。收敛可以任意慢，定义不提供速率。</p>
+<p><strong>指数稳定</strong>：存在 <span class="math inline">M\ge1</span>、<span class="math inline">a&gt;0</span>，使</p>
+<p><span class="math display">
+\|x(t)\|\le M\|x(0)\|e^{-at}
+\tag{52-7}
+</span></p>
+<p>指数稳定蕴含渐近稳定，反之不成立。§52.1.3 的 <span class="math inline">x&#39;=-x^{3}</span> 就是反例：它渐近稳定，但从 <span class="math inline">1</span> 到 <span class="math inline">0.1</span> 要 <span class="math inline">49.5</span> s、从 <span class="math inline">0.1</span> 到 <span class="math inline">0.01</span> 要 <span class="math inline">4950</span> s，找不到一对固定的 <span class="math inline">(M,a)</span> 覆盖所有初值。</p>
+<p><strong>全局</strong>与<strong>局部</strong>是另一条轴，与上面三种正交。全局指 <span class="math inline">\delta</span> 可以取到无穷（或 <span class="math inline">\delta_0=\infty</span>），局部只在一个邻域内成立。单摆的结论是局部的：吸引域由分界能量 <span class="math inline">2g/l=19.62</span> J/kg 圈定，出了这个圈就再也回不来。</p>
+<h3 id="lyapunov-函数正定径向无界">52.2.2 Lyapunov 函数：正定、径向无界</h3>
+<p>设 <span class="math inline">V:\mathbb{R}^{n}\to\mathbb{R}</span> 连续可微，<span class="math inline">V(0)=0</span>。若存在正定函数 <span class="math inline">\alpha</span> 使 <span class="math inline">V(x)\ge\alpha(\|x\|)</span>，称 <span class="math inline">V</span> 正定；若还有 <span class="math inline">\lim_{\|x\|\to\infty}V(x)=\infty</span>，称 <span class="math inline">V</span> 径向无界。</p>
+<p><span class="math display">
+V(x)&gt;0\ (x\neq0),\qquad \lim_{\|x\|\to\infty}V(x)=\infty
+\tag{52-8}
+</span></p>
+<p>两个条件各管一件事。正定性保证 <span class="math inline">V</span> 的等值面 <span class="math inline">\{V=c\}</span> 把原点包在里面，<span class="math inline">V</span> 下降就意味着轨迹向里走；径向无界保证这些等值面不“开口”，<span class="math inline">V</span> 有界就推出 <span class="math inline">\|x\|</span> 有界。</p>
+<p>单摆的能量函数在 <span class="math inline">\mathbb{R}^{2}</span> 上正定，但因为 <span class="math inline">\cos</span> 的周期性，它不径向无界：</p>
+<p><span class="math display">
+V=\tfrac12x_2^{2}+9.81\left(1-\cos x_1\right)
+\tag{52-9}
+</span></p>
+<p>沿 <span class="math inline">x_2</span> 方向它确实趋于无穷，沿 <span class="math inline">x_1</span> 方向却周期往复。后果是：<span class="math inline">V</span> 有界只能推出角速度有界，推不出角度有界——摆可以一直转。这正是“全局结论需要径向无界”的具体体现，也是 §52.1.1 中初值 1.05 倍分界能量那条轨迹的数学解释。</p>
+<h3 id="连续时间-lyapunov-定理">52.2.3 连续时间 Lyapunov 定理</h3>
+<p><strong>定理（Lyapunov 直接法）</strong> 设 <span class="math inline">D</span> 是包含原点的开集，<span class="math inline">V:D\to\mathbb{R}</span> 连续可微且正定。沿系统轨迹计算 <span class="math inline">\dot V</span>。</p>
+<p>若在 <span class="math inline">D</span> 内 <span class="math inline">\dot V\le0</span>，则原点稳定；若在 <span class="math inline">D\setminus\{0\}</span> 内 <span class="math inline">\dot V&lt;0</span>，则原点渐近稳定；若进一步存在常数 <span class="math inline">c_1,c_2,c_3&gt;0</span> 使</p>
+<p><span class="math display">
+c_1\|x\|^{2}\le V(x)\le c_2\|x\|^{2},\qquad \dot V(x)\le-c_3\|x\|^{2}
+\tag{52-10}
+</span></p>
+<p>则原点指数稳定。若 <span class="math inline">D=\mathbb{R}^{n}</span> 且 <span class="math inline">V</span> 径向无界，结论升级为全局。</p>
+<p>三个条件的分工要看清。<span class="math inline">\dot V\le0</span> 只给稳定，这是最容易漏的一步：不少设计文档写了“<span class="math inline">\dot V\le0</span>，故渐近稳定”，中间缺了 LaSalle 或严格负定这一环。<span class="math inline">\dot V&lt;0</span> 给渐近，但速率不做保证。只有式 (52-10) 那种二次型夹逼才给出指数速率。</p>
+<p>式 (52-10) 里的三个常数不是装饰。把第一式代入第三式，可以消去 <span class="math inline">\|x\|^{2}</span>，得到</p>
+<p><span class="math display">
+V(x(t))\le V(x(0))\,e^{-(c_3/c_2)t}
+\tag{52-11}
+</span></p>
+<p>再由 <span class="math inline">c_1\|x\|^{2}\le V</span> 得 <span class="math inline">\|x(t)\|\le\sqrt{c_2/c_1}\,\|x(0)\|e^{-c_3/(2c_2)\,t}</span>。也就是说，指数速率的下界是 <span class="math inline">c_3/(2c_2)</span>，初值的放大倍数是 <span class="math inline">\sqrt{c_2/c_1}</span>。这两个数都可以从 <span class="math inline">P</span>、<span class="math inline">Q</span> 直接读出：<span class="math inline">c_1=\lambda_{\min}(P)</span>、<span class="math inline">c_2=\lambda_{\max}(P)</span>、<span class="math inline">c_3=\lambda_{\min}(Q)</span>。</p>
+<h3 id="lasalle-不变原理">52.2.4 LaSalle 不变原理</h3>
+<p>很多系统的 <span class="math inline">\dot V</span> 只是半负定：<span class="math inline">\dot V\le0</span>，但在某些方向上恰好为零。机械系统的阻尼项 <span class="math inline">-b x_2^{2}</span> 就是典型——速度为零时它等于零，不管位置在哪里。</p>
+<p>这时不能直接断言渐近稳定，因为轨迹可能停在 <span class="math inline">\dot V=0</span> 的某个点上不动。LaSalle 给出了正确的补充条件。</p>
+<p><strong>定理（LaSalle）</strong> 设 <span class="math inline">\Omega</span> 是紧的正不变集，<span class="math inline">V</span> 在 <span class="math inline">\Omega</span> 上连续可微且 <span class="math inline">\dot V\le0</span>。令 <span class="math inline">E=\{x\in\Omega:\dot V(x)=0\}</span>，<span class="math inline">M</span> 是 <span class="math inline">E</span> 中最大的不变集，则当 <span class="math inline">t\to\infty</span> 时，每条从 <span class="math inline">\Omega</span> 出发的轨迹都趋于 <span class="math inline">M</span>。</p>
+<p><span class="math display">
+E=\{x\in\Omega:\dot V(x)=0\},\qquad x(t)\to M\subseteq E
+\tag{52-12}
+</span></p>
+<p>对单摆，<span class="math inline">\dot V=-b x_2^{2}</span>，所以 <span class="math inline">E</span> 是整条 <span class="math inline">x_2=0</span> 的轴。<span class="math inline">E</span> 里哪些点能停留？在 <span class="math inline">x_2=0</span> 上，<span class="math inline">\dot x_1=0</span>、<span class="math inline">\dot x_2=-9.81\sin x_1</span>，只有 <span class="math inline">x_1=0</span> 或 <span class="math inline">x_1=\pm\pi</span> 才不动。所以在 <span class="math inline">|x_1|&lt;\pi</span> 内，<span class="math inline">M</span> 只有原点，轨迹必然收敛到原点。</p>
+<p>这条推理给出一个可计算的区域：只要水平集 <span class="math inline">\{V\le c\}</span> 不包含 <span class="math inline">x_1=\pm\pi</span>，结论就成立。<span class="math inline">x_1=\pi</span> 处的能量是 <span class="math inline">2g/l=19.62</span>，所以 <span class="math inline">c</span> 必须严格小于它。脚本按 <span class="math inline">0.01</span> 的步长取到 <span class="math inline">c=19.61</span>，对应的角度上界逼近 <span class="math inline">\pi</span>。</p>
+<h3 id="定理的逆与找不到的含义">52.2.5 定理的逆与“找不到”的含义</h3>
+<p>线性系统有一个漂亮的逆定理：<span class="math inline">A</span> 的所有特征值实部为负，当且仅当对任意正定 <span class="math inline">Q</span>，方程 (52-4) 有唯一正定解 <span class="math inline">P</span>。这条“当且仅当”让线性情形没有保守性——稳定性与二次型 Lyapunov 函数的存在性完全等价。</p>
+<p>非线性系统没有这么好的性质。质量-弹簧-阻尼对象加上一个立方项，得到</p>
+<p><span class="math display">
+\ddot x+0.4\dot x+x-0.2x^{3}=0
+\tag{52-13}
+</span></p>
+<p>取 <span class="math inline">V=\tfrac12(x_1^{2}+x_2^{2})</span>，则 <span class="math inline">\dot V=-0.4x_2^{2}+0.2x_1^{3}x_2</span>。脚本在三个半径上检查这个二次型：<span class="math inline">c=0.1</span> 的圆上 <span class="math inline">\max\dot V=+1.98\times10^{-4}</span>，<span class="math inline">c=0.5</span> 时 <span class="math inline">+0.0216</span>，<span class="math inline">c=1.0</span> 时 <span class="math inline">+0.1363</span>。<strong>每一条圆上都有 <span class="math inline">\dot V&gt;0</span> 的点</strong>，所以这个二次型在任何水平集上都不是 Lyapunov 函数。</p>
+<p>但同一组数字显示，从 <span class="math inline">(0.8,0)</span>、<span class="math inline">(1.2,0)</span>、<span class="math inline">(1.6,0)</span> 出发的轨迹都收敛到原点，末态模长在 <span class="math inline">10^{-6}</span> 量级。也就是说，<strong>系统在原点附近是稳定的，二次型却给不出证书。</strong> 这不是数值错误，而是 Lyapunov 方法的固有局限：它对 <span class="math inline">V</span> 的形式敏感，选错了形式就什么也证不出来。</p>
+<p>这一节要带走两句：线性情形下“找不到 <span class="math inline">P</span>”等价于不稳定；非线性情形下“找不到 <span class="math inline">V</span>”什么也不说明。</p>
+<h3 id="离散时间版本">52.2.6 离散时间版本</h3>
+<p>离散系统 <span class="math inline">x_{k+1}=f(x_k)</span> 的定理形式几乎一样，只把导数换成差分：</p>
+<p><span class="math display">
+\Delta V(x_k)=V(x_{k+1})-V(x_k)
+\tag{52-14}
+</span></p>
+<p><span class="math inline">\Delta V\le0</span> 给稳定，<span class="math inline">\Delta V&lt;0</span> 给渐近稳定；若 <span class="math inline">c_1\|x\|^{2}\le V\le c_2\|x\|^{2}</span> 且 <span class="math inline">\Delta V\le-c_3\|x\|^{2}</span>，则每步至少缩小一个固定比例，即 <span class="math inline">\|x_k\|\le\sqrt{c_2/c_1}\,\|x_0\|\,(1-c_3/c_2)^{k/2}</span>。</p>
+<p>对线性系统 <span class="math inline">x_{k+1}=A_dx_k</span>，取 <span class="math inline">V=x^{\mathsf T}Px</span>，条件变成</p>
+<p><span class="math display">
+A_d^{\mathsf T}PA_d-P=-Q
+\tag{52-15}
+</span></p>
+<p>这是离散 Lyapunov 方程。它的可解性与连续情形平行：<span class="math inline">A_d</span> 的全部特征值模小于 1，当且仅当对任意正定 <span class="math inline">Q</span> 存在唯一正定解 <span class="math inline">P</span>。</p>
+<p>两个版本有一处实质差别容易被忽略。连续域的“稳定边界”是虚轴，极点在边界上时方程奇异、<span class="math inline">P</span> 发散；离散域的边界是单位圆，<span class="math inline">|z|=1</span> 时同样奇异。而两者的“距离感”不同：连续域里极点从 <span class="math inline">-0.01</span> 挪到 <span class="math inline">-0.001</span>，稳定裕度缩小十倍；离散域里 <span class="math inline">z</span> 从 <span class="math inline">0.99</span> 挪到 <span class="math inline">0.999</span>，<span class="math inline">P</span> 的元素放大约一百倍。§52.5 会用 <span class="math inline">T_s=0.05</span> s 的电机算例给出具体数字：<span class="math inline">|z|=0.99005</span>，<span class="math inline">P</span> 的最大元素 <span class="math inline">126.5</span>，比连续域的 <span class="math inline">6.3</span> 大了二十倍，原因只是采样周期把时间尺度压缩了。</p>
+<h3 id="四个最常见的错误">52.2.7 四个最常见的错误</h3>
+<p>定理本身不复杂，错都错在细节。以下四条在审稿与现场检查里出现频率最高。</p>
+<p><strong>第一，把 <span class="math inline">\dot V\le0</span> 直接当成渐近稳定。</strong> 半负定只给稳定。要补 LaSalle，或者把 <span class="math inline">Q</span> 换成使 <span class="math inline">\dot V</span> 严格负定的形式（例如对机械系统取 <span class="math inline">Q</span> 含位置项）。单摆就是典型：<span class="math inline">\dot V=-0.3x_2^{2}</span> 在整条 <span class="math inline">x_2=0</span> 上为零，若不补 LaSalle，只能得到“摆不会越摆越大”。</p>
+<p><strong>第二，忘了径向无界。</strong> 局部结论与全局结论的差别全在这一个条件上。单摆能量沿角度方向周期，不是径向无界，因此无论仿真跑多久、初值多小，都不能宣称全局渐近稳定；真正的全局结论要求把角度限制在 <span class="math inline">(-\pi,\pi)</span> 的开区间内，或者换一个周期性处理的状态坐标。</p>
+<p><strong>第三，把 <span class="math inline">V</span> 当成物理能量。</strong> Lyapunov 函数不唯一：<span class="math inline">P</span> 解出来之后，任意正定矩阵 <span class="math inline">R</span> 都能构造 <span class="math inline">P&#39;=P+R</span> 对应的新函数，结论不变。所以 <span class="math inline">V</span> 的数值大小没有物理意义，只有它的等值面形状与导数符号有意义。把 <span class="math inline">V</span> 的单位写成焦耳、再拿去做能量预算，是常见但无害的误用；有害的是反过来——因为“能量不守恒”就否定 <span class="math inline">V</span>。</p>
+<p><strong>第四，平衡点没平移到原点。</strong> 定理要求 <span class="math inline">f(0)=0</span>。若实际平衡点是 <span class="math inline">x_\star\neq0</span>，必须先令 <span class="math inline">e=x-x_\star</span>，在 <span class="math inline">e</span> 坐标下写方程，再用 <span class="math inline">V(e)</span>。省这一步，<span class="math inline">\dot V</span> 里会多出常数项，符号判断全错。第 42 章的稳态误差分析里，工作点偏移的处理与此是同一件事。</p>
+<h3 id="三个定理的证明骨架">52.2.8 三个定理的证明骨架</h3>
+<p>定理不必背，但证明的骨架要清楚，否则用的时候就不知道哪一步在依赖什么。三个定理的证明各有一个关键动作。</p>
+<p><strong>稳定性</strong>的关键是“水平集装得进 <span class="math inline">\varepsilon</span> 球”。<span class="math inline">V</span> 正定且连续，所以存在 <span class="math inline">c&gt;0</span>，使 <span class="math inline">\{V\le c\}</span> 整个落在 <span class="math inline">\|x\|&lt;\varepsilon</span> 里。初值若在这个水平集内，<span class="math inline">\dot V\le0</span> 保证 <span class="math inline">V</span> 不增，于是轨迹永远出不去。整个过程只用了一次单调性，一次连续性。这里的“<span class="math inline">\delta</span>”就是水平集的内接球半径。</p>
+<p><strong>渐近稳定性</strong>的关键是“排除停在非零水平集上”。若 <span class="math inline">\dot V</span> 负定，可直接反证：<span class="math inline">V</span> 单调有下界，故收敛到某个 <span class="math inline">V_\infty</span>；若 <span class="math inline">V_\infty&gt;0</span>，轨迹被限制在紧集内，<span class="math inline">\omega</span> 极限集非空，而在这个集合上必须有 <span class="math inline">\dot V=0</span>；但 <span class="math inline">\dot V&lt;0</span> 除原点外处处成立，矛盾。若 <span class="math inline">\dot V</span> 只是半负定，这一步不成立，需要 LaSalle 把“<span class="math inline">\dot V=0</span> 的点”进一步排除——单摆就是靠“<span class="math inline">x_2=0</span> 上只有 <span class="math inline">x_1=0,\pm\pi</span> 能停住”补上这一刀。</p>
+<p><strong>指数稳定性</strong>的关键是“三明治不等式”。要同时有 <span class="math inline">c_1\|x\|^{2}\le V(t,x)\le c_2\|x\|^{2}</span> 与 <span class="math inline">\dot V\le-c_3\|x\|^{2}</span>，也就是式 (52-8) 的正定性条件加上一个带余量的导数条件。</p>
+<p>下界把 <span class="math inline">V</span> 小翻译成 <span class="math inline">\|x\|</span> 小，上界把 <span class="math inline">\|x\|</span> 大翻译成 <span class="math inline">V</span> 大，两者缺一不可。有了三明治，<span class="math inline">\dot V\le-(c_3/c_2)V</span>，用 Grönwall 不等式得 <span class="math inline">V(t)\le V(0)e^{-c_3t/c_2}</span>，再开方就得到式 (52-28) 的界。</p>
+<p>只给上界不给下界是初学者最常犯的证明错误。上界只能说明“<span class="math inline">V</span> 有界”，而下界才说明“<span class="math inline">V</span> 有界意味着状态有界”。若 <span class="math inline">V</span> 在某个方向上恒为零（半正定），下界不成立，结论也就断了。</p>
+<h3 id="非自治与时变的一瞥">52.2.9 非自治与时变的一瞥</h3>
+<p>本章全程假设 <span class="math inline">f</span> 不显含时间。真实系统里，参数会随温度漂移，负载会变，参考值会走，<span class="math inline">f</span> 往往是 <span class="math inline">f(t,x)</span>。</p>
+<p>时变情形下 <span class="math inline">V</span> 也要写成 <span class="math inline">V(t,x)</span>，且必须“一致正定”：存在与 <span class="math inline">t</span> 无关的 <span class="math inline">c_1</span>、<span class="math inline">c_2</span> 使三明治成立。只要求“对每个 <span class="math inline">t</span> 都正定”是不够的——可能出现 <span class="math inline">V</span> 在每个时刻都正定、但下界随 <span class="math inline">t</span> 趋于零的情况，此时收敛性无法保证。</p>
+<p>更关键的一条：时变系统里 <span class="math inline">\dot V\le0</span> 不再够用。因为在某个时刻 <span class="math inline">\dot V=0</span>，系统可能“停下来歇一会”，而 <span class="math inline">f</span> 随时间变化之后又会把它推走。常见的补丁是 Barbalat 引理：若 <span class="math inline">V</span> 有下界、<span class="math inline">\dot V\le0</span> 且 <span class="math inline">\dot V</span> 一致连续，则 <span class="math inline">\dot V\to0</span>。它不能给出速率，但能给出“最终不再消耗 <span class="math inline">V</span>”这一结论，自适应控制里几乎每次都要用它。</p>
+<p>本章不展开时变理论，只提醒一件事：<strong>把自治情形的结论直接搬到自适应或参数时变系统上，是审稿意见里出现频率很高的一类问题</strong>。看到“参数缓慢变化”这句话，就应当问“多慢算慢、有没有一致界”。</p>
+<h3 id="一维系统的完整推演">52.2.10 一维系统的完整推演</h3>
+<p>二阶以上的例子总要借助工具，一维系统则可以把每一步都写清楚。它小到能一眼看完，却包含了本章所有关键动作。</p>
+<p>考虑 <span class="math inline">\dot x=-x+x^{3}</span>。这个系统的平衡点有三个：<span class="math inline">x=0</span> 与 <span class="math inline">x=\pm1</span>。线性化给出 <span class="math inline">f&#39;(x)=-1+3x^{2}</span>，在原点处是 <span class="math inline">-1</span>，稳定；在 <span class="math inline">\pm1</span> 处是 <span class="math inline">2</span>，不稳定。所以原点局部渐近稳定，<span class="math inline">\pm1</span> 是两个不稳定平衡点，它们把状态轴分成三段。</p>
+<p>取 <span class="math inline">V=x^{2}/2</span>，<span class="math inline">\dot V=x\dot x=-x^{2}+x^{4}=x^{2}(x^{2}-1)</span>。在 <span class="math inline">|x|&lt;1</span> 内 <span class="math inline">\dot V&lt;0</span>，在 <span class="math inline">|x|&gt;1</span> 内 <span class="math inline">\dot V&gt;0</span>。于是水平集 <span class="math inline">\{V\le c\}</span> 能用当且仅当 <span class="math inline">\sqrt{2c}&lt;1</span>，即 <span class="math inline">c&lt;1/2</span>。这个上界对应的正是“不越过 <span class="math inline">\pm1</span>”这一条件，与平衡点的位置完全吻合。</p>
+<p>脚本给出四个初值的结果：<span class="math inline">0.5</span> 收敛到 <span class="math inline">0</span>，<span class="math inline">0.9</span> 收敛到 <span class="math inline">0</span>，<span class="math inline">1.1</span> 跑到 <span class="math inline">9.633870</span>，<span class="math inline">2</span> 跑到 <span class="math inline">19.583766</span>。网格搜索找到的最大可用水平是 <span class="math inline">c=0.49</span>，解析值是 <span class="math inline">0.5</span>，差的那一点来自网格离散步长。</p>
+<p>这个例子把三件事一次讲完。第一，<span class="math inline">V</span> 的可用范围由 <span class="math inline">\dot V</span> 的符号决定，不由 <span class="math inline">V</span> 自己决定；本例中 <span class="math inline">V</span> 处处正定、处处径向无界，但可用的水平集只到 <span class="math inline">0.5</span>。第二，范围边界往往对应另一个平衡点，<span class="math inline">\pm1</span> 就是边界；判断边界在哪里，等价于解 <span class="math inline">f(x)=0</span>。第三，初值一旦越过边界，不是“收敛慢一点”，而是彻底发散，<span class="math inline">1.1</span> 与 <span class="math inline">0.9</span> 只差 <span class="math inline">0.2</span>，结局一个是 <span class="math inline">0</span>，一个是 <span class="math inline">9.6</span>。</p>
+<p>用线性化能不能得到这些结论？只能得到第一条：原点稳定，<span class="math inline">\pm1</span> 不稳定。它说不出 <span class="math inline">0.5</span> 这个范围，也说不出越过之后会跑到哪里。这就是 §52.1.1 那句“线性判据回答局部问题”的最简版本。</p>
+<p>一维系统还有一个好处：可以把 <span class="math inline">\dot V</span> 的符号画成一条数轴上的箭头，<span class="math inline">|x|&lt;1</span> 指向原点，<span class="math inline">|x|&gt;1</span> 指向外侧。二维系统的相图是这条数轴的推广，三维以上就画不出来了，只能靠 <span class="math inline">V</span> 的等值面想象。所以每次遇到高维问题，先在一维或二维找一个能完全看懂的类比，是很有用的习惯。</p>
+<h3 id="方程为什么总有唯一解">52.2.11 方程为什么总有唯一解</h3>
+<p>式 (52-4) 是一个线性方程，但它未必可解，更未必唯一。把这件事说清楚，后面所有“解出来就完事”的操作才有依据。</p>
+<p>先把方程拉直。按列优先把 <span class="math inline">P</span> 拉成向量 <span class="math inline">\mathrm{vec}(P)</span>，式 (52-4) 就变成 <span class="math inline">L\,\mathrm{vec}(P)=-\mathrm{vec}(Q)</span>，其中 <span class="math inline">L</span> 的构造见 §52.4.4 的式 (52-19)。<span class="math inline">L</span> 是 <span class="math inline">n^{2}\times n^{2}</span> 的矩阵，称为 Lyapunov 算子，它的特征值有闭式：若 <span class="math inline">A</span> 的特征值是 <span class="math inline">\lambda_1,\dots,\lambda_n</span>，则 <span class="math inline">L</span> 的特征值恰为所有两两之和 <span class="math inline">\lambda_i+\lambda_j</span>。</p>
+<p>有了谱，可解性就清楚了：<strong><span class="math inline">L</span> 可逆当且仅当不存在一对特征值满足 <span class="math inline">\lambda_i+\lambda_j=0</span></strong>。对稳定系统，所有特征值的实部为负，任意两个之和的实部也必然为负，永远不可能等于零。所以只要 <span class="math inline">A</span> 是 Hurwitz 的，方程对任意 <span class="math inline">Q</span> 都有唯一解。§52.4.4 会用本章对象验证一次：极点 <span class="math inline">-0.2\pm1.989975\mathrm{j}</span> 给出的四个和正是 <span class="math inline">-0.4</span>、<span class="math inline">-0.4</span>、<span class="math inline">-0.4\pm3.97995\mathrm{j}</span>，与脚本输出逐位一致。</p>
+<p>唯一性还有一个直接推论：若 <span class="math inline">Q</span> 对称，则解 <span class="math inline">P</span> 也对称。理由是转置方程后，<span class="math inline">P^{\mathsf T}</span> 同样满足方程，而解唯一，故 <span class="math inline">P=P^{\mathsf T}</span>。这条推论省掉了一半的计算量，也解释了为什么求解器只返回一个对称矩阵。</p>
+<p>反过来看不可解的情形，能帮助理解“临界”是什么意思。取 <span class="math inline">A=\mathrm{diag}(1,-1)</span>，方程的三个分量是 <span class="math inline">2p_{11}=-q_{11}</span>、<span class="math inline">-2p_{22}=-q_{22}</span>、<span class="math inline">0=-q_{12}</span>。前两个可解，第三个要求 <span class="math inline">q_{12}=0</span>；即便满足，<span class="math inline">p_{12}</span> 也完全自由。这就是“特征值关于虚轴对称”带来的退化：系统既不收敛也不发散，<span class="math inline">P</span> 描述的“能量”不再唯一。</p>
+<p>本章对象在 <span class="math inline">c=0</span> 时正是这种情形，极点落在 <span class="math inline">\pm2\mathrm{j}</span> 上，脚本解出的 <span class="math inline">P</span> 元素达到 <span class="math inline">9.007\times10^{15}</span>。这个数不是“很大的能量”，而是“方程接近奇异、解在数值上失控”的信号。它提醒一件事：<strong><span class="math inline">P</span> 的元素大小本身没有物理意义，只有与 <span class="math inline">Q</span> 一起看才有意义</strong>。</p>
+<p>最后给出解的积分表示，它在后面几节反复用到：</p>
+<p><span class="math display">
+P=\int_0^{\infty}e^{A^{\mathsf T}t}Qe^{At}\,\mathrm{d}t .
+</span></p>
+<p>直接对右端求导即可验证它满足方程，而收敛性由 <span class="math inline">A</span> 的 Hurwitz 性保证。这个式子把 <span class="math inline">P</span> 解释成“沿轨迹累积的代价”，也解释了为什么 <span class="math inline">P</span> 主要由慢模态决定——快模态的指数因子衰减得快，对积分的贡献小。</p>
+<h2 id="设计步骤">52.3 设计步骤</h2>
+<h3 id="七步流程与每步的产物">52.3.1 七步流程与每步的产物</h3>
+<p>把前面两节的定理落成一次可复现的分析，只需要七步。图 52-11 把它们画成一条带分支的流程：前三步是“准备”，中间两步是“求解与验算”，最后两步是“下结论”。</p>
+<figure>
+<img src="figs/ch052/fig_052_11_flow.svg" alt="图 52-11　Lyapunov 分析七步流程" /><figcaption aria-hidden="true">图 52-11　Lyapunov 分析七步流程</figcaption>
+</figure>
+<p>七步依次是：确定平衡点并平移到原点、线性化并检查特征值、选二次型 <span class="math inline">V</span> 与正定 <span class="math inline">Q</span>、解 Lyapunov 方程、验证 <span class="math inline">V</span> 正定与 <span class="math inline">\dot V</span> 负定、判断结论是全局还是局部、写下结论与适用域。</p>
+<p>这个顺序不能颠倒。工程上最常见的失败不是算错，而是跳过第一步直接解方程，得到的 <span class="math inline">P</span> 对应的是“某个假想的原点”，与真实工作点差一个常值偏移，于是 <span class="math inline">\dot V</span> 里多出一阶项，符号判断整个作废。</p>
+<p>每一步都要留下可检查的产物，而不是只在脑子里过一遍：第一步留下平移后的方程，第二步留下特征值表，第三步留下 <span class="math inline">Q</span> 与理由，第四步留下 <span class="math inline">P</span> 与残差，第五步留下 <span class="math inline">\lambda(P)</span> 的最小值，第六步留下水平集上界 <span class="math inline">c</span>，第七步留下一句能写进报告的结论。有产物，别人才复核得了。</p>
+<h3 id="第一步确定平衡点并平移">52.3.2 第一步：确定平衡点并平移</h3>
+<p>定理要求 <span class="math inline">f(0)=0</span>。实际系统给出的平衡点往往不是原点：带负载转矩的电机，稳态电流不为零；带重力的竖直运动对象，稳态位置偏离几何中点；有常值扰动的回路，积分器输出停在一个非零值上。</p>
+<p>做法是先解 <span class="math inline">f(x_\star)=0</span>，再令 <span class="math inline">e=x-x_\star</span>，把方程写成 <span class="math inline">\dot e=\tilde f(e)</span>，此时 <span class="math inline">\tilde f(0)=0</span>。<span class="math inline">V</span> 与 <span class="math inline">Q</span> 都定义在 <span class="math inline">e</span> 上，而不是 <span class="math inline">x</span> 上。</p>
+<p>这一步在控制器里对应前馈项：把 <span class="math inline">x_\star</span> 算出来并叠加到控制量上，剩下的反馈只负责压 <span class="math inline">e</span>。第 42 章讨论稳态误差时，工作点偏移的处理与此完全一致——那里是让积分器承担平移，这里是让坐标变换承担平移。</p>
+<p>若平衡点随工况缓慢漂移，<span class="math inline">V</span> 的等值面也要跟着平移。此时更稳妥的写法是把 <span class="math inline">V</span> 写成 <span class="math inline">V(x-x_\star(t))</span>，并在 <span class="math inline">\dot V</span> 中保留 <span class="math inline">\dot x_\star</span> 项；否则会把“跟踪误差收敛”误判成“状态收敛”。</p>
+<h3 id="第二步线性化检查与分支判断">52.3.3 第二步：线性化检查与分支判断</h3>
+<p>在平移后的原点上求 Jacobian <span class="math inline">A=\partial\tilde f/\partial e</span>，算特征值，按实部符号分三支。</p>
+<p>第一支，全部实部为负。此时原点局部渐近稳定，且由逆定理，线性化方程的 <span class="math inline">P</span> 一定存在且正定，可以作为局部的 Lyapunov 函数。对本章的质量-弹簧-阻尼对象（<span class="math inline">k=4</span>、<span class="math inline">c=0.4</span>、<span class="math inline">m=1</span>），极点是 <span class="math inline">-0.2\pm1.989975\mathrm{j}</span>，实部离虚轴只有 <span class="math inline">0.2</span>，属于“稳定但不算宽裕”。</p>
+<p>第二支，存在实部为正的特征值。原点不稳定，二次型路线到此为止。此时要么改控制器（第 54 章的状态反馈），要么分析别的平衡点。</p>
+<p>第三支，实部恰好为零。这是最容易被误判的一支，线性化给不出结论，而且 Lyapunov 方程本身会奇异。取一个无阻尼振子，极点为 <span class="math inline">\pm1\mathrm{j}</span>，脚本解出的 <span class="math inline">P</span> 元素达到 <span class="math inline">9.007\times10^{15}</span>，Lyapunov 算子的奇异值是 <span class="math inline">[2,2,0,0]</span>——两个零奇异值直接说明方程不可解。此时只能回到非线性方程，用 LaSalle 或构造非二次 <span class="math inline">V</span>，不能靠“把求解器容差调大”蒙混过去。</p>
+<h3 id="第三步选-q解方程验算残差">52.3.4 第三步：选 <span class="math inline">Q</span>、解方程、验算残差</h3>
+<p><span class="math inline">Q</span> 的选择没有唯一答案，但有一个合理的默认值：<span class="math inline">Q=I</span>。它对应的 <span class="math inline">\dot V=-\|e\|^{2}</span>，含义是“所有状态方向的误差同权”。脚本对这个对象算出收敛率界 <span class="math inline">\alpha=\lambda_{\min}(Q)/(2\lambda_{\max}(P))=0.079324</span>。</p>
+<p><span class="math inline">Q</span> 的整体缩放不影响结论。取 <span class="math inline">Q=0.01I</span>，解出的 <span class="math inline">P</span> 同比例缩小，<span class="math inline">\alpha</span> 仍是 <span class="math inline">0.079324</span>。所以不要指望“把 <span class="math inline">Q</span> 调大”能换来更紧的界，它只是把 <span class="math inline">V</span> 的数值放大。</p>
+<p>真正改变界的是 <span class="math inline">Q</span> 的方向权重。对同一个对象，取 <span class="math inline">Q=\mathrm{diag}(10,1)</span> 时 <span class="math inline">\alpha=0.027603</span>，取 <span class="math inline">Q=\mathrm{diag}(1,10)</span> 时 <span class="math inline">\alpha=0.009747</span>，都比各向同性的 <span class="math inline">0.079324</span> 小。原因是加权把 <span class="math inline">V</span> 的等值面拉长，最坏方向上的衰减被低估。这个例子说明：<strong>在没想清楚之前，<span class="math inline">Q=I</span> 往往给出最不保守的界</strong>；一旦按物理量纲加权，界会变松，需要重新评估。</p>
+<p>还有一个更隐蔽的坑：取 <span class="math inline">Q=C^{\mathsf T}C</span>（输出只有位置）时，<span class="math inline">\alpha=0</span>。方程仍可解、<span class="math inline">P</span> 仍正定，因为系统能观；但 <span class="math inline">\lambda_{\min}(Q)=0</span>，速率界退化为零。加上 <span class="math inline">10^{-3}I</span> 后 <span class="math inline">\alpha=0.000379</span>，仍然比 <span class="math inline">Q=I</span> 小两个数量级。看到 <span class="math inline">\alpha</span> 突然掉到零，先查 <span class="math inline">Q</span> 是不是半正定而非正定。</p>
+<p>解出 <span class="math inline">P</span> 之后必须验算残差，而不是看求解器有没有报错：</p>
+<p><span class="math display">
+r=\frac{\left\|A^{\mathsf T}P+PA+Q\right\|_{F}}{\left\|Q\right\|_{F}}
+\tag{52-16}
+</span></p>
+<p>本章算例的 <span class="math inline">r=1.783\times10^{-15}</span>，用 Kronecker 展开独立求解得到的 <span class="math inline">P</span> 与之相差 <span class="math inline">9.223\times10^{-16}</span>，两种解法互相印证。判据可以定得简单些：双精度下 <span class="math inline">r&lt;10^{-10}</span> 视为通过；超过这个量级，先怀疑 <span class="math inline">Q</span> 不对称、<span class="math inline">A</span> 接近临界，而不是怀疑数学推导。</p>
+<p>顺带记录两个条件数。<span class="math inline">P</span> 的条件数是 <span class="math inline">4.0426</span>，Lyapunov 算子的条件数是 <span class="math inline">32.0489</span>。后者约为前者的八倍，符合“算子条件数随维数平方增长”的经验。条件数大意味着 <span class="math inline">P</span> 对 <span class="math inline">A</span> 的微小误差敏感，报告里应当写出来，否则别人复现时会得到差别很大的 <span class="math inline">P</span>。</p>
+<h3 id="第四步验证正定性并写结论">52.3.5 第四步：验证正定性并写结论</h3>
+<p>先看 <span class="math inline">\lambda(P)</span>。本章算例的两个特征值是 <span class="math inline">1.559204</span> 与 <span class="math inline">6.303296</span>，都为正，<span class="math inline">V</span> 正定成立。若出现零或负特征值，不要急着判“系统不稳定”——先确认 <span class="math inline">Q</span> 是否真的正定、<span class="math inline">A</span> 是否真的稳定，因为数值误差可能把 <span class="math inline">10^{-16}</span> 量级的特征值变成负数。</p>
+<p>再判断结论的适用范围。二次型 <span class="math inline">V=e^{\mathsf T}Pe</span> 天然径向无界，所以限制只可能来自 <span class="math inline">\dot V</span> 的符号：线性系统里 <span class="math inline">\dot V=-e^{\mathsf T}Qe</span> 全局成立，结论就是全局指数稳定；非线性系统里 <span class="math inline">\dot V&lt;0</span> 通常只在某个水平集内成立，结论只能是局部的，并且必须给出这个水平集的上界。</p>
+<p>单摆就是后一种。<span class="math inline">\dot V=-0.3x_2^{2}\le0</span>，靠 LaSalle 补上渐近性，而水平集不能碰到 <span class="math inline">x_1=\pm\pi</span>，于是 <span class="math inline">c&lt;2g/l=19.62</span>。脚本按 <span class="math inline">0.01</span> 步长取到 <span class="math inline">c=19.61</span>，这是一个可以直接写进报告的适用域。</p>
+<p>结论建议写成三句话，缺一句都算没写完：</p>
+<p>第一句交代平衡点与坐标，例如“在 <span class="math inline">\theta=0</span>、以 <span class="math inline">(\theta,\dot\theta)</span> 为状态、平衡点已平移到原点”。</p>
+<p>第二句交代稳定性等级与依据，例如“原点局部渐近稳定；取 <span class="math inline">Q=I</span> 解得 <span class="math inline">P</span>，残差 <span class="math inline">1.8\times10^{-15}</span>，<span class="math inline">\dot V=-x_2^{2}\cdot0.3\le0</span>，由 LaSalle 不变原理得渐近性”。</p>
+<p>第三句交代适用域，例如“结论在 <span class="math inline">V\le19.61</span> 内成立，超出后摆可能越顶”。</p>
+<h3 id="不通过时怎么办">52.3.6 不通过时怎么办</h3>
+<p>七步里任何一步都可能卡住。表 52-1 把常见症状、原因与处理列在一起，按“先查便宜的、再查昂贵的”排序。</p>
+<table>
+<thead>
+<tr class="header">
+<th>症状</th>
+<th>原因</th>
+<th>处理</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><span class="math inline">P</span> 有非正特征值</td>
+<td><span class="math inline">A</span> 不稳定，或 <span class="math inline">Q</span> 非正定</td>
+<td>回第二步查特征值；确认 <span class="math inline">Q</span> 对称正定</td>
+</tr>
+<tr class="even">
+<td>残差 <span class="math inline">r&gt;10^{-10}</span></td>
+<td>方程接近奇异，或 <span class="math inline">A</span> 有实部近零的极点</td>
+<td>查 <span class="math inline">\min|\mathrm{Re}\,\lambda|</span>；改用高精度或解析解</td>
+</tr>
+<tr class="odd">
+<td><span class="math inline">\mathrm{cond}(P)</span> 随参数线性膨胀</td>
+<td>参数贴近稳定边界</td>
+<td>报告条件数；结论标注“对该参数敏感”</td>
+</tr>
+<tr class="even">
+<td><span class="math inline">\alpha</span> 远小于实测衰减率</td>
+<td>二次型与真实不变集形状不匹配</td>
+<td>界本身合法，可接受；需更紧则换 <span class="math inline">Q</span> 或换 <span class="math inline">V</span></td>
+</tr>
+<tr class="odd">
+<td>任意半径上都有 <span class="math inline">\dot V&gt;0</span>，但仿真收敛</td>
+<td>二次型不适配</td>
+<td>换非二次 <span class="math inline">V</span>（§52.9），不要用仿真替代证明</td>
+</tr>
+<tr class="even">
+<td>线性化极点在虚轴上</td>
+<td>临界情形，方程奇异</td>
+<td>放弃二次型，直接做非线性分析</td>
+</tr>
+</tbody>
+</table>
+<p>表中第三行需要展开。脚本取扰动 <span class="math inline">\epsilon</span> 从 <span class="math inline">10^{-1}</span> 降到 <span class="math inline">10^{-4}</span>，<span class="math inline">P</span> 的元素从 <span class="math inline">5</span> 涨到 <span class="math inline">5000</span>，<span class="math inline">\mathrm{cond}(P)</span> 与 <span class="math inline">\mathrm{cond}(L)</span> 都从 <span class="math inline">10</span> 涨到 <span class="math inline">10^{4}</span>，而残差始终是零。<strong>残差为零不代表结论可靠</strong>，它只说明方程解对了；结论的可信度由条件数决定。这是数值线性代数里“后向稳定不等于前向准确”的经典区别，在 Lyapunov 分析里尤其容易踩。</p>
+<p>表中第五行对应 §52.2.5 的三次项反例：三个半径上 <span class="math inline">\max\dot V</span> 分别是 <span class="math inline">+1.98\times10^{-4}</span>、<span class="math inline">+0.0216</span>、<span class="math inline">+0.1363</span>，二次型给不出任何证书，但轨迹确实收敛。这时正确的做法是承认“二次型失败”，然后换函数，而不是把仿真曲线当成证明。</p>
+<p>最后一条经验：不要用仿真的收敛去反推稳定性。仿真是有限时间、有限初值、有限精度的抽样，它只能证伪，不能证明。Lyapunov 分析的价值恰恰在于它给出的是对所有初值（或明确划定的初值集合）都成立的结论。</p>
+<h3 id="把七步走到纸上">52.3.7 把七步走到纸上</h3>
+<p>流程讲完，走一遍完整算例。对象仍是 <span class="math inline">k=4</span>、<span class="math inline">c=0.4</span>、<span class="math inline">m=1</span> 的质量-弹簧-阻尼系统，目标是给出一份可以直接贴进报告的结论。</p>
+<p>第一步，写方程。<span class="math inline">\ddot x+0.4\dot x+4x=0</span>，平衡点在 <span class="math inline">x=0</span>、<span class="math inline">\dot x=0</span>，已经是原点，不需要平移。这一步的产物是状态方程，见 §52.4.1 的式 (52-17)。</p>
+<p>第二步，线性化。系统本来就是线性的，<span class="math inline">A</span> 就是状态方程的系数矩阵。特征方程 <span class="math inline">s^{2}+0.4s+4=0</span>，两个根 <span class="math inline">-0.2\pm1.989975\mathrm{j}</span>，实部为负，属于“局部渐近稳定”那一支，可以进入第三步。产物是一行特征值。</p>
+<p>第三步，选 <span class="math inline">Q</span>。取 <span class="math inline">Q=I</span>，理由是两个状态的量纲接近（位移与速度都是国际单位），不需要额外加权。产物是一句“<span class="math inline">Q=I</span>，量纲相当”。</p>
+<p>第四步，解方程。把 <span class="math inline">A</span> 与 <span class="math inline">Q</span> 代入，得到 <span class="math inline">P=\begin{bmatrix}6.3&amp;0.125\\0.125&amp;1.5625\end{bmatrix}</span>，残差 <span class="math inline">1.783\times10^{-15}</span>，与 Kronecker 解法的差 <span class="math inline">9.223\times10^{-16}</span>。产物是 <span class="math inline">P</span> 与两个残差。</p>
+<p>第五步，验证正定。<span class="math inline">\lambda(P)=1.559204</span> 与 <span class="math inline">6.303296</span>，都大于零，<span class="math inline">V</span> 正定。<span class="math inline">\mathrm{cond}(P)=4.0426</span>，属于健康范围。产物是两个特征值与条件数。</p>
+<p>第六步，判断范围。线性系统里 <span class="math inline">\dot V=-x^{\mathsf T}x</span> 对一切 <span class="math inline">x</span> 成立，<span class="math inline">V</span> 又径向无界，所以结论是全局的，不需要给水平集上界。产物是一句“全局成立”。</p>
+<p>第七步，写结论。三句话：平衡点在原点，状态取位移与速度；原点全局指数稳定，取 <span class="math inline">Q=I</span> 解得 <span class="math inline">P</span>，<span class="math inline">\dot V=-\|x\|^{2}</span>，衰减率不小于 <span class="math inline">\alpha=\lambda_{\min}(Q)/(2\lambda_{\max}(P))=0.079324</span>；结论对全部初值成立，界相对实测保守 <span class="math inline">2.52</span> 倍。</p>
+<p>这七步在纸上不超过一页，计算量只有一次二阶方程求解。换成三阶、五阶，步骤完全一样，只是解方程要用工具。<strong>流程的价值在于它把“我算了一下，应该稳定”变成“每一步都有产物，别人可以逐条复核”。</strong></p>
+<p>再走一遍非线性版本，看看差别在哪。对象换成单摆，第一步要确认平衡点 <span class="math inline">(0,0)</span>；第二步线性化得到极点 <span class="math inline">-0.15\pm3.13\mathrm{j}</span>，实部为负；第三步不能用 Lyapunov 方程，改用物理能量 <span class="math inline">V=\tfrac12x_2^{2}+9.81(1-\cos x_1)</span>；第四步没有方程可解，直接求导得 <span class="math inline">\dot V=-0.3x_2^{2}</span>；第五步验证 <span class="math inline">V</span> 在 <span class="math inline">|x_1|&lt;\pi</span> 内正定；第六步发现 <span class="math inline">\dot V</span> 只是半负定，需要 LaSalle，且水平集不能碰 <span class="math inline">\pm\pi</span>，于是 <span class="math inline">c&lt;19.62</span>；第七步的结论必须带适用域，“<span class="math inline">V\le19.61</span> 内渐近稳定”。</p>
+<p>两相对照，前两步一样，第三到第五步的方法完全不同，第六步的差别最大：线性情形不需要讨论水平集，非线性情形不讨论水平集就等于没做完。这也解释了为什么本章要把 §52.2 的定理前提写得那么细——到了第六步，前提就是结论的一部分。</p>
+<h3 id="复核者会问的五个问题">52.3.8 复核者会问的五个问题</h3>
+<p>一份 Lyapunov 分析交上去，复核者通常会按顺序问五个问题。提前准备好答案，比事后补算省事得多。</p>
+<p>第一个问题：“平衡点是什么，为什么要平移到原点？”答案要具体到坐标与工况，不能只说“原点”。带负载的电机，稳态电流不是零；带重力的升降机构，稳态位置不在几何中点。回答时给出 <span class="math inline">x_\star</span> 的表达式，并说明平移后 <span class="math inline">f(0)=0</span> 是怎么验证的。</p>
+<p>第二个问题：“<span class="math inline">Q</span> 为什么这么选？”最差的回答是“惯例”。好的回答是“两个状态量纲相当，取 <span class="math inline">I</span>；若按物理量加权，<span class="math inline">\alpha</span> 会从 <span class="math inline">0.079324</span> 降到 <span class="math inline">0.027603</span>，界更松”。这个回答同时说明了选择理由与代价。</p>
+<p>第三个问题：“残差多少，怎么验证解对了？”答案要给出残差的定义式与数值，最好再给出交叉验证的结果。只说“求解器没报错”是不合格的，因为 §52.10.2 那个转置错误就不会报错。</p>
+<p>第四个问题：“结论是全局还是局部？局部的话边界在哪？”线性系统可以直接说全局；非线性系统必须给出 <span class="math inline">c</span> 的值与它的来源。若说不出 <span class="math inline">c</span>，说明水平集分析没做。</p>
+<p>第五个问题：“条件数多少？参数变化会不会翻转结论？”这一问针对鲁棒性。<span class="math inline">\mathrm{cond}(P)=4.0426</span> 说明结论稳健；若条件数是 <span class="math inline">10^{6}</span>，就要补一段敏感性分析，说明在什么参数范围内结论仍然成立。</p>
+<p>五个问题对应本章的五个关键动作：平移、选 <span class="math inline">Q</span>、验残差、定范围、报条件数。把这五件事写进一页纸，评审基本不会再追问。反过来，任何一件缺失，都会被要求补充——而且往往是在项目节点前一周。</p>
+<h2 id="连续情形">52.4 连续情形</h2>
+<h3 id="算例对象">52.4.1 算例对象</h3>
+<p>用同一个单自由度对象贯穿全章：质量 <span class="math inline">m=1</span> kg、刚度 <span class="math inline">k=4</span> N/m、阻尼 <span class="math inline">c=0.4</span> N·s/m，位移记 <span class="math inline">x_1</span>、速度记 <span class="math inline">x_2</span>。状态方程是</p>
+<p><span class="math display">
+\dot x=\begin{bmatrix}0&amp;1\\-4&amp;-0.4\end{bmatrix}x
+\tag{52-17}
+</span></p>
+<p>无阻尼时固有频率是 <span class="math inline">\omega_n=\sqrt{k/m}=2</span> rad/s，阻尼比 <span class="math inline">\zeta=c/(2\sqrt{km})=0.1</span>，属于欠阻尼。极点是 <span class="math inline">-0.2\pm1.989975\mathrm{j}</span>，实部 <span class="math inline">-0.2</span> 对应时间常数 <span class="math inline">5</span> s，也就是包络衰减到 <span class="math inline">e^{-1}</span> 要 <span class="math inline">5</span> s。</p>
+<p>选这个对象有两个理由。它的极点可以解析写出，任何数值结果都能用手算核对；它的阻尼可以在 <span class="math inline">0</span> 到 <span class="math inline">8</span> 之间连续调，能一次看到“临界—欠阻尼—临界阻尼—过阻尼”四种情形，而 Lyapunov 方程的可解性、条件数、收敛率界在这四种情形里的表现差别很大。</p>
+<h3 id="阻尼变化时的极点族">52.4.2 阻尼变化时的极点族</h3>
+<p>把 <span class="math inline">c</span> 依次取 <span class="math inline">0</span>、<span class="math inline">0.4</span>、<span class="math inline">2</span>、<span class="math inline">4</span>、<span class="math inline">8</span>，得到表 52-2。阻尼比依次是 <span class="math inline">0</span>、<span class="math inline">0.1</span>、<span class="math inline">0.5</span>、<span class="math inline">1</span>、<span class="math inline">2</span>。</p>
+<table>
+<thead>
+<tr class="header">
+<th>阻尼 <span class="math inline">c</span></th>
+<th>阻尼比 <span class="math inline">\zeta</span></th>
+<th>极点</th>
+<th>Lyapunov 方程</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><span class="math inline">0</span></td>
+<td><span class="math inline">0</span></td>
+<td><span class="math inline">\pm2\mathrm{j}</span></td>
+<td>奇异，<span class="math inline">P</span> 发散</td>
+</tr>
+<tr class="even">
+<td><span class="math inline">0.4</span></td>
+<td><span class="math inline">0.1</span></td>
+<td><span class="math inline">-0.2\pm1.989975\mathrm{j}</span></td>
+<td>可解，<span class="math inline">\mathrm{cond}(P)=4.0426</span></td>
+</tr>
+<tr class="odd">
+<td><span class="math inline">2</span></td>
+<td><span class="math inline">0.5</span></td>
+<td><span class="math inline">-1\pm1.732051\mathrm{j}</span></td>
+<td>可解，条件数变小</td>
+</tr>
+<tr class="even">
+<td><span class="math inline">4</span></td>
+<td><span class="math inline">1</span></td>
+<td><span class="math inline">-2,\,-2</span></td>
+<td>可解，<span class="math inline">A</span> 不可对角化</td>
+</tr>
+<tr class="odd">
+<td><span class="math inline">8</span></td>
+<td><span class="math inline">2</span></td>
+<td><span class="math inline">-0.535898,\,-7.464102</span></td>
+<td>可解，条件数显著变大</td>
+</tr>
+</tbody>
+</table>
+<p>表 52-2 里有两行值得单独说。</p>
+<p>第一行，<span class="math inline">c=0</span>。极点在虚轴上，Lyapunov 算子有两个零奇异值，方程不可解。脚本给出的 <span class="math inline">P</span> 元素量级是 <span class="math inline">10^{15}</span>，这不是“解很大”，而是“没有解，求解器在数值上勉强除了一个接近零的数”。判据不能看解是否存在，要看残差与奇异值。</p>
+<p>第四行，<span class="math inline">c=4</span>。极点是二重根 <span class="math inline">-2</span>，<span class="math inline">A</span> 只有一个线性无关的特征向量，不可对角化。很多人以为“重根会让方程出问题”，其实不会：只要实部严格为负，<span class="math inline">P</span> 就存在且唯一。不可对角化影响的是 <span class="math inline">e^{At}</span> 里出现 <span class="math inline">te^{-2t}</span> 项，飞升时间稍长，但不影响 Lyapunov 方程的可解性。</p>
+<p>最后一行，<span class="math inline">c=8</span>。过阻尼把两个极点拉到 <span class="math inline">-0.536</span> 与 <span class="math inline">-7.464</span>，最慢的模态反而比 <span class="math inline">c=0.4</span> 时更慢（<span class="math inline">0.536&lt;2</span>）。这提醒一件事：<strong>加大阻尼不一定加快收敛</strong>，临界阻尼附近才是响应最快的地方。Lyapunov 分析能直接看到这一点，因为 <span class="math inline">\alpha</span> 只由最慢的极点决定。</p>
+<p>图 52-3 把 <span class="math inline">c</span> 从 <span class="math inline">0</span> 连续扫到 <span class="math inline">8</span>，画出两个极点的轨迹。轨迹从虚轴上的 <span class="math inline">\pm2\mathrm{j}</span> 出发，沿左半平面画一个半圆，在 <span class="math inline">c=4</span> 处汇合于 <span class="math inline">-2</span>，之后一个向左快跑、一个向右慢挪。</p>
+<figure>
+<img src="figs/ch052/fig_052_03_poles.svg" alt="图 52-3　极点随阻尼系数的移动轨迹" /><figcaption aria-hidden="true">图 52-3　极点随阻尼系数的移动轨迹</figcaption>
+</figure>
+<h3 id="解出-p-及其几何意义">52.4.3 解出 <span class="math inline">P</span> 及其几何意义</h3>
+<p>对 <span class="math inline">c=0.4</span> 这一组，取 <span class="math inline">Q=I</span>，解 <span class="math inline">A^{\mathsf T}P+PA=-Q</span> 得</p>
+<p><span class="math display">
+P=\begin{bmatrix}6.3&amp;0.125\\0.125&amp;1.5625\end{bmatrix}
+\tag{52-18}
+</span></p>
+<p>两个特征值是 <span class="math inline">1.559204</span> 与 <span class="math inline">6.303296</span>，都为正，条件数 <span class="math inline">4.0426</span>，残差 <span class="math inline">1.783\times10^{-15}</span>。</p>
+<p>这几个数各有用处。<span class="math inline">P_{11}=6.3</span> 远大于 <span class="math inline">P_{22}=1.5625</span>，说明位置误差在 <span class="math inline">V</span> 里的权重是速度误差的四倍——同样大小的偏差，位移更“贵”。这不是人为加的权重，而是由对象本身决定的：刚度 <span class="math inline">4</span> 意味着位置偏差会储存势能，速度偏差只储存动能，而阻尼又让动能很快耗掉。</p>
+<p>非对角元 <span class="math inline">0.125</span> 为正，说明等值面是向右上倾斜的椭圆。倾斜的量很小，<span class="math inline">0.125/\sqrt{6.3\times1.5625}\approx0.04</span>，肉眼看接近正椭圆。</p>
+<p>条件数 <span class="math inline">4.0426</span> 的平方根是 <span class="math inline">2.0106</span>，正好是等值面长轴与短轴之比。所以 <span class="math inline">\mathrm{cond}(P)</span> 有一个纯几何的解释：<strong>它衡量 <span class="math inline">V</span> 的等值椭圆的扁的程度</strong>。扁得越厉害，同一个 <span class="math inline">V</span> 值对应的状态范围在某个方向上越窄，界就越保守。</p>
+<p>图 52-1 把相图与三条等值线画在一起。轨迹从外侧螺旋进入原点，每条等值线都被轨迹由外向内穿过，没有一条被穿出——这就是 <span class="math inline">\dot V&lt;0</span> 的几何含义。</p>
+<figure>
+<img src="figs/ch052/fig_052_01_phase.svg" alt="图 52-1　相轨迹与二次型 Lyapunov 函数的等值线" /><figcaption aria-hidden="true">图 52-1　相轨迹与二次型 Lyapunov 函数的等值线</figcaption>
+</figure>
+<h3 id="lyapunov-算子的谱">52.4.4 Lyapunov 算子的谱</h3>
+<p>把方程 (52-4) 按列展开成向量形式，可以写成 <span class="math inline">L\,\mathrm{vec}(P)=-\mathrm{vec}(Q)</span>，其中 <span class="math inline">L=I\otimes A^{\mathsf T}+A^{\mathsf T}\otimes I</span>。这个 <span class="math inline">2n^2\times2n^2</span> 的矩阵把“解 Lyapunov 方程”变成“解一个线性方程组”，也把可解性变成一个谱的问题。</p>
+<p>对二阶系统，<span class="math inline">L</span> 的四个特征值恰好是 <span class="math inline">A</span> 的特征值两两之和：</p>
+<p><span class="math display">
+\lambda(L)=\{\lambda_i+\lambda_j,\;i,j=1,\dots,n\}
+\tag{52-19}
+</span></p>
+<p>代入 <span class="math inline">-0.2\pm1.989975\mathrm{j}</span>，得到 <span class="math inline">-0.4</span>、<span class="math inline">-0.4</span>、<span class="math inline">-0.4+3.97995\mathrm{j}</span>、<span class="math inline">-0.4-3.97995\mathrm{j}</span>，与脚本输出的 <span class="math inline">-0.4\pm3.97995\mathrm{j}</span> 加两个 <span class="math inline">-0.4</span> 完全一致。</p>
+<p>式 (52-19) 一下把三件事串起来。第一，只要 <span class="math inline">A</span> 的极点全在左半平面，任意两个之和的实部就严格为负，<span class="math inline">L</span> 非奇异，方程有唯一解——这就是线性情形“稳定等价于 <span class="math inline">P</span> 存在”的代数原因。第二，极点越靠近虚轴，<span class="math inline">\lambda_i+\lambda_j</span> 的实部越接近零，<span class="math inline">L</span> 越接近奇异。第三，<span class="math inline">L</span> 的条件数由最靠近零的那个特征值决定，量级约为 <span class="math inline">1/(2\min|\mathrm{Re}\,\lambda|)</span>。</p>
+<p>本章算例的 <span class="math inline">\mathrm{cond}(L)=32.0489</span>，与 <span class="math inline">P</span> 的条件数 <span class="math inline">4.0426</span> 相差约八倍。图 52-4 把两条条件数曲线画在同一张图上，横轴是阻尼系数。两条曲线在 <span class="math inline">c\to0</span> 时都急剧上升，在临界阻尼附近取到最小值，过阻尼后又缓慢抬升。它们的形状几乎平行，说明“<span class="math inline">P</span> 病态”与“算子病态”是同一件事的两种度量。</p>
+<figure>
+<img src="figs/ch052/fig_052_04_cond.svg" alt="图 52-4　二次型矩阵与 Lyapunov 算子的条件数随阻尼变化" /><figcaption aria-hidden="true">图 52-4　二次型矩阵与 Lyapunov 算子的条件数随阻尼变化</figcaption>
+</figure>
+<h3 id="连续情形的三条结论">52.4.5 连续情形的三条结论</h3>
+<p>把这一节收成三条，后面几节都会用到。</p>
+<p><strong>第一，线性情形没有保守性。</strong> 极点全在左半平面，<span class="math inline">P</span> 就存在；有一个极点在右半平面或虚轴上，<span class="math inline">P</span> 就不存在（虚轴上时方程奇异）。所以对线性系统，“找不到 Lyapunov 函数”与“不稳定”是同一句话。这条等价性只对线性系统成立，§52.2.5 的三次项反例说明非线性系统没有这个待遇。</p>
+<p><strong>第二，条件数比解本身更值得报告。</strong> 残差 <span class="math inline">10^{-15}</span> 只说明方程解对了，不说明结论稳健。<span class="math inline">\mathrm{cond}(P)=4.04</span> 是一个健康的数；§52.3.6 里扰动降到 <span class="math inline">10^{-4}</span> 时条件数涨到 <span class="math inline">10^{4}</span>，同样的求解器、同样的残差，结论的可信度已经差了几个数量级。</p>
+<p><strong>第三，收敛快慢由最慢极点决定，而界由 <span class="math inline">P</span> 与 <span class="math inline">Q</span> 共同决定。</strong> 这个对象的真实最慢模态衰减率是 <span class="math inline">0.2</span>，<span class="math inline">Q=I</span> 给出的界是 <span class="math inline">0.079324</span>，保守了 <span class="math inline">2.52</span> 倍。保守从哪来、能不能收紧，是 §52.6 的主题。</p>
+<h3 id="二阶情形的闭式解">52.4.6 二阶情形的闭式解</h3>
+<p>二阶系统的 Lyapunov 方程可以手算，结果值得记住，因为它是所有数值结果的对照。</p>
+<p>设 <span class="math inline">A=\begin{bmatrix}0&amp;1\\-k&amp;-c\end{bmatrix}</span>、<span class="math inline">P=\begin{bmatrix}p&amp;q\\q&amp;r\end{bmatrix}</span>、<span class="math inline">Q=I</span>。把 <span class="math inline">A^{\mathsf T}P+PA</span> 逐项展开，得到三个方程：</p>
+<p><span class="math display">
+-2kq=-1,\qquad p-cq-kr=0,\qquad 2q-2cr=-1
+\tag{52-20}
+</span></p>
+<p>第一个方程只含 <span class="math inline">q</span>，直接解出 <span class="math inline">q=1/(2k)</span>。第三个方程解出 <span class="math inline">r=(1+1/k)/(2c)</span>。第二个方程解出 <span class="math inline">p=cq+kr</span>，合并后是</p>
+<p><span class="math display">
+p=\frac{c}{2k}+\frac{k+1}{2c},\qquad q=\frac{1}{2k},\qquad r=\frac{k+1}{2kc}
+\tag{52-21}
+</span></p>
+<p>代入 <span class="math inline">k=4</span>、<span class="math inline">c=0.4</span>：<span class="math inline">q=0.125</span>、<span class="math inline">r=1.5625</span>、<span class="math inline">p=6.3</span>，与数值解逐位相同。手算五分钟就能核对工具，这是二阶情形值得单独列出来的原因。</p>
+<p>这组闭式解还能解释三件事。</p>
+<p>第一，<span class="math inline">q</span> 只与 <span class="math inline">k</span> 有关，与 <span class="math inline">c</span> 无关。非对角元反映的是“位置与速度的几何耦合”，由刚度决定；阻尼只改变等值面的胖瘦，不改变倾斜方向。本章 <span class="math inline">q=0.125</span> 是一个很小的正数，说明倾斜很轻。</p>
+<p>第二，<span class="math inline">p/r=k+c^{2}/(k+1)\approx k</span>。本章这个比值是 <span class="math inline">4.032</span>，几乎就是刚度 <span class="math inline">4</span>。所以“位置项权重是速度项的四倍”不是巧合，它就是刚度在数值上的投影。刚度越大，同样的位移偏差越“贵”。</p>
+<p>第三，<span class="math inline">p</span> 与 <span class="math inline">r</span> 都含 <span class="math inline">1/c</span> 因子。<span class="math inline">c\to0</span> 时它们同时发散，这正是 §52.4.2 里 <span class="math inline">c=0</span> 时方程奇异的解析解释。数值上表现为 <span class="math inline">P</span> 的元素涨到 <span class="math inline">10^{15}</span>，解析上就是分母趋零。</p>
+<p>更进一步，<span class="math inline">\lambda_{\max}(P)</span> 约等于 <span class="math inline">p</span>（因为 <span class="math inline">p\gg r</span>），于是</p>
+<p><span class="math display">
+\alpha=\frac{1}{2\lambda_{\max}(P)}\approx\frac{c}{k+1}
+\tag{52-22}
+</span></p>
+<p>本章 <span class="math inline">\alpha\approx0.4/5=0.08</span>，与脚本的 <span class="math inline">0.079324</span> 只差 <span class="math inline">0.8\%</span>。这个近似式给出一个很有用的判断：<strong>收敛率界与阻尼近似成正比，与“刚度加一”近似成反比</strong>。它解释了为什么增大阻尼能改善界，也解释了为什么在同样阻尼下提高刚度会让界变松。</p>
+<h3 id="与能控能观-gramian-的关系">52.4.7 与能控、能观 Gramian 的关系</h3>
+<p>第 51 章用能控 Gramian 衡量“把状态推过去有多难”，它满足</p>
+<p><span class="math display">
+AW_c+W_cA^{\mathsf T}+BB^{\mathsf T}=0
+\tag{52-23}
+</span></p>
+<p>把 <span class="math inline">Q</span> 取成 <span class="math inline">BB^{\mathsf T}</span>，本章的方程写成 <span class="math inline">A^{\mathsf T}P+PA=-BB^{\mathsf T}</span>。两个方程长得不同，但解是同一个矩阵：<span class="math inline">W_c</span> 对称，而对称矩阵的 <span class="math inline">AW+WA^{\mathsf T}</span> 与 <span class="math inline">A^{\mathsf T}W+WA</span> 在 <span class="math inline">(A,B)</span> 与其转置系统之间互换，转置系统的 Gramian 与原系统相同。于是 <span class="math inline">P=W_c</span>。</p>
+<p>同理，取 <span class="math inline">Q=C^{\mathsf T}C</span>，解出的 <span class="math inline">P</span> 就是能观 Gramian <span class="math inline">W_o</span>。</p>
+<p>这条联系有两个用处。第一，它说明第 51 章的 Gramian 不是另一个工具，而是 Lyapunov 方程的两个特例；第 51 章讲的“最小能量”“弱能观方向”，都可以翻译成“<span class="math inline">P</span> 的某个特征方向”。第二，它给出了 <span class="math inline">Q</span> 的一个有物理含义的选法：<span class="math inline">Q=BB^{\mathsf T}</span> 对应“按输入通道加权”，<span class="math inline">Q=C^{\mathsf T}C</span> 对应“按输出通道加权”。前者在最优控制里自然出现，后者在观测器设计里自然出现。</p>
+<p>但它也带来 §52.7.2 提到的陷阱：<span class="math inline">BB^{\mathsf T}</span> 与 <span class="math inline">C^{\mathsf T}C</span> 都是半正定的，只要输入或输出维数小于状态维数，<span class="math inline">\lambda_{\min}(Q)</span> 就是零，速率界退化为零。Gramian 本身仍然正定（只要系统能控或能观），所以“<span class="math inline">P</span> 正定”与“<span class="math inline">\alpha&gt;0</span>”是两件事，不能混为一谈。</p>
+<h3 id="与极点配置的对照">52.4.8 与极点配置的对照</h3>
+<p>同一个稳定性结论有两条推导路线：极点配置从特征值出发，Lyapunov 从二次型出发。把两条路线并排看，能看清各自的边界。</p>
+<p>极点路线的逻辑是：<span class="math inline">A</span> 的特征值决定 <span class="math inline">e^{At}</span> 的每一个模态，模态全衰减则系统稳定。它给出的是<strong>精确</strong>的稳定性判断，而且能算出每个模态的时间常数与振荡频率。缺点是无法处理非线性，也无法处理参数不确定——极点稍微一动，结论就变了。</p>
+<p>Lyapunov 路线的逻辑是：找到一个沿轨迹单调下降的函数，下降到底就是平衡点。它给出的是<strong>充分</strong>判断，而且在二次型情形下会自动带出一个收敛率界。优点是能处理非线性、能处理不确定（只要 <span class="math inline">P</span> 对所有可能的 <span class="math inline">A</span> 都成立），缺点是保守。</p>
+<p>两条路线在一点上交汇：对线性系统，<span class="math inline">A</span> 稳定等价于 Lyapunov 方程有正定解。这条等价意味着“极点全在左半平面”与“存在二次型 Lyapunov 函数”是同一件事的两种说法。交汇点之外，两条路线各走各的——极点路线能给出精确的模态分解，Lyapunov 路线能给出去掉线性假设的证明。</p>
+<p>实际工作中最好的用法是两条都走一遍。先用极点判断“稳不稳、多快、振不振”，再用 Lyapunov 给出一个可以写进证明的界。两个结论不一致时，通常是 <span class="math inline">Q</span> 选得不好或 <span class="math inline">P</span> 求解有误，而不是理论有问题。</p>
+<p>以本章 <span class="math inline">c=4</span> 的情形为例。极点是二重根 <span class="math inline">-2</span>，<span class="math inline">A</span> 不可对角化，<span class="math inline">e^{At}</span> 里出现 <span class="math inline">te^{-2t}</span> 项。极点路线会提醒你“这里有一个多项式因子，响应不是纯指数”；Lyapunov 路线给出的界仍然是纯指数 <span class="math inline">e^{-\alpha t}</span>，因为界只要求“存在某个指数上界”，多项式因子被吸收进常数里。两者都没错，但极点路线描述得更细。</p>
+<h3 id="状态变换对-p-的影响">52.4.9 状态变换对 <span class="math inline">P</span> 的影响</h3>
+<p>同一个系统，换一组状态坐标，<span class="math inline">P</span> 会变，条件数也会变。这条性质在工程上很重要，因为“选什么单位”本质上就是选坐标。</p>
+<p>设 <span class="math inline">x=Tz</span>，<span class="math inline">T</span> 可逆。把 <span class="math inline">V=x^{\mathsf T}Px</span> 改写成 <span class="math inline">z</span> 的函数，得到 <span class="math inline">V=z^{\mathsf T}(T^{\mathsf T}PT)z</span>，所以新坐标下的矩阵是 <span class="math inline">P_z=T^{\mathsf T}PT</span>。</p>
+<p>这个式子解释了 §52.8.2 为什么强调量纲归一化。若位移以毫米计、速度以米每秒计，<span class="math inline">T=\mathrm{diag}(10^{-3},1)</span>，<span class="math inline">P_z</span> 的第一个对角元会被放大 <span class="math inline">10^{6}</span> 倍，条件数随之恶化。而稳定性结论本身完全不变——<span class="math inline">P_z</span> 仍然正定，<span class="math inline">\dot V</span> 仍然负定。变差的只是数值表示。</p>
+<p>反过来说，选一个合适的 <span class="math inline">T</span> 可以改善条件数。常用的做法是把每个状态除以它的最大预期值，使所有状态都在 <span class="math inline">[-1,1]</span> 量级。这一步不需要任何理论，只需要知道工况范围。</p>
+<p>有一个细节容易忽略：<span class="math inline">P</span> 的特征向量与 <span class="math inline">A</span> 的特征向量一般不重合。<span class="math inline">A</span> 的特征向量描述“模态方向”，<span class="math inline">P</span> 的特征向量描述“等值面的主轴方向”，两者只有在特殊情况下才一致。本章算例里 <span class="math inline">P</span> 的非对角元很小，主轴接近坐标轴，而 <span class="math inline">A</span> 的特征向量是复的，方向随阻尼变化。所以不要用“<span class="math inline">P</span> 的主轴”去解释“模态”，那是两套几何。</p>
+<h3 id="频域里的同一个对象">52.4.10 频域里的同一个对象</h3>
+<p>Lyapunov 方程常被当作纯时域工具，其实它与频域有直接的对应，看清这层对应能避免一类误用。</p>
+<p>取 <span class="math inline">Q=C^{\mathsf T}C</span>，<span class="math inline">P</span> 的积分表示（§52.2.11）可以改写成频域积分：</p>
+<p><span class="math display">
+\mathrm{tr}\left(B^{\mathsf T}PB\right)=\frac{1}{2\pi}\int_{-\infty}^{\infty}\mathrm{tr}\left(G(\mathrm{j}\omega)^{\mathsf H}G(\mathrm{j}\omega)\right)\mathrm{d}\omega ,
+</span></p>
+<p>其中 <span class="math inline">G(s)=C(sI-A)^{-1}B</span>。左端是 <span class="math inline">H_2</span> 范数的平方，右端是频域上的能量积分。这就是 Parseval 关系在状态空间里的样子：<strong><span class="math inline">P</span> 的元素度量的是“输入到状态的累积能量”，而它在频域里对应曲线下的面积</strong>。</p>
+<p>这个对应解释了两件事。第一，为什么 <span class="math inline">Q=C^{\mathsf T}C</span> 会让 <span class="math inline">\alpha</span> 退化。此时 <span class="math inline">c_3=\lambda_{\min}(Q)=0</span>（若 <span class="math inline">C</span> 行满秩但列数少于状态数），式 (52-28) 的分母非零、分子为零，界给不出正的衰减率。物理含义是：<span class="math inline">H_2</span> 指标只约束“输出能量”，不约束“状态范数”，未被观测的方向可以慢慢漂。这不是公式失效，是指标本身不覆盖那个方向。</p>
+<p>第二，为什么弱阻尼系统的界特别松。二阶系统的幅频特性在共振峰附近有一个高而窄的尖峰，频域积分被这个尖峰主导，于是 <span class="math inline">P</span> 的元素被放大；而时域的真实衰减只由包络决定，与尖峰高度关系不大。两者之间的差距，就是 §52.6.2 说的“椭圆的各向异性”在频域里的表现。</p>
+<p>还有一个数值上的用处：算 <span class="math inline">H_2</span> 范数时，可以解 Lyapunov 方程再取迹，也可以直接做频域积分。两条路线的结果应当一致，这又是一次免费的交叉验证。对本章对象，<span class="math inline">P</span> 的特征值是 <span class="math inline">1.559204</span> 与 <span class="math inline">6.303296</span>，把 <span class="math inline">B</span>、<span class="math inline">C</span> 代进去就能得到对应的 <span class="math inline">H_2</span> 值；若两者不符，多半是 <span class="math inline">B</span>、<span class="math inline">C</span> 的定义与 <span class="math inline">A</span> 的状态顺序没对上。</p>
+<p>需要提醒的是，不要把“<span class="math inline">\alpha</span> 小”读成“频域性能差”。<span class="math inline">\alpha</span> 是由最坏方向决定的保守下界，频域指标是由能量平均决定的整体量。一个系统可以 <span class="math inline">H_2</span> 指标很好而 <span class="math inline">\alpha</span> 很小，也可以反过来。两者回答的是不同的问题，不能互相替代。</p>
+<h2 id="离散情形">52.5 离散情形</h2>
+<h3 id="从连续到离散极点怎么映射">52.5.1 从连续到离散：极点怎么映射</h3>
+<p>数字控制器按固定周期采样，零阶保持下连续对象变成 <span class="math inline">x_{k+1}=A_dx_k</span>，其中 <span class="math inline">A_d=e^{AT_s}</span>。极点的映射是 <span class="math inline">z=e^{\lambda T_s}</span>：左半平面映到单位圆内，虚轴映到单位圆上，右半平面映到单位圆外。稳定性判据从“实部为负”变成“模小于一”，本质是同一个条件换了坐标系。</p>
+<p>取 <span class="math inline">T_s=0.05</span> s，本章对象的连续极点 <span class="math inline">-0.2\pm1.989975\mathrm{j}</span> 映射为</p>
+<p><span class="math display">
+z=e^{-0.01}\angle\pm0.0994988=e^{-0.01}\left(\cos0.0995\pm\mathrm{j}\sin0.0995\right)
+\tag{52-24}
+</span></p>
+<p>模是 <span class="math inline">e^{-0.01}=0.99005</span>，相角 <span class="math inline">\pm5.70^{\circ}</span>。脚本核对的结果就是 <span class="math inline">|z|=0.99005</span>，与解析值一致到最后一位。</p>
+<p>这里有一个容易搞混的换算。连续域的衰减率是 <span class="math inline">0.2</span> 每秒，离散域每步衰减到 <span class="math inline">0.99005</span>，每步的对数衰减是 <span class="math inline">0.00995</span>，除以 <span class="math inline">T_s=0.05</span> 才回到 <span class="math inline">0.199</span>。<strong>讨论“收敛速度”时必须说清是每秒还是每步</strong>，否则两个数会差二十倍，正好是采样周期的倒数。</p>
+<h3 id="解离散-lyapunov-方程">52.5.2 解离散 Lyapunov 方程</h3>
+<p>取 <span class="math inline">Q=I</span>，解 <span class="math inline">A_d^{\mathsf T}PA_d-P=-Q</span>：</p>
+<p><span class="math display">
+P_d=\begin{bmatrix}126.499994&amp;2.512508\\2.512508&amp;31.753336\end{bmatrix}
+\tag{52-25}
+</span></p>
+<p>残差 <span class="math inline">3.689\times10^{-15}</span>，条件数 <span class="math inline">3.9943</span>，与连续域的 <span class="math inline">4.0426</span> 几乎相同——采样没有改变等值面的形状，只改变了它的尺度。</p>
+<p>尺度变了多少？<span class="math inline">P_{11}</span> 从 <span class="math inline">6.3</span> 变成 <span class="math inline">126.5</span>，正好是二十倍，也就是 <span class="math inline">1/T_s</span>。这不是巧合，可以从方程推出来。把 <span class="math inline">A_d\approx I+T_sA</span> 代入并只留一阶项：</p>
+<p><span class="math display">
+A_d^{\mathsf T}P_dA_d-P_d\approx T_s\left(A^{\mathsf T}P_d+P_dA\right)=-Q
+\tag{52-26}
+</span></p>
+<p>也就是 <span class="math inline">A^{\mathsf T}P_d+P_dA\approx-Q/T_s</span>。与连续方程相比，右端多除了一个 <span class="math inline">T_s</span>，所以 <span class="math inline">P_d\approx P/T_s</span>。物理上说得通：<span class="math inline">\Delta V</span> 是“每步”的下降量，而 <span class="math inline">\dot V</span> 是“每秒”的下降量，两者差一个采样周期。<strong>离散 Lyapunov 函数不是连续版本的替代品，它是连续版本乘上时间刻度。</strong></p>
+<p>这个 1/Ts 因子有一个直接后果：采样周期取得越小，<span class="math inline">P_d</span> 越大，离散方程的数值条件越差；但它同时让每步的 <span class="math inline">\Delta V</span> 越小，单步噪声的影响也越小。工程上 <span class="math inline">T_s</span> 的选择要在“条件数”与“单步扰动”之间折中，不能一味求小。</p>
+<h3 id="每步收缩比与它的界">52.5.3 每步收缩比与它的界</h3>
+<p>连续域的界是 <span class="math inline">\|x(t)\|\le\sqrt{c_2/c_1}\|x_0\|e^{-\alpha t}</span>，离散域对应的是几何序列：</p>
+<p><span class="math display">
+\|x_k\|\le\sqrt{c_2/c_1}\,\|x_0\|\,\alpha_d^{k},\qquad \alpha_d=\sqrt{1-\frac{c_3}{c_2}}
+\tag{52-27}
+</span></p>
+<p>其中 <span class="math inline">c_1=\lambda_{\min}(P_d)</span>、<span class="math inline">c_2=\lambda_{\max}(P_d)</span>、<span class="math inline">c_3=\lambda_{\min}(Q)</span>。对本章算例，<span class="math inline">\alpha_d=0.992099</span>。</p>
+<p>脚本同时记录了实测的每步收缩比均值：<span class="math inline">0.990175</span>。界 <span class="math inline">0.992099</span> 比实测大，说明界是保守的，这与连续域的结论一致。差别的原因也一样：<span class="math inline">c_2/c_1</span> 由 <span class="math inline">P_d</span> 的条件数决定，而 <span class="math inline">P_d</span> 的等值面是椭圆，最坏方向被椭圆的长短轴比放大了。</p>
+<p>图 52-7 左边是 <span class="math inline">T_s=0.05</span> 时的离散极点与单位圆，右边是 <span class="math inline">\sqrt{V(x_k)}</span> 的逐步下降曲线与式 (52-27) 给出的直线界。二者的斜率接近但不重合，界始终在上方。这种“贴着但不越过”的形态，是 Lyapunov 界在数值上的典型外观。</p>
+<figure>
+<img src="figs/ch052/fig_052_07_discrete.svg" alt="图 52-7　离散极点分布与 \sqrt{V} 的逐步收缩" /><figcaption aria-hidden="true">图 52-7　离散极点分布与 <span class="math inline">\sqrt{V}</span> 的逐步收缩</figcaption>
+</figure>
+<h3 id="采样周期的三处影响">52.5.4 采样周期的三处影响</h3>
+<p><strong>第一，稳定边界。</strong> 连续域的临界是实部为零，离散域的临界是模为一。<span class="math inline">T_s</span> 不改变“哪个系统稳定”，但改变“离边界多远”的度量：连续域的距离是 <span class="math inline">|\mathrm{Re}\,\lambda|</span>，离散域的距离是 <span class="math inline">1-|z|\approx|\mathrm{Re}\,\lambda|T_s</span>。同一个对象，采样越快，离散极点越贴近单位圆，数字上看“更危险”，实际上并没有变差。</p>
+<p><strong>第二，零阶保持引入的相位滞后。</strong> 上面的推导把 <span class="math inline">A_d=e^{AT_s}</span> 当成精确模型，但真实回路里采样与保持会带来约 <span class="math inline">T_s/2</span> 的等效延迟。<span class="math inline">T_s=0.05</span> s 时这个延迟是 <span class="math inline">25</span> ms，对一个时间常数 <span class="math inline">5</span> s 的对象可以忽略；对时间常数 <span class="math inline">50</span> ms 的快回路就不能忽略。第 51 章讨论采样对能控性的影响时，用的是同一套“快慢对比”逻辑。</p>
+<p><strong>第三，数值条件。</strong> 由 1/Ts 因子，<span class="math inline">T_s</span> 从 <span class="math inline">0.05</span> 降到 <span class="math inline">0.005</span>，<span class="math inline">P_d</span> 的元素放大十倍，条件数不变但绝对量级变大。求解器处理 <span class="math inline">10^{3}</span> 量级的矩阵没问题，处理 <span class="math inline">10^{8}</span> 量级就开始丢有效位。实践中若发现离散 Lyapunov 方程残差突然变差，先看 <span class="math inline">T_s</span> 是不是过小，而不是先怀疑模型。</p>
+<h3 id="离散情形最容易错的两点">52.5.5 离散情形最容易错的两点</h3>
+<p>第一，把连续域的 <span class="math inline">\alpha</span> 直接搬到离散域。连续域的 <span class="math inline">\alpha</span> 单位是 <span class="math inline">1/\mathrm{s}</span>，离散域的 <span class="math inline">\alpha_d</span> 是无量纲的每步因子，两者只能通过 <span class="math inline">e^{-\alpha T_s}</span> 相互换算。写成 <span class="math inline">\alpha_d=\alpha</span> 会让结论差二十倍。</p>
+<p>第二，用 <span class="math inline">\Delta V&lt;0</span> 代替 <span class="math inline">\Delta V\le-c_3\|x\|^{2}</span>。前者只给渐近稳定，后者才给指数收敛与明确的每步收缩比。数字实现里 <span class="math inline">\Delta V</span> 常常因为舍入在 <span class="math inline">10^{-16}</span> 量级抖动，若只有严格负号，很容易被一次舍入破坏；有了 <span class="math inline">-c_3\|x\|^{2}</span> 这个余量，判据才稳。</p>
+<h3 id="采样周期与极点位置的数值对照">52.5.6 采样周期与极点位置的数值对照</h3>
+<p>把 <span class="math inline">T_s</span> 依次取 <span class="math inline">0.01</span>、<span class="math inline">0.05</span>、<span class="math inline">0.1</span>、<span class="math inline">0.2</span>、<span class="math inline">0.5</span> s，连续极点 <span class="math inline">-0.2\pm1.989975\mathrm{j}</span> 映射到离散域的结果可以直接用 <span class="math inline">z=e^{\lambda T_s}</span> 算出。</p>
+<p><span class="math inline">T_s=0.01</span> 时，<span class="math inline">|z|=e^{-0.002}=0.998002</span>，相角 <span class="math inline">0.0199</span> rad，约 <span class="math inline">1.14^{\circ}</span>。<span class="math inline">T_s=0.05</span> 时，<span class="math inline">|z|=0.990050</span>，相角 <span class="math inline">5.70^{\circ}</span>。<span class="math inline">T_s=0.1</span> 时，<span class="math inline">|z|=0.980199</span>，相角 <span class="math inline">11.40^{\circ}</span>。<span class="math inline">T_s=0.2</span> 时，<span class="math inline">|z|=0.960789</span>，相角 <span class="math inline">22.80^{\circ}</span>。<span class="math inline">T_s=0.5</span> 时，<span class="math inline">|z|=0.904837</span>，相角 <span class="math inline">57.01^{\circ}</span>。</p>
+<p>五个数排在一起，规律很清楚：<span class="math inline">1-|z|</span> 依次是 <span class="math inline">0.0020</span>、<span class="math inline">0.00995</span>、<span class="math inline">0.0198</span>、<span class="math inline">0.0392</span>、<span class="math inline">0.0952</span>，与 <span class="math inline">T_s</span> 近似成正比；相角也近似与 <span class="math inline">T_s</span> 成正比。这就是 §52.5.4 说的“距离换了刻度”的定量版本：<span class="math inline">1-|z|\approx0.2T_s</span>。</p>
+<p>工程上选 <span class="math inline">T_s</span> 有三条经验。第一条，采样角频率至少是振荡角频率的十倍，本例 <span class="math inline">\omega=2</span>，取 <span class="math inline">T_s\le0.3</span> s 就够。第二条，<span class="math inline">T_s</span> 应当小于最慢时间常数的十分之一，本例时间常数 <span class="math inline">5</span> s，<span class="math inline">T_s\le0.5</span> s 就够。第三条，数字实现还要考虑计算延迟与通信抖动，通常再留一倍余量。三条合起来，本例取 <span class="math inline">0.05</span> s 是保守而合理的。</p>
+<p>要注意第一条与第二条给的是“能用”的门槛，不是“好”的标准。<span class="math inline">T_s</span> 太大，离散化误差与保持延迟都会侵蚀相位裕度；<span class="math inline">T_s</span> 太小，<span class="math inline">P_d</span> 的量级膨胀、计算负担上升。<span class="math inline">0.05</span> s 正好落在中间，这也是本章选它做算例的原因。</p>
+<h3 id="离散化方法的选择">52.5.7 离散化方法的选择</h3>
+<p>上面的推导默认零阶保持。实际工程里还有双线性（Tustin）、前向欧拉、后向欧拉等离散化方法，它们给出的 <span class="math inline">A_d</span> 不同，Lyapunov 分析的对象也不同。</p>
+<p>零阶保持的优点是极点映射精确，<span class="math inline">z=e^{\lambda T_s}</span> 严格成立，因此稳定性判断与连续域完全一致。缺点是它假设输入在一个周期内保持不变，对快速变化的输入有建模误差。</p>
+<p>Tustin 的优点是频率响应在低频段保真度高，常用于滤波器设计。它的极点映射是 <span class="math inline">z=(1+\lambda T_s/2)/(1-\lambda T_s/2)</span>，稳定系统仍映到单位圆内，但位置与零阶保持不同，<span class="math inline">P_d</span> 的数值也会有差别。</p>
+<p>前向欧拉的映射是 <span class="math inline">z=1+\lambda T_s</span>，它把左半平面映到以 <span class="math inline">1</span> 为圆心、半径为 <span class="math inline">|\lambda|T_s</span> 的圆内。当 <span class="math inline">|\lambda|T_s&gt;2</span> 时，这个圆会越过单位圆，<strong>原本稳定的连续系统会被离散成不稳定</strong>。这不是数值误差，是方法本身的限制。所以在做离散 Lyapunov 分析之前，必须先确认离散化方法与 <span class="math inline">T_s</span> 的组合没有破坏稳定性。</p>
+<p>后向欧拉把左半平面严格映到单位圆内，无条件稳定，但会引入额外的相位滞后，频率特性在高频段失真。</p>
+<p>实践中有一条简单原则：控制器实现的离散化方法与稳定性分析用的离散化方法必须一致。用零阶保持实现、用 Tustin 分析，得到的 <span class="math inline">P_d</span> 与真实运行的系统不对应，残差再小也没有意义。这条原则听起来简单，但跨团队协作时经常出错——控制算法组用一套工具，嵌入式组用另一套。</p>
+<h3 id="量化误差与执行延迟">52.5.8 量化误差与执行延迟</h3>
+<p>前面的分析假设状态是实数、执行是即时的。真实系统里，这两条都不成立，而它们对离散 Lyapunov 结论的影响方式完全不同。</p>
+<p>量化误差是一种“状态上的不确定”。编码器分辨率有限，读到的 <span class="math inline">x</span> 与真实的 <span class="math inline">x</span> 差一个 <span class="math inline">\pm q/2</span>，于是算出的 <span class="math inline">V</span> 有误差，用在反馈里则等效于在闭环中注入了一个有界扰动。Lyapunov 分析对此的结论是：<strong>只能得到最终有界，不能得到渐近收敛</strong>。因为当 <span class="math inline">\|x\|</span> 小到与 <span class="math inline">q</span> 同量级时，扰动项已经与收敛项相当，<span class="math inline">\Delta V</span> 不再恒为负。有界域的尺度大致是 <span class="math inline">q\|P_dB\|/\lambda_{\min}(Q_d)</span> 量级，这个式子说明两件事：分辨率越高，有界域越小；<span class="math inline">Q_d</span> 越大，有界域也越小。</p>
+<p>这解释了一个常见现象：仿真里曲线收敛到零，实测里总是停在某个小范围内抖动。不是控制器写错了，是仿真没有量化环节。做严格分析时，要么在模型里显式加上量化，要么在报告里注明“结论为最终有界，界由分辨率决定”。</p>
+<p>执行延迟是另一种性质的问题。控制器算出的力要等一个采样周期才生效，等效于在回路里串了一个纯延迟。对离散系统，一个周期的延迟相当于把输入矩阵换成 <span class="math inline">B_d</span> 的滞后版本，闭环矩阵从 <span class="math inline">A_d-B_dK</span> 变成带额外状态的形式。判断方法很直接：把延迟作为增广状态写进 <span class="math inline">A_d</span>，重新解 Lyapunov 方程，看 <span class="math inline">\lvert z\rvert_{\max}</span> 是否仍小于 <span class="math inline">1</span>。</p>
+<p>延迟对 <span class="math inline">\alpha_d</span> 的影响不是线性的。延迟接近一个采样周期时，相位损失迅速累积，<span class="math inline">\alpha_d</span> 可能从 <span class="math inline">0.992099</span> 掉到接近 <span class="math inline">1</span>，也就是几乎不收缩。这时候增加采样率比调 <span class="math inline">Q</span> 有用得多，因为延迟的相位损失正比于 <span class="math inline">\omega T_s</span>，而 <span class="math inline">T_s</span> 减半，损失也减半。</p>
+<h3 id="多速率采样">52.5.9 多速率采样</h3>
+<p>工程系统里常常不是所有信号都以同一频率采样。电流环跑 <span class="math inline">10</span> kHz，速度环跑 <span class="math inline">1</span> kHz，位置环跑 <span class="math inline">100</span> Hz，这是伺服驱动里的标准分层。用单一 <span class="math inline">T_s</span> 做 Lyapunov 分析，必须选一个“代表周期”，而这个选择会影响结论。</p>
+<p>保守的做法是按最慢的回路分析，把快速的内部回路当成瞬时完成。这样得到的 <span class="math inline">P_d</span> 对应最慢的采样，结论对三个回路都成立，代价是忽略了快回路带来的额外稳定裕度。</p>
+<p>精确的做法是建立切换系统模型：在慢周期内，系统先用快回路的动态演化若干步，再按慢回路更新一次。这类系统的 Lyapunov 分析要用公共 Lyapunov 函数，即要求同一个 <span class="math inline">P_d</span> 对所有子模式都满足收缩条件。条件比单模式严格，但结论也更强。</p>
+<p>还有一条实用经验：<strong>多速率系统里，最危险的不是最慢的回路，而是两个回路的周期接近整数倍的情形</strong>。此时慢回路的采样点会周期性地落在快回路的特定相位上，形成拍频，表现为某个频率上的持续振荡。仿真时若只跑单速率模型，这种振荡根本不会出现，现场调试时却会出现，排查起来非常费时。</p>
+<h3 id="离散结论怎么写进报告">52.5.10 离散结论怎么写进报告</h3>
+<p>离散情形的结论比连续情形多一个参数，写法上容易含糊。建议固定成三句话。</p>
+<p>第一句写稳定性与范围：“闭环极点全部位于单位圆内，最大模为 <span class="math inline">0.99005</span>，对应采样周期 <span class="math inline">0.05</span> s。”这一句给出判据、数值与前提，缺一个就不完整。</p>
+<p>第二句写速率，并明确单位：“每步收缩到 <span class="math inline">0.99005</span>，折合每秒衰减率 <span class="math inline">0.199</span>。”若只写“每步 <span class="math inline">0.99</span>”，读者无法与连续指标比较；若只写“每秒 <span class="math inline">0.2</span>”，读者不知道采样周期。两个都给，才不会歧义。</p>
+<p>第三句写界的保守度：“离散 Lyapunov 界给出每步 <span class="math inline">0.992099</span>，实测 <span class="math inline">0.990175</span>。”这一句说明界可用，也说明界不是精确值。把两个数都写出来，后续调整采样周期时就有了参照。</p>
+<p>三句话的共同要求是“数与前提绑在一起”。离散分析里最容易出的报告错误，是把连续域的 <span class="math inline">\alpha</span> 直接抄到离散章节，或者把每步收缩比当成每秒速率。这两种错误都不会被计算程序发现，只能靠写报告时逐句核对单位。</p>
+<p>与之配套，图里也应当标清时间轴。离散仿真的横轴若是“步数 <span class="math inline">k</span>”，就要在轴上注明，不能只写 <span class="math inline">t</span>；若是换算成秒，就要说明换算方式。本章图 52-7 用步数作横轴，因为它的目的是展示逐步收缩，换算成秒反而看不清每一步。</p>
+<h2 id="稳定性与性能">52.6 稳定性与性能</h2>
+<h3 id="界里的三个数">52.6.1 界里的三个数</h3>
+<p>指数稳定的界可以写成一句可以直接用的话：</p>
+<p><span class="math display">
+\|x(t)\|\le\sqrt{\frac{c_2}{c_1}}\,\|x_0\|\,e^{-\alpha t},\qquad \alpha=\frac{c_3}{2c_2}
+\tag{52-28}
+</span></p>
+<p>三个数各有分工。<span class="math inline">c_2/c_1=\mathrm{cond}(P)</span> 决定初值被放大多少，<span class="math inline">\alpha</span> 决定衰减多快，<span class="math inline">c_3=\lambda_{\min}(Q)</span> 决定“每单位状态范数至少消耗多少 <span class="math inline">V</span>”。三者合起来给出一个到达时间的上界：要把范数压到初值的 <span class="math inline">1\%</span>，需要 <span class="math inline">t\ge\ln100/\alpha</span>。</p>
+<p>对本章算例，<span class="math inline">\alpha=0.079324</span>，<span class="math inline">\ln100/\alpha=58.05</span> s。而真实系统的最慢模态是 <span class="math inline">0.2</span>，同样压到 <span class="math inline">1\%</span> 只要 <span class="math inline">23.03</span> s。界比实际慢了 <span class="math inline">2.52</span> 倍。这个倍数不是误差，是保守性的定量表达。</p>
+<h3 id="保守性的三个来源">52.6.2 保守性的三个来源</h3>
+<p><strong>第一，椭圆的各向异性。</strong> <span class="math inline">V=x^{\mathsf T}Px</span> 的等值面是椭圆，长短轴比 <span class="math inline">\sqrt{\mathrm{cond}(P)}=2.0106</span>。式 (52-28) 用 <span class="math inline">\|x\|</span> 而不是 <span class="math inline">\sqrt{V}</span> 来度量，等于用一个外接圆去套椭圆，最坏方向上就多算了这个比值。<span class="math inline">2.0106</span> 已经占了 <span class="math inline">2.52</span> 中的大部分。</p>
+<p><strong>第二，用同一个 <span class="math inline">\alpha</span> 描述所有方向。</strong> 真实系统的两个模态衰减率不同：欠阻尼对的实部是 <span class="math inline">0.2</span>，另一支更快。界只能取最慢的，这没错；错在它还把“最慢模态”与“最坏方向”绑定在一起，而这两件事在几何上并不重合。</p>
+<p><strong>第三，<span class="math inline">Q</span> 的选择。</strong> 取 <span class="math inline">Q=I</span> 时 <span class="math inline">\alpha</span> 是各向同性的折中；一旦按物理量纲加权，<span class="math inline">\alpha</span> 反而更小（§52.3.4 的 <span class="math inline">0.027603</span> 与 <span class="math inline">0.009747</span>）。这说明保守性并不随“加权更合理”而单调改善，它取决于 <span class="math inline">V</span> 的等值面与真实不变集形状的匹配程度。</p>
+<p>脚本对数值轨迹做了指数拟合，得到衰减率 <span class="math inline">0.199172</span>，与解析的 <span class="math inline">0.2</span> 只差 <span class="math inline">0.4\%</span>。也就是说，<span class="math inline">0.2</span> 确实是系统的真实速率，<span class="math inline">0.079324</span> 纯粹是界的问题。图 52-6 把两条曲线画在一起：实测轨迹按 <span class="math inline">e^{-0.2t}</span> 下降，界按 <span class="math inline">e^{-0.079324t}</span> 下降，两者在对数坐标上是两条斜率不同的直线。</p>
+<figure>
+<img src="figs/ch052/fig_052_06_rate.svg" alt="图 52-6　收敛率界与真实轨迹的对比" /><figcaption aria-hidden="true">图 52-6　收敛率界与真实轨迹的对比</figcaption>
+</figure>
+<p>图 52-10 换一个角度看同一件事：横轴扫过阻尼系数，纵轴是“真实速率 ÷ 界”。曲线在临界阻尼附近最低，说明那里界的相对保守性最小；在欠阻尼与过阻尼两端都抬高。这提示一件事：<strong>如果你关心界的紧度，临界阻尼附近是最容易得到好界的区域</strong>，因为那时 <span class="math inline">P</span> 的等值面最接近圆形。</p>
+<figure>
+<img src="figs/ch052/fig_052_10_gap.svg" alt="图 52-10　真实衰减率与界给出的衰减率之比" /><figcaption aria-hidden="true">图 52-10　真实衰减率与界给出的衰减率之比</figcaption>
+</figure>
+<h3 id="收紧界的四条路">52.6.3 收紧界的四条路</h3>
+<p>第一条，换 <span class="math inline">Q</span>。前面已经看到，对本例 <span class="math inline">Q=I</span> 反而最紧，换任何对角加权都变松。这条路的收益依赖对象，不能指望普适。</p>
+<p>第二条，换 <span class="math inline">V</span> 的形式。若已知系统的某个守恒量或某个单调量（例如机械系统的总能量），直接用它可以显著收紧。单摆的能量函数就是例子，它不需要解任何方程。</p>
+<p>第三条，分段拼接。在不同区域用不同的二次型，或者用一个分片二次型逼近真实的不变集。这能把保守性压下去，代价是分析复杂度上升，而且拼接处要验证连续性。</p>
+<p>第四条，接受它。界的作用是“保证”，不是“预测”。一个慢了 <span class="math inline">2.52</span> 倍但仍然成立的保证，在安全认证、鲁棒性分析里往往比一个准确但没有证明的仿真更有价值。工程报告里应当同时给出界与实测，并说明差距的来源。</p>
+<h3 id="代数收敛不是所有收敛都叫指数">52.6.4 代数收敛：不是所有收敛都叫指数</h3>
+<p>考虑 <span class="math inline">x&#39;=-x^{3}</span>。取 <span class="math inline">V=x^{2}</span>，则 <span class="math inline">\dot V=-2x^{4}</span>，负定，原点全局渐近稳定。但它不满足指数稳定的条件：<span class="math inline">\dot V</span> 与 <span class="math inline">V</span> 的比值是 <span class="math inline">-2x^{2}</span>，随 <span class="math inline">x\to0</span> 趋于零，找不到一个与状态无关的 <span class="math inline">c_3</span>。</p>
+<p>解可以解析写出：</p>
+<p><span class="math display">
+x(t)=\frac{x_0}{\sqrt{1+2x_0^{2}t}}
+\tag{52-29}
+</span></p>
+<p>从 <span class="math inline">1</span> 降到 <span class="math inline">0.1</span>，需要 <span class="math inline">1+2t=100</span>，即 <span class="math inline">49.5</span> s；从 <span class="math inline">0.1</span> 再降到 <span class="math inline">0.01</span>，需要 <span class="math inline">1+0.02t=100</span>，即 <span class="math inline">4950</span> s。脚本的数值积分给出 <span class="math inline">49.506</span> s 与 <span class="math inline">4950.557</span> s，与解析值吻合到小数点后两位。</p>
+<p>对照指数收敛：同样从 <span class="math inline">1</span> 降到 <span class="math inline">0.1</span>，<span class="math inline">e^{-t}</span> 只要 <span class="math inline">\ln10=2.303</span> s。也就是说，<span class="math inline">x&#39;=-x^{3}</span> 的第一个十倍比指数系统慢 <span class="math inline">21.5</span> 倍，第二个十倍慢 <span class="math inline">2150</span> 倍。每多降一个数量级，时间就乘 <span class="math inline">100</span>。</p>
+<p>图 52-8 把两条曲线画在半对数坐标上。指数收敛是一条直线，代数收敛是一条持续变陡的曲线——在半对数图上“变陡”就是“越来越慢”。这张图是判断“到底属于哪一类收敛”的最快方法：<strong>半对数图上不直，就不是指数稳定</strong>。</p>
+<figure>
+<img src="figs/ch052/fig_052_08_algebraic.svg" alt="图 52-8　代数收敛与指数收敛在半对数坐标下的区别" /><figcaption aria-hidden="true">图 52-8　代数收敛与指数收敛在半对数坐标下的区别</figcaption>
+</figure>
+<p>这个区别对控制器设计很实际。指数稳定给了一个与初值无关的时间常数，可以据此定采样周期、定观测器带宽；代数收敛没有时间常数，只能给“多久降到多少”的表格。第 54 章设计状态反馈时默认追求指数稳定，原因就在这里。</p>
+<h3 id="性能分析的三条实践">52.6.5 性能分析的三条实践</h3>
+<p>第一，先算 <span class="math inline">\alpha</span>，再看实测。若两者相差在三倍以内，属于正常保守；若相差十倍以上，先检查 <span class="math inline">P</span> 的条件数是否过大，再检查 <span class="math inline">Q</span> 是否取成了半正定。</p>
+<p>第二，报告里写明是“界”还是“实测”。二者不能混用：界可以写进证明，实测只能写进验证。把 <span class="math inline">58.05</span> s 说成“系统的调节时间”是错的，它是“保证不超过的时间”。</p>
+<p>第三，对代数收敛的系统，不要硬套指数指标。用“降到某个精度所需时间”描述，比编一个 <span class="math inline">\alpha</span> 更诚实，也更有用。</p>
+<h3 id="到达时间的换算">52.6.6 到达时间的换算</h3>
+<p>式 (52-28) 可以直接换成“多久进入某个精度带”的表格，工程上这比一个抽象的 <span class="math inline">\alpha</span> 好用。</p>
+<p>把范数压到初值的 <span class="math inline">10\%</span>，界给出的时间是 <span class="math inline">\ln10/\alpha=29.03</span> s，实测是 <span class="math inline">\ln10/0.2=11.51</span> s。压到 <span class="math inline">1\%</span>，界给 <span class="math inline">58.05</span> s，实测 <span class="math inline">23.03</span> s。压到 <span class="math inline">0.1\%</span>，界给 <span class="math inline">87.08</span> s，实测 <span class="math inline">34.54</span> s。</p>
+<p>三组数的比值都是 <span class="math inline">2.52</span>，因为界与实测都是纯指数，比值与精度无关。这一点值得记住：<strong>保守性是一个常数倍，不随精度要求变化</strong>。所以只要算出一个精度下的差距，其他精度可以按比例推。</p>
+<p>不过这个比值只在“纯指数”前提下成立。若系统有多个模态，快模态先衰减完，慢模态主导后期，那么早期与后期的等效衰减率不同，比值会变。本章对象只有一对共轭极点，没有这个问题；三阶以上就要小心。</p>
+<p>还有一处容易忽略：界的起点不是 <span class="math inline">\|x_0\|</span>，而是 <span class="math inline">\sqrt{\mathrm{cond}(P)}\|x_0\|=2.0106\|x_0\|</span>。也就是说，界在 <span class="math inline">t=0</span> 处就已经比真实轨迹高了一倍。§52.6.2 把这个因子归因于椭圆的各向异性，这里是它的直接后果。</p>
+<p>把这两个因子乘起来，<span class="math inline">2.0106\times2.52\approx5.07</span>，看起来界比实测差五倍。但实际差距只有 <span class="math inline">2.52</span> 倍，因为两个因子并不独立：放大倍数在早期起作用，衰减率在后期起作用，二者的影响有重叠。这也提醒一件事：<strong>不要把界里的各个因子简单相乘来解释总保守性</strong>，它们对应的机制不同，作用时段也不同。</p>
+<p>如果协议要求“<span class="math inline">2</span> s 内进入 <span class="math inline">\pm1\%</span>”，本对象做不到。按实测速率算需要 <span class="math inline">23.03</span> s，按界算需要 <span class="math inline">58.05</span> s，两个数都远大于 <span class="math inline">2</span> s。要满足协议，只能改控制器把闭环极点往左推，这是第 54 章的任务。Lyapunov 分析在这里的作用不是“证明能达标”，而是“提前算出达不到”，避免在设计后期才发现指标定错了。</p>
+<h3 id="界在控制器设计中的三种用法">52.6.7 界在控制器设计中的三种用法</h3>
+<p>第一种用法是定采样周期。经验规则是 <span class="math inline">T_s\le1/(10\alpha)</span>，本章 <span class="math inline">\alpha=0.079324</span>，给出 <span class="math inline">T_s\le1.26</span> s。这个上限比 §52.5.6 按振荡频率算出的 <span class="math inline">0.3</span> s 宽，所以取两者中更严的那个。规则的含义是“一个衰减时间常数内至少采十个点”，否则离散控制看不出连续动态。</p>
+<p>第二种用法是定监测阈值。在线算出的 <span class="math inline">V</span> 若有缓慢上升趋势，可能是参数漂移或执行器饱和。阈值可以设在 <span class="math inline">V</span> 的初始值的某个倍数，也可以设在水平集上界 <span class="math inline">c</span> 的一个比例。后者的物理含义更清楚：“距离已知的安全边界还有多远”。</p>
+<p>第三种用法是做鲁棒性预算。若 <span class="math inline">A</span> 有不确定量 <span class="math inline">\Delta A</span>，可以把 <span class="math inline">\dot V</span> 写成 <span class="math inline">-x^{\mathsf T}Qx+x^{\mathsf T}(\Delta A^{\mathsf T}P+P\Delta A)x</span>，只要后一项不超过前一项，稳定性就保住。这个条件给出了“允许多大的 <span class="math inline">\Delta A</span>”的定量答案，比分段仿真更可靠。</p>
+<p>三种用法有一个共同点：都用到了 <span class="math inline">\alpha</span> 或 <span class="math inline">P</span> 的具体数值，而不只是“稳定”这个结论。这也是为什么本章反复强调 <span class="math inline">\mathrm{cond}(P)</span> 与 <span class="math inline">\alpha</span> 要写进报告——它们是可用的工程参数，不是数学装饰。</p>
+<h3 id="多模态系统的界怎么算">52.6.8 多模态系统的界怎么算</h3>
+<p>本章对象只有一对共轭极点，界的形式简单。真实系统往往有三到五对极点，此时界仍然成立，但两个因子的分工变了。</p>
+<p>式 (52-28) 里，<span class="math inline">\alpha</span> 由 <span class="math inline">\lambda_{\min}(Q)/(2\lambda_{\max}(P))</span> 决定，而 <span class="math inline">P</span> 的积分表示 <span class="math inline">\int_0^\infty e^{A^{\mathsf T}t}Qe^{At}\mathrm{d}t</span> 说明：快模态的指数因子衰减得快，对积分贡献小，所以 <span class="math inline">P</span> 的范数主要由慢模态撑起来。于是 <span class="math inline">\lambda_{\max}(P)</span> 大致由最慢的极点决定，<span class="math inline">\alpha</span> 也由它决定。这一点与“收敛速度由主导极点决定”的经典结论一致。</p>
+<p>不一致的地方在起点。<span class="math inline">\sqrt{\mathrm{cond}(P)}</span> 由 <span class="math inline">P</span> 的全谱决定，快模态虽然对 <span class="math inline">P</span> 的范数贡献小，却会把 <span class="math inline">\lambda_{\min}(P)</span> 压得更低，因为它在某个方向上“几乎不动”，<span class="math inline">V</span> 沿那个方向增长极慢。结果是：模态分离越明显，<span class="math inline">\mathrm{cond}(P)</span> 越大，界在 <span class="math inline">t=0</span> 处抬高得越多。</p>
+<p>这两个效应叠加后的表现是：<strong>早期界很松，后期界逐渐贴住真实轨迹</strong>。本章对象的两个因子是 <span class="math inline">2.0106</span> 与 <span class="math inline">2.52</span>，看起来只差五倍；若系统有一对快十倍的极点，<span class="math inline">\mathrm{cond}(P)</span> 可能涨到 <span class="math inline">10^{2}</span> 量级，早期的界就会高出两个数量级，而后期仍然只差两三倍。</p>
+<p>工程上的处理办法有两条。第一条是按主导极点做降阶，把快模态当成瞬时跟随，只对慢子系统算 <span class="math inline">\alpha</span>。这样得到的界更紧，但必须验证降阶误差不会破坏稳定性——通常要求快慢极点相差五倍以上。第二条是分时段使用界：早期用真实仿真给出可达集，后期用 Lyapunov 界给出保证。两条合起来，既不夸大早期性能，也不放弃后期的严格性。</p>
+<p>还有一处容易误判：多模态系统的收敛曲线在半对数图上不是一条直线，而是先陡后缓的折线。看到折线不要以为“不满足指数稳定”，它只是多个指数叠加的结果，最终斜率由最慢模态决定。</p>
+<h3 id="界的三种误用">52.6.9 界的三种误用</h3>
+<p>第一种误用是把界当成预测。界是“不慢于”的保证，不是“将会达到”的估计。用 <span class="math inline">58.05</span> s 去安排生产节拍，会把本来 <span class="math inline">23.03</span> s 就能完成的动作拖慢一倍多。正确用法是：仿真给预期，界给兜底。</p>
+<p>第二种误用是用界比较两个控制器。若两个控制器都稳定，界的松紧更多反映 <span class="math inline">Q</span> 的选择，而不是控制器本身的优劣。要比较控制器，应当比较真实衰减率或积分指标，界只在“两者都拿不出实测”时作为参考。</p>
+<p>第三种误用是忽略界的适用前提。式 (52-28) 要求 <span class="math inline">V</span> 在全局满足三明治不等式，对非线性系统这通常只在局部成立。把局部界写成“全局保证”，是审稿意见里最常见的错误之一。写结论时，界后面必须跟上它的区域。</p>
+<h2 id="参数意义与作用">52.7 参数意义与作用</h2>
+<h3 id="对象参数刚度与阻尼">52.7.1 对象参数：刚度与阻尼</h3>
+<p>本章对象的两个物理参数是 <span class="math inline">k=4</span> 与 <span class="math inline">c=0.4</span>。极点的解析式是</p>
+<p><span class="math display">
+s_{1,2}=-\frac{c}{2}\pm\sqrt{\frac{c^{2}}{4}-k}
+\tag{52-30}
+</span></p>
+<p>这个式子把两个参数的作用分得很清楚。<span class="math inline">c</span> 只出现在实部与根号内，控制“衰减快慢”；<span class="math inline">k</span> 只出现在根号内，控制“振荡频率”。固定 <span class="math inline">c=0.4</span> 加大 <span class="math inline">k</span>，实部始终是 <span class="math inline">-0.2</span>，虚部从 <span class="math inline">1.99</span> 变大——系统振荡更快，但包络衰减不变，阻尼比反而下降。这就是“加刚度会让系统更振荡”的定量说法。</p>
+<p>固定 <span class="math inline">k=4</span> 加大 <span class="math inline">c</span>，情况不是单调的。<span class="math inline">c</span> 从 <span class="math inline">0</span> 到 <span class="math inline">4</span>，实部从 <span class="math inline">0</span> 走到 <span class="math inline">-2</span>，收敛变快；<span class="math inline">c</span> 超过 <span class="math inline">4</span>，一根极点继续左移，另一根却向右挪，最慢的那根决定了整体速度，于是收敛又变慢。<span class="math inline">c=8</span> 时最慢极点是 <span class="math inline">-0.536</span>，比 <span class="math inline">c=0.4</span> 时的 <span class="math inline">-0.2</span> 快，但比 <span class="math inline">c=4</span> 时的 <span class="math inline">-2</span> 慢得多。</p>
+<p>表 52-2 已经把这个非单调性列清楚了。工程含义是：<strong>阻尼不是越大越好，临界阻尼附近才是响应最快的点</strong>。这也解释了为什么很多位置伺服把阻尼比设计在 <span class="math inline">0.7</span> 到 <span class="math inline">1.0</span> 之间，而不是一味加大摩擦。</p>
+<h3 id="q-的三重身份">52.7.2 <span class="math inline">Q</span> 的三重身份</h3>
+<p><span class="math inline">Q</span> 在 Lyapunov 方程里只是一个矩阵，但它同时扮演三个角色，混在一起就容易出错。</p>
+<p><strong>第一，它是量纲的载体。</strong> <span class="math inline">\dot V=-x^{\mathsf T}Qx</span> 的量纲是“<span class="math inline">V</span> 每秒”，所以 <span class="math inline">Q</span> 的元素量纲必须是“<span class="math inline">V</span> 每单位状态的平方每秒”。位置与速度的单位不同，若强行取 <span class="math inline">Q</span> 全为 <span class="math inline">1</span>，等于默认“<span class="math inline">1</span> m 的误差与 <span class="math inline">1</span> m/s 的误差等价”。量纲差得远时，这个默认会把某一方向压得极重或极轻。</p>
+<p><strong>第二，它的整体缩放不起作用。</strong> <span class="math inline">Q\to\lambda Q</span> 使 <span class="math inline">P\to\lambda P</span>，<span class="math inline">\alpha=\lambda_{\min}(Q)/(2\lambda_{\max}(P))</span> 的分子分母同乘 <span class="math inline">\lambda</span>，结果不变。脚本用 <span class="math inline">Q=I</span> 与 <span class="math inline">Q=0.01I</span> 得到同一个 <span class="math inline">0.079324</span>，就是这条不变性的直接验证。所以调 <span class="math inline">Q</span> 的“大小”是无效操作，只有调“形状”才有意义。</p>
+<p><strong>第三，它的形状决定保守性。</strong> 本章算例里，<span class="math inline">Q=I</span> 给出 <span class="math inline">0.079324</span>，<span class="math inline">\mathrm{diag}(10,1)</span> 给出 <span class="math inline">0.027603</span>，<span class="math inline">\mathrm{diag}(1,10)</span> 给出 <span class="math inline">0.009747</span>。两个加权方向都把界变松了，原因是加权让 <span class="math inline">P</span> 的等值面更扁，<span class="math inline">\mathrm{cond}(P)</span> 上升，式 (52-28) 里的 <span class="math inline">\sqrt{c_2/c_1}</span> 把收益吃掉。</p>
+<p>还有一类特殊选择：<span class="math inline">Q=C^{\mathsf T}C</span>。它的物理含义是“只惩罚输出误差”，听起来很合理，但在本章对象上给出 <span class="math inline">\alpha=0</span>——因为输出只有位置，速度方向在 <span class="math inline">Q</span> 里权重为零，<span class="math inline">\lambda_{\min}(Q)=0</span>。方程仍可解（系统能观），但速率界退化为零。加上 <span class="math inline">10^{-3}I</span> 后才回到 <span class="math inline">0.000379</span>。这类“半正定 <span class="math inline">Q</span>”是现场分析里最常见的隐形错误。</p>
+<h3 id="p-的元素是诊断量不是设计量">52.7.3 <span class="math inline">P</span> 的元素是诊断量，不是设计量</h3>
+<p>初学者常想把 <span class="math inline">P</span> 的元素“调”成某个值，这是方向反了。<span class="math inline">P</span> 由 <span class="math inline">A</span> 与 <span class="math inline">Q</span> 唯一确定，它没有自由度。它的元素只有诊断价值。</p>
+<p><span class="math inline">P_{11}/P_{22}=6.3/1.5625\approx4.03</span>，说明位置误差在 <span class="math inline">V</span> 里的权重是速度的四倍。这个比值接近 <span class="math inline">k/c</span> 与时间常数的组合，反映“刚度储能、阻尼耗能”的物理事实。若某天算出 <span class="math inline">P_{11}&lt;P_{22}</span>，先怀疑状态顺序写反了，而不是对象变了。</p>
+<p>非对角元 <span class="math inline">P_{12}=0.125</span> 反映位置与速度的耦合。它为正，说明“位置偏右且速度向右”这种状态比“位置偏右且速度向左”更“贵”——因为前者正在远离平衡点。这个符号可以当作一次快速自检。</p>
+<p><span class="math inline">\mathrm{cond}(P)=4.0426</span> 是最值得记录的一个数。它同时是等值面长短轴比的平方、初值放大倍数的平方、以及数值敏感度的粗略指标。三个解释指向同一个量，所以它在报告里出现的频率应该最高。</p>
+<h3 id="采样周期的三重身份">52.7.4 采样周期的三重身份</h3>
+<p><span class="math inline">T_s</span> 在离散 Lyapunov 分析里同时是尺度因子、稳定裕度度量、条件数来源。</p>
+<p>作为尺度因子，<span class="math inline">P_d\approx P/T_s</span>，<span class="math inline">T_s</span> 减半则 <span class="math inline">P_d</span> 加倍。本章 <span class="math inline">T_s=0.05</span> 时 <span class="math inline">P_{11}=126.5</span>，正好是连续域 <span class="math inline">6.3</span> 的二十倍。</p>
+<p>作为稳定裕度度量，<span class="math inline">1-|z|\approx|\mathrm{Re}\,\lambda|T_s</span>。同一个对象，<span class="math inline">T_s</span> 越小，离散极点越贴单位圆，但这个“贴近”不代表更危险，只是同一件事换了刻度。</p>
+<p>作为条件数来源，<span class="math inline">T_s</span> 过小会让 <span class="math inline">P_d</span> 的元素膨胀到 <span class="math inline">10^{6}</span> 以上，双精度下开始丢有效位。经验阈值是 <span class="math inline">P_d</span> 的最大元素不超过 <span class="math inline">10^{6}</span>，超过就考虑用双精度以外的求解手段，或者改用连续域分析再离散化结论。</p>
+<h3 id="参数作用的汇总">52.7.5 参数作用的汇总</h3>
+<p>表 52-3 把本节讨论的参数、作用方向与工程建议收在一起。表中“单调”一列只写确定成立的方向，非单调的地方明确标注。</p>
+<table>
+<thead>
+<tr class="header">
+<th>参数</th>
+<th>主要作用</th>
+<th>单调性</th>
+<th>建议</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>阻尼 <span class="math inline">c</span></td>
+<td>控制实部，决定最慢模态</td>
+<td>非单调，临界阻尼最快</td>
+<td>取 <span class="math inline">\zeta\approx0.7\sim1.0</span></td>
+</tr>
+<tr class="even">
+<td>刚度 <span class="math inline">k</span></td>
+<td>控制虚部，决定振荡频率</td>
+<td>单调，<span class="math inline">k\uparrow</span> 频率 <span class="math inline">\uparrow</span></td>
+<td>与执行器带宽匹配</td>
+</tr>
+<tr class="odd">
+<td><span class="math inline">Q</span> 的整体缩放</td>
+<td>无</td>
+<td>不影响 <span class="math inline">\alpha</span></td>
+<td>不必调，取 <span class="math inline">Q=I</span> 即可</td>
+</tr>
+<tr class="even">
+<td><span class="math inline">Q</span> 的方向权重</td>
+<td>改变等值面形状</td>
+<td>加权越重，<span class="math inline">\alpha</span> 越小</td>
+<td>先算 <span class="math inline">\alpha</span> 再决定</td>
+</tr>
+<tr class="odd">
+<td><span class="math inline">Q</span> 半正定</td>
+<td>速率界退化为零</td>
+<td>退化</td>
+<td>加 <span class="math inline">10^{-3}I</span> 正则化</td>
+</tr>
+<tr class="even">
+<td>采样周期 <span class="math inline">T_s</span></td>
+<td>缩放 <span class="math inline">P_d</span>，改变条件数</td>
+<td><span class="math inline">T_s\downarrow</span>，<span class="math inline">P_d\uparrow</span></td>
+<td>兼顾条件数与延迟</td>
+</tr>
+<tr class="odd">
+<td>平衡点偏移</td>
+<td>破坏 <span class="math inline">f(0)=0</span></td>
+<td>结论失效</td>
+<td>先平移再分析</td>
+</tr>
+</tbody>
+</table>
+<p>表 52-3 里最容易被忽视的是最后一行。它不是一个“参数”，而是一个前置条件；条件不满足时，前面所有关于 <span class="math inline">c</span>、<span class="math inline">k</span>、<span class="math inline">Q</span> 的讨论都不成立。</p>
+<h3 id="三个反直觉的结论">52.7.6 三个反直觉的结论</h3>
+<p>第一，<strong>加大阻尼不一定加快收敛</strong>。<span class="math inline">c</span> 从 <span class="math inline">4</span> 加到 <span class="math inline">8</span>，最慢极点从 <span class="math inline">-2</span> 退到 <span class="math inline">-0.536</span>，收敛慢了近四倍。</p>
+<p>第二，<strong>加大 <span class="math inline">Q</span> 不一定收紧界</strong>。<span class="math inline">Q</span> 的整体缩放完全无效，方向加权通常让界变松。</p>
+<p>第三，<strong>减小采样周期不一定改善数值性质</strong>。<span class="math inline">T_s</span> 减半让 <span class="math inline">P_d</span> 加倍，条件数不变但绝对量级上升，残差可能变差。</p>
+<p>这三个结论有一个共同点：它们都打破了“参数越大越好”的直觉，原因也一样——Lyapunov 结论由最坏方向、最慢模态、最病态的量决定，而这些量对参数的依赖不是单调的。</p>
+<h3 id="量纲归一化的具体做法">52.7.7 量纲归一化的具体做法</h3>
+<p>§52.4.9 说明了坐标变换会改变 <span class="math inline">P</span> 的条件数，这里给出可执行的做法。</p>
+<p>第一步，为每个状态选一个“满量程”值。位移取行程的一半，速度取最大允许速度，电流取额定电流。这些数来自工况，不来自数学。</p>
+<p>第二步，构造 <span class="math inline">T=\mathrm{diag}(x_{1,\max},\dots,x_{n,\max})</span>，令 <span class="math inline">x=Tz</span>。此时 <span class="math inline">z</span> 的每个分量都在 <span class="math inline">[-1,1]</span> 量级。</p>
+<p>第三步，在 <span class="math inline">z</span> 坐标下解 Lyapunov 方程。若 <span class="math inline">Q</span> 也同步变换成 <span class="math inline">Q_z=T^{\mathsf T}QT</span>，解出的 <span class="math inline">P_z</span> 与原坐标下的 <span class="math inline">P</span> 满足 <span class="math inline">P_z=T^{\mathsf T}PT</span>，<span class="math inline">\alpha</span> 完全不变。这一点很重要：<strong>归一化只改善数值条件，不改变任何结论</strong>。</p>
+<p>第四步，把 <span class="math inline">P_z</span> 换回原坐标，或者在控制器里直接用 <span class="math inline">z</span>。推荐后者，因为在线计算时 <span class="math inline">z</span> 的数值范围已知，定点实现更容易定标。</p>
+<p>举一个具体的量级例子。若位移以毫米记录、速度以米每秒记录，两者的数值可能差三个数量级。此时 <span class="math inline">Q=I</span> 等价于“<span class="math inline">1</span> mm 的误差与 <span class="math inline">1</span> m/s 的误差同权”，而物理上这两件事完全不可比。归一化之后，<span class="math inline">Q=I</span> 才真正表示“两个方向同等重要”。</p>
+<p>最后一条经验：把满量程值写进配置文件，不要在代码里硬编码。工况变了，满量程要跟着变，硬编码会让归一化失效，而失效的表现往往只是条件数变大，不会报错，很难发现。</p>
+<h3 id="参数漂移后结论怎么迁移">52.7.8 参数漂移后结论怎么迁移</h3>
+<p>设计时用的 <span class="math inline">A</span> 是标称值，运行中的 <span class="math inline">A</span> 会漂。与其反复重算，不如先弄清“结论对参数的敏感度在哪个量级”。</p>
+<p>第一阶灵敏度可以解析求出。设 <span class="math inline">A</span> 依赖某个标量参数 <span class="math inline">p</span>，记 <span class="math inline">\partial A/\partial p=A_p</span>，<span class="math inline">P</span> 对该参数的偏导为 <span class="math inline">S=\partial P/\partial p</span>。对 <span class="math inline">A^{\mathsf T}P+PA=-Q</span> 两边求导，得</p>
+<p><span class="math display">
+A^{\mathsf T}S+SA=-\left(A_p^{\mathsf T}P+PA_p\right).
+</span></p>
+<p>这是一个与原来同系数的 Lyapunov 方程，右端换成已知量，解出 <span class="math inline">S</span> 就得到 <span class="math inline">P</span> 的一阶变化率。<span class="math inline">\alpha</span> 的变化再由此得到，因为 <span class="math inline">\alpha</span> 只依赖 <span class="math inline">P</span> 的特征值。整条链不涉及任何新的算法，只是把同一个求解器调用两次。</p>
+<p>实践中更常用的是“扫参数 + 画曲线”。把 <span class="math inline">p</span> 在标称值附近扫一遍，每个点解一次方程，画出 <span class="math inline">\alpha(p)</span> 与 <span class="math inline">\mathrm{cond}(P)(p)</span>。曲线的形状通常比单个灵敏度数值更有信息量：<span class="math inline">\alpha</span> 随 <span class="math inline">p</span> 单调下降，说明参数往一个方向漂是安全的、往另一个方向漂要报警；曲线出现尖谷，说明某个 <span class="math inline">p</span> 附近 <span class="math inline">\alpha</span> 对参数极敏感，那里必须做区间分析。</p>
+<p>三条判断规则可以直接用。第一，若 <span class="math inline">\alpha</span> 在参数变化 <span class="math inline">20\%</span> 内保持同号且变化不到一半，结论可以按“稳健”写进报告。第二，若 <span class="math inline">\alpha</span> 在某处穿过零，那一点就是稳定边界，必须给出对应的参数值——这往往比“稳定”本身更有用，因为它给出了运行包络。第三，若 <span class="math inline">\mathrm{cond}(P)</span> 随参数急剧上升，即使 <span class="math inline">\alpha</span> 还没变号，也要警惕——这说明 <span class="math inline">V</span> 的等值面正在变得极扁，局部结论的适用域在缩小。</p>
+<p>还有一条与直觉相反的提醒：<strong>最敏感的参数往往不是刚度，而是阻尼</strong>。刚度变化主要移动极点频率，对实部影响是二阶的；阻尼变化直接改变实部，一阶就见效。所以做敏感性分析时，先把阻尼取准，再考虑其他参数。</p>
+<h3 id="参数不是独立的">52.7.9 参数不是独立的</h3>
+<p>前面逐个讨论参数，实际使用时它们互相牵制，单独调一个往往得不到预期的效果。</p>
+<p>第一对耦合是 <span class="math inline">Q</span> 与量纲。改变状态单位等价于改变 <span class="math inline">Q</span> 的加权，所以“换单位”和“改 <span class="math inline">Q</span>”是同一件事的两种说法。这也意味着：报告里必须写清 <span class="math inline">Q</span> 与状态单位，只写 <span class="math inline">Q=I</span> 而不写单位，读者无法判断这个 <span class="math inline">I</span> 到底加权了什么。</p>
+<p>第二对耦合是 <span class="math inline">T_s</span> 与 <span class="math inline">\alpha_d</span>。<span class="math inline">T_s</span> 减小，每步的收缩比 <span class="math inline">\alpha_d</span> 会更接近 <span class="math inline">1</span>，但折算成每秒的速率反而更接近真实的连续速率。只比较 <span class="math inline">\alpha_d</span> 的数值会得出“采样越快收敛越慢”的错误结论——这正是 §52.5.10 强调要写清单位的原因。</p>
+<p>第三对耦合是 <span class="math inline">k</span> 与 <span class="math inline">c</span>。刚度增大，无阻尼自然频率升高，同样的阻尼系数对应的阻尼比下降，系统更容易振荡。所以“加固结构”往往会同时恶化阻尼特性，需要配套调整。</p>
+<p>第四对耦合是 <span class="math inline">c</span> 与 <span class="math inline">P</span> 的条件数。阻尼偏离临界阻尼越远，<span class="math inline">P</span> 的等值面越扁，条件数越大。这解释了一个常见现象：为了让响应更快而减小阻尼，界反而变得更保守，因为界里的 <span class="math inline">\sqrt{\mathrm{cond}(P)}</span> 变大了。</p>
+<p>这四对耦合的共同启示是：<strong>参数选择必须成组做，不能逐个优化</strong>。工程上的做法是先定约束（量程、采样率、结构刚度），再在剩余的自由度里选 <span class="math inline">Q</span> 与阻尼，最后用 <span class="math inline">\alpha</span>、条件数、界三个指标一起验收。</p>
+<h2 id="调参方法与经验">52.8 调参方法与经验</h2>
+<h3 id="先定问题再定参数">52.8.1 先定问题，再定参数</h3>
+<p>Lyapunov 分析里的“调参”不是调控制器增益，而是调分析过程本身：选哪个 <span class="math inline">Q</span>、用哪个 <span class="math inline">V</span>、水平集取多大、网格多细。这些选择没有唯一正确答案，但它们应当由“要回答什么问题”决定。</p>
+<p>四类常见问题对应四套选法。问“稳不稳”，<span class="math inline">Q=I</span> 就够，只需要 <span class="math inline">P</span> 正定。问“多快”，需要 <span class="math inline">\alpha</span>，此时 <span class="math inline">Q</span> 的形状开始起作用。问“多大范围”，需要水平集上界 <span class="math inline">c</span>，此时 <span class="math inline">V</span> 的形式比 <span class="math inline">Q</span> 更重要。问“参数变了还稳不稳”，需要扫参数并记录 <span class="math inline">\mathrm{cond}(P)</span> 的变化。</p>
+<p>把问题定错，后面的计算全白费。最典型的是想估计吸引域却只算了一个 <span class="math inline">\alpha</span>——<span class="math inline">\alpha</span> 是局部速率，与吸引域边界没有直接关系。</p>
+<h3 id="q-的选取五条经验">52.8.2 <span class="math inline">Q</span> 的选取：五条经验</h3>
+<p><strong>第一条，默认 <span class="math inline">Q=I</span>。</strong> 它给出各向同性的 <span class="math inline">\dot V</span>，含义最清楚，本章算例里还恰好是最紧的界。没有特殊理由时不要改。</p>
+<p><strong>第二条，先做量纲归一化。</strong> 若位移以毫米计、速度以米每秒计，<span class="math inline">Q=I</span> 会让位移方向的权重被放大 <span class="math inline">10^{6}</span> 倍。做法是先把状态无量纲化，或者按 <span class="math inline">1/x_{\max}^{2}</span> 构造 <span class="math inline">Q</span> 的对角元。</p>
+<p><strong>第三条，加权之后必须复算 <span class="math inline">\alpha</span>，不能假设“更合理”就意味着“更紧”。</strong> 本章的 <span class="math inline">\mathrm{diag}(10,1)</span> 与 <span class="math inline">\mathrm{diag}(1,10)</span> 都把 <span class="math inline">\alpha</span> 从 <span class="math inline">0.079324</span> 压到 <span class="math inline">0.027603</span> 与 <span class="math inline">0.009747</span>。加权的初衷通常是“强调重要状态”，结果却让界更保守，这个反直觉必须用数字确认。</p>
+<p><strong>第四条，半正定 <span class="math inline">Q</span> 要加正则项。</strong> <span class="math inline">Q=C^{\mathsf T}C</span> 在输出维数小于状态维数时必然半正定，<span class="math inline">\lambda_{\min}(Q)=0</span>，速率界直接退化为零。加 <span class="math inline">10^{-3}I</span> 之后回到 <span class="math inline">0.000379</span>，仍比 <span class="math inline">Q=I</span> 小两个数量级，但至少不是零。</p>
+<p><strong>第五条，把 <span class="math inline">Q</span> 写进报告。</strong> 同一个系统，不同的 <span class="math inline">Q</span> 给出不同的 <span class="math inline">P</span> 与不同的 <span class="math inline">\alpha</span>。不写 <span class="math inline">Q</span>，结论无法复现。</p>
+<h3 id="局部结论与全局结论的分界">52.8.3 局部结论与全局结论的分界</h3>
+<p>二次型 <span class="math inline">V=x^{\mathsf T}Px</span> 一定径向无界，所以“全局”这个词能不能用，只取决于 <span class="math inline">\dot V</span> 的符号在多大范围内成立。</p>
+<p>线性系统里 <span class="math inline">\dot V=-x^{\mathsf T}Qx</span> 对一切 <span class="math inline">x</span> 成立，结论可以直接写成全局指数稳定。</p>
+<p>非线性系统里要先找 <span class="math inline">\dot V&lt;0</span> 的区域，再找这个区域里最大的不变水平集。本章的三次项对象就是反例：<span class="math inline">V=\tfrac12(x_1^{2}+x_2^{2})</span> 在半径 <span class="math inline">0.1</span>、<span class="math inline">0.5</span>、<span class="math inline">1.0</span> 的圆上都有 <span class="math inline">\dot V&gt;0</span> 的点，所以它连局部证书都给不出，尽管轨迹实际收敛。</p>
+<p>判断“能不能用全局”有一个便宜的检查：把 <span class="math inline">\dot V</span> 写成“线性部分 + 高阶项”，若高阶项在无穷远处压不住线性部分，就只能是局部结论。这一步不需要求解方程，手算即可。</p>
+<h3 id="吸引域估计的实用做法">52.8.4 吸引域估计的实用做法</h3>
+<p>以单摆为例。<span class="math inline">V=\tfrac12x_2^{2}+9.81(1-\cos x_1)</span>，<span class="math inline">\dot V=-0.3x_2^{2}\le0</span>。水平集 <span class="math inline">\{V\le c\}</span> 不能包含 <span class="math inline">x_1=\pm\pi</span>，否则 LaSalle 的论证失效。<span class="math inline">x_1=\pi</span> 处的能量是 <span class="math inline">2g/l=19.62</span>，所以 <span class="math inline">c</span> 必须严格小于它。</p>
+<p>脚本按 <span class="math inline">0.01</span> 的步长从 <span class="math inline">1</span> 扫到 <span class="math inline">19.61</span>，取到 <span class="math inline">c=19.61</span> 时水平集刚好不碰 <span class="math inline">\pm\pi</span>。这个 <span class="math inline">0.01</span> 的步长是经验值：太粗会越界，太细没有必要，因为 <span class="math inline">c</span> 的精度只影响“适用域”这句话的小数位，不影响结论本身。</p>
+<p>拿到 <span class="math inline">c=19.61</span> 之后要做两侧验证。内侧取分界能量的 <span class="math inline">0.95</span> 倍，初值 <span class="math inline">(2.691,0)</span>，能量 <span class="math inline">18.641</span>，轨迹的最大摆角就是 <span class="math inline">2.691</span>，末态回到 <span class="math inline">(0,0)</span>。外侧取 <span class="math inline">1.05</span> 倍，初值 <span class="math inline">(3.0,1.469)</span>，能量 <span class="math inline">20.601</span>，最大摆角冲到 <span class="math inline">8.318</span>，末态停在 <span class="math inline">6.2832\approx2\pi</span>——摆转起来了。</p>
+<figure>
+<img src="figs/ch052/fig_052_05_region.svg" alt="图 52-5　能量分界线与两侧初值的不同命运" /><figcaption aria-hidden="true">图 52-5　能量分界线与两侧初值的不同命运</figcaption>
+</figure>
+<p>图 52-5 把这两条轨迹画在同一张相图上，中间那条虚线是 <span class="math inline">V=19.62</span> 的分界。内侧轨迹闭合收敛，外侧轨迹越过顶点后一路向右。这张图同时说明一件事：<strong>理论给的 <span class="math inline">c</span> 是充分条件，不是必要条件</strong>。实际吸引域比 <span class="math inline">c=19.61</span> 对应的水平集大一些，因为 LaSalle 的论证保守。</p>
+<p>另一组数字可以校准“多快”。从 <span class="math inline">2.5</span> rad 出发，能量 <span class="math inline">17.6692</span>，进入 <span class="math inline">\pm0.05</span> rad 带用 <span class="math inline">25.126</span> s。无阻尼对照组的能量漂移只有 <span class="math inline">4.586\times10^{-7}</span>，说明这个 <span class="math inline">25.126</span> s 不是数值耗散造成的假收敛。</p>
+<h3 id="数值参数的选取">52.8.5 数值参数的选取</h3>
+<p>三个数值参数需要显式设定：求解器容差、网格步长、正则化强度。</p>
+<p>求解器容差按残差判据定。目标残差 <span class="math inline">10^{-12}</span>，则相对容差取 <span class="math inline">10^{-13}</span> 量级即可，再小没有意义，因为 <span class="math inline">P</span> 本身的舍入误差就在 <span class="math inline">10^{-16}</span>。</p>
+<p>网格步长按“结论的小数位”定。若只需要判断“<span class="math inline">c</span> 大约在 <span class="math inline">19</span> 到 <span class="math inline">20</span> 之间”，步长 <span class="math inline">0.1</span> 足够；若要写“<span class="math inline">c=19.61</span>”，步长必须不大于 <span class="math inline">0.01</span>。</p>
+<p>正则化强度按 <span class="math inline">\lambda_{\min}(Q)</span> 与 <span class="math inline">\lambda_{\max}(Q)</span> 的比值定。加 <span class="math inline">10^{-3}I</span> 意味着把最小特征值抬到 <span class="math inline">10^{-3}</span>，若原始 <span class="math inline">Q</span> 的最大特征值是 <span class="math inline">10^{3}</span>，条件数仍是 <span class="math inline">10^{6}</span>，正则化几乎无效。此时应当先做量纲归一化，而不是继续加大正则项。</p>
+<h3 id="一条完整的工作流">52.8.6 一条完整的工作流</h3>
+<p>把上面的经验串起来，对本章对象走一遍。</p>
+<p>第一步，写方程，确认平衡点在原点，<span class="math inline">A</span> 已知。第二步，算极点 <span class="math inline">-0.2\pm1.989975\mathrm{j}</span>，确认实部为负。第三步，取 <span class="math inline">Q=I</span>，解出 <span class="math inline">P</span>，残差 <span class="math inline">1.783\times10^{-15}</span>，<span class="math inline">\mathrm{cond}(P)=4.0426</span>。第四步，算 <span class="math inline">\alpha=0.079324</span>，与实测 <span class="math inline">0.199172</span> 对比，比值 <span class="math inline">2.52</span>，判定为正常保守。第五步，因为是线性系统，直接写“全局指数稳定，衰减率不小于 <span class="math inline">0.079324</span>”，不需要讨论水平集。</p>
+<p>全程不需要仿真就能完成前四步，仿真的作用是验证而不是推导。这个顺序很重要：<strong>先有结论，再用仿真检验；不要先用仿真找结论，再补一个证明</strong>。</p>
+<h3 id="三条现场经验">52.8.7 三条现场经验</h3>
+<p>第一，先在草稿纸上算一遍二阶情形。二阶的 <span class="math inline">P</span> 有解析解，手算五分钟，能提前发现符号错误与状态顺序错误。</p>
+<p>第二，把残差、条件数、<span class="math inline">\alpha</span> 三个数一起打印。只看其中一个都会误判：残差小可能是病态，条件数大可能只是量纲问题，<span class="math inline">\alpha</span> 小可能只是 <span class="math inline">Q</span> 选得不好。</p>
+<p>第三，对非线性对象，先画相图再选 <span class="math inline">V</span>。相图的形状会告诉你等值面应该长什么样；盲选二次型，十次有八次证不出东西。</p>
+<h3 id="三个对象的分析对照">52.8.8 三个对象的分析对照</h3>
+<p>本章用了三个对象，它们正好代表三类情形。把三者的分析过程并排看，可以看出方法的选择取决于系统的结构，而不取决于个人偏好。</p>
+<p>第一个是质量-弹簧-阻尼对象，线性、二阶、有解析极点。它的分析全程只需一条方程：写出 <span class="math inline">A</span>，解 Lyapunov 方程，验证 <span class="math inline">P</span> 正定，写全局指数稳定。计算量最小，结论最强，没有任何适用范围限制。代价是它太特殊——真实系统很少严格线性。</p>
+<p>第二个是单摆，非线性、二阶、有守恒量。它不能用 Lyapunov 方程，因为方程只对线性系统成立；必须用物理能量，靠 LaSalle 补上渐近性。结论是局部的，边界 <span class="math inline">c&lt;19.62</span> 来自另一个平衡点的能量。计算量中等，主要花在寻找水平集上界与验证两侧初值。</p>
+<p>第三个是三次项对象，非线性、二阶、没有可用的二次型。它的分析分两步：先证明二次型失败（三个半径上都有 <span class="math inline">\dot V&gt;0</span>），再构造物理能量 <span class="math inline">V=\tfrac12x_2^{2}+U(x_1)</span> 并讨论次水平集的连通性。结论也是局部的，但边界的来源不是“另一个平衡点的能量”，而是“势垒的位置”加“连通分支”。</p>
+<p>三者的差别可以归成一句话：<strong>有物理能量的系统用能量，有线性结构的系统用方程，两者都没有的系统只能靠构造或优化。</strong> 这句话不能反过来用——不能说“没有物理能量就一定不能用能量法”，因为有些系统的能量需要先做变换才能看出来。</p>
+<p>计算量上也有一个规律。线性对象的分析是“一次求解”，非线性对象的分析是“构造 + 验证 + 定界”三段，后者的工作量大约是前者的三到五倍。所以在项目初期判断“这个系统值不值得做严格分析”时，先看它有没有现成的能量函数：有，成本可控；没有，要么接受仿真验证，要么上 SOS。</p>
+<p>三个对象的结论强度也不同。线性对象的结论对所有初值成立，单摆的结论对 <span class="math inline">V\le19.61</span> 成立，三次项的结论对 <span class="math inline">V&lt;1.25</span> 且 <span class="math inline">|x_1|&lt;\sqrt5</span> 成立。越往后，结论越依赖“初值在某个范围内”这个前提。工程使用时要格外注意这个前提，因为它对应的是操作规程，不是数学细节。</p>
+<p>还有一点值得对照：三个对象的保守性来源不同。线性对象的保守性来自 <span class="math inline">P</span> 的椭圆形状，单摆的保守性来自 LaSalle 只给“收敛到不变集”而不给速率，三次项的保守性来自势垒估计得偏小。对应地，收紧的办法也不同——线性对象换 <span class="math inline">Q</span>，单摆补 Lyapunov 函数，三次项做更精细的区域划分。</p>
+<h3 id="把工作流用到非线性对象上">52.8.9 把工作流用到非线性对象上</h3>
+<p>§52.8.6 的六步流程是按线性对象写的。换成单摆，前两步照旧，后四步要改写，值得逐条对照。</p>
+<p>第一步，写方程。单摆的平衡点在 <span class="math inline">(0,0)</span>，不需要平移，但要注意角度必须用弧度，且平衡点只在 <span class="math inline">|x_1|&lt;\pi</span> 内唯一。</p>
+<p>第二步，算极点。线性化后得到 <span class="math inline">-0.15\pm3.13\mathrm{j}</span>，实部为负，说明原点局部稳定。这一步只提供定性信息，因为线性化在 <span class="math inline">|x_1|</span> 接近 <span class="math inline">\pi</span> 时完全失效。</p>
+<p>第三步，换掉“解方程”。非线性系统没有 Lyapunov 方程可解，直接用物理能量 <span class="math inline">V=\tfrac12x_2^{2}+9.81(1-\cos x_1)</span>。这一步的关键是判断“系统有没有守恒量”——单摆有，所以能量法是首选。</p>
+<p>第四步，验算改为“求导并检查符号”。<span class="math inline">\dot V=-0.3x_2^{2}</span>，半负定。这里不能因为“不是负定”就判定失败，而要判断能不能用 LaSalle。判据是：<span class="math inline">\dot V=0</span> 的集合上除了原点还有没有别的轨迹能停住。单摆的答案是“有，但那些点与原点被势垒隔开”，于是要加区域限制。</p>
+<p>第五步，定范围。这一步在线性情形里根本不存在，在非线性情形里却是核心。做法是解 <span class="math inline">f(x)=0</span> 找到相邻平衡点，取它的能量作为上界：<span class="math inline">9.81(1-\cos\pi)=19.62</span>，于是 <span class="math inline">c&lt;19.62</span>，脚本取 <span class="math inline">c=19.61</span>。</p>
+<p>第六步，写结论。必须带三样东西：稳定性类型（渐近、指数）、适用域（<span class="math inline">V\le19.61</span>）、以及“域外会怎样”（越过顶点后持续旋转）。第三样最容易被省略，但它是操作规程的依据。</p>
+<p>把这六步与线性版对照，可以看出工作量主要花在第三与第五步。第三、第五步本质上都是“找结构”：找守恒量、找相邻平衡点。这两件事没有通用算法，只能靠对系统的理解。所以非线性分析的门槛不在数学，在建模。</p>
+<p>还有一条实用经验：如果第三步怎么都找不到合适的 <span class="math inline">V</span>，先回到第一步检查建模——很多时候“找不到 Lyapunov 函数”的真正原因是状态变量选得不好，换一组坐标（例如用能量而不是位移）问题就消了。</p>
+<h2 id="优化与改进">52.9 优化与改进</h2>
+<h3 id="二次型在哪里失效">52.9.1 二次型在哪里失效</h3>
+<p>§52.2.5 的三次项对象可以再看一遍。方程是</p>
+<p><span class="math display">
+\ddot x+0.4\dot x+x-0.2x^{3}=0
+</span></p>
+<p>取 <span class="math inline">V=\tfrac12(x_1^{2}+x_2^{2})</span>，<span class="math inline">\dot V=-0.4x_2^{2}+0.2x_1^{3}x_2</span>。脚本在半径 <span class="math inline">0.1</span>、<span class="math inline">0.5</span>、<span class="math inline">1.0</span> 的圆上算出的 <span class="math inline">\max\dot V</span> 分别是 <span class="math inline">+1.98\times10^{-4}</span>、<span class="math inline">+0.0216</span>、<span class="math inline">+0.1363</span>，全都为正。</p>
+<p>问题不在数值，在形状。<span class="math inline">V</span> 的等值面是圆，而系统的自然“能量面”不是圆——刚度随位移变化（<span class="math inline">x-0.2x^{3}</span>），势能在 <span class="math inline">x_1</span> 较大时变平。用圆去套一个变形的势能面，必然在某些方向上把“正在远离”误判成“正在靠近”。</p>
+<p>图 52-9 把 <span class="math inline">\dot V&gt;0</span> 的区域涂成红色。红色区域从原点附近就开始出现，沿 <span class="math inline">x_1</span> 与 <span class="math inline">x_2</span> 同号的方向伸展。这意味着这个二次型在任何包含原点的水平集上都不是 Lyapunov 函数。</p>
+<p>这里要说清一个分寸。<strong>失败的是一族等权二次型，不是“所有二次型”</strong>。若改用线性化后的 Lyapunov 方程解出的 <span class="math inline">P</span>，由于原点附近三次项是高阶小量，<span class="math inline">\dot V</span> 在一个足够小的邻域内确实负定——这正是 §52.2.5 所说的“线性化能判局部、不能判全局”。问题在于这个邻域通常小得没有工程意义：椭圆被压得极扁，<span class="math inline">c</span> 只有 <span class="math inline">10^{-2}</span> 量级，而实际工况的初值远离原点。所以“二次型失效”的准确含义是“等权二次型给不出有用的适用域”，而不是“二次型在数学上不存在”。</p>
+<figure>
+<img src="figs/ch052/fig_052_09_nocert.svg" alt="图 52-9　二次型在三次项对象上的失效区域" /><figcaption aria-hidden="true">图 52-9　二次型在三次项对象上的失效区域</figcaption>
+</figure>
+<h3 id="换用物理能量">52.9.2 换用物理能量</h3>
+<p>这个对象有一个现成的能量函数。把方程写成 <span class="math inline">\dot x_1=x_2</span>、<span class="math inline">\dot x_2=-0.4x_2-x_1+0.2x_1^{3}</span>，势能是恢复力对位移的积分：</p>
+<p><span class="math display">
+U(x_1)=\int_0^{x_1}\left(s-0.2s^{3}\right)\mathrm{d}s=\frac{x_1^{2}}{2}-0.05x_1^{4}
+\tag{52-31}
+</span></p>
+<p>取 <span class="math inline">V=\tfrac12x_2^{2}+U(x_1)</span>，求导：</p>
+<p><span class="math display">
+\dot V=x_2\dot x_2+\left(x_1-0.2x_1^{3}\right)\dot x_1=-0.4x_2^{2}\le0
+\tag{52-32}
+</span></p>
+<p>一次就成功了。<span class="math inline">\dot V</span> 半负定，<span class="math inline">E=\{x_2=0\}</span>，在 <span class="math inline">x_2=0</span> 上只有 <span class="math inline">x_1=0</span> 与 <span class="math inline">x_1=\pm\sqrt5</span> 能让状态停住，所以由 LaSalle，轨迹收敛到原点的条件是它始终待在 <span class="math inline">|x_1|&lt;\sqrt5</span> 的区域内。</p>
+<p>这就是“换 <span class="math inline">V</span>”的价值：同一个系统，二次型给不出任何证书，能量函数直接给出半负定的导数。差别不在计算量，在是否用上了系统的物理结构。</p>
+<h3 id="次水平集的连通性陷阱">52.9.3 次水平集的连通性陷阱</h3>
+<p>拿到 <span class="math inline">V</span> 之后不能直接说“<span class="math inline">V\le c</span> 内收敛”，还要看这个集合长什么样。</p>
+<p><span class="math inline">U(x_1)=x_1^{2}/2-0.05x_1^{4}</span> 在 <span class="math inline">x_1=\sqrt5\approx2.236</span> 处取极大值 <span class="math inline">U=1.25</span>，之后随 <span class="math inline">|x_1|</span> 增大而下降，最终趋于 <span class="math inline">-\infty</span>。于是 <span class="math inline">V</span> 的次水平集 <span class="math inline">\{V\le c\}</span> 在 <span class="math inline">c&lt;1.25</span> 时并不是一个连通的、包含原点的椭圆盘：它在势垒外侧还有一片区域，那片区域里的点 <span class="math inline">V</span> 值同样很小，但已经在“下坡”的外侧。</p>
+<p>脚本的实验正好卡在这个陷阱上。从 <span class="math inline">(0.8,0)</span> 出发，<span class="math inline">V=0.300</span>，收敛；从 <span class="math inline">(1.2,0)</span> 出发，<span class="math inline">V=0.616</span>，收敛；从 <span class="math inline">(1.6,0)</span> 出发，<span class="math inline">V=0.952</span>，仍收敛，末态模长约 <span class="math inline">10^{-6}</span>。但从 <span class="math inline">(2.5,0)</span> 出发，<span class="math inline">V=1.172&lt;1.25</span>，看起来“能量更低”，却发散到 <span class="math inline">4.97\times10^{5}</span>。</p>
+<p>原因不是能量判据错了，而是 <span class="math inline">2.5</span> 已经在势垒外侧。判据必须写成“<span class="math inline">\{V\le c\}</span> 中包含原点的那一个连通分支”，或者更实用地写成交集 <span class="math inline">\{V\le c\}\cap\{|x_1|&lt;\sqrt5\}</span>。省掉这个交集，就会得出“<span class="math inline">2.5</span> 应该收敛”的错误结论。</p>
+<p>这条经验可以推广：<strong>凡是非单峰势能的系统，能量小不等于离平衡点近</strong>。单摆也有同样的结构，只是它的势能在 <span class="math inline">\pm\pi</span> 处是极大，之后周期性重复，所以 §52.8 才要用 <span class="math inline">x_1=\pm\pi</span> 去截断。</p>
+<p>有了这个截断，能量函数给出的适用域是 <span class="math inline">c&lt;1.25</span> 且 <span class="math inline">|x_1|&lt;\sqrt5</span>。三个收敛初值的 <span class="math inline">V</span> 都小于 <span class="math inline">1.25</span>，落在域内；发散的那个落在域外。理论、仿真、几何三者对上了。</p>
+<h3 id="系统化的构造方法">52.9.4 系统化的构造方法</h3>
+<p>手工构造 <span class="math inline">V</span> 靠灵感，工程上需要可重复的流程。常用的有四类。</p>
+<p><strong>能量法。</strong> 机械、电路、热系统都有现成的能量表达式，直接拿来用，把阻尼项留在 <span class="math inline">\dot V</span> 里。这是成功率最高的方法，前提是系统有明确的物理结构。</p>
+<p><strong>变量梯度法。</strong> 先假设 <span class="math inline">\dot V</span> 的形式（例如 <span class="math inline">\dot V=-\sum g_i(x)x_i^{2}</span>），再反解 <span class="math inline">V</span> 的梯度并检查可积性。它把“猜 <span class="math inline">V</span>”换成“猜 <span class="math inline">\dot V</span>”，对有明确耗散结构的系统很有效。</p>
+<p><strong>Krasovskii 方法。</strong> 取 <span class="math inline">V=f^{\mathsf T}Pf</span>，用 Jacobian 的对称部分判断。它不需要物理直觉，代价是保守。</p>
+<p><strong>平方和（SOS）与线性矩阵不等式。</strong> 把“<span class="math inline">V</span> 正定且 <span class="math inline">\dot V&lt;0</span>”写成多项式非负约束，用半定规划求解。它能把“找 <span class="math inline">V</span>”变成“解优化”，是当前非线性分析的主流工具。代价是计算量随状态维数与多项式阶数快速增长，四阶以上、五维以上就相当吃力。</p>
+<h3 id="从分析到设计">52.9.5 从分析到设计</h3>
+<p>Lyapunov 方法不只是“验尸”，它可以直接用来设计控制器。</p>
+<p>对线性系统，取 <span class="math inline">V=x^{\mathsf T}Px</span>，要求 <span class="math inline">\dot V&lt;0</span> 就得到 <span class="math inline">A^{\mathsf T}P+PA+Q&lt;0</span> 型的不等式。把 <span class="math inline">A</span> 换成 <span class="math inline">A-BK</span>，未知量同时包含 <span class="math inline">P</span> 与 <span class="math inline">K</span>，这就是线性矩阵不等式形式的综合问题。LQR 是它的一个特例：给定 <span class="math inline">Q</span>、<span class="math inline">R</span>，最优反馈使闭环的 Lyapunov 方程恰好成立，<span class="math inline">P</span> 就是 Riccati 方程的解。第 55 章会从这个角度重新推导 LQR。</p>
+<p>对非线性系统，同样的思路给出“控制 Lyapunov 函数”：先选 <span class="math inline">V</span>，再找 <span class="math inline">u</span> 使 <span class="math inline">\dot V</span> 负定。这条路在滑模控制里尤其自然，因为滑模面本身就可以当 <span class="math inline">V</span> 的零集，第 59 章会展开。</p>
+<h3 id="什么时候值得升级">52.9.6 什么时候值得升级</h3>
+<p>非二次 <span class="math inline">V</span>、SOS、LMI 都不是免费的。判断标准可以概括成三条。</p>
+<p>第一，二次型给出的结论已经够用，就不要升级。如果只需要“局部指数稳定”这一句话，二次型加线性化就完成了，升级只会增加审稿人质疑的空间。</p>
+<p>第二，二次型的失败是“形状不匹配”而非“系统不稳定”，值得升级。三次项对象就是这一类：轨迹明明收敛，二次型却给不出证书。此时换 <span class="math inline">V</span> 是唯一出路。</p>
+<p>第三，需要定量的吸引域，且二次型给的 <span class="math inline">c</span> 太小。此时升级的收益可以直接用“适用域扩大了多少倍”来衡量，值得投入。</p>
+<p>反过来，如果系统的非线性很强、状态维数很高、又没有明显的物理结构，SOS 的求解时间可能超过项目周期。这种情况下更实际的做法是分区线性化，用一组二次型覆盖不同工作区，每个区域单独给证书。</p>
+<h3 id="平方和松弛能保证什么不能保证什么">52.9.7 平方和松弛：能保证什么，不能保证什么</h3>
+<p>SOS 值得单独说清，因为它在文献里出现频率很高，而边界条件经常被略过。</p>
+<p>基本想法是把“多项式 <span class="math inline">p(x)\ge0</span> 对一切 <span class="math inline">x</span> 成立”这个难以处理的约束，替换成“<span class="math inline">p</span> 可以写成一族多项式的平方和”。后者等价于存在一个半正定矩阵 <span class="math inline">Q</span> 使 <span class="math inline">p(x)=z(x)^{\mathsf T}Qz(x)</span>，其中 <span class="math inline">z(x)</span> 是由单项式组成的向量。于是“找 <span class="math inline">V</span>”变成“找 <span class="math inline">Q</span>”，而 <span class="math inline">Q\succeq0</span> 是标准的半定规划约束。</p>
+<p>第一个必须记住的事实是：<strong>平方和是非负的充分条件，不是必要条件</strong>。存在非负但不能写成平方和的多项式，最早的反例来自 Motzkin。所以 SOS 求解失败，只说明“这个次数下找不到证书”，不说明“系统不稳定”。这与 Lyapunov 方法本身的“充分不必要”是同一类局限，只是又叠了一层。</p>
+<p>第二个事实是次数的影响。<span class="math inline">V</span> 的次数每加二，单项式向量 <span class="math inline">z</span> 的维数就按组合数增长。二阶系统取四次 <span class="math inline">V</span> 还算轻松，六次就开始吃力；四阶系统取四次 <span class="math inline">V</span> 已经需要可观的算力。工程上的现实做法是从低次试起，解不出来再加次，而不是一上来就取高次。</p>
+<p>第三个事实是数值尺度。SOS 把多项式的系数直接放进半定规划，系数之间差几个数量级时，求解器会报“数值不稳定”或给出看似可行、代回去却不满足的 <span class="math inline">Q</span>。处理办法与 §52.7.7 同源：先把状态无量纲化，让各项系数落在同一量级。</p>
+<p>第四点最容易被忽略：<strong>SOS 的结果必须回到原系统验证</strong>。求解器给的是浮点近似，<span class="math inline">Q</span> 的最小特征值可能是 <span class="math inline">-10^{-9}</span>。因此拿到 <span class="math inline">V</span> 之后，要重新计算 <span class="math inline">\dot V</span> 的系数，检查它是否真的可以写成平方和，或者在预计的区域内做密集采样验证。只信求解器的“成功”状态，是把数值误差当成了数学结论。</p>
+<h3 id="让仿真给构造提供线索">52.9.8 让仿真给构造提供线索</h3>
+<p>构造 <span class="math inline">V</span> 不是纯粹的纸笔工作，仿真可以给出方向，前提是知道该看什么。</p>
+<p>第一个线索是相图的形状。把轨迹画出来，看等值线应该往哪个方向拉长。本章三次项对象的相图在 <span class="math inline">|x_1|</span> 较大时明显变扁，这直接提示 <span class="math inline">V</span> 的势能项要随 <span class="math inline">x_1</span> 变平——于是 <span class="math inline">U</span> 里出现了 <span class="math inline">x_1^{4}</span> 项。</p>
+<p>第二个线索是 <span class="math inline">\dot V</span> 为正的区域。取一个候选 <span class="math inline">V</span>，把 <span class="math inline">\dot V&gt;0</span> 的点涂色（图 52-9 就是这么做），看红色区域的形状。如果红色集中在某个方向，说明 <span class="math inline">V</span> 在该方向“太陡”或“太缓”，调整那一项的比重往往就能消掉。</p>
+<p>第三个线索是不同初值的收敛时间。若两个初值的 <span class="math inline">V</span> 相近但收敛时间差很多，说明 <span class="math inline">V</span> 没有反映出真实的“距离”，这个 <span class="math inline">V</span> 用作区域估计会很保守。</p>
+<p>第四个线索是能量漂移。无阻尼时总能量应当守恒，仿真里若出现稳定漂移，说明数值积分有问题，这时候任何基于能量的结论都不可信。本章无阻尼情形的漂移是 <span class="math inline">4.586\times10^{-7}</span>，这个量级说明积分器选得合适。</p>
+<p>这四条线索的共同点是：<strong>它们都从“看图”开始，以“改公式”结束</strong>。仿真不能替代证明，但它能把盲目的试错压缩到几次之内。反过来，只跑仿真不看结构，得到的只是一堆曲线，写不进报告。</p>
+<h2 id="工程落地">52.10 工程落地</h2>
+<h3 id="三条数值路线">52.10.1 三条数值路线</h3>
+<p>解 <span class="math inline">A^{\mathsf T}P+PA=-Q</span> 有三条常用路线，适用场景不同。</p>
+<p><strong>第一条，Bartels-Stewart 算法。</strong> 先用 Schur 分解把 <span class="math inline">A</span> 化为上三角，再回代求解。复杂度 <span class="math inline">O(n^{3})</span>，是 SciPy 的默认实现，也是绝大多数场景的正确选择。它的数值稳定性好，因为全程用正交变换。</p>
+<p><strong>第二条，Kronecker 展开。</strong> 把方程写成 <span class="math inline">L\,\mathrm{vec}(P)=-\mathrm{vec}(Q)</span> 后直接解线性方程组，<span class="math inline">L</span> 是 <span class="math inline">n^{2}\times n^{2}</span>。复杂度 <span class="math inline">O(n^{6})</span>，只适合 <span class="math inline">n\le10</span> 的小系统，但它的价值在于独立验证——两条完全不同的算法给出同一个 <span class="math inline">P</span>，才说明结果可信。本章的交叉验证差值 <span class="math inline">9.223\times10^{-16}</span> 就是这么来的。</p>
+<p><strong>第三条，迭代法。</strong> 用 <span class="math inline">P_{k+1}</span> 逐步逼近，适合超大规模稀疏系统，或者 <span class="math inline">A</span> 只能以算子形式给出（无法显式存矩阵）的场景。收敛速度由 <span class="math inline">A</span> 的谱决定，极点越靠近虚轴越慢，这一点与 §52.4.4 的算子谱分析一致。</p>
+<p>工程上默认用第一条，用第二条在小维数下抽查，第三条只在特殊结构下考虑。</p>
+<h3 id="api-语义的坑">52.10.2 API 语义的坑</h3>
+<p>这是本章最容易踩、后果最严重的一个坑，必须单独写。</p>
+<p>SciPy 的连续 Lyapunov 求解器解的是 <span class="math inline">AX+XA^{\mathsf H}=Q</span>，而我们要解的是 <span class="math inline">A^{\mathsf T}P+PA=-Q</span>。直接把 <span class="math inline">A</span> 与 <span class="math inline">-Q</span> 传进去，得到的是另一个方程的解。</p>
+<p>本章初版代码就是这么写的。输出的 <span class="math inline">P</span> 是 <span class="math inline">\begin{bmatrix}1.6125&amp;-0.5\\-0.5&amp;6.25\end{bmatrix}</span>，相对残差 <span class="math inline">2.372\times10^{1}</span>——残差比右端项还大二十倍，说明解根本不满足目标方程。修正的方法是把第一个参数传 <span class="math inline">A^{\mathsf T}</span>：</p>
+<p><span class="math display">
+\text{求 }A^{\mathsf T}P+PA=-Q\;\Longleftrightarrow\;\text{调用 solver}(A^{\mathsf T},\,-Q)
+\tag{52-33}
+</span></p>
+<p>改完之后 <span class="math inline">P=\begin{bmatrix}6.3&amp;0.125\\0.125&amp;1.5625\end{bmatrix}</span>，残差降到 <span class="math inline">1.783\times10^{-15}</span>，与 Kronecker 解法的差是 <span class="math inline">9.223\times10^{-16}</span>。</p>
+<p>这个错误之所以危险，是因为求解器不报错、返回的矩阵也对称、特征值也可能为正。只有算残差才能发现。<strong>凡是调用 Lyapunov 求解器，第一件事就是算残差</strong>，这是本章反复强调残差的原因。</p>
+<p>离散版本有同样的陷阱。SciPy 的离散求解器解的是 <span class="math inline">AXA^{\mathsf H}-X+Q=0</span>，对应我们的 <span class="math inline">A_d^{\mathsf T}PA_d-P=-Q</span> 时，同样要传 <span class="math inline">A_d^{\mathsf T}</span>。两个 API 的转置约定一致，记住一次即可。</p>
+<h3 id="病态与精度控制">52.10.3 病态与精度控制</h3>
+<p>§52.3.6 的病态序列说明：参数越靠近稳定边界，<span class="math inline">P</span> 的元素越大，条件数越高，而残差可能仍然是零。工程上要三道防线。</p>
+<p>第一道，报告条件数。<span class="math inline">\mathrm{cond}(P)</span> 与 <span class="math inline">\mathrm{cond}(L)</span> 都算出来，与残差一起记录。任何一个超过 <span class="math inline">10^{6}</span>，结论就要加注“对参数敏感”。</p>
+<p>第二道，做状态缩放。把量纲差异大的状态归一化到同一量级，能让条件数下降一两个数量级。这是最便宜也最有效的改善手段，比换求解器管用。</p>
+<p>第三道，用两条算法交叉验证。Bartels-Stewart 与 Kronecker 在 <span class="math inline">n\le10</span> 时都很快，两者结果一致才放心。若两者差异明显，说明方程本身病态，不是算法问题。</p>
+<p>精度方面，双精度（约 <span class="math inline">10^{-16}</span> 的相对精度）对绝大多数控制问题是够的。只有两种情况需要更高精度：<span class="math inline">A</span> 的极点实部小于 <span class="math inline">10^{-8}</span>，或者 <span class="math inline">P</span> 的元素超过 <span class="math inline">10^{10}</span>。这两种情况下，与其提高精度，不如先问“这个系统是不是已经贴在稳定边界上了”。</p>
+<h3 id="离散实现的三个注意点">52.10.4 离散实现的三个注意点</h3>
+<p>第一，<span class="math inline">P_d</span> 的量级比 <span class="math inline">P</span> 大 <span class="math inline">1/T_s</span> 倍。<span class="math inline">T_s=0.001</span> s 时，<span class="math inline">P_d</span> 的元素可能是 <span class="math inline">P</span> 的一千倍。若在线计算 <span class="math inline">V</span> 用的是单精度浮点，<span class="math inline">10^{4}</span> 量级的 <span class="math inline">P</span> 乘上 <span class="math inline">10^{-3}</span> 量级的状态，中间结果的动态范围可能超出单精度。做法是先把状态归一化，再算二次型。</p>
+<p>第二，离散方程对 <span class="math inline">Q</span> 的正定性要求更严。连续域里 <span class="math inline">Q</span> 半正定加上能观性还能凑合，离散域里 <span class="math inline">\Delta V\le-c_3\|x\|^{2}</span> 需要 <span class="math inline">c_3&gt;0</span>，半正定直接失效。这条与 §52.5.5 的第二点呼应。</p>
+<p>第三，离散极点靠近单位圆时，<span class="math inline">P_d</span> 的增长比连续域更剧烈。连续域的距离是 <span class="math inline">|\mathrm{Re}\,\lambda|</span>，离散域是 <span class="math inline">1-|z|</span>，后者在 <span class="math inline">T_s</span> 小时是前者的 <span class="math inline">T_s</span> 倍。同样是“距边界 <span class="math inline">10^{-3}</span>”，离散域的 <span class="math inline">P_d</span> 可能比连续域大三个数量级。这不是系统变差了，是坐标刻度变了。</p>
+<h3 id="在线监测-v">52.10.5 在线监测 <span class="math inline">V</span></h3>
+<p>Lyapunov 函数不只能写在报告里，还能跑在控制器里做实时健康监测。</p>
+<p>计算量很小。对称矩阵的二次型只需 <span class="math inline">n(n+1)/2</span> 次乘加：</p>
+<p><span class="math display">
+V(x)=x^{\mathsf T}Px=\sum_{i=1}^{n}p_{ii}x_i^{2}+2\sum_{i&lt;j}p_{ij}x_ix_j
+\tag{52-34}
+</span></p>
+<p>二阶系统是 <span class="math inline">3</span> 次乘加，五阶是 <span class="math inline">15</span> 次，对任何现代 MCU 都是可忽略的开销。</p>
+<p>用法是设阈值：正常运行时 <span class="math inline">V</span> 应当单调下降，若连续若干个采样周期 <span class="math inline">V</span> 上升超过某个百分比，就报警。阈值不能设得太紧，因为测量噪声会让 <span class="math inline">V</span> 抖动；经验值是“连续 <span class="math inline">5</span> 个周期上升且累计超过 <span class="math inline">10\%</span>”。</p>
+<p>还要注意下溢。状态收敛到 <span class="math inline">10^{-8}</span> 时，<span class="math inline">V</span> 在 <span class="math inline">10^{-16}</span> 量级，单精度下已经贴近最小正规数。做法是监测 <span class="math inline">\sqrt{V}</span> 而不是 <span class="math inline">V</span>，或者在对数域比较。</p>
+<h3 id="嵌入式与定点实现">52.10.6 嵌入式与定点实现</h3>
+<p>嵌入式实现的关键是“离线算 <span class="math inline">P</span>，在线只算二次型”。</p>
+<p><span class="math inline">P</span> 在控制器设计阶段算好，烧进固件；运行时只做式 (52-34) 的乘加。这样在线代码只有十几行，不依赖任何线性代数库。</p>
+<p>定点实现要注意三点。第一，<span class="math inline">P</span> 的元素动态范围可能很大（本章 <span class="math inline">6.3</span> 与 <span class="math inline">0.125</span> 差 <span class="math inline">50</span> 倍），统一用同一个 <span class="math inline">Q</span> 格式会损失小元素的有效位。做法是给 <span class="math inline">P</span> 单独选格式，或者把 <span class="math inline">P</span> 归一化后再缩放状态。第二，<span class="math inline">x_i^{2}</span> 容易溢出，<span class="math inline">16</span> 位定点下 <span class="math inline">x_i</span> 超过 <span class="math inline">181</span> 就溢出，必须先限幅。第三，<span class="math inline">V</span> 的累加要用更宽的累加器，中间结果高位对齐。</p>
+<p>若目标平台有单精度 FPU，直接用浮点更省事，代价只是几微秒。</p>
+<h3 id="与全书其他章节的接口">52.10.7 与全书其他章节的接口</h3>
+<p>Lyapunov 分析不是一个孤立工具，它是后面好几章的共同语言。</p>
+<p>第 54 章的状态反馈与观测器，用 <span class="math inline">V=x^{\mathsf T}Px</span> 把“极点配置”翻译成“<span class="math inline">\dot V</span> 负定”，误差方程 <span class="math inline">e&#39;=(A-LC)e</span> 的稳定性也由同一个方程判定。第 55 章的 LQR，其 Riccati 方程就是 Lyapunov 方程的推广。第 58 章的 MPC，终端代价常用 <span class="math inline">P</span> 保证递归可行性。第 59 章的滑模，用 <span class="math inline">V=s^{2}/2</span> 证明到达条件。第 85 章的数字控制，用离散 Lyapunov 方程 (52-15) 判断采样后的稳定性。</p>
+<p>这些章里出现的 <span class="math inline">P</span>，来源都是本章的方程 (52-4) 与 (52-15)。把这两个方程记牢，后面很多推导都能一眼看懂。</p>
+<h3 id="落地检查清单">52.10.8 落地检查清单</h3>
+<p>表 52-4 是一份可以直接贴进评审材料的清单。每一条都是“是/否”判断，不通过时有明确动作。</p>
+<table>
+<thead>
+<tr class="header">
+<th>检查项</th>
+<th>判据</th>
+<th>不通过时</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>平衡点是否在原点</td>
+<td><span class="math inline">f(0)=0</span></td>
+<td>先做坐标平移</td>
+</tr>
+<tr class="even">
+<td><span class="math inline">Q</span> 是否对称正定</td>
+<td><span class="math inline">\lambda_{\min}(Q)&gt;0</span></td>
+<td>加 <span class="math inline">10^{-3}I</span> 或改选</td>
+</tr>
+<tr class="odd">
+<td>求解器参数是否转置</td>
+<td>残差 <span class="math inline">&lt;10^{-10}</span></td>
+<td>传 <span class="math inline">A^{\mathsf T}</span> 与 <span class="math inline">-Q</span></td>
+</tr>
+<tr class="even">
+<td>两条算法是否一致</td>
+<td>差值 <span class="math inline">&lt;10^{-12}</span></td>
+<td>查病态，做状态缩放</td>
+</tr>
+<tr class="odd">
+<td><span class="math inline">P</span> 是否正定</td>
+<td><span class="math inline">\lambda_{\min}(P)&gt;0</span></td>
+<td>回查 <span class="math inline">A</span> 的极点</td>
+</tr>
+<tr class="even">
+<td>条件数是否可接受</td>
+<td><span class="math inline">\mathrm{cond}(P)&lt;10^{6}</span></td>
+<td>报告加注敏感性</td>
+</tr>
+<tr class="odd">
+<td>结论范围是否写明</td>
+<td>全局或局部 + 上界 <span class="math inline">c</span></td>
+<td>补水平集分析</td>
+</tr>
+<tr class="even">
+<td>在线计算是否溢出</td>
+<td>中间结果在量程内</td>
+<td>状态归一化或限幅</td>
+</tr>
+<tr class="odd">
+<td>采样周期是否记录</td>
+<td><span class="math inline">T_s</span> 与 <span class="math inline">P_d</span> 同表</td>
+<td>补离散化说明</td>
+</tr>
+</tbody>
+</table>
+<p>这张表里最容易被跳过的是第七行。“局部渐近稳定”与“全局渐近稳定”在报告里只差两个字，在工程上差一个适用域。写下结论时若说不出 <span class="math inline">c</span> 是多少，就还没有做完分析。</p>
+<h3 id="多轴耦合与分块求解">52.10.9 多轴耦合与分块求解</h3>
+<p>真实的机电系统很少是单自由度的。三轴云台、六轴机械臂、多电机同步传动，状态维数从六到几十不等。此时的第一个问题不是“解方程要多久”，而是“该怎么组织这次计算”。</p>
+<p>先看计算量。Bartels-Stewart 的复杂度是 <span class="math inline">O(n^{3})</span>，<span class="math inline">n=30</span> 时大约是 <span class="math inline">n=2</span> 时的三千多倍。但即便在笔记本上，<span class="math inline">n=30</span> 的求解也只要几十毫秒，所以计算量从来不是瓶颈。真正的瓶颈在另外两处：一是 <span class="math inline">A</span> 的建模误差会随维数放大，二是各轴的量纲差异让 <span class="math inline">Q=I</span> 失去意义。</p>
+<p>建模误差的问题更隐蔽。低维时可以把每个参数都标定到位，维数一高，“某个轴的阻尼系数在温升后变化三成”这类不确定性就变成常态。这时候即使解出一个漂亮的 <span class="math inline">P</span>，它对应的也是一个不存在的精确模型。工程上更稳妥的做法是把耦合项与参数偏差显式写成 <span class="math inline">\Delta A</span>，用 §52.6.7 第三种用法的鲁棒性预算去卡它的上界，而不是假装它们不存在。</p>
+<p>分块求解是一个常用的折中。把 <span class="math inline">A</span> 拆成块对角部分 <span class="math inline">A_0</span> 与耦合部分 <span class="math inline">\Delta A</span>，先对每个轴单独解 <span class="math inline">A_i^{\mathsf T}P_i+P_iA_i=-Q_i</span>，再拼成 <span class="math inline">P=\mathrm{diag}(P_1,\dots,P_m)</span>。这个 <span class="math inline">P</span> 对 <span class="math inline">A_0</span> 是严格解，对整体 <span class="math inline">A_0+\Delta A</span> 只是一个候选函数，需要验证</p>
+<p><span class="math display">
+\dot V=-x^{\mathsf T}Qx+x^{\mathsf T}\left(\Delta A^{\mathsf T}P+P\Delta A\right)x&lt;0 .
+</span></p>
+<p>把后一项按块展开，会得到形如“耦合系数小于某个由 <span class="math inline">\lambda_{\min}(Q_i)</span> 与 <span class="math inline">\|P_i\|</span> 决定的阈值”的条件。这个条件的物理意义很清楚：<strong>某一轴的执行能力必须足以压住邻轴传过来的扰动</strong>。它比整体求解保守，但每条不等式都能对应到一个可测量的部件，出了问题知道该动哪里。</p>
+<p>分块是否够用，有一个经验判据。分别用整体求解与分块求解算出 <span class="math inline">\alpha</span>，若分块给出的 <span class="math inline">\alpha</span> 只比整体小两成以内，就用分块——结论稍保守，但结构清楚、可维护；若小了一半以上，说明耦合是主导因素，必须整体求解，否则得到的结论没有实际指导意义。</p>
+<p>还有一种情况必须整体求解：系统存在明显的模态耦合，例如柔性机械臂的低阶弯曲模态与关节运动耦合。此时块对角假设直接违背物理事实，分块解出的 <span class="math inline">P</span> 可能在真实系统上连正定性都保不住。</p>
+<h3 id="一页纸的交付模板">52.10.10 一页纸的交付模板</h3>
+<p>分析做完了，怎么交给别人？建议固定成一页纸，六个字段，顺序固定。</p>
+<p>第一段写模型：状态变量是什么、量纲是什么、平衡点在哪里、<span class="math inline">A</span> 的数值。这一段的作用是让别人能复现，所以必须给出状态顺序——“<span class="math inline">x_1</span> 位移、<span class="math inline">x_2</span> 速度”这样的说明不能省，否则 <span class="math inline">P</span> 的元素无法解读。</p>
+<p>第二段写参数：<span class="math inline">Q</span> 的取值与理由、采样周期（若是离散系统）、求解器与方法。<span class="math inline">Q</span> 的理由要写成“两个状态量纲相当，取 <span class="math inline">I</span>”这种可检验的句子，不要写“按经验”。</p>
+<p>第三段写结果，四个数并列：残差 <span class="math inline">1.783\times10^{-15}</span>、<span class="math inline">\mathrm{cond}(P)=4.0426</span>、<span class="math inline">\alpha=0.079324</span>、实测衰减率 <span class="math inline">0.199172</span>。前两个说明算对了，后两个说明结论有多紧。</p>
+<p>第四段写结论：一句话，包含稳定性类型与适用范围。“原点全局指数稳定，衰减率不小于 <span class="math inline">0.079324</span>”是合格的；“系统稳定”不合格，因为它没说是哪种稳定、对哪些初值成立。</p>
+<p>第五段写验证：用了哪条独立路线、跑了哪几组初值、结果与界的比值是多少。这一段是给复核者看的，也是给自己留的证据。</p>
+<p>第六段写边界：这套结论在什么条件下失效。参数漂移多少、采样周期多大、饱和多深，会让 <span class="math inline">\dot V</span> 不再负定。这一段的写法应当是“若 <span class="math inline">k</span> 超过某值则结论失效”，而不是“实际中应注意参数变化”这种没有信息量的话。</p>
+<p>一页纸的限制不是为了省纸，而是为了强迫作者做取舍。凡是写不进一页纸的内容，通常是因为作者自己还没想清楚哪一条是主要结论。真正做透的分析，核心往往只有一条不等式和三个数。</p>
+<h3 id="参数变更后要重算什么">52.10.11 参数变更后要重算什么</h3>
+<p>分析报告不是一次性的。样机换了电机、结构调整了质量、控制器改了采样周期，原来的结论都要重新确认。把“改了什么就要重算什么”固定成一张对照表，可以避免漏算。</p>
+<table>
+<thead>
+<tr class="header">
+<th>变更内容</th>
+<th>必须重算</th>
+<th>可以保留</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>刚度或质量变化</td>
+<td><span class="math inline">A</span>、极点、<span class="math inline">P</span>、<span class="math inline">\alpha</span></td>
+<td>分析流程、<span class="math inline">Q</span> 的选择理由</td>
+</tr>
+<tr class="even">
+<td>阻尼变化</td>
+<td>极点、<span class="math inline">P</span>、<span class="math inline">\alpha</span>、界</td>
+<td>状态定义、量纲归一化</td>
+</tr>
+<tr class="odd">
+<td>采样周期变化</td>
+<td><span class="math inline">A_d</span>、<span class="math inline">P_d</span>、<span class="math inline">\alpha_d</span>、离散图</td>
+<td>连续域的全部结论</td>
+</tr>
+<tr class="even">
+<td>离散化方法变化</td>
+<td><span class="math inline">A_d</span>、<span class="math inline">P_d</span></td>
+<td><span class="math inline">Q</span>、适用域的形状</td>
+</tr>
+<tr class="odd">
+<td>状态坐标变换</td>
+<td><span class="math inline">P</span>、条件数</td>
+<td><span class="math inline">\alpha</span>、稳定性类型、<span class="math inline">c</span> 对应的物理边界</td>
+</tr>
+<tr class="even">
+<td><span class="math inline">Q</span> 的调整</td>
+<td><span class="math inline">P</span>、<span class="math inline">\alpha</span>、界</td>
+<td>极点、稳定性类型</td>
+</tr>
+</tbody>
+</table>
+<p>表里最容易被漏掉的是最后两行。坐标变换不改变任何结论，所以很多人以为不用重算，但报告里写的 <span class="math inline">P</span> 与代码里用的 <span class="math inline">P</span> 必须一致，否则在线计算的 <span class="math inline">V</span> 与报告的数值对不上。<span class="math inline">Q</span> 的调整则相反，它看起来很“轻”，实际会改变 <span class="math inline">\alpha</span> 与界的全部数值。</p>
+<p>还有一条实践建议：把 <span class="math inline">P</span> 的数值连同生成它的代码版本一起存档。半年后若有人问“这个 <span class="math inline">P</span> 是怎么来的”，能立刻回答“哪个提交、哪个参数、哪个求解器”。没有这份记录，报告里的矩阵就只是一串无法追溯的数字。</p>
+<h2 id="优缺点与适用边界">52.11 优缺点与适用边界</h2>
+<h3 id="四条优点">52.11.1 四条优点</h3>
+<p><strong>第一，不需要解方程。</strong> 这是 Lyapunov 方法最本质的优势。稳定性是关于 <span class="math inline">t\to\infty</span> 的命题，仿真永远只能跑到有限时刻；Lyapunov 函数把无穷时间的问题变成一个代数符号问题，一次判断覆盖所有时间。对非线性系统，这一点尤其重要，因为非线性方程绝大多数没有解析解。</p>
+<p><strong>第二，能处理非线性。</strong> 极点判据只对线性系统有效，描述函数只对特定类型的非线性有效，相平面只对二阶有效。Lyapunov 方法对维数没有硬限制，对非线性形式也只要求连续可微。单摆的能量函数就是一个例子：不需要线性化，对任意摆角都成立。</p>
+<p><strong>第三，给出定量结论。</strong> 稳定/不稳定是定性判断，Lyapunov 方法还能给出衰减率 <span class="math inline">\alpha</span>、初值放大倍数 <span class="math inline">\sqrt{\mathrm{cond}(P)}</span>、适用域上界 <span class="math inline">c</span>。这三个数直接对应工程指标：调节时间、超调、安全工作范围。</p>
+<p><strong>第四，可以嵌入在线系统。</strong> <span class="math inline">V</span> 的计算只是二次型，几十次乘加，能跑在单片机上。把 <span class="math inline">V</span> 做成实时监测量，可以在系统偏离设计工况时提前报警，这比事后分析有用得多。</p>
+<h3 id="五条局限">52.11.2 五条局限</h3>
+<p><strong>第一，充分不必要。</strong> 找到 <span class="math inline">V</span> 一定能证明稳定，找不到 <span class="math inline">V</span> 什么也说明不了。三次项对象就是活例子：等权二次型在任何半径上都给出正的 <span class="math inline">\dot V</span>，系统却确实收敛。这个不对称意味着 Lyapunov 方法的“失败”不等于“系统有问题”，只等于“这个函数不行”。</p>
+<p><strong>第二，<span class="math inline">V</span> 的构造没有通用算法。</strong> 线性系统有方程可解，非线性系统只能靠物理直觉、变量梯度、Krasovskii 或 SOS。对高维黑箱模型，这几种方法都可能失效。工程上常见的妥协是分区线性化，用一组二次型覆盖工作区。</p>
+<p><strong>第三，无法直接判定不稳定。</strong> 要证明不稳定，需要 Chetaev 函数（在一个区域内 <span class="math inline">V&gt;0</span> 且 <span class="math inline">\dot V&gt;0</span>），而构造 Chetaev 函数比构造 Lyapunov 函数更难。所以实践中“判不稳定”往往还是靠线性化或仿真。</p>
+<p><strong>第四，数值上可能病态。</strong> 极点靠近虚轴时 <span class="math inline">P</span> 的元素急剧增大，条件数升高，结论对参数敏感。§52.3.6 的序列里，扰动 <span class="math inline">10^{-4}</span> 就让条件数到 <span class="math inline">10^{4}</span>，再小两个数量级就接近双精度的极限。</p>
+<p><strong>第五，扩展情形复杂。</strong> 时滞系统需要 Krasovskii 泛函或 Razumikhin 条件，切换系统需要共同 Lyapunov 函数，混杂系统需要多 Lyapunov 函数。每一种扩展都有各自的技术条件，不能把本章的结论直接搬过去。</p>
+<h3 id="适用边界">52.11.3 适用边界</h3>
+<p>适合用的场景有三个特征：维数不高（十维以内）、有明确的物理结构（机械、电路、热工）、需要一份能被复核的证书（安全认证、论文、评审）。</p>
+<p>不适合的场景也有三个特征：高维黑箱（神经网络控制器、复杂化工流程）、强非光滑（干摩擦、饱和、继电器）、时滞显著（网络控制、大惯性过程）。这三类不是“不能分析”，而是“用本章的工具性价比低”，应当换方法。</p>
+<p>还有一个边界容易被忽略：<strong>Lyapunov 方法回答的是“是否收敛到平衡点”，不回答“收敛到哪个平衡点”</strong>。多平衡点系统里，不同初值可能收敛到不同点，LaSalle 只能告诉你“收敛到不变集”，要说清是哪一个，还得结合相图或区域划分。§52.9.3 的三次项对象就有三个平衡点：<span class="math inline">0</span> 与 <span class="math inline">\pm\sqrt5</span>。</p>
+<h3 id="与相邻方法的对比">52.11.4 与相邻方法的对比</h3>
+<p>表 52-5 把五种常用稳定性分析工具放在一起。选择依据不是“哪个更先进”，而是“要回答什么问题、系统是什么结构”。</p>
+<table>
+<thead>
+<tr class="header">
+<th>方法</th>
+<th>能给什么</th>
+<th>主要局限</th>
+<th>适用对象</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>极点判据</td>
+<td>精确的稳定/不稳定</td>
+<td>只对线性定常</td>
+<td>线性化后的工作点</td>
+</tr>
+<tr class="even">
+<td>相平面</td>
+<td>全局几何图像</td>
+<td>只对二阶</td>
+<td>二阶非线性</td>
+</tr>
+<tr class="odd">
+<td>描述函数</td>
+<td>极限环的存在与幅值</td>
+<td>近似，只对特定非线性</td>
+<td>含间隙、饱和的回路</td>
+</tr>
+<tr class="even">
+<td>Lyapunov 直接法</td>
+<td>稳定性证明 + 定量界</td>
+<td>充分不必要，<span class="math inline">V</span> 难构造</td>
+<td>低维、有物理结构</td>
+</tr>
+<tr class="odd">
+<td>SOS / LMI</td>
+<td>自动搜索 <span class="math inline">V</span> 与吸引域</td>
+<td>计算量随维数爆炸</td>
+<td>中低维多多项式系统</td>
+</tr>
+</tbody>
+</table>
+<p>表中第二行与第四行常常配合使用：相图给出几何直觉，Lyapunov 给出严格证明。只画相图不证明，结论不可靠；只做 Lyapunov 不看相图，<span class="math inline">V</span> 往往选错形状。</p>
+<p>第三行值得补充一句。描述函数假设非线性环节可以用一个与幅值相关的等效增益代替，它能预测极限环，但不能证明稳定性。工程上常把描述函数与 Lyapunov 结合：描述函数找候选极限环，Lyapunov 在环外证明收敛。</p>
+<h3 id="什么时候该换工具">52.11.5 什么时候该换工具</h3>
+<p>三条判断标准。</p>
+<p>第一条，系统维数超过十且没有稀疏结构。此时 <span class="math inline">P</span> 的求解仍然可行，但 <span class="math inline">V</span> 的构造与验证成本急剧上升，LMI 往往更合适。</p>
+<p>第二条，非线性不可微或有切换。Lyapunov 定理要求 <span class="math inline">f</span> 连续可微，干摩擦、饱和、继电器都不满足。此时要么做光滑化近似，要么改用非光滑分析。</p>
+<p>第三条，结论需要“精确”而非“保守”。Lyapunov 给的是保证，天生保守。若工程上需要精确的吸引域边界，只能靠数值延拓或大规模仿真加验证，此时 Lyapunov 的作用退化为“提供初值”。</p>
+<p>反过来，如果需求是“给一份能过评审的稳定性证明”，本章的方法仍然是最直接的选择。它的推导短、假设清楚、结论可复核，这三条在工程评审里比“精确”更重要。</p>
+<h3 id="一次误判的复盘">52.11.6 一次误判的复盘</h3>
+<p>把前面几条局限放到一个具体情境里，能看清它们是怎么合起来误导人的。</p>
+<p>设想一台带配重的翻转机构，调试时出现“偶尔回中不到位”。工程师按小角度工况线性化，算出极点实部为负，判为稳定，于是先怀疑传感器。换了传感器仍复现，又怀疑摩擦。最后做 Lyapunov 分析才发现问题：机构在大角度时配重提供的回复力矩迅速减小，等效刚度随角度下降，二次型给出的 <span class="math inline">\dot V&lt;0</span> 只在一个不大的角度范围内成立，而回中指令的初始角已经超出这个范围。系统是局部稳定、全局不稳定的。</p>
+<p>这个例子包含三个典型错误。第一，把线性化结论当成全局结论。极点只描述原点邻域，工作范围超出邻域时它什么也没说。第二，没有算适用域。若当初解出 <span class="math inline">c</span> 并核对初值，问题在第一次分析时就会暴露。第三，把“偶尔”归因于外部因素。Lyapunov 视角下，“偶尔”通常意味着工作点偶尔越过了某个边界——这本身就是需要定量的信息。</p>
+<p>复盘之后的做法很简单：把 <span class="math inline">c</span> 换算成允许的初始角，写进操作规程；同时把 <span class="math inline">V</span> 做成在线监测量，一旦 <span class="math inline">V</span> 超过 <span class="math inline">0.8c</span> 就降速。这两条改动没有增加任何硬件，成本只是几十行代码。</p>
+<p>这个案例说明一件事：本章的方法最大的价值不是“证明稳定”，而是<strong>把“稳定”这个定性说法变成一组可核对的数</strong>。一旦有了数，误判就没有藏身之处。</p>
+<h2 id="python-仿真代码">52.12 Python 仿真代码</h2>
+<p>本章所有数值都来自两个脚本：<code>code/ch052_sim.py</code> 负责算，<code>code/ch052_figs.py</code> 负责画。前者不画图，后者不算法。这样分工之后，正文里任何一个数字都能在不看图的情况下复算，图也不会因为一次计算改动而失真。</p>
+<h3 id="代码组织与运行方式">52.12.1 代码组织与运行方式</h3>
+<p>在 <code>book</code> 目录下执行两条命令：</p>
+<pre><code>&quot;D:\Anaconda3\envs\py311\python.exe&quot; code\ch052_sim.py
+&quot;D:\Anaconda3\envs\py311\python.exe&quot; code\ch052_figs.py</code></pre>
+<p>第一条打印十二组报告，第二条在 <code>figs/ch052/</code> 下生成 11 张图的 SVG 与 PDF。依赖只有 <code>numpy</code>、<code>scipy</code>、<code>matplotlib</code>，不需要 <code>control</code>——本章的方程都可以直接用 <code>scipy.linalg</code> 的两个 Lyapunov 求解器加 <code>numpy</code> 的矩阵运算完成，省掉了 <code>slycot</code> 在 Windows 上的安装麻烦。</p>
+<p>脚本按三层组织，见表 52-6。</p>
+<table>
+<thead>
+<tr class="header">
+<th>层</th>
+<th>内容</th>
+<th>主要函数</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>对象层</td>
+<td>三个被分析系统</td>
+<td><code>plant_msd</code>、<code>f_pendulum</code>、<code>f_cubic_damped</code>、<code>f_cubic_only</code></td>
+</tr>
+<tr class="even">
+<td>工具层</td>
+<td>求解与体检</td>
+<td><code>solve_p</code>、<code>solve_p_vec</code>、<code>lyap_operator</code>、<code>simulate</code>、<code>pendulum_energy</code></td>
+</tr>
+<tr class="odd">
+<td>报告层</td>
+<td>按主题成组输出</td>
+<td><code>report_spectrum</code> 至 <code>report_q_effect</code> 共十二个</td>
+</tr>
+</tbody>
+</table>
+<p>工具层只接受数组，不打印任何东西；所有打印集中在报告层。换对象时只改对象层与报告层的两行，工具层不动。</p>
+<p>三个对象分别是：52.4 节的单自由度质量-弹簧-阻尼对象（<code>plant_msd</code>，<span class="math inline">k=4</span>、<span class="math inline">c=0.4</span>、<span class="math inline">m=1</span>）；52.1 与 52.8 节的单摆（<code>f_pendulum</code>，<span class="math inline">g=9.81</span>、<span class="math inline">l=1</span>、<span class="math inline">b=0.3</span>）；52.2 与 52.9 节的三次项对象（<code>f_cubic_damped</code> 带阻尼，<code>f_cubic_only</code> 只保留三次项，用于演示代数收敛）。</p>
+<h3 id="两个核心函数">52.12.2 两个核心函数</h3>
+<p>整章的技术核心只有两段：把方程解对，把残差算对。</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> solve_p(A, Q):</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">&quot;&quot;&quot;解 A&#39;P + PA = -Q，返回 P 与相对残差。</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="co">    注意：scipy 解的是 A X + X A^H = Q，</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="co">    所以求 A&#39;P + PA = -Q 必须传 A.T 与 -Q。</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="co">    &quot;&quot;&quot;</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    P <span class="op">=</span> la.solve_continuous_lyapunov(A.T, <span class="op">-</span>Q)</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>    res <span class="op">=</span> np.linalg.norm(A.T <span class="op">@</span> P <span class="op">+</span> P <span class="op">@</span> A <span class="op">+</span> Q) <span class="op">/</span> <span class="bu">max</span>(np.linalg.norm(Q), <span class="fl">1e-300</span>)</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> P, <span class="bu">float</span>(res)</span></code></pre></div>
+<p>这段代码只有五行，注释里那句“必须传 <code>A.T</code>”是初版踩坑后补上的。当时传的是 <code>A</code>，得到 <span class="math inline">P=\begin{bmatrix}1.6125&amp;-0.5\\-0.5&amp;6.25\end{bmatrix}</span>，残差 <span class="math inline">2.372\times10^{1}</span>，求解器不报错，矩阵也对称，只有残差暴露了问题。</p>
+<p>第二段是独立的验证通道：</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> lyap_operator(A):</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">&quot;&quot;&quot;连续 Lyapunov 算子 L，满足 vec(A&#39;P+PA)=L vec(P)（列优先）。&quot;&quot;&quot;</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    n <span class="op">=</span> A.shape[<span class="dv">0</span>]</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> np.kron(np.eye(n), A.T) <span class="op">+</span> np.kron(A.T, np.eye(n))</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> solve_p_vec(A, Q):</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>    <span class="co">&quot;&quot;&quot;用 Kronecker 展开独立求解，作为交叉验证。&quot;&quot;&quot;</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>    L <span class="op">=</span> lyap_operator(A)</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>    p <span class="op">=</span> np.linalg.solve(L, <span class="op">-</span>Q.reshape(<span class="op">-</span><span class="dv">1</span>, order<span class="op">=</span><span class="st">&quot;F&quot;</span>))</span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> p.reshape(A.shape, order<span class="op">=</span><span class="st">&quot;F&quot;</span>)</span></code></pre></div>
+<p><code>np.kron</code> 的写法容易把两个因子的顺序搞反，验证办法是看结果：两个解法的差应当落在 <span class="math inline">10^{-15}</span> 量级。本章得到 <span class="math inline">9.223\times10^{-16}</span>。若差到 <span class="math inline">10^{-8}</span> 以上，先查 <code>order="F"</code> 有没有漏，再查转置。</p>
+<p>离散版本同样只有几行，转置约定与连续版一致：</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> solve_p_discrete(Ad, Q):</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">&quot;&quot;&quot;解 Ad&#39;PAd - P = -Q，返回 P 与相对残差。&quot;&quot;&quot;</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    P <span class="op">=</span> la.solve_discrete_lyapunov(Ad.T, Q)</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    res <span class="op">=</span> np.linalg.norm(Ad.T <span class="op">@</span> P <span class="op">@</span> Ad <span class="op">-</span> P <span class="op">+</span> Q) <span class="op">/</span> np.linalg.norm(Q)</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> P, <span class="bu">float</span>(res)</span></code></pre></div>
+<h3 id="十二组报告怎么读">52.12.3 十二组报告怎么读</h3>
+<p><code>main()</code> 顺序调用十二个报告，每组前面有编号与标题。表 52-7 汇总了每组的关键输出与它支撑的正文结论。</p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>报告</th>
+<th>关键输出</th>
+<th>对应正文</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>【1】<code>report_spectrum</code></td>
+<td>五个阻尼下的极点，<span class="math inline">-0.2\pm1.989975\mathrm{j}</span> 至 <span class="math inline">-0.535898</span>/<span class="math inline">-7.464102</span></td>
+<td>表 52-2、图 52-3</td>
+</tr>
+<tr class="even">
+<td>【2】<code>report_lyap</code></td>
+<td><span class="math inline">P</span>、残差 <span class="math inline">1.783\times10^{-15}</span>、<span class="math inline">\mathrm{cond}(P)=4.0426</span>、<span class="math inline">\mathrm{cond}(L)=32.0489</span></td>
+<td>§52.4.3、§52.4.4</td>
+</tr>
+<tr class="odd">
+<td>【3】<code>report_rate</code></td>
+<td>真实速率 <span class="math inline">0.200000</span>、界 <span class="math inline">0.079324</span>、比值 <span class="math inline">2.52</span>、拟合 <span class="math inline">0.199172</span></td>
+<td>§52.6.1、图 52-6</td>
+</tr>
+<tr class="even">
+<td>【4】<code>report_pendulum</code></td>
+<td>分界能量 <span class="math inline">19.6200</span>、进入 <span class="math inline">0.05</span> 带 <span class="math inline">25.126</span> s、无阻尼漂移 <span class="math inline">4.586\times10^{-7}</span></td>
+<td>§52.1.2、§52.8.4</td>
+</tr>
+<tr class="odd">
+<td>【5】<code>report_region_1d</code></td>
+<td>网格最大水平 <span class="math inline">c=0.49</span>（解析 <span class="math inline">0.5</span>）</td>
+<td>§52.8.4</td>
+</tr>
+<tr class="even">
+<td>【6】<code>report_region_2d</code></td>
+<td>两侧初值 <span class="math inline">(2.691,0)</span> 收敛、<span class="math inline">(3.0,1.469)</span> 转起，最大摆角 <span class="math inline">8.318</span></td>
+<td>图 52-5</td>
+</tr>
+<tr class="odd">
+<td>【7】<code>report_quadratic_fail</code></td>
+<td>三个圆上 <span class="math inline">\max\dot V</span> 为 <span class="math inline">+1.98\times10^{-4}</span>/<span class="math inline">+0.0216</span>/<span class="math inline">+0.1363</span></td>
+<td>§52.2.5、图 52-9</td>
+</tr>
+<tr class="even">
+<td>【8】<code>report_cubic</code></td>
+<td><span class="math inline">x&#39;=-x^{3}</span> 的 <span class="math inline">49.506</span> s 与 <span class="math inline">4950.557</span> s</td>
+<td>§52.6.4、图 52-8</td>
+</tr>
+<tr class="odd">
+<td>【9】<code>report_discrete</code></td>
+<td><span class="math inline">\lvert z\rvert=0.99005</span>、<span class="math inline">P_{11}=126.5</span>、<span class="math inline">\alpha_d=0.992099</span>、实测 <span class="math inline">0.990175</span></td>
+<td>§52.5、图 52-7</td>
+</tr>
+<tr class="even">
+<td>【10】<code>report_conservative</code></td>
+<td>界与实测的比值随阻尼变化</td>
+<td>图 52-10</td>
+</tr>
+<tr class="odd">
+<td>【11】<code>report_numeric</code></td>
+<td>扰动 <span class="math inline">10^{-4}</span> 时 <span class="math inline">\mathrm{cond}(P)=\mathrm{cond}(L)=10^{4}</span>，残差仍为零</td>
+<td>§52.3.6、§52.10.3</td>
+</tr>
+<tr class="even">
+<td>【12】<code>report_q_effect</code></td>
+<td><span class="math inline">Q=I</span> 与 <span class="math inline">0.01I</span> 同为 <span class="math inline">0.079324</span>，<span class="math inline">C^{\mathsf T}C</span> 为 <span class="math inline">0</span>，加正则后 <span class="math inline">0.000379</span></td>
+<td>§52.3.4、§52.7.2</td>
+</tr>
+</tbody>
+</table>
+<p>读这十二组时有四处容易看漏。</p>
+<p>第一处，第二组的 <span class="math inline">\mathrm{cond}(L)</span> 是 <span class="math inline">\mathrm{cond}(P)</span> 的约八倍。不要以为其中一个是错的，它们度量的是不同对象：前者是 <span class="math inline">n^{2}\times n^{2}</span> 的算子，后者是 <span class="math inline">n\times n</span> 的解矩阵。八倍这个比例大致是 <span class="math inline">n^{2}</span> 与 <span class="math inline">n</span> 的关系带来的。</p>
+<p>第二处，第三组的比值 <span class="math inline">2.52</span> 略大于 <span class="math inline">\sqrt{\mathrm{cond}(P)}=2.0106</span>。多出来的部分来自“最慢模态”与“最坏方向”不重合，这一点在 §52.6.2 已经解释。</p>
+<p>第三处，第七组的三个 <span class="math inline">\max\dot V</span> 随半径增大而增大，但都为正。若只算一个半径，可能误以为“缩小范围就能成功”；三个半径一起看，才知道这个二次型在任何尺度上都不行。</p>
+<p>第四处，第十一组的残差全是零。这最容易被当成“结果很好”，实际上它是“方程解对了但结论不可信”的典型。看这一组必须同时看条件数。</p>
+<h3 id="图的生成">52.12.4 图的生成</h3>
+<p><code>ch052_figs.py</code> 只做三件事：调数据、调样式、保存。</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> plot_styles <span class="im">import</span> setup, save, LINE_MAIN, LINE_COMP, SINGLE, DOUBLE</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> flow_styles <span class="im">as</span> fs</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> ch052_sim <span class="im">as</span> cs</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>setup()</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>FIG <span class="op">=</span> BOOK <span class="op">/</span> <span class="st">&quot;figs&quot;</span> <span class="op">/</span> <span class="st">&quot;ch052&quot;</span></span></code></pre></div>
+<p>三行导入对应三类图：数据曲线用 <code>plot_styles</code>，流程与框图用 <code>flow_styles</code>，数值一律从 <code>ch052_sim</code> 取，不在画图脚本里重算。这条规矩保证“图上的数与正文的数”永远一致。</p>
+<p>11 张图的分工是：图 52-1 相图加等值线，图 52-2 单摆能量下降，图 52-3 极点轨迹，图 52-4 条件数随阻尼，图 52-5 分界线与两侧初值，图 52-6 界与轨迹，图 52-7 离散极点与逐步收缩（双子图），图 52-8 代数与指数收敛，图 52-9 二次型失效区域，图 52-10 界与真实速率之比，图 52-11 七步流程。</p>
+<p>图内文字有一条硬约束：中文与公式不能混在同一个字符串里。轴标签写成“位移 x1 (m)”而不是“位移 <span class="math inline">x_1</span> (m)”，因为后者在 SVG 与 PDF 两条渲染链上会出现方框。公式只出现在图注与正文里。</p>
+<h3 id="换成自己的对象">52.12.5 换成自己的对象</h3>
+<p>换对象只需改三处。</p>
+<p>第一处，<code>plant_msd</code> 换成你的状态矩阵。若是非线性系统，把 <code>f_*</code> 换掉，并保证返回的导数与状态同维。</p>
+<p>第二处，<code>report_spectrum</code> 里的阻尼序列换成为你关心的参数扫描范围。这一步决定你看得到哪些极点。</p>
+<p>第三处，<code>report_lyap</code> 里的 <span class="math inline">Q</span> 换成你的选择。默认 <span class="math inline">Q=I</span>，只有在量纲差异大时才改。</p>
+<p>工具层的四个函数不用动。这也是把它们与报告层分开的原因：分析流程是通用的，对象与参数是特定的。</p>
+<h3 id="怎么确认结果可信">52.12.6 怎么确认结果可信</h3>
+<p>四个检查，按成本从低到高。</p>
+<p>第一，残差。低于 <span class="math inline">10^{-10}</span> 才算通过。这一条能抓住 API 误用、<span class="math inline">Q</span> 不对称、<span class="math inline">A</span> 临界三类错误。</p>
+<p>第二，交叉验证。<code>solve_p</code> 与 <code>solve_p_vec</code> 的差低于 <span class="math inline">10^{-12}</span>。这一条能抓住转置、<code>order</code>、维度顺序三类错误。</p>
+<p>第三，条件数。超过 <span class="math inline">10^{6}</span> 就在报告里加注。这一条不改变结论，但改变结论的可信度描述。</p>
+<p>第四，量纲检查。<span class="math inline">P</span> 的元素量级是否符合物理直觉：位置项的权重量级应当接近刚度与阻尼的组合，不该出现 <span class="math inline">10^{12}</span> 这样的数。</p>
+<p>四条都过，才可以把数字写进报告。本章所有数字都过了这四条。</p>
+<h3 id="移植到-matlab-与嵌入式">52.12.7 移植到 MATLAB 与嵌入式</h3>
+<p>MATLAB 的 <code>lyap(A, Q)</code> 解的是 <span class="math inline">AX+XA^{\mathsf T}+Q=0</span>，与 SciPy 的符号约定相反。移植时要写成 <code>lyap(A.', Q)</code> 才能得到 <span class="math inline">A^{\mathsf T}P+PA=-Q</span> 的解。这个差异与 §52.10.2 是同一类问题，只是方向反过来。移植后第一件事仍然是算残差。</p>
+<p>嵌入式移植不需要求解器。<span class="math inline">P</span> 在设计阶段算好，导出为常量数组，在线只做式 (52-34) 的乘加。若状态是定点数，先把 <span class="math inline">P</span> 归一化到 <span class="math inline">[-1,1)</span> 区间，再把缩放因子并入状态，避免中间结果溢出。</p>
+<h3 id="把判据做成回归测试">52.12.8 把判据做成回归测试</h3>
+<p>本章的判据可以直接写成断言，放进持续集成。</p>
+<p>第一批断言针对求解器：残差 <span class="math inline">&lt;10^{-10}</span>，两法差 <span class="math inline">&lt;10^{-12}</span>，<span class="math inline">P</span> 的最小特征值 <span class="math inline">&gt;0</span>。三条都过，说明方程解对了。</p>
+<p>第二批针对数值：<span class="math inline">\mathrm{cond}(P)</span> 与 <span class="math inline">\mathrm{cond}(L)</span> 落在预期区间，<span class="math inline">\alpha</span> 与实测速率的比值落在 <span class="math inline">2</span> 到 <span class="math inline">3</span> 之间。第二条不是“必须精确等于 <span class="math inline">2.52</span>”，而是“不许偏离量级”，因为实现细节会带来小幅差异。</p>
+<p>第三批针对定性结论：<span class="math inline">c=0</span> 时求解器必须报出病态（条件数 <span class="math inline">&gt;10^{12}</span> 或残差 <span class="math inline">&gt;1</span>）；三次项对象上二次型必须在三个半径上都失败；能量函数必须在 <span class="math inline">|x_1|&lt;\sqrt5</span> 内给出负定导数。这三条把“理论的边界”固定下来，防止后续改动悄悄越过。</p>
+<p>回归测试的价值不在通过，而在失败时能指出是哪一层出了问题。第一批失败是数值问题，第二批失败是参数问题，第三批失败是理论假设被破坏。三层分开，定位就快。</p>
+<h3 id="报告函数怎么写才好对账">52.12.9 报告函数怎么写才好对账</h3>
+<p>十二组报告都是“打印给人看”的，但它们最好同时“返回给机器”。这个细节决定了代码能不能做自动对账。</p>
+<p>推荐的做法是每个 <code>report_*</code> 函数返回一个字典，键名用英文、单位写进键名或说明，打印只是字典的一种呈现方式。例如求解报告返回 <code>{"P": P, "residual": res, "cond_P": cond_p}</code>，正文里的每个数都能在字典里找到对应项。这样改代码后跑一遍，把新旧字典做差分，就知道哪些文字需要改。</p>
+<p>单位必须统一在字典生成处，不要在打印时换算。本章全部用国际单位制：位移米、速度米每秒、时间秒、角度弧度。若某个报告内部用了度，必须在键名里写明 <code>_deg</code>，否则半年后没人记得。</p>
+<p>数值格式也要固定。残差与条件数用三位有效数字的科学计数法，衰减率用六位小数，时间用三位小数。格式固定的好处是对账时可以直接做字符串比较，不需要容差。本章正文里“<span class="math inline">1.783\times10^{-15}</span>”与“<span class="math inline">0.079324</span>”这两种精度不是随意选的，前者是残差的合理有效位，后者是 <span class="math inline">\alpha</span> 的合理有效位。</p>
+<p>字典还有一个用处：把结论写成断言。例如 <code>assert abs(d["alpha"] - 0.079324) &lt; 1e-6</code>，这就把 §52.12.8 的回归测试落到了代码里。断言写在报告函数末尾，跑一次就检查一次，比事后单独写测试脚本更不容易被遗忘。</p>
+<p>最后一点：不要在报告函数里做随机数或时变操作。同一个输入必须给出同一个输出，否则对账失效。本章所有报告都是确定性的，仿真用固定步长、固定初值，没有用到随机种子。</p>
+<h3 id="常见报错与排查">52.12.10 常见报错与排查</h3>
+<p>跑这套代码时最常遇到的问题，几乎都能从现象反推到原因。下面这张表按“看到什么”组织，比按“哪里错了”组织更好用。</p>
+<table>
+<thead>
+<tr class="header">
+<th>现象</th>
+<th>最可能的原因</th>
+<th>检查动作</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>残差在 <span class="math inline">10^{-1}</span> 量级</td>
+<td>转置传错，或 <span class="math inline">Q</span> 的符号写反</td>
+<td>打印 <span class="math inline">A^{\mathsf T}P+PA+Q</span> 的整体范数</td>
+</tr>
+<tr class="even">
+<td>残差很小但 <span class="math inline">P</span> 不正定</td>
+<td><span class="math inline">A</span> 本身不稳定，或 <span class="math inline">Q</span> 非正定</td>
+<td>打印 <span class="math inline">A</span> 的特征值与 <span class="math inline">Q</span> 的最小特征值</td>
+</tr>
+<tr class="odd">
+<td>两种算法差 <span class="math inline">10^{-3}</span></td>
+<td>方程病态</td>
+<td>打印 <span class="math inline">\mathrm{cond}(L)</span>，做状态缩放</td>
+</tr>
+<tr class="even">
+<td>解出的 <span class="math inline">P</span> 元素达 <span class="math inline">10^{12}</span></td>
+<td>状态量纲相差悬殊</td>
+<td>归一化后重解</td>
+</tr>
+<tr class="odd">
+<td>仿真曲线不收敛</td>
+<td>初值在吸引域外，或时间轴太短</td>
+<td>查初值的 <span class="math inline">V</span> 与上界 <span class="math inline">c</span></td>
+</tr>
+<tr class="even">
+<td>理论界随 <span class="math inline">t</span> 增大</td>
+<td><span class="math inline">\dot V</span> 的符号写错</td>
+<td>用 <span class="math inline">\dot V=-x^{\mathsf T}Qx</span> 逐点核对</td>
+</tr>
+<tr class="odd">
+<td>单摆的 <span class="math inline">\dot V</span> 不恒负</td>
+<td>正常现象，需要 LaSalle</td>
+<td>检查不变集是否只有原点</td>
+</tr>
+<tr class="even">
+<td>三次项上二次型失败</td>
+<td>正常现象，是本例的设计意图</td>
+<td>换物理能量，见 §52.9.2</td>
+</tr>
+<tr class="odd">
+<td>离散极点跑到单位圆外</td>
+<td><span class="math inline">T_s</span> 过大，或用了前向欧拉</td>
+<td>改用零阶保持并减小 <span class="math inline">T_s</span></td>
+</tr>
+<tr class="even">
+<td>图里中文变成方框</td>
+<td>字体未回退</td>
+<td>确认 <code>apply_cjk_font</code> 被调用</td>
+</tr>
+<tr class="odd">
+<td>SVG 里公式错位</td>
+<td>中文与公式混在同一字符串</td>
+<td>拆成两段，公式单独写</td>
+</tr>
+<tr class="even">
+<td>验收脚本报缺图</td>
+<td>文件名与正文链接不一致</td>
+<td>以磁盘文件名为准改链接</td>
+</tr>
+</tbody>
+</table>
+<p>前四条属于“算错了”，第五到第九条属于“分析没做完整”，最后三条属于“呈现问题”。三类问题的排查顺序应当反过来：先解决呈现，再确认分析完整，最后才怀疑数值。因为呈现问题最容易发现也最容易修，而数值问题的排查成本最高。</p>
+<p>还有一个不会报错但很危险的情况：所有断言都通过，但结论的方向反了。例如把“渐近稳定”写成“稳定”，或者把局部结论写成全局。这类错误代码查不出来，只能靠 §52.3.8 的五个问题自查。写完一段结论后，逐条回答那五个问题，比自己重读三遍更有效。</p>
+<h3 id="把仿真换成实测数据">52.12.11 把仿真换成实测数据</h3>
+<p>本章的曲线全部来自模型。模型给出的稳定性是“在假设成立的前提下”的稳定性，要把它变成对真实设备的陈述，还需要一步：用实测数据检验假设。</p>
+<p>实测能做的第一件事是标定参数。质量、刚度、阻尼这三个数里，质量可以直接称，刚度可以做静载试验，阻尼只能靠动态响应反推。反推的方法很直接：记录一段自由衰减，取包络的对数斜率，得到实际衰减率，再与模型的 <span class="math inline">0.2</span> 对比。若实测明显更小，说明存在未建模的阻尼或摩擦；明显更大，说明模型里的阻尼偏大。</p>
+<p>第二件事是证伪。这是实测最可靠的作用。仿真只能说明“模型稳定”，实测却可以说明“模型错了”——只要实测出现持续振荡或发散，模型的假设就一定有问题。注意方向：实测不能证明稳定，因为任何有限时长的记录都覆盖不了 <span class="math inline">t\to\infty</span>；它只能否证。</p>
+<p>第三件事是标定在线监测的阈值。§52.10.5 提到的“连续五个周期上升超过 <span class="math inline">10\%</span>”这类经验值，必须用实测噪声水平去定。做法是让设备在正常工况下跑足够长时间，记录 <span class="math inline">V</span> 的抖动幅度，把阈值设在抖动幅度的三倍以上，否则会频繁误报。</p>
+<p>采集数据有三条硬要求，缺一条结论就不可靠。采样率至少是系统带宽的十倍，本章对象带宽约 <span class="math inline">2</span> rad/s，即 <span class="math inline">0.32</span> Hz，所以 <span class="math inline">10</span> Hz 以上才够；记录时长至少三个时间常数，本章是 <span class="math inline">15</span> s 量级；初值必须记录，因为所有理论界都以 <span class="math inline">\|x_0\|</span> 为基准，没有初值就无法比较。</p>
+<p>处理数据时有两处容易出错。第一处是滤波。为了去掉噪声做低通滤波，会把真实的高频衰减也滤掉，导致实测衰减率偏小。正确做法是滤波器的截止频率远高于关心的模态，或者干脆不滤波、只用拟合。第二处是微分。速度若是从位移差分得到，噪声会被放大，<span class="math inline">V</span> 的曲线会剧烈抖动。能用编码器直接测速度就不要差分，必须差分时先做平滑。</p>
+<p>最后一句话要说清楚：<strong>实测与仿真的偏差本身就是信息</strong>。偏差稳定在一个常数倍，多半是参数标定问题；偏差随工况变化，多半是未建模的非线性；偏差随时间漂移，多半是温升或磨损。三种偏差对应三种处理，不调查就直接改控制器，通常会把问题掩盖得更深。</p>
+<p>至此，第 52 章的正文结束。下一章处理本章留下的三个缺口：<span class="math inline">V</span> 能不能自动搜（SOS）、没有守恒量的系统怎么证（收缩分析）、以及能不能用“能量只进不出”这个物理直觉替代构造（无源性）。三者的共同点是都试图把“猜函数”变成“用结构”。</p>
+
+<nav class="footnav"><a href="ch051.html">← 上一章</a><a href="index.html">返回目录</a><a href="ch053.html">下一章 →</a></nav>
+</body>
+</html>

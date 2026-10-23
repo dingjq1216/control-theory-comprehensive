@@ -1,0 +1,989 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="zh-CN" xml:lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>第 11 章　电机与电力电子基础 · 控制大综合</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    span.underline{text-decoration: underline;}
+    div.column{display: inline-block; vertical-align: top; width: 50%;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    ul.task-list{list-style: none;}
+  </style>
+  <link rel="stylesheet" href="assets/book.css" />
+  <script src="assets/katex/katex.min.js"></script>
+  <script>document.addEventListener("DOMContentLoaded", function () {
+   var mathElements = document.getElementsByClassName("math");
+   var macros = [];
+   for (var i = 0; i < mathElements.length; i++) {
+    var texText = mathElements[i].firstChild;
+    if (mathElements[i].tagName == "SPAN") {
+     katex.render(texText.data, mathElements[i], {
+      displayMode: mathElements[i].classList.contains('display'),
+      throwOnError: false,
+      macros: macros,
+      fleqn: false
+     });
+  }}});
+  </script>
+  <link rel="stylesheet" href="assets/katex/katex.min.css" />
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+  <link rel="stylesheet" href="assets/site.css" />
+</head>
+<body>
+<nav class="topnav"><a class="home" href="index.html">目录</a><span class="pos">011 / 115</span><span class="pager"><a href="ch010.html">上一章</a><a href="ch012.html">下一章</a></span></nav>
+
+<nav id="TOC" role="doc-toc">
+<ul>
+<li><a href="#第11章-电机与电力电子基础">第11章 电机与电力电子基础</a>
+<ul>
+<li><a href="#动机与要解决的问题">11.1 动机与要解决的问题</a></li>
+<li><a href="#定义与数学基础">11.2 定义与数学基础</a></li>
+<li><a href="#推导与性质">11.3 推导与性质</a></li>
+<li><a href="#离散对应与数值实现">11.4 离散对应与数值实现</a></li>
+<li><a href="#工程含义与适用边界">11.5 工程含义与适用边界</a></li>
+<li><a href="#仿真与验证">11.6 仿真与验证</a></li>
+<li><a href="#小结与常见错误">11.7 小结与常见错误</a></li>
+</ul></li>
+</ul>
+</nav>
+<h1 id="第11章-电机与电力电子基础">第11章 电机与电力电子基础</h1>
+<h2 id="动机与要解决的问题">11.1 动机与要解决的问题</h2>
+<h3 id="控制工程师为什么绕不开电机与电力电子">11.1.1 控制工程师为什么绕不开电机与电力电子</h3>
+<p>做位置控制的人迟早会遇到一个尴尬的时刻：控制器输出了一串漂亮的数字，示波器上的电流却不是那个样子。给定是一条干净的阶跃，实际电流上叠着锯齿；给定恒定，电流却每隔一个开关周期抖一下；低速时指令很细，电机却一格一格地爬。</p>
+<p>这些现象不在控制算法里，而在算法与电机之间的那一层。控制器算出的是电压指令，真正加到绕组上的是开关器件在一串周期里斩出来的方波；绕组是电感，电流只能连续变化；电机转动又产生反电动势，把电压和转速绑在一起。<strong>算法与物理之间的这三件事——开关、电感、反电动势——构成了本章的全部内容。</strong></p>
+<p>先看一个数量级。本章实验用一台 24 V、电枢电阻 0.7 <span class="math inline">\Omega</span>、电感 1 mH、<span class="math inline">K_t=K_e=0.10</span> 的小直流电机，负载 0.05 N·m。加 12 V 阶跃后，稳态电流只有 0.7298 A，而电流峰值达到 13.4981 A，是稳态的 18.5 倍。如果按稳态电流选驱动器，开机瞬间就会过流保护。这个倍数不是控制器造成的，是“电感还没建立起电流、反电动势还没上来”这段物理过程决定的。</p>
+<p>再看第二个数量级。同一套参数做电流环，采样 20 kHz，带宽取 4 kHz 时，阶跃响应的末段摆幅达到 512.53%，环路已经发散；带宽取 500 Hz 时超调为 0，但调节时间 0.95 ms。两者相差八倍带宽，得到的不是一个“更快”的环路，而是一个“不能工作”的环路。<strong>带宽不是旋钮，它受采样频率、计算延迟和 PWM 更新时刻共同约束。</strong></p>
+<p>第三个数量级来自死区。24 V 母线、20 kHz 开关频率、2 <span class="math inline">\mu</span>s 死区，平均电压误差 0.960 V，基波幅值 1.222 V，占相电压峰值 12 V 的 10.19%。低速时相电压峰值本身只有一两伏，这 1.2 V 的误差足以让电流波形畸变、让转速在一转之内忽快忽慢。</p>
+<p>三个例子指向同一个结论：<strong>电机的控制精度上限，往往由功率级的非理想性决定，而不是由控制律的阶数决定。</strong> 本章不讲先进算法，只把这层“非理想但确定”的物理讲清楚，让后续章节的算法有一个可信的被控对象。</p>
+<h3 id="一条完整的能量链">11.1.2 一条完整的能量链</h3>
+<p>从电网到负载，能量经过四级，每一级都有自己的时间尺度，见表 11-1 上方的描述。</p>
+<p>第一级是<strong>母线</strong>。市电整流后得到直流母线，或者由电池直接供电。母线电压 <span class="math inline">U_{dc}</span> 是一个硬约束：它决定了电机能得到的最高电压，因而决定了最高转速。本章 §11.5.2 会给出定量关系。</p>
+<p>第二级是<strong>逆变器</strong>。三相桥或 H 桥把直流斩成脉冲，用占空比合成出想要的平均电压。开关频率通常 10–20 kHz，周期 50–100 <span class="math inline">\mu</span>s。这一级是“离散”的来源：电压不是连续的，而是每隔一个周期更新一次。</p>
+<p>第三级是<strong>电机</strong>。绕组电感把脉冲电压滤成连续电流，电流产生力矩，力矩推动转子。电气时间常数 <span class="math inline">L/R</span> 通常是毫秒级，机电时间常数 <span class="math inline">J/(b+K_tK_e/R)</span> 通常是十毫秒级。两个时间常数相差五到十倍，这决定了电流环和速度环可以分层设计。</p>
+<p>第四级是<strong>负载</strong>。负载力矩可能是恒定的、随转速平方增长的（风机泵类）、或随位置变化的（重力、弹簧）。负载特性决定了稳态工作点，也决定了选型时的力矩余量。</p>
+<p>把本章算例的稳态拆开，可以看到能量在哪一级损失。电枢输入功率 <span class="math inline">12\times0.7298=8.756</span> W，铜耗 <span class="math inline">0.7298^2\times0.7=0.373</span> W，转化为机械功率 8.383 W；机械功率里，负载拿走 <span class="math inline">0.05\times114.892=5.745</span> W，黏性阻尼拿走 <span class="math inline">2\times10^{-4}\times114.892^2=2.64</span> W。<strong>从电到负载的效率是 65.6%，损失主要来自机械阻尼（2.64 W），铜耗只有 0.373 W。</strong> 这组数说明：小功率电机里，机械阻尼常常比铜耗大一个量级，不能只盯着电阻。</p>
+<p>四级串起来，控制器的分层也就清楚了。电流环跑在开关频率的量级（10–20 kHz），速度环跑在电流环的十分之一（1–2 kHz），位置环再低一个数量级（100–200 Hz）。<strong>每一层只“看见”下一层的平均行为，前提是下一层的动态比上一层快得多。</strong> 本章的任务就是把这条链上每一级的模型写出来，并说明“平均行为”这个前提在什么条件下成立。</p>
+<h3 id="三类电机两类变换器">11.1.3 三类电机、两类变换器</h3>
+<p>工程上常见的执行电机有三类，它们的模型复杂度、控制方式和适用场合差别很大，见表 11-1。</p>
+<p>表 11-1　三类执行电机的对比</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">项目</th>
+<th style="text-align: left;">直流有刷电机</th>
+<th style="text-align: left;">永磁同步电机</th>
+<th style="text-align: left;">感应电机</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">励磁来源</td>
+<td style="text-align: left;">永磁体（定子）</td>
+<td style="text-align: left;">永磁体（转子）</td>
+<td style="text-align: left;">定子电流感应</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">数学模型</td>
+<td style="text-align: left;">一阶电气 + 一阶机械</td>
+<td style="text-align: left;">d-q 两轴耦合</td>
+<td style="text-align: left;">五阶，含转差</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">控制方式</td>
+<td style="text-align: left;">调压</td>
+<td style="text-align: left;">磁场定向（FOC）</td>
+<td style="text-align: left;">变频 + 矢量控制</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">低速性能</td>
+<td style="text-align: left;">好</td>
+<td style="text-align: left;">好（需编码器）</td>
+<td style="text-align: left;">一般（需测速）</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">典型场合</td>
+<td style="text-align: left;">小功率、低成本</td>
+<td style="text-align: left;">伺服、机器人</td>
+<td style="text-align: left;">风机、泵、重载</td>
+</tr>
+</tbody>
+</table>
+<p>直流有刷电机最简单：励磁由永磁体提供，力矩正比于电枢电流，反电动势正比于转速，四个方程就能描述完整。它的缺点是电刷磨损、换向火花，寿命受限。永磁同步电机把永磁体放到转子上，用三相绕组产生旋转磁场，效率高、功率密度大；代价是三相量互相耦合，必须做坐标变换才能像直流电机一样控制。感应电机没有永磁体，转子电流由定子感应产生，结构最结实、成本最低，但模型阶数最高，低速时需要额外的观测手段。</p>
+<p>变换器侧主要两类。<strong>H 桥</strong>用于直流电机、单相负载，四个开关组成两个桥臂，能输出正、负、零三种电压。<strong>三相桥</strong>用于交流电机，六个开关，每相一个桥臂，能合成六个非零矢量和两个零矢量。两类变换器的工作模式、死区处理和电压利用率都不同，但“用开关的平均值代替瞬时值”这个思路是共通的。</p>
+<p>本章的取舍是：直流电机讲透（因为它的四个方程是理解一切电机模型的起点），PMSM 讲到 d-q 模型与力矩公式（因为伺服与机器人几乎都用它），感应电机只讲稳态等效电路与转差（因为它的动态模型属于电机专业课程，控制工程师更需要的是“转矩-转差曲线”这张图）。</p>
+<p>三类电机的模型都有各自的“失效工况”，选型时必须知道自己在哪一段工作。</p>
+<p><strong>直流有刷电机</strong>的模型里没有电刷压降。真实电刷一对压降约 1–2 V 量级，且近似与电流无关。本章算例母线 12 V、反电动势稳态 11.49 V，若串入 1.5 V 电刷压降，可用电压只剩 10.5 V，稳态转速会从 114.892 rad/s 降到约 100 rad/s，差 13%。<strong>电压越低、转速越低，这项误差占比越大</strong>，12 V 系统里 1.5 V 就是 12.5%，而 300 V 系统里只有 0.5%。所以小电压直驱场合必须把电刷压降写进模型，否则空载转速会一直偏高。</p>
+<p><strong>永磁同步电机</strong>的 d-q 模型假定反电动势是正弦、电感不随转子位置变化。真实电机若用集中绕组，反电动势接近梯形，含 5、7 次谐波，用正弦模型算出的力矩会在每转出现 6 倍频脉动，幅值可达平均力矩的百分之几。另外，表贴式电机 <span class="math inline">L_d\approx L_q</span>，磁阻转矩为零；本章参数 <span class="math inline">L_d=1.2</span> mH、<span class="math inline">L_q=1.8</span> mH，两者差 50%，说明它是内嵌式，才有力矩公式里的 <span class="math inline">(L_d-L_q)i_di_q</span> 一项。<strong>若把内嵌式电机按 <span class="math inline">L_d=L_q</span> 建模，磁阻转矩整项丢掉，<span class="math inline">i_d=0</span> 控制看起来仍然能用，但弱磁段的转矩会算少。</strong></p>
+<p><strong>感应电机</strong>的 T 型等效电路是稳态模型，忽略铁耗、集肤效应与温度对转子电阻的影响。它只在转差较小的线性段准：本章 <span class="math inline">s=0.03</span> 时转矩 59.208 N·m，与 <span class="math inline">s</span> 近似成正比；一旦越过临界转差 0.1655，曲线转为下降，电机进入不稳定区，稳态模型给出的“工作点”实际上不可维持。<strong>T-s 曲线的右半边只能用来算起动转矩，不能用来设计稳态工作点。</strong> 另外转子电阻随温度上升约每摄氏度 0.4%，冷态与热态的起动转矩能差 20% 以上，按冷态整定的起动时间在热态会明显变长。</p>
+<p>把这三条放在一起，得到一条贯穿全书的判断：<strong>模型不是越精确越好，而是要与工作区间匹配。</strong> 直流电机在低压低速段要加电刷压降，PMSM 在谐波明显或凸极比大时要补项，感应电机只在临界转差以内使用稳态模型。超出区间的部分，要么换模型，要么换电机。</p>
+<h3 id="五个必须回答的定量问题">11.1.4 五个必须回答的定量问题</h3>
+<p>拿到一套“电机 + 驱动器”的参数，在写第一行控制代码之前，有五个问题必须能算出数来。它们贯穿全章，也是 §11.6 六组实验的设计依据。</p>
+<p><strong>第一，起动电流峰值是多少？</strong> 本章算例是 13.4981 A，出现在 3.28 ms，是稳态电流的 18.5 倍。这个数决定过流保护阈值、决定器件选型、也决定是否需要软起动或电流限幅。</p>
+<p><strong>第二，两个时间常数是多少？</strong> 电气时间常数 <span class="math inline">L/R=1.429</span> ms，机电时间常数 <span class="math inline">J/(b+K_tK_e/R)=8.284</span> ms，比值 0.17。比值小于 1 时，电流环可以先于速度环稳定，分层设计成立；比值接近或大于 1 时，两层必须一起设计。</p>
+<p><strong>第三，电流环带宽能取多高？</strong> 采样 20 kHz 时，500 Hz 可用、1 kHz 尚可、2 kHz 超调 50.77%、4 kHz 发散。带宽的上限由采样频率与延迟决定，经验值是采样频率的 1/20 到 1/10，本章会用实测数据把这个区间卡死。</p>
+<p><strong>第四，母线电压够不够？</strong> 48 V 母线、<span class="math inline">\psi_f=0.02</span> Wb、4 对极，电压极限对应的电角速度是 1385.6 rad/s，机械角速度 346.4 rad/s，约 3307 r/min。超过这个转速，再大的电流指令也换不来转矩，必须弱磁。</p>
+<p><strong>第五，死区带来的电压误差占多少？</strong> 24 V 母线时是 0.960 V，占相电压峰值的 10.19%；48 V 时翻倍到 1.920 V，占比不变；300 V 时是 12.000 V，占比仍是 10.19%。<strong>占比只由死区时间与开关频率的乘积决定，与母线电压无关</strong>，这一点常被误判。</p>
+<p>五个问题分别对应电气、机械、离散、电压、非理想性五个层面。能把它们算出数，才算真正“拿到”了这套驱动系统。</p>
+<h3 id="一句话核心与本章路线">11.1.5 一句话核心与本章路线</h3>
+<p>本章的核心可以压成一句话：<strong>电机是“电压—电流—力矩—转速”的四级积分链，电力电子是这条链入口处的采样保持器，控制的难点在于这两件事的时间尺度只差一个数量级。</strong></p>
+<p>这句话展开成三句。电压到电流是电感的一阶惯性，时间常数 <span class="math inline">L/R</span>；电流到力矩是比例，系数 <span class="math inline">K_t</span>；力矩到转速是惯量的一阶积分，时间常数 <span class="math inline">J/b</span> 被反电动势修正为 <span class="math inline">J/(b+K_tK_e/R)</span>。电力电子把连续的电压指令变成周期性的方波，等效于一个零阶保持器加一个纯延迟。两个时间尺度接近，所以“先设计电流环、再设计速度环”的经典分层只在特定参数下成立。</p>
+<p>全章的路线是：§11.2 写方程（直流、PMSM、感应、PWM），§11.3 做推导（力矩来源、传递函数、功率不变性、纹波、死区、调制利用率、损耗），§11.4 讲离散（精确离散、离散 PI、延迟预算、平均模型与开关模型的分工），§11.5 谈工程（选型、母线、带宽、低速、边界），§11.6 用六组实验验证，§11.7 收束成清单。</p>
+<h3 id="三个错误直觉">11.1.6 三个错误直觉</h3>
+<p><strong>直觉一：电机是一个“电压进、转速出”的比例环节。</strong> 这个直觉在稳态附近成立，在起动和制动时不成立。12 V 阶跃时，若按比例环节估算，电流应当是 <span class="math inline">12/0.7=17.14</span> A，实际峰值 13.4981 A，因为反电动势已经削掉一部分；转速也不是立刻到位，而是按 8.284 ms 的时间常数爬升。把电机当比例环节，会在起动电流、制动距离、抗扰恢复时间上系统性地低估。</p>
+<p><strong>直觉二：电流环带宽越高，响应越快。</strong> 实测结果正好相反：带宽从 500 Hz 提到 2 kHz，上升时间从 0.500 ms 降到 0.050 ms，但超调从 0 涨到 50.77%，调节时间从 0.95 ms 退化到 0.90 ms 再退化到 8 ms（4 kHz 时已发散）。<strong>“快”是指到达并停住，不是指第一次冲过目标。</strong> 带宽的上限由延迟的相位损失决定，超过它，环路只是在振荡。</p>
+<p><strong>直觉三：平均模型够用，不必管开关细节。</strong> 设计电流环时确实可以用平均模型，但有三件事平均模型看不见：纹波峰值（决定电感饱和与采样信噪比）、死区误差（决定低速波形畸变）、开关损耗（决定温升与降额）。本章实验三测得 5 A 平均电流下纹波峰峰值 600 mA（双极性、<span class="math inline">D=0.5</span>），峰值电流就是 5.3 A；实验六测得死区误差占相电压峰值 10.19%。这两个数都不在平均模型里，却都必须在选型时留出余量。</p>
+<h2 id="定义与数学基础">11.2 定义与数学基础</h2>
+<h3 id="正方向约定与电动机惯例">11.2.1 正方向约定与电动机惯例</h3>
+<p>电机方程里的符号错误，比任何数值误差都更难查。同一个转矩，按电动机惯例写是正的，按发电机惯例写就是负的；同一相电流，从绕组流入和流出差一个负号。<strong>在写第一个方程之前，必须把三个正方向钉死。</strong></p>
+<p>第一个是<strong>电流正方向</strong>：规定从驱动器流向电机、从绕组正端流入为负、流出为正（或反之，但全章统一）。本章采用“流入为正”，即电流从逆变器桥臂中点流入绕组时 <span class="math inline">i&gt;0</span>。</p>
+<p>第二个是<strong>电压正方向</strong>：与电流关联参考方向一致，绕组端电压减去反电动势等于电阻压降加电感压降。</p>
+<p>第三个是<strong>转矩与转速正方向</strong>：转矩正方向与转速正方向相同，即“正转矩产生正加速度”。按这个约定，电动机运行时 <span class="math inline">T_e</span> 与 <span class="math inline">\omega</span> 同号，机械功率 <span class="math inline">T_e\omega&gt;0</span>，能量从电到机；发电制动时两者异号，功率为负。</p>
+<p>约定定好之后，“电动机惯例”就只有一个含义：<strong>所有方程都写成“输入量减反电动势、再除以阻抗”的形式，制动时电流自然取负值，不需要另写一套方程。</strong> 这一点在 §11.6 的仿真里很重要——正阶跃和负阶跃用同一份代码，只是 <span class="math inline">u</span> 的符号不同。</p>
+<h3 id="直流电机四个方程">11.2.2 直流电机：四个方程</h3>
+<p>直流有刷电机的全部动态由四个方程描述。第一个是电枢回路：</p>
+<p><span class="math display">u=R\,i+L\frac{\mathrm{d}i}{\mathrm{d}t}+e \tag{11-1}</span></p>
+<p>其中 <span class="math inline">u</span> 是电枢端电压，<span class="math inline">R</span> 是电枢电阻，<span class="math inline">L</span> 是电枢电感，<span class="math inline">e</span> 是反电动势。这个方程说的是：端电压一部分降在电阻上，一部分用来克服电感，剩下的与反电动势平衡。</p>
+<p>第二个是反电动势与转速的关系：</p>
+<p><span class="math display">e=K_e\,\omega \tag{11-2}</span></p>
+<p><span class="math inline">K_e</span> 是反电动势常数，单位 V·s/rad。永磁体磁通恒定时，反电动势严格正比于转速。</p>
+<p>第三个是电磁转矩与电流的关系：</p>
+<p><span class="math display">T_e=K_t\,i \tag{11-3}</span></p>
+<p><span class="math inline">K_t</span> 是转矩常数，单位 N·m/A。在国际单位制下，<span class="math inline">K_t</span> 与 <span class="math inline">K_e</span> 的数值相等（都等于磁链），但单位不同，这一点常被忽略。</p>
+<p>第四个是机械方程：</p>
+<p><span class="math display">J\frac{\mathrm{d}\omega}{\mathrm{d}t}=T_e-T_L-b\,\omega \tag{11-4}</span></p>
+<p><span class="math inline">J</span> 是转动惯量，<span class="math inline">T_L</span> 是负载转矩，<span class="math inline">b</span> 是黏性阻尼系数。</p>
+<p>四个方程里，(11-1) 与 (11-2) 构成电气子系统，(11-3) 与 (11-4) 构成机械子系统，<span class="math inline">i</span> 与 <span class="math inline">\omega</span> 是两者之间的耦合变量。稳态时导数为零，可以解出</p>
+<p><span class="math display">\omega_{ss}=\frac{K_tU/R-T_L}{b+K_tK_e/R},\qquad i_{ss}=\frac{U-K_e\omega_{ss}}{R} \tag{11-5}</span></p>
+<p>代入本章参数（<span class="math inline">U=12</span> V，<span class="math inline">R=0.7\ \Omega</span>，<span class="math inline">K_t=K_e=0.10</span>，<span class="math inline">T_L=0.05</span> N·m，<span class="math inline">b=2\times10^{-4}</span> N·m·s/rad），得 <span class="math inline">\omega_{ss}=114.892</span> rad/s，<span class="math inline">i_{ss}=0.7298</span> A。手算与仿真一致到小数点后三位，说明四个方程的符号没有写错。</p>
+<p>图 11-1 是这四个方程的仿真结果。上图是电枢电流：从零开始上升，在 3.28 ms 达到峰值 13.4981 A，随后随反电动势建立而回落，稳态 0.7298 A。下图是转速：单调上升，63.2% 上升时间 8.620 ms；虚线是不含电感的一阶近似，两者在起动初期偏差最大，达 12.798 rad/s，占稳态转速的 11.14%。</p>
+<figure>
+<img src="figs/ch011/fig_011_01_dc_step.svg" alt="图 11-1　直流电机 12 V 电压阶跃的电流与转速" /><figcaption aria-hidden="true">图 11-1　直流电机 12 V 电压阶跃的电流与转速</figcaption>
+</figure>
+<p>峰值出现在 3.28 ms 而不是 <span class="math inline">t=0</span>，是电感与反电动势竞争的结果：电感让电流不能突变，反电动势随转速上升又把电流往下压。<strong>这两个效应的时间常数相差 5.8 倍（1.429 ms 对 8.284 ms），峰值就落在两者之间。</strong></p>
+<p>这个竞争过程可以用一个“冻结转速”的估算看清：假设转速在这段时间内还没来得及上升，电流只按 <span class="math inline">L/R</span> 上升，即 <span class="math inline">i(t)=(U/R)\left(1-\mathrm{e}^{-Rt/L}\right)</span>。</p>
+<p>代入 <span class="math inline">t=3.28</span> ms，得 <span class="math inline">17.143\times(1-\mathrm{e}^{-2.295})=15.417</span> A。实际峰值 13.4981 A，比这个估算低 12.4%。差额来自这段时间内已经建立的反电动势：峰值时刻由 <span class="math inline">K_e\omega=U-Ri</span> 反推得 2.55 V，对应转速 25.5 rad/s。<strong>先算“冻结转速”的上界，再用反电动势修正，是不仿真时估峰值的实用办法。</strong></p>
+<h3 id="三相系统与-clarkepark-变换">11.2.3 三相系统与 Clarke、Park 变换</h3>
+<p>三相电机的困难在于三个绕组互相耦合：A 相的电流会在 B、C 相感应出电压，转矩又同时依赖三相电流。直接在三相坐标里设计控制器，等于面对三个互相缠绕的变量。坐标变换的目的是把这团缠绕解开。</p>
+<p>第一步是 <strong>Clarke 变换</strong>，把三相静止坐标 <span class="math inline">(a,b,c)</span> 变到两相静止坐标 <span class="math inline">(\alpha,\beta)</span>。采用幅值不变约定：</p>
+<p><span class="math display">\begin{bmatrix}i_\alpha\\ i_\beta\end{bmatrix}=\frac{2}{3}\begin{bmatrix}1&amp;-\frac{1}{2}&amp;-\frac{1}{2}\\ 0&amp;\frac{\sqrt3}{2}&amp;-\frac{\sqrt3}{2}\end{bmatrix}\begin{bmatrix}i_a\\ i_b\\ i_c\end{bmatrix} \tag{11-6}</span></p>
+<p>前面的 <span class="math inline">2/3</span> 是幅值不变约定的标志。若用功率不变约定，系数是 <span class="math inline">\sqrt{2/3}</span>，两种约定只在缩放上不同，但混用会让力矩公式差一个常数。本章统一用幅值不变约定，即三相电流幅值为 <span class="math inline">I_m</span> 时，<span class="math inline">i_\alpha</span> 的幅值也是 <span class="math inline">I_m</span>。</p>
+<p>三相无中线时 <span class="math inline">i_a+i_b+i_c=0</span>，所以 Clarke 变换只用两个电流，第三个是冗余的：</p>
+<p><span class="math display">i_a+i_b+i_c=0 \tag{11-7}</span></p>
+<p>第二步是 <strong>Park 变换</strong>，把静止的 <span class="math inline">(\alpha,\beta)</span> 变到随转子旋转的 <span class="math inline">(d,q)</span>：</p>
+<p><span class="math display">\begin{bmatrix}i_d\\ i_q\end{bmatrix}=\begin{bmatrix}\cos\theta_e&amp;\sin\theta_e\\ -\sin\theta_e&amp;\cos\theta_e\end{bmatrix}\begin{bmatrix}i_\alpha\\ i_\beta\end{bmatrix} \tag{11-8}</span></p>
+<p><span class="math inline">\theta_e</span> 是转子电角度，与机械角度的关系是 <span class="math inline">\theta_e=p\,\theta_m</span>，<span class="math inline">p</span> 是极对数。反变换为</p>
+<p><span class="math display">\begin{bmatrix}i_\alpha\\ i_\beta\end{bmatrix}=\begin{bmatrix}\cos\theta_e&amp;-\sin\theta_e\\ \sin\theta_e&amp;\cos\theta_e\end{bmatrix}\begin{bmatrix}i_d\\ i_q\end{bmatrix} \tag{11-9}</span></p>
+<p>变换的几何意义是：站在转子上看，三相正弦电流变成了两个直流量。<span class="math inline">i_d</span> 沿转子磁链方向，<span class="math inline">i_q</span> 垂直于它。<strong>控制问题从“跟踪三个正弦”变成“调节两个常数”，这是磁场定向控制能够像直流电机一样工作的根本原因。</strong></p>
+<p>图 11-2 是本章实验四的波形：三相电流是三条相位互差 <span class="math inline">120^\circ</span> 的正弦，变换后 <span class="math inline">i_q</span> 稳定在 5.000 A，<span class="math inline">i_d</span> 的均值是 <span class="math inline">-7.298\times10^{-19}</span> A，即机器精度下的零。</p>
+<figure>
+<img src="figs/ch011/fig_011_03_dq.svg" alt="图 11-2　三相电流与 d-q 分量" /><figcaption aria-hidden="true">图 11-2　三相电流与 d-q 分量</figcaption>
+</figure>
+<p><span class="math inline">i_d</span> 的均值不是“接近零”而是“零到机器精度”，这不是巧合，而是变换正确的判据。若把变换矩阵的符号写错，<span class="math inline">i_d</span> 会变成 <span class="math inline">i_q</span> 的镜像，均值同样不为零，但波形会明显偏移；若把 <span class="math inline">2/3</span> 写成 <span class="math inline">\sqrt{2/3}</span>，<span class="math inline">i_q</span> 的均值会偏离 5.000 A 约 22.5%。<strong>先用一个已知的三相正弦校验变换，再谈控制，是省时间的做法。</strong></p>
+<p>变换不只适用于电流。电压、磁链在同一组坐标下服从同一对矩阵，因为它们是同一个空间矢量的三个分量。把 <span class="math inline">[i_a,i_b,i_c]^{\mathrm{T}}</span> 换成 <span class="math inline">[i_d,i_q]^{\mathrm{T}}</span> 之后，电压与磁链也一并变换，控制器里只保留 d-q 两个通道，三相的耦合被“打包”进了 <span class="math inline">\omega_e</span> 的交叉项。</p>
+<p>Park 矩阵在幅值不变约定下是正交矩阵（差一个尺度），逆矩阵等于转置，这是 (11-9) 可以直接写出来的原因。Clarke 矩阵不是方阵，因为三相里有一相冗余；加上零序分量 <span class="math inline">i_0=(i_a+i_b+i_c)/3</span> 才能构成可逆的三阶变换。无中线时 <span class="math inline">i_0=0</span>，所以只取两行。</p>
+<p><span class="math inline">\theta_e</span> 的来源必须与实际转子位置对齐。编码器给出的是机械角，乘极对数得到电角度，但编码器零位与转子磁链方向之间有一个固定的安装偏差 <span class="math inline">\theta_0</span>。若 <span class="math inline">\theta_0</span> 不为零，<span class="math inline">i_d</span> 与 <span class="math inline">i_q</span> 会互相串扰：本应全部落在 q 轴的电流，有一部分落到 d 轴，产生额外的铜耗与转矩损失。标定的办法是让电机空载、给定 <span class="math inline">i_d=0</span>、<span class="math inline">i_q</span> 为常数，缓慢转动，调 <span class="math inline">\theta_0</span> 使 <span class="math inline">i_d</span> 的均值过零。<strong>这一步不做，后面的电流环调得再好，效率也会差几个百分点。</strong></p>
+<p>给一个数值例子，把三步变换走一遍。取 <span class="math inline">i_a=5</span> A、<span class="math inline">i_b=i_c=-2.5</span> A，这是一个幅值 5 A、位于 a 轴方向的电流矢量。Clarke 变换得 <span class="math inline">i_\alpha=\frac23(5+1.25+1.25)=5</span> A，<span class="math inline">i_\beta=\frac23(0-\frac{\sqrt3}{2}\times2.5+\frac{\sqrt3}{2}\times2.5)=0</span>。再取 <span class="math inline">\theta_e=30^\circ</span>，Park 变换得 <span class="math inline">i_d=5\cos30^\circ=4.330</span> A，<span class="math inline">i_q=-5\sin30^\circ=-2.5</span> A。</p>
+<p>校验一下：<span class="math inline">i_d^2+i_q^2=18.75+6.25=25</span>，等于 <span class="math inline">i_\alpha^2+i_\beta^2=25</span>。<strong>Park 是旋转，不改变矢量模长；模长变了，一定是矩阵系数或角度错了。</strong> 这个校验比逐点对波形快得多，适合放在代码的自检里。</p>
+<p><span class="math inline">i_q</span> 为负值也值得注意。它说明在这个角度下，电流矢量超前 q 轴，按本章的约定产生负转矩。若控制器期望正转矩却得到负值，先查 <span class="math inline">\theta_e</span> 的零位与旋转方向，而不是先去调 PI。</p>
+<h3 id="pmsm-的-d-q-模型">11.2.4 PMSM 的 d-q 模型</h3>
+<p>永磁同步电机在 d-q 坐标下的电压方程是</p>
+<p><span class="math display">u_d=R_si_d+L_d\frac{\mathrm{d}i_d}{\mathrm{d}t}-\omega_eL_qi_q \tag{11-10}</span></p>
+<p><span class="math display">u_q=R_si_q+L_q\frac{\mathrm{d}i_q}{\mathrm{d}t}+\omega_e\left(L_di_d+\psi_f\right) \tag{11-11}</span></p>
+<p>其中 <span class="math inline">R_s</span> 是定子电阻，<span class="math inline">L_d</span>、<span class="math inline">L_q</span> 是直轴与交轴电感，<span class="math inline">\psi_f</span> 是永磁体磁链，<span class="math inline">\omega_e=p\,\omega_m</span> 是电角速度。(11-10) 与 (11-11) 与直流电机的 (11-1) 结构相同，只是多了两个耦合项：<span class="math inline">\omega_eL_qi_q</span> 是交轴电流在直轴上产生的旋转反电动势，<span class="math inline">\omega_e(L_di_d+\psi_f)</span> 是直轴磁链（含永磁体）在交轴上产生的反电动势。</p>
+<p>电磁转矩为</p>
+<p><span class="math display">T_e=\frac{3}{2}p\left[\psi_fi_q+(L_d-L_q)i_di_q\right] \tag{11-12}</span></p>
+<p>方括号里第一项是永磁转矩，第二项是磁阻转矩。表贴式电机 <span class="math inline">L_d\approx L_q</span>，磁阻转矩为零，转矩正比于 <span class="math inline">i_q</span>；内置式电机 <span class="math inline">L_q&gt;L_d</span>，令 <span class="math inline">i_d&lt;0</span> 可以额外得到一部分转矩，这就是“最大转矩每安培”控制的由来。</p>
+<p>机械方程与直流电机相同：</p>
+<p><span class="math display">J\frac{\mathrm{d}\omega_m}{\mathrm{d}t}=T_e-T_L-b\,\omega_m \tag{11-13}</span></p>
+<p>本章实验四取 <span class="math inline">R_s=0.5\ \Omega</span>，<span class="math inline">L_d=1.2</span> mH，<span class="math inline">L_q=1.8</span> mH，<span class="math inline">\psi_f=0.02</span> Wb，<span class="math inline">p=4</span>，<span class="math inline">i_d=0</span>，<span class="math inline">i_q=5</span> A，<span class="math inline">\omega_m=100</span> rad/s。代入得 <span class="math inline">\omega_e=400</span> rad/s，<span class="math inline">u_d=-3.6000</span> V，<span class="math inline">u_q=10.5000</span> V，<span class="math inline">T_e=0.6000</span> N·m。四个数都能手算复核：<span class="math inline">u_d=-400\times1.8\times10^{-3}\times5=-3.6</span>；<span class="math inline">u_q=0.5\times5+400\times0.02=10.5</span>；<span class="math inline">T_e=1.5\times4\times0.02\times5=0.6</span>。</p>
+<p>稳态时导数为零，(11-10) 与 (11-11) 退化成代数方程 <span class="math inline">u_d=R_si_d-\omega_eL_qi_q</span> 与 <span class="math inline">u_q=R_si_q+\omega_e\left(L_di_d+\psi_f\right)</span>。</p>
+<p>这两个式子说明 d 轴与 q 轴的“主要矛盾”不同：d 轴电压主要由 q 轴电流的耦合项决定，q 轴电压主要由永磁磁链决定。低速时 <span class="math inline">R_si_q</span> 占主导，高速时 <span class="math inline">\omega_e\psi_f</span> 占主导。两者相等的转折点满足 <span class="math inline">\omega_e=R_si_q/\psi_f</span>，本章参数下是 125 rad/s 电角速度，即机械 31.25 rad/s、约 298 r/min。<strong>超过这个转速，反电动势就是 q 轴电压的主要成分，电压裕度开始吃紧。</strong></p>
+<p>磁阻转矩的值也值得算一次。取 <span class="math inline">i_d=-2</span> A、<span class="math inline">i_q=5</span> A，磁阻项为 <span class="math inline">1.5\times4\times(1.2-1.8)\times10^{-3}\times(-2)\times5=0.036</span> N·m，是永磁转矩 0.6 N·m 的 6%。但电流幅值从 5 A 增到 <span class="math inline">\sqrt{29}=5.385</span> A，增加 7.7%。<strong>用 7.7% 的电流换 6% 的转矩，在这个工作点并不划算</strong>；最大转矩每安培的最优点要按 <span class="math inline">L_d</span>、<span class="math inline">L_q</span> 与 <span class="math inline">i_q</span> 联立求，不是“加一点负 <span class="math inline">i_d</span> 总是好的”。</p>
+<p>从控制的角度看，(11-10) 与 (11-11) 是线性方程，但系数含 <span class="math inline">\omega_e</span>，所以它是一个“参数随转速变化”的线性系统。转速升高，耦合项 <span class="math inline">\omega_eL_q</span> 与 <span class="math inline">\omega_eL_d</span> 成比例增大，两个轴之间的相互干扰越来越强。若只用一个固定的 PI，高速时 d 轴的扰动会串到 q 轴，q 轴的扰动又会串回 d 轴，表现为电流跟踪变慢、相位滞后。</p>
+<p>解决办法是前馈解耦：在 PI 输出上叠加 <span class="math inline">\hat u_d=-\omega_eL_qi_q</span> 与 <span class="math inline">\hat u_q=\omega_e(L_di_d+\psi_f)</span>，把耦合项抵消。补偿后，两个轴各自退化成一个 RL 回路，<span class="math inline">u_d=R_si_d+L_d\mathrm{d}i_d/\mathrm{d}t</span>、<span class="math inline">u_q=R_si_q+L_q\mathrm{d}i_q/\mathrm{d}t</span>，可以用同一套 <span class="math inline">K_p=L\omega_c</span>、<span class="math inline">K_i=R\omega_c</span> 整定。<strong>解耦不是“可选的优化”，而是高速下电流环能否保持带宽的前提。</strong></p>
+<h3 id="感应电机的稳态模型与转差">11.2.5 感应电机的稳态模型与转差</h3>
+<p>感应电机没有永磁体，转子电流靠定子磁场感应产生，因此转速必须低于同步转速，否则没有相对运动、没有感应、没有转矩。同步转速为</p>
+<p><span class="math display">n_s=\frac{60f}{p} \tag{11-14}</span></p>
+<p><span class="math inline">f</span> 是定子频率，<span class="math inline">p</span> 是极对数。转差定义为</p>
+<p><span class="math display">s=\frac{n_s-n}{n_s} \tag{11-15}</span></p>
+<p><span class="math inline">s=0</span> 时转子与磁场同步，转矩为零；<span class="math inline">s=1</span> 时转子堵转。正常运行在 <span class="math inline">s=0.01</span>–<span class="math inline">0.05</span> 的小转差区。</p>
+<p>稳态分析用 T 型等效电路：定子电阻 <span class="math inline">R_s</span> 与漏抗 <span class="math inline">X_{ls}</span> 串联，励磁支路 <span class="math inline">X_m</span> 与转子支路并联，转子支路是 <span class="math inline">R_r/s</span> 与漏抗 <span class="math inline">X_{lr}</span> 串联。从定子端看进去的阻抗为</p>
+<p><span class="math display">Z=R_s+\mathrm{j}X_{ls}+\frac{\mathrm{j}X_m\left(\frac{R_r}{s}+\mathrm{j}X_{lr}\right)}{\frac{R_r}{s}+\mathrm{j}\left(X_m+X_{lr}\right)} \tag{11-16}</span></p>
+<p>定子电流 <span class="math inline">I_s=U_s/Z</span>，气隙功率等于转子铜耗除以转差，转矩等于气隙功率除以同步机械角速度：</p>
+<p><span class="math display">T_e=\frac{3\left|I_r&#39;\right|^2R_r/s}{\omega_s},\qquad \omega_s=\frac{2\pi f}{p} \tag{11-17}</span></p>
+<p>本章实验五取 <span class="math inline">R_s=0.5\ \Omega</span>，<span class="math inline">R_r=0.4\ \Omega</span>，<span class="math inline">X_{ls}=X_{lr}=1.2\ \Omega</span>，<span class="math inline">X_m=40\ \Omega</span>，<span class="math inline">U_s=220</span> V，<span class="math inline">f=50</span> Hz，<span class="math inline">p=2</span>。同步转速 1500 r/min。数值扫转差得到：最大转矩 150.808 N·m，临界转差 0.1655，对应转速 1251.8 r/min；起动转矩 54.623 N·m，是最大转矩的 0.362 倍；<span class="math inline">s=0.03</span> 时转矩 59.208 N·m，过载倍数 2.55。</p>
+<p>图 11-3 把这组数据画成转矩-转差曲线，并叠加了母线电压降到 90% 与 80% 的两条曲线。三条曲线的形状相同，只是幅值按电压平方缩放：90% 电压的最大转矩 122.155 N·m，80% 电压 96.517 N·m，与 <span class="math inline">(0.9)^2</span>、<span class="math inline">(0.8)^2</span> 的比值都是 1.0000。</p>
+<figure>
+<img src="figs/ch011/fig_011_04_induction.svg" alt="图 11-3　感应电机转矩-转差曲线与电压影响" /><figcaption aria-hidden="true">图 11-3　感应电机转矩-转差曲线与电压影响</figcaption>
+</figure>
+<p>曲线有三个特征点：起动点 <span class="math inline">s=1</span>、最大转矩点 <span class="math inline">s=0.1655</span>、额定工作点 <span class="math inline">s=0.03</span>。<strong>最大转矩与电压平方成正比，临界转差与电压无关</strong>——这是感应电机最重要的两条 scaling 关系，也是低压时“带不动负载”的根本原因：不是电流不够，是最大转矩掉到了负载转矩以下。</p>
+<p>曲线的两段性质完全不同。<span class="math inline">s&lt;s_m</span> 是稳定段：负载增大，转速略降、转差略增、转矩增大，能自动回到平衡；<span class="math inline">s&gt;s_m</span> 是不稳定段：负载增大，转速下降、转差增大，转矩反而减小，电机迅速堵转。<strong>临界转差 <span class="math inline">0.1655</span> 就是稳定与不稳定的分界</strong>，运行点必须留在左侧。</p>
+<p>起动转矩只有最大转矩的 0.362 倍，原因在转子阻抗角。<span class="math inline">s=1</span> 时转子支路的电阻是 <span class="math inline">R_r=0.4\ \Omega</span>，漏抗是 <span class="math inline">X_{lr}=1.2\ \Omega</span>，阻抗角 <span class="math inline">\arctan(1.2/0.4)=71.6^\circ</span>，功率因数只有 0.316，大部分转子电流是无功的；<span class="math inline">s=0.03</span> 时 <span class="math inline">R_r/s=13.33\ \Omega</span>，阻抗角降到 <span class="math inline">5.14^\circ</span>，功率因数 0.996，电流几乎全部用来产生转矩。<strong>同一个电流，起动时只有三成做功，额定点几乎全部做功，这就是 0.362 的来源。</strong></p>
+<h3 id="开关器件与-pwm-的基本量">11.2.6 开关器件与 PWM 的基本量</h3>
+<p>逆变器的输出不是一个连续电压，而是一串幅值为 <span class="math inline">U_{dc}</span> 的脉冲。描述这串脉冲只需两个量：开关周期 <span class="math inline">T_s</span> 与占空比 <span class="math inline">D</span>。</p>
+<p><span class="math display">D=\frac{t_{on}}{T_s} \tag{11-18}</span></p>
+<p>一个周期内的平均电压为</p>
+<p><span class="math display">\langle u\rangle=D\,U_{dc} \tag{11-19}</span></p>
+<p>对全桥（H 桥）双极性调制，输出在 <span class="math inline">+U_{dc}</span> 与 <span class="math inline">-U_{dc}</span> 之间切换，平均电压是 <span class="math inline">\langle u\rangle=(2D-1)U_{dc}</span>。这两个式子是所有平均模型的基础：<strong>控制器算出的连续电压，最终以占空比的形式被实现，中间隔着一个采样保持。</strong></p>
+<p>开关器件的选择决定 <span class="math inline">T_s</span> 能取多小、效率能有多高。三类常用器件的对比如表 11-2。</p>
+<p>表 11-2　常用开关器件的对比</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">项目</th>
+<th style="text-align: left;">功率 MOSFET</th>
+<th style="text-align: left;">IGBT</th>
+<th style="text-align: left;">SiC MOSFET</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">电压范围</td>
+<td style="text-align: left;">20–200 V</td>
+<td style="text-align: left;">600–1700 V</td>
+<td style="text-align: left;">600–1700 V</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">电流范围</td>
+<td style="text-align: left;">几安到几百安</td>
+<td style="text-align: left;">几十安到上千安</td>
+<td style="text-align: left;">几十安到几百安</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">开关频率</td>
+<td style="text-align: left;">20–200 kHz</td>
+<td style="text-align: left;">5–20 kHz</td>
+<td style="text-align: left;">20–100 kHz</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">导通特性</td>
+<td style="text-align: left;">电阻型，<span class="math inline">I^2R</span></td>
+<td style="text-align: left;">饱和压降型</td>
+<td style="text-align: left;">电阻型，<span class="math inline">R_{ds,on}</span> 小</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">典型场合</td>
+<td style="text-align: left;">低压伺服、电池供电</td>
+<td style="text-align: left;">工业变频、大功率</td>
+<td style="text-align: left;">高效、高功率密度</td>
+</tr>
+</tbody>
+</table>
+<p>MOSFET 是电阻型导通，低压小电流时损耗低；IGBT 有固定的饱和压降，高压大电流时更有优势，但开关速度慢；SiC MOSFET 兼具高耐压与高开关频率，代价是成本与驱动难度。<strong>选器件本质上是在“开关频率”与“单次开关损耗”之间做乘法</strong>，这一点在 §11.3.7 会给出定量式。</p>
+<p>用数据手册算损耗时要注意温度。MOSFET 的 <span class="math inline">R_{ds,on}</span> 随结温上升而增大，从 25 ℃ 到 150 ℃ 通常增大到 1.5–2 倍，若按常温值算导通损耗，会把最坏工况低估一半；IGBT 的饱和压降温度系数在小电流时为负、大电流时为正，多管并联时前者容易抢电流。<strong>开关频率的上限不是由控制算法决定的，而是由器件与散热共同决定的。</strong> 想把 20 kHz 提到 40 kHz，先算清开关损耗翻倍后结温是否还在降额线内，再谈纹波与带宽的收益。</p>
+<h3 id="符号与单位">11.2.7 符号与单位</h3>
+<p>本章用到的符号汇总于表 11-3。同一符号在全章只表达一个含义，与后续章节冲突时以本书《术语与符号表》为准。</p>
+<p>表 11-3　本章符号与单位</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">符号</th>
+<th style="text-align: left;">含义</th>
+<th style="text-align: left;">单位</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><span class="math inline">u</span></td>
+<td style="text-align: left;">绕组端电压</td>
+<td style="text-align: left;">V</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><span class="math inline">i</span></td>
+<td style="text-align: left;">绕组电流</td>
+<td style="text-align: left;">A</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><span class="math inline">R</span></td>
+<td style="text-align: left;">绕组电阻</td>
+<td style="text-align: left;"><span class="math inline">\Omega</span></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><span class="math inline">L</span></td>
+<td style="text-align: left;">绕组电感</td>
+<td style="text-align: left;">H</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><span class="math inline">e</span></td>
+<td style="text-align: left;">反电动势</td>
+<td style="text-align: left;">V</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><span class="math inline">K_e</span></td>
+<td style="text-align: left;">反电动势常数</td>
+<td style="text-align: left;">V·s/rad</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><span class="math inline">K_t</span></td>
+<td style="text-align: left;">转矩常数</td>
+<td style="text-align: left;">N·m/A</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><span class="math inline">T_e</span></td>
+<td style="text-align: left;">电磁转矩</td>
+<td style="text-align: left;">N·m</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><span class="math inline">T_L</span></td>
+<td style="text-align: left;">负载转矩</td>
+<td style="text-align: left;">N·m</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><span class="math inline">J</span></td>
+<td style="text-align: left;">转动惯量</td>
+<td style="text-align: left;">kg·m²</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><span class="math inline">b</span></td>
+<td style="text-align: left;">黏性阻尼</td>
+<td style="text-align: left;">N·m·s/rad</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><span class="math inline">\omega_m</span></td>
+<td style="text-align: left;">机械角速度</td>
+<td style="text-align: left;">rad/s</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><span class="math inline">\omega_e</span></td>
+<td style="text-align: left;">电角速度</td>
+<td style="text-align: left;">rad/s</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><span class="math inline">p</span></td>
+<td style="text-align: left;">极对数</td>
+<td style="text-align: left;">—</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><span class="math inline">\psi_f</span></td>
+<td style="text-align: left;">永磁体磁链</td>
+<td style="text-align: left;">Wb</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><span class="math inline">s</span></td>
+<td style="text-align: left;">转差</td>
+<td style="text-align: left;">—</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><span class="math inline">U_{dc}</span></td>
+<td style="text-align: left;">直流母线电压</td>
+<td style="text-align: left;">V</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><span class="math inline">D</span></td>
+<td style="text-align: left;">占空比</td>
+<td style="text-align: left;">—</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><span class="math inline">f_s</span></td>
+<td style="text-align: left;">开关频率</td>
+<td style="text-align: left;">Hz</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><span class="math inline">T_s</span></td>
+<td style="text-align: left;">开关周期</td>
+<td style="text-align: left;">s</td>
+</tr>
+</tbody>
+</table>
+<h2 id="推导与性质">11.3 推导与性质</h2>
+<h3 id="力矩从哪来磁共能与虚功">11.3.1 力矩从哪来：磁共能与虚功</h3>
+<p>上一节把 <span class="math inline">T_e=K_ti</span> 当作已知，但为什么电流会产生力矩、为什么有的电机还有磁阻转矩、为什么感应电机必须有转差，这些问题的答案在能量里。</p>
+<p>磁场储能对电感电流的积分是 <span class="math inline">W=\int i\,\mathrm{d}\psi</span>；更方便的是<strong>磁共能</strong>，定义为对磁链的积分：</p>
+<p><span class="math display">W_f&#39;=\int_0^{i}\psi(i&#39;)\,\mathrm{d}i&#39; \tag{11-20}</span></p>
+<p>在电流恒定、只有几何位置变化的条件下，电磁转矩等于磁共能对机械角度的偏导：</p>
+<p><span class="math display">T_e=\left.\frac{\partial W_f&#39;}{\partial\theta_m}\right|_{i=\mathrm{const}} \tag{11-21}</span></p>
+<p>对线性磁路 <span class="math inline">\psi=L(\theta_m)i</span>，磁共能是 <span class="math inline">\frac12L(\theta_m)i^2</span>，于是</p>
+<p><span class="math display">T_e=\frac12i^2\frac{\mathrm{d}L}{\mathrm{d}\theta_m} \tag{11-22}</span></p>
+<p>这个式子解释了三件事。第一，<strong>力矩来自电感随位置的变化</strong>，而不是来自电流本身；电流只是“激励”，角度变化才是“做功的通道”。第二，若电感不随位置变化（例如表贴式永磁电机的定子自感），则这一项为零，力矩只能来自永磁体与电流的相互作用。第三，两台电机若电感随角度的变化率相同，力矩就正比于电流平方，这就是磁阻电机与磁阻转矩的来源。</p>
+<p>PMSM 的 (11-12) 正是 (11-22) 的具体化：转子旋转时，d 轴与 q 轴的电感不同，磁共能对角度求导得到 <span class="math inline">(L_d-L_q)i_di_q</span> 这一项。感应电机的转子没有永磁体，转子电流由转差感应，转差为零则转子电流为零，力矩也为零——这从 (11-22) 看是“电感变化率存在但没有电流”，从等效电路看是“转子支路阻抗无穷大”。</p>
+<h3 id="直流电机的传递函数与两个时间常数">11.3.2 直流电机的传递函数与两个时间常数</h3>
+<p>把 (11-1)–(11-4) 做拉普拉斯变换，令初值为零：</p>
+<p><span class="math display">(Ls+R)I(s)=U(s)-K_e\Omega(s),\qquad (Js+b)\Omega(s)=K_tI(s)-T_L(s) \tag{11-23}</span></p>
+<p>消去 <span class="math inline">I(s)</span>，得到电压到转速的传递函数</p>
+<p><span class="math display">\frac{\Omega(s)}{U(s)}=\frac{K_t}{(Ls+R)(Js+b)+K_tK_e} \tag{11-24}</span></p>
+<p>分母展开后是 <span class="math inline">LJs^2+(Lb+RJ)s+(Rb+K_tK_e)</span>，写成标准二阶形式 <span class="math inline">\omega_n^2</span> 与 <span class="math inline">2\zeta\omega_n</span>：</p>
+<p><span class="math display">\omega_n=\sqrt{\frac{Rb+K_tK_e}{LJ}},\qquad \zeta=\frac{Lb+RJ}{2\sqrt{LJ\left(Rb+K_tK_e\right)}} \tag{11-25}</span></p>
+<p>代入本章参数（<span class="math inline">L=1</span> mH，<span class="math inline">R=0.7\ \Omega</span>，<span class="math inline">J=1.2\times10^{-4}</span> kg·m²，<span class="math inline">b=2\times10^{-4}</span>，<span class="math inline">K_tK_e=0.01</span>），得 <span class="math inline">\omega_n=290.7</span> rad/s，<span class="math inline">\zeta=1.21</span>。阻尼比大于 1，系统是过阻尼的，阶跃响应不会超调；这与 §11.6.2 的实验结果一致——转速单调上升，没有振荡。</p>
+<p>传递函数的两个稳态量可以直接读出。直流增益是 <span class="math inline">K_t/(Rb+K_tK_e)=0.1/0.01014=9.862</span> rad/s/V，即每伏电压对应 9.862 rad/s 的空载转速；负载灵敏度是 <span class="math inline">R/(Rb+K_tK_e)=69.03</span> rad/s/(N·m)，即每牛米负载压低 69.03 rad/s。12 V 空载 118.34 rad/s，减去 0.05 N·m 的 3.45 rad/s，得 114.89 rad/s，与仿真的 114.892 一致。<strong>这两个数比 Bode 图更实用：选电机时先看增益够不够，再看负载压降大不大。</strong></p>
+<p>分母的两个根是 <span class="math inline">-154.4</span> 与 <span class="math inline">-547.3</span> rad/s，对应时间常数 6.48 ms 与 1.83 ms。慢极点的时间常数比 <span class="math inline">\tau_m=8.284</span> ms 小 22%，但上升时间只差 4.1%——上升时间由两个极点共同决定，对慢极点并不敏感。<strong>“两个时间常数”是量级估算，不是精确公式。</strong> 只有当 <span class="math inline">\tau_e/\tau_m&lt;0.01</span> 时，慢极点才会与 <span class="math inline">\tau_m</span> 吻合到 1% 以内。</p>
+<p>过阻尼系统的两个极点可以用两个时间常数做量级估算：</p>
+<p><span class="math display">\tau_e=\frac{L}{R},\qquad \tau_m=\frac{J}{b+K_tK_e/R} \tag{11-26}</span></p>
+<p>前者是电气时间常数，后者是机电时间常数。本章参数下 <span class="math inline">\tau_e=1.429</span> ms，<span class="math inline">\tau_m=8.284</span> ms，比值 0.17。<strong>比值的物理含义是“电流建立得快不快于转速建立”</strong>：比值远小于 1，电流环可以先稳定，再设计速度环；比值接近 1，两个环的带宽必须拉开但又拉不开，只能一起设计。</p>
+<p>上升时间与调节时间也值得区分。两个极点 <span class="math inline">-154.4</span> 与 <span class="math inline">-547.3</span> rad/s 中，慢极点主导尾部，按 <span class="math inline">4/154.4</span> 估算，2% 调节时间约 25.9 ms；而 63.2% 上升时间只有 8.620 ms。<strong>两者相差三倍，“看起来到位”与“真正到位”不是一回事。</strong> 速度环若按上升时间定带宽，会把稳定时间估短；按调节时间定，才留得住负载扰动后的恢复余量。</p>
+<p>一个容易混淆的点是 <span class="math inline">\tau_m</span> 的分母。它不是 <span class="math inline">b</span>，而是 <span class="math inline">b+K_tK_e/R</span>。多出来的 <span class="math inline">K_tK_e/R</span> 是反电动势的“电气阻尼”：转速升高，反电动势升高，电流下降，力矩下降。这部分阻尼在电气上产生、在机械上表现，数值上往往远大于黏性阻尼（本章 <span class="math inline">0.014286</span> 对 <span class="math inline">0.0002</span>，相差 71 倍）。<strong>忽略它会把机电时间常数高估 70 倍。</strong></p>
+<h3 id="d-q-变换的功率不变性与-32">11.3.3 d-q 变换的功率不变性与 3/2</h3>
+<p>三相瞬时功率是</p>
+<p><span class="math display">p=u_ai_a+u_bi_b+u_ci_c \tag{11-27}</span></p>
+<p>把 (11-6)、(11-9) 代入并利用 <span class="math inline">i_a+i_b+i_c=0</span>，得到</p>
+<p><span class="math display">p=\frac32\left(u_\alpha i_\alpha+u_\beta i_\beta\right)=\frac32\left(u_di_d+u_qi_q\right) \tag{11-28}</span></p>
+<p>系数 <span class="math inline">3/2</span> 是幅值不变约定的必然结果。直观地看：幅值不变约定让每相电流的峰值与 <span class="math inline">i_\alpha</span> 的峰值相同，但三相共同做功，功率自然是两相坐标的 <span class="math inline">3/2</span> 倍。若改用功率不变约定，系数变成 1，但电流幅值会被缩放 <span class="math inline">\sqrt{3/2}</span>，力矩公式也要跟着改。<strong>两套约定不能混用，混用的典型症状是力矩差 1.5 倍或 2/3 倍。</strong></p>
+<p>本章实验四专门校验这一点：<span class="math inline">u_d=-3.6000</span> V，<span class="math inline">u_q=10.5000</span> V，<span class="math inline">i_d</span> 均值 <span class="math inline">-7.298\times10^{-19}</span> A，<span class="math inline">i_q</span> 均值 5.000 A。按 (11-28) 算得 78.7500 W；同时用三相瞬时功率逐点平均，也得到 78.7500 W，相对偏差 <span class="math inline">0.00\times10^{0}</span>。再把功率拆开：机械功率 <span class="math inline">T_e\omega_m=0.6000\times100=60.0000</span> W，铜耗 <span class="math inline">\frac32R_s(i_d^2+i_q^2)=18.7500</span> W，两者之和 78.7500 W，残差 <span class="math inline">0.00\times10^{0}</span> W。</p>
+<p><strong>功率平衡残差为零，比“波形看起来对”强得多。</strong> 它同时验证了变换矩阵、<span class="math inline">3/2</span> 系数、力矩公式和铜耗公式；其中任何一个写错，残差都不会是零。</p>
+<h3 id="pwm-的平均模型与纹波">11.3.4 PWM 的平均模型与纹波</h3>
+<p>开关频率足够高时，一个周期内的电流变化很小，可以对 (11-1) 在一个周期内取平均：</p>
+<p><span class="math display">L\frac{\mathrm{d}\langle i\rangle}{\mathrm{d}t}=\langle u\rangle-R\langle i\rangle-e \tag{11-29}</span></p>
+<p>这就是<strong>平均模型</strong>：它把开关过程抹平，只保留占空比决定的平均电压。设计电流环、速度环时用平均模型，因为环路带宽远低于开关频率，看不见纹波。</p>
+<p>但平均模型看不见纹波，而纹波必须单独算。以单极性 H 桥为例，输出在 <span class="math inline">0</span> 与 <span class="math inline">U_{dc}</span> 之间切换，导通期间电流上升斜率约 <span class="math inline">(U_{dc}-\langle u\rangle)/L</span>，关断期间下降斜率约 <span class="math inline">-\langle u\rangle/L</span>，两者持续时间分别是 <span class="math inline">DT_s</span> 与 <span class="math inline">(1-D)T_s</span>。峰峰值出现在两段斜率与时间乘积相等处：</p>
+<p><span class="math display">\Delta i_{pp}=\frac{U_{dc}D(1-D)}{Lf_s} \tag{11-30}</span></p>
+<p>双极性调制时输出在 <span class="math inline">+U_{dc}</span> 与 <span class="math inline">-U_{dc}</span> 之间切换，电压摆幅是 <span class="math inline">2U_{dc}</span>，纹波恰好翻倍。</p>
+<p>代入本章参数（<span class="math inline">U_{dc}=24</span> V，<span class="math inline">L=1</span> mH，<span class="math inline">f_s=20</span> kHz）：<span class="math inline">D=0.5</span> 时单极性 300 mA、双极性 600 mA；<span class="math inline">D=0.2</span> 或 <span class="math inline">0.8</span> 时单极性 192 mA、双极性 384 mA。纹波随占空比呈抛物线，在 0.5 处最大，两端对称。图 11-4 左边是这条抛物线与五个仿真点，右边是 <span class="math inline">D=0.2</span> 与 <span class="math inline">D=0.5</span> 两个周期的时域波形。</p>
+<figure>
+<img src="figs/ch011/fig_011_02_pwm_ripple.svg" alt="图 11-4　PWM 电流纹波：占空比抛物线与时域波形" /><figcaption aria-hidden="true">图 11-4　PWM 电流纹波：占空比抛物线与时域波形</figcaption>
+</figure>
+<p>仿真点系统性地比解析值高 0.3%–1.3%，原因在 §11.6.4 会展开：解析式假设电流严格线性，真实电流是指数段。<strong>这个偏差不大，但它提醒我们，(11-30) 是“线性化”的产物，占空比越偏离 0.5、电感越小、频率越低，偏差越大。</strong></p>
+<p>纹波公式也可以反用来选电感。若要求纹波不超过平均电流的 20%，5 A 对应 1 A；<span class="math inline">D=0.5</span> 是最坏情况，代入 (11-30) 得 <span class="math inline">L\ge U_{dc}/(4f_s\Delta i)=24/(4\times20000\times1)=300\ \mu</span>H。本章取 1 mH，是下限的 3.3 倍，纹波相应降到 300 mA，占平均值的 6%。<strong>电感选得越大，纹波越小，但体积、成本与电流响应速度都会变差</strong>；300 <span class="math inline">\mu</span>H 是“刚好够用”，1 mH 是“留了三倍余量”，工程上通常落在两者之间。</p>
+<p>除了纹波，电感还要校核饱和电流。峰值电流是平均值加半个纹波，5 A 平均、600 mA 纹波时是 5.3 A；电感的饱和电流必须大于这个值，并留出至少 20% 的裕量。<strong>纹波算得再准，电感一饱和，电感量掉到十分之一，纹波会瞬间放大，电流环也跟着失稳。</strong></p>
+<p>纹波的有效值也值得算。三角波的 RMS 是峰峰值的 <span class="math inline">1/(2\sqrt3)=0.2887</span>。600 mA 峰峰值对应 173.2 mA RMS，占 5 A 的 3.46%，铜耗只增加 0.12%；但平均电流降到 0.5 A 时，同样的纹波有效值占 34.6%，铜耗增加 12%，平均电流再降到 0.3 A 以下就进入断续模式，平均模型失效。<strong>纹波是否可接受，要看它相对平均电流的比例，而不是绝对值。</strong></p>
+<h3 id="h-桥的四种工作模式与死区">11.3.5 H 桥的四种工作模式与死区</h3>
+<p>H 桥有四个开关，组成两个桥臂。按电压与电流的符号组合，工作状态分四种，见表 11-4。</p>
+<p>表 11-4　H 桥的四种工作模式</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">模式</th>
+<th style="text-align: left;">电压</th>
+<th style="text-align: left;">电流</th>
+<th style="text-align: left;">开关状态</th>
+<th style="text-align: left;">能量流向</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">正向电动</td>
+<td style="text-align: left;"><span class="math inline">u&gt;0</span></td>
+<td style="text-align: left;"><span class="math inline">i&gt;0</span></td>
+<td style="text-align: left;">Q1、Q4 导通</td>
+<td style="text-align: left;">母线到电机</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">正向制动</td>
+<td style="text-align: left;"><span class="math inline">u&lt;0</span></td>
+<td style="text-align: left;"><span class="math inline">i&gt;0</span></td>
+<td style="text-align: left;">Q2、Q3 导通</td>
+<td style="text-align: left;">电机到母线</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">反向电动</td>
+<td style="text-align: left;"><span class="math inline">u&lt;0</span></td>
+<td style="text-align: left;"><span class="math inline">i&lt;0</span></td>
+<td style="text-align: left;">Q2、Q3 导通</td>
+<td style="text-align: left;">母线到电机</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">反向制动</td>
+<td style="text-align: left;"><span class="math inline">u&gt;0</span></td>
+<td style="text-align: left;"><span class="math inline">i&lt;0</span></td>
+<td style="text-align: left;">Q1、Q4 导通</td>
+<td style="text-align: left;">电机到母线</td>
+</tr>
+</tbody>
+</table>
+<p>四种模式的开关组合其实只有两种：Q1、Q4 同时导通，或 Q2、Q3 同时导通。区别在于电流方向：电流与电压同向是电动，反向是制动（回馈）。<strong>“制动”不是一个额外的电路状态，而是同一开关状态下电流反向的自然结果。</strong> 这也是为什么 H 桥能四象限运行，而半桥只能两象限。</p>
+<p>制动时能量往哪里去，是一个常被忽略的问题。本章转子在 114.892 rad/s 时的动能是 <span class="math inline">\frac12J\omega^2=0.792</span> J；1000 <span class="math inline">\mu</span>F 的母线电容在 24 V 时只储存 0.288 J。若这 0.792 J 全部回灌且没有泄放通道，母线电压会升到 <span class="math inline">\sqrt{24^2+2\times0.792/10^{-3}}=46.5</span> V，接近翻倍。<strong>频繁启停的系统，母线电容与制动电阻是按“一次制动回灌多少能量”选的，不是按稳态功率选的。</strong></p>
+<p>工程上有三种处理：加制动电阻与斩波器，把多余能量烧掉；用可回馈的电网侧变流器，把能量送回电网；靠电池或超级电容吸收。三种方案的体积、成本、效率差别很大，但共同点是——<strong>控制器必须知道母线电压的上限，否则制动指令发出去了，硬件先过压保护。</strong></p>
+<p>实际电路里，同一桥臂的上下两个开关不能同时导通，否则母线直接短路。为此在关断一个、开通另一个之间插入<strong>死区时间</strong> <span class="math inline">t_d</span>，通常 1–3 <span class="math inline">\mu</span>s。死区期间两个开关都关断，电流只能通过二极管续流，此时桥臂中点电压由电流方向决定，而不是由指令决定。一个开关周期内平均下来的电压误差是</p>
+<p><span class="math display">\Delta u=-U_{dc}\,t_d\,f_s\,\mathrm{sign}(i) \tag{11-31}</span></p>
+<p>这个式子的形式值得注意：误差正比于 <span class="math inline">U_{dc}</span>、<span class="math inline">t_d</span>、<span class="math inline">f_s</span> 三者的乘积，且只与电流方向有关，与电流大小无关。<span class="math inline">t_d=2\ \mu</span>s、<span class="math inline">f_s=20</span> kHz 时，<span class="math inline">t_df_s=0.04</span>，24 V 母线的平均误差是 0.960 V，48 V 是 1.920 V，300 V 是 12.000 V。<strong>误差的绝对值随母线升高，但占母线电压的比例恒为 4%。</strong></p>
+<p>死区的时序细节决定了这 4% 为什么躲不掉。以 Q1 关断、Q2 开通为例：先关 Q1，等待 <span class="math inline">t_d</span>，再开 Q2。<span class="math inline">t_d</span> 内两个开关都关断，若电流为正，它经 Q2 的反并二极管续流，桥臂中点被钳到负母线；若电流为负，它经 Q1 的反并二极管续流，中点被钳到正母线。<strong><span class="math inline">t_d</span> 内的电压完全由电流方向决定，控制器失去了控制权。</strong> 一个周期损失 <span class="math inline">t_d</span>，平均电压就少 <span class="math inline">U_{dc}t_df_s</span>。</p>
+<p>实际死区还要修正器件延时。开通延时 <span class="math inline">t_{on}</span> 与关断延时 <span class="math inline">t_{off}</span> 通常不相等，真正需要的死区是 <span class="math inline">(t_{off}-t_{on})</span> 再加裕量，而不是手册上的 <span class="math inline">t_d</span>。温度升高时 <span class="math inline">t_{off}</span> 变长，若死区按常温设定，高温下可能不够；反过来，死区设得过大，低速畸变更严重。<strong>死区时间是一个需要按最坏温度校核的量，不是拍一个 2 <span class="math inline">\mu</span>s 就完事。</strong></p>
+<p>误差的基波幅值比平均值大，因为方波误差的基波系数是 <span class="math inline">4/\pi</span>。24 V 时基波幅值 1.222 V，占相电压峰值 12 V 的 10.19%；48 V 与 300 V 的占比同样是 10.19%。<strong>低速时相电压峰值本身很小，这 10.19% 就是波形畸变的主要来源</strong>，§11.5.4 会给出补偿办法。</p>
+<h3 id="调制方式与母线利用率">11.3.6 调制方式与母线利用率</h3>
+<p>同样的母线电压，不同的调制方式能输出的最大相电压不同。三种常见方式的对比见表 11-5。</p>
+<p>表 11-5　三种调制方式的电压利用率</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">方式</th>
+<th style="text-align: left;">最大相电压峰值</th>
+<th style="text-align: left;">相对 SPWM</th>
+<th style="text-align: left;">特点</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">SPWM</td>
+<td style="text-align: left;"><span class="math inline">U_{dc}/2</span></td>
+<td style="text-align: left;">1.000</td>
+<td style="text-align: left;">实现简单，线性度好</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">SVPWM</td>
+<td style="text-align: left;"><span class="math inline">U_{dc}/\sqrt3</span></td>
+<td style="text-align: left;">1.1547</td>
+<td style="text-align: left;">注入三次谐波，多 15.47%</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">六阶梯</td>
+<td style="text-align: left;"><span class="math inline">2U_{dc}/\pi</span></td>
+<td style="text-align: left;">1.2732</td>
+<td style="text-align: left;">方波，谐波大，仅高速用</td>
+</tr>
+</tbody>
+</table>
+<p>本章实验六的实测值与理论一致：24 V 母线，SPWM 最大相电压峰值 12.000 V，SVPWM 13.856 V，相对提升 15.47%；六阶梯 15.279 V，相对提升 27.32%。三个数分别等于 <span class="math inline">24/2</span>、<span class="math inline">24/\sqrt3</span>、<span class="math inline">2\times24/\pi</span>。</p>
+<p>SVPWM 的 15.47% 不是“作弊”，而是把零序分量注入后，相电压峰值不变、线电压不变，但直流母线利用率提高。代价是相电压波形里多了三次谐波，而三次谐波在三相无中线系统中不产生电流，所以不增加损耗。<strong>这也是为什么现代伺服几乎都用 SVPWM 而不是 SPWM。</strong></p>
+<p>零序注入的具体做法是：取三相指令的最大值与最小值，令 <span class="math inline">u_0=-(\max+\min)/2</span>，再把它同时加到三相上。三相同时加同一个量，线电压相减时消掉，所以电机看到的线电压不变；但相电压的峰值被“居中”了，同样母线电压下可以容纳更大的基波幅值。<strong>SVPWM 与“注入三次谐波”是同一件事的两种说法</strong>，前者从空间矢量角度描述，后者从相电压波形角度描述。</p>
+<p>六阶梯的 27.32% 更高，但输出是方波，谐波含量大、转矩脉动大，只在需要极限转速的场合使用。<strong>利用率与波形质量是一对矛盾</strong>，选调制方式就是在两者之间取点。</p>
+<h3 id="损耗温升与降额">11.3.7 损耗、温升与降额</h3>
+<p>变换器的损耗分两类。导通损耗在器件导通期间产生：MOSFET 是 <span class="math inline">I^2R_{ds,on}</span>，IGBT 是 <span class="math inline">V_{ce}I</span>。开关损耗在每次开通、关断的过渡过程中产生，近似为</p>
+<p><span class="math display">P_{sw}\approx\frac12U_{dc}I\left(t_r+t_f\right)f_s \tag{11-32}</span></p>
+<p><span class="math inline">t_r</span>、<span class="math inline">t_f</span> 是上升、下降时间。24 V、5 A、<span class="math inline">t_r+t_f=100</span> ns、20 kHz 时，单管开关损耗约 0.12 W；若换成 300 V 母线、同样电流，损耗变成 1.5 W，是前者的 12.5 倍。<strong>高压带来的不只是绝缘问题，还有成比例增加的开关损耗。</strong></p>
+<p>把四个开关合起来算：H 桥四管，单管 0.12 W，总开关损耗 0.48 W；热阻 50 K/W 时温升 24 K，40 ℃ 环境下降到 64 ℃，离 125 ℃ 还有 61 ℃ 裕量。散热器换成 100 K/W，温升 48 K，结温 88 ℃，仍可用但余量只剩 37 ℃。<strong>热设计的核心不是算一个典型值，而是确认最坏工况（最高母线、最大电流、最高环境温度）下的结温。</strong></p>
+<p>温升由热阻决定：<span class="math inline">\Delta T=P\,R_{th}</span>，<span class="math inline">R_{th}</span> 从结到环境，包含结到壳、壳到散热器、散热器到空气三段。工程上的降额规则通常是：结温不超过 125 ℃（留 25 ℃ 裕量），母线电压不超过器件额定值的 80%，电流不超过额定值的 70%。<strong>降额不是保守，而是把“参数分散 + 高温 + 瞬态”三件事的余量预先留出来。</strong></p>
+<p>对控制工程师而言，损耗的直接影响有两个。第一，高温会让 <span class="math inline">R_{ds,on}</span> 上升、<span class="math inline">V_{ce}</span> 上升，导通压降变化，低速时相当于一个随温度漂移的死区误差。第二，过热保护会突然限流或封锁输出，控制器必须能识别这种“非故障的失效”，否则会误判为传感器故障。<strong>§11.5.6 的验收文件里，应当把热保护阈值与降额曲线列为必填项。</strong></p>
+<h2 id="离散对应与数值实现">11.4 离散对应与数值实现</h2>
+<h3 id="电流环为什么必须精确离散">11.4.1 电流环为什么必须精确离散</h3>
+<p>连续域设计的 PI，拿到数字控制器里要变成差分方程。最常见的做法是“先按连续域算出 <span class="math inline">K_p</span>、<span class="math inline">K_i</span>，再用前向欧拉实现”。这个做法在带宽远低于采样频率时没问题，在电流环这种带宽接近采样频率十分之一的场合会出问题。</p>
+<p>原因是离散化会移动极点。连续域的极点 <span class="math inline">s=-R/L=-700</span> rad/s，用前向欧拉 <span class="math inline">s\leftarrow(z-1)/T_s</span> 映射后，极点落在 <span class="math inline">z=1-RT_s/L</span>。采样 20 kHz 时 <span class="math inline">z=0.965</span>，看似没问题；但零点与增益也一起被移动，等效的 <span class="math inline">b</span> 从精确值 0.049136 变成 0.05，相对误差 1.76%。采样降到 5 kHz（<span class="math inline">T_s=200\ \mu</span>s）时，<span class="math inline">z=0.86</span>，<span class="math inline">b</span> 的误差涨到 7.16%。</p>
+<p>1.76% 与 7.16% 这两个数看起来不大，但它们影响的是电流环的<strong>闭环增益</strong>。电流环的 <span class="math inline">K_p=L\omega_c</span>、<span class="math inline">K_i=R\omega_c</span> 是按连续对象整定的，对象增益偏了 7%，闭环带宽就偏 7%，相位裕度也跟着变。<strong>在 5 kHz 采样、1 kHz 带宽这一档，7% 的偏差足以让超调从 2.51% 明显变大。</strong></p>
+<p>误差有一个简单的估算式。令 <span class="math inline">x=RT_s/L</span>，前向欧拉的 <span class="math inline">b</span> 与精确值之比是 <span class="math inline">x/(1-\mathrm{e}^{-x})</span>，相对误差约为 <span class="math inline">x/2</span>。20 kHz 时 <span class="math inline">x=0.035</span>，误差 1.75%；5 kHz 时 <span class="math inline">x=0.14</span>，误差 7.0%；2 kHz 时 <span class="math inline">x=0.35</span>，误差 15.6%。<strong>采样率每降一半，误差大约翻一倍</strong>，这就是为什么慢采样系统不能照搬连续域的整定结果。当 <span class="math inline">x&gt;0.5</span> 时，欧拉离散的极点已经跑到 <span class="math inline">z&lt;0.5</span>，动态严重失真，必须换 ZOH。</p>
+<p>正确做法是用零阶保持（ZOH）精确离散。它不引入额外误差，代价只是多算一个指数。</p>
+<h3 id="零阶保持精确离散">11.4.2 零阶保持精确离散</h3>
+<p>一个开关周期内，电压 <span class="math inline">u</span> 保持不变，电流从 <span class="math inline">i[k]</span> 演化到 <span class="math inline">i[k+1]</span>。对 (11-1) 在 <span class="math inline">[kT_s,(k+1)T_s]</span> 上积分，得</p>
+<p><span class="math display">i[k+1]=a\,i[k]+b\left(u[k]-e[k]\right),\qquad a=\mathrm{e}^{-RT_s/L},\quad b=\frac{1-a}{R} \tag{11-33}</span></p>
+<p>这个式子是精确的，不是近似：它假设 <span class="math inline">u</span> 与 <span class="math inline">e</span> 在一个周期内不变，这正好符合“PWM 在一个周期内保持、反电动势变化远慢于电流”的实际情况。若 <span class="math inline">e</span> 变化也很快，可以把 <span class="math inline">e</span> 一起增广进状态，但电流环的时间尺度通常不需要。</p>
+<p><span class="math inline">a</span> 的物理含义是“一个周期后电流保留的比例”。本章参数、20 kHz 采样时 <span class="math inline">a=0.965605</span>，即每周期衰减 3.44%，时间常数 1.429 ms 对应约 28.6 个周期。<span class="math inline">b</span> 是“单位电压在一个周期内建立的电流”，<span class="math inline">b=0.049136</span> A/V。</p>
+<p>两个系数的关系 <span class="math inline">b=(1-a)/R</span> 值得记住：它保证了稳态时 <span class="math inline">i=b(u-e)/(1-a)=(u-e)/R</span>，与连续域的稳态解一致。<strong>任何离散化方法，只要稳态解不对，就一定是错的</strong>；前向欧拉的 <span class="math inline">b=T_s/L</span> 在稳态时给出 <span class="math inline">i=T_s(u-e)/(L(1-a))</span>，当 <span class="math inline">a=1-RT_s/L</span> 时正好等于 <span class="math inline">(u-e)/R</span>，所以它的稳态是对的，错在动态。</p>
+<p>机械方程通常用显式欧拉推进：<span class="math inline">\omega[k+1]=\omega[k]+(T_s/J)(T_e-T_L-b\omega[k])</span>。它的稳定性由最慢的机械极点决定，本章是 <span class="math inline">-154.4</span> rad/s，步长上限 <span class="math inline">2/154.4=12.95</span> ms。20 <span class="math inline">\mu</span>s 的电气步长远小于这个上限，所以统一用 20 <span class="math inline">\mu</span>s 同时推进电气与机械是安全的；若为了提速把机械步长放到 200 <span class="math inline">\mu</span>s，仍有 65 倍余量。<strong>判断能不能用大步长，看的是最慢极点，不是最快极点。</strong></p>
+<p>多速率仿真有一个接口细节：电气侧每 20 <span class="math inline">\mu</span>s 更新一次，机械侧每 200 <span class="math inline">\mu</span>s 读一次力矩，中间 10 个电气步的力矩必须做平均或保持，不能只取最后一个。取最后一个相当于给机械侧加了半个机械步的延迟，会让速度环的相位裕度少几度。<strong>本章所有实验都用单速率，正是为了避开这个接口误差。</strong></p>
+<h3 id="离散-pi-与抗饱和">11.4.3 离散 PI 与抗饱和</h3>
+<p>电流环的 PI 写成位置式：</p>
+<p><span class="math display">u[k]=K_p\,e[k]+I[k],\qquad I[k]=I[k-1]+K_iT_s\,e[k] \tag{11-34}</span></p>
+<p><span class="math inline">e[k]=i_{ref}[k]-i[k]</span>。<span class="math inline">K_p=L\omega_c</span>、<span class="math inline">K_i=R\omega_c</span> 是按“零极点对消”整定的：PI 的零点放在对象的极点 <span class="math inline">-R/L</span> 上，闭环变成一阶惯性，带宽 <span class="math inline">\omega_c</span>。本章四组带宽对应 <span class="math inline">K_p=3.142</span>、<span class="math inline">6.283</span>、<span class="math inline">12.566</span>、<span class="math inline">25.133</span> V/A，与 <span class="math inline">L\omega_c</span> 完全一致。</p>
+<p>位置式 PI 有一个必须处理的问题：<strong>积分饱和</strong>。起动时电压指令可能超过母线能提供的最大值，若积分器继续累加，退出饱和后要很久才能把积分“吐”回来，表现为长时间的超调或反向冲。抗饱和的常用做法是回写：</p>
+<p><span class="math display">I[k]=I[k-1]+K_iT_s\,e[k]+\frac{T_s}{T_t}\left(u_{sat}[k-1]-u[k-1]\right) \tag{11-35}</span></p>
+<p><span class="math inline">u_{sat}</span> 是限幅后的实际输出，<span class="math inline">T_t</span> 是回写时间常数，通常取 <span class="math inline">T_t=\sqrt{T_s/\omega_c}</span> 或直接取几个采样周期。当输出未饱和时，<span class="math inline">u_{sat}=u</span>，回写项为零，积分器正常工作；饱和时回写项把积分器往回拉，拉的速度由 <span class="math inline">T_t</span> 决定。</p>
+<p>实验二的电流环带了限幅与回写，2 kHz 时稳态误差 0.004 mA，说明积分器在正常工作；4 kHz 时末段摆幅 512.53%，说明问题不在积分器，而在环路本身已经不稳定。<strong>抗饱和能治“饱和后的恢复慢”，治不了“环路发散”，两者要分清。</strong></p>
+<p>图 11-5 把三组带宽的阶跃画在一起：500 Hz 的曲线平缓，约 0.5 ms 到达 1 A；1 kHz 的曲线在 0.15 ms 到达，超调 2.51%；2 kHz 的曲线在 0.05 ms 冲过目标 50.77%，随后用 0.9 ms 才收住。<strong>三条曲线并排看，才能理解“带宽”与“稳定”不是一回事。</strong></p>
+<figure>
+<img src="figs/ch011/fig_011_05_current_loop.svg" alt="图 11-5　电流环三种带宽的阶跃响应" /><figcaption aria-hidden="true">图 11-5　电流环三种带宽的阶跃响应</figcaption>
+</figure>
+<p>位置式可以改写成增量式：<span class="math inline">\Delta u[k]=K_p(e[k]-e[k-1])+K_iT_se[k]</span>，<span class="math inline">u[k]=u[k-1]+\Delta u[k]</span>。两者在数学上等价，但增量式把历史全部压在 <span class="math inline">u[k-1]</span> 里，做手自动切换、输出限幅跟踪时更方便；缺点是它同样会累积，抗饱和仍要显式处理。<strong>“增量式天然抗饱和”是一个流传很广的误解</strong>，它只是把饱和点从积分器挪到了输出累加器。</p>
+<p>量化误差在电流环里不能忽略。12 位 ADC、±20 A 量程，一个 LSB 是 <span class="math inline">40/4096=9.77</span> mA；经 <span class="math inline">K_p=6.283</span> V/A 放大后，输出跳变 61 mV，占死区误差 0.96 V 的 6.4%，还可以接受。若换成 8 位 ADC，LSB 是 156 mA，放大后 0.98 V，与死区误差同量级，电流环会被量化噪声淹没。<strong>选 ADC 位数时，要用 <span class="math inline">K_p</span> 乘 LSB，再与死区、纹波比较，而不是只看“多少位”。</strong></p>
+<h3 id="采样pwm-与计算延迟的相位预算">11.4.4 采样、PWM 与计算延迟的相位预算</h3>
+<p>数字电流环的延迟由三部分组成。第一是采样保持：电流在周期起点采样，整个周期用它，等效 <span class="math inline">T_s/2</span> 的延迟。第二是计算：从采样到算出占空比，至少一个周期，<span class="math inline">T_s</span>。第三是 PWM 更新：占空比在下一个周期生效，平均再 <span class="math inline">T_s/2</span>。合计约 <span class="math inline">2T_s</span>，工程上常按 <span class="math inline">1.5T_s</span> 估算。</p>
+<p>延迟在频域是纯相位滞后，<span class="math inline">\varphi=-\omega_c\tau_d</span>。采样 20 kHz、<span class="math inline">\tau_d=1.5T_s=75\ \mu</span>s 时：</p>
+<ul>
+<li>带宽 500 Hz，<span class="math inline">\omega_c=3142</span> rad/s，滞后 <span class="math inline">13.5^\circ</span>；</li>
+<li>带宽 1 kHz，滞后 <span class="math inline">27.0^\circ</span>；</li>
+<li>带宽 2 kHz，滞后 <span class="math inline">54.0^\circ</span>；</li>
+<li>带宽 4 kHz，滞后 <span class="math inline">108.0^\circ</span>。</li>
+</ul>
+<p>再加上 RL 对象本身的相位（<span class="math inline">\omega_c=4</span> kHz 时已达 <span class="math inline">-88.4^\circ</span>），4 kHz 的总滞后超过 <span class="math inline">180^\circ</span>，闭环必然发散。2 kHz 时总滞后约 <span class="math inline">-139^\circ</span>，相位裕度约 <span class="math inline">41^\circ</span>，对应超调 50.77%——与实验二实测一致。1 kHz 时总滞后约 <span class="math inline">-110^\circ</span>，裕度约 <span class="math inline">70^\circ</span>，超调 2.51%。500 Hz 时裕度接近 <span class="math inline">90^\circ</span>，超调为零。</p>
+<p><strong>这就是“带宽取采样频率的 1/20 到 1/10”这条经验规则的来历。</strong> 它不是拍脑袋，而是把 <span class="math inline">1.5T_s</span> 的延迟代入相位公式算出来的：<span class="math inline">\omega_cT_s\le0.3</span> 时延迟滞后不超过 <span class="math inline">26^\circ</span>，留得住裕度；<span class="math inline">\omega_cT_s=0.63</span>（2 kHz）时滞后 <span class="math inline">54^\circ</span>，已经很勉强；<span class="math inline">\omega_cT_s=1.26</span>（4 kHz）时滞后超过 <span class="math inline">100^\circ</span>，必然失稳。</p>
+<p>把这条规则套到 10 kHz 采样：<span class="math inline">T_s=100\ \mu</span>s，<span class="math inline">1.5T_s=150\ \mu</span>s。500 Hz 时滞后 <span class="math inline">27^\circ</span>，1 kHz 时 <span class="math inline">54^\circ</span>，2 kHz 时 <span class="math inline">108^\circ</span>。所以 10 kHz 采样下，500 Hz 才是“1/20”，1 kHz 已经是“1/10”的边缘。<strong>把 20 kHz 的参数直接搬到 10 kHz，带宽会从“可用”变成“振荡”</strong>；反过来，把 10 kHz 的参数搬到 20 kHz，则白白浪费了一倍的可用带宽。</p>
+<h3 id="平均模型与开关模型的分工">11.4.5 平均模型与开关模型的分工</h3>
+<p>同一套电机参数，仿真里要建两个模型，各管一件事。</p>
+<p><strong>平均模型</strong>用 (11-29)，状态是平均电流与转速，步长可以取开关周期的十分之一甚至更大。它用来设计控制器、扫参数、做稳定性分析。优点是快，一次 100 ms 的阶跃只需几千步；缺点是把纹波、死区、采样时刻全抹掉了。</p>
+<p><strong>开关模型</strong>用 (11-1) 与 (11-33)，步长必须远小于开关周期（本章取 400 步/周期），显式地模拟开通、关断、死区、二极管续流。它用来验证纹波、采样误差、死区补偿、损耗。优点是真实，缺点是慢，100 ms 要跑几百万步。</p>
+<p>两个模型的分工可以总结成一句话：<strong>平均模型回答“环路稳不稳”，开关模型回答“波形像不像”。</strong> 只做平均模型，会漏掉纹波与死区；只做开关模型，参数扫不动、稳定性看不出来。本章六组实验里，实验一、二、四、五用平均或精确离散模型，实验三、六用开关模型。</p>
+<p>把两者的代价算清楚，分工就不再是口号。开关频率 20 kHz 对应周期 50 <span class="math inline">\mu</span>s。平均模型取 20 <span class="math inline">\mu</span>s 步长，一个开关周期内走 2.5 步；开关模型取 0.125 <span class="math inline">\mu</span>s 步长，即每周期 400 步。同样仿真 100 ms 的阶跃过程：</p>
+<ul>
+<li>平均模型：<span class="math inline">0.1/20\times10^{-6}=5\,000</span> 步；</li>
+<li>开关模型：<span class="math inline">0.1/0.125\times10^{-6}=800\,000</span> 步。</li>
+</ul>
+<p>步数比正好是 <span class="math inline">800\,000/5\,000=160</span>。这还只是步数比。实际耗时比通常更大，因为开关模型的每一步还要判断开关状态、处理死区逻辑、在四个桥臂之间切换电流通路，单步开销至少是平均模型的三到五倍。按每步开销相同保守估计，一次 100 ms 仿真，平均模型瞬间完成，开关模型要多花两个数量级的时间。如果做 5 组参数 × 4 个工况的扫描，平均模型 20 次跑完还能再迭代，开关模型 20 次就足以让人放弃调参。</p>
+<p>由此得到一条实用的工作顺序：<strong>先用平均模型把增益、带宽、限幅全定下来，再用开关模型在最终参数上跑两三组波形验收。</strong> 反过来做——一上来就用开关模型调 PI 参数——是初学者最常见的效率陷阱：每改一次 <span class="math inline">K_p</span> 等几十秒，改到第十次就开始凭感觉而不是凭指标做决定，最后参数既不是最优的，也说不清为什么选它。</p>
+<p>还有一个容易忽略的差别：两个模型的<strong>状态变量不同</strong>。平均模型的状态是 <span class="math inline">\langle i\rangle</span> 与 <span class="math inline">\omega</span>，纹波在建模阶段就被平均掉了，所以它给出的电流永远是光滑的；开关模型的状态是瞬时 <span class="math inline">i</span>，纹波是解的一部分。这意味着在平均模型上做的“电流峰值保护”是假的——它看到的峰值只是平均值的峰值，真正的瞬时峰值要高出纹波的一半。24 V、<span class="math inline">D=0.5</span>、5 A 平均电流、20 kHz 这一组参数下，单极性纹波 300 mA，瞬时峰值比平均值高 150 mA；双极性则高 300 mA。若把过流阈值卡在平均电流的 1.02 倍，开关模型里每周期都会触发。<strong>保护阈值必须按瞬时值设，而瞬时峰值只能在开关模型里看到。</strong></p>
+<h3 id="实现的六个细节">11.4.6 实现的六个细节</h3>
+<p><strong>第一，离散化用 ZOH，不用前向欧拉。</strong> 前向欧拉的增益误差在 5 kHz 采样时是 7.16%，会直接改变闭环带宽。ZOH 只多一个 <code>exp</code>，没有理由省。</p>
+<p><strong>第二，电流采样对齐 PWM 中心。</strong> 三角载波的顶点或底点对应电感电流的平均值，此时采样误差最小；对齐开关沿会采到尖峰与振铃。若采样时刻偏离中心 <span class="math inline">\Delta t</span>，读到的电流偏离平均值约 <span class="math inline">(U_{dc}-\langle u\rangle)\Delta t/L</span>，24 V、<span class="math inline">D=0.5</span>、<span class="math inline">\Delta t=1\ \mu</span>s 时约 12 mA，占 5 A 的 0.24%。</p>
+<p><strong>第三，把一拍延迟显式写进模型。</strong> 控制器算出的 <span class="math inline">u[k]</span> 在 <span class="math inline">k+1</span> 才生效，仿真里若直接用它更新 <span class="math inline">k+1</span> 的电流，会高估相位裕度。本章 <code>current_loop</code> 里固定用 <code>u_hist[k-1]</code>，就是为了让延迟可见。</p>
+<p><strong>第四，抗饱和必须配限幅。</strong> 只有积分器没有限幅，等于没有抗饱和；只有限幅没有回写，积分器会在饱和期间继续累加。两者要成对出现。</p>
+<p><strong>第五，标幺化或定点化要统一基值。</strong> 电流基值取额定峰值，电压基值取 <span class="math inline">U_{dc}/\sqrt3</span>，频率基值取额定电频率。基值不统一，会在变换、限幅、保护三处各差一个系数，而且很难查。</p>
+<p><strong>第六，保护逻辑独立于控制环。</strong> 过流、过压、过温、编码器断线，这些判断不能放在电流环的任务里，否则环路一发散，保护也跟着失效。<strong>控制可以停，保护不能停。</strong></p>
+<h2 id="工程含义与适用边界">11.5 工程含义与适用边界</h2>
+<h3 id="选型的四个约束">11.5.1 选型的四个约束</h3>
+<p>选电机与驱动器，本质上是四条约束同时满足，见表 11-6。</p>
+<p>表 11-6　选型的四个约束</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">约束</th>
+<th style="text-align: left;">决定因素</th>
+<th style="text-align: left;">本章算例</th>
+<th style="text-align: left;">不满足的后果</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">电压</td>
+<td style="text-align: left;">最高转速与反电动势</td>
+<td style="text-align: left;">48 V 母线对应 27.7 V 相电压峰值</td>
+<td style="text-align: left;">高速段转矩掉零</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">电流</td>
+<td style="text-align: left;">峰值转矩与过载倍数</td>
+<td style="text-align: left;">负载 0.05 N·m 时 0.73 A；额定 1 N·m 对应 10 A</td>
+<td style="text-align: left;">起动或加速过流</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">热</td>
+<td style="text-align: left;">连续转矩与散热</td>
+<td style="text-align: left;">连续电流决定温升</td>
+<td style="text-align: left;">长时间运行降额或保护</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">惯量匹配</td>
+<td style="text-align: left;">负载惯量与电机惯量之比</td>
+<td style="text-align: left;">通常 1–10 倍</td>
+<td style="text-align: left;">带宽上不去、易振荡</td>
+</tr>
+</tbody>
+</table>
+<p>四条约束里，电压与电流是“瞬时”约束，热是“平均”约束，惯量匹配是“动态”约束。<strong>选型时最容易被忽略的是热</strong>：峰值电流按 13.5 A 选，连续电流只有 0.73 A，若按峰值选散热，体积会大出好几倍；若按连续值选器件，峰值又扛不住。正确做法是分别校核：器件按峰值电流选，散热按有效值（RMS）算。</p>
+<p>本章算例的电流有效值可以估一下：稳态 0.7298 A，起动阶段峰值 13.4981 A 但只持续几毫秒，按 100 ms 窗口算，RMS 大约 2–3 A，远小于峰值。<strong>这就是为什么驱动器标称“峰值 30 A、连续 10 A”——两个数对应两种热时间尺度。</strong></p>
+<p>惯量匹配也值得算一个数。设负载惯量是电机惯量的 5 倍，总惯量 <span class="math inline">7.2\times10^{-4}</span> kg·m²；若要求 1000 rad/s² 的角加速度，需要转矩 0.72 N·m，对应电流 7.2 A，是稳态 0.7298 A 的 9.9 倍。<strong>加速转矩往往比负载转矩大一个数量级</strong>，选型时若只看负载转矩，动态响应一定不够。</p>
+<p>这四条约束不是独立的。提高母线电压能扩展转速，但会增加开关损耗；加大电流能提高转矩，但受热与电感饱和限制；减小惯量能提高带宽，但会降低抗扰能力。<strong>选型是在四条边之间找一个可行域，而不是把每一条都拉到极限。</strong></p>
+<h3 id="母线电压调制比与弱磁">11.5.2 母线电压、调制比与弱磁</h3>
+<p>母线电压决定电机能跑多快。稳态时忽略电阻压降与电感压降，d-q 电压满足</p>
+<p><span class="math display">\sqrt{u_d^2+u_q^2}\le\frac{U_{dc}}{\sqrt3} \tag{11-36}</span></p>
+<p>右边的 <span class="math inline">U_{dc}/\sqrt3</span> 是 SVPWM 能输出的最大相电压峰值（§11.3.6）。把 <span class="math inline">u_d\approx-\omega_eL_qi_q</span>、<span class="math inline">u_q\approx\omega_e\psi_f</span> 代入，忽略磁阻项，得到电压极限对应的最高电角速度：</p>
+<p><span class="math display">\omega_{e,\max}\approx\frac{U_{dc}}{\sqrt3\,\psi_f} \tag{11-37}</span></p>
+<p>本章参数 <span class="math inline">\psi_f=0.02</span> Wb、<span class="math inline">p=4</span>。48 V 母线时 <span class="math inline">\omega_{e,\max}=1385.6</span> rad/s，机械角速度 <span class="math inline">346.4</span> rad/s，约 3307 r/min；24 V 母线时减半，约 1654 r/min。<strong>母线电压翻倍，最高转速翻倍，这是最直接的一条 scaling law。</strong></p>
+<p>超过这个转速怎么办？两条路。第一条是<strong>弱磁</strong>：令 <span class="math inline">i_d&lt;0</span>，抵消一部分永磁磁链，使 <span class="math inline">\psi_f+L_di_d</span> 变小，电压极限对应的转速提高。代价是同样的转矩需要更大的电流，铜耗上升，且电流受 <span class="math inline">i_d^2+i_q^2\le I_{\max}^2</span> 约束。第二条是<strong>提高母线电压</strong>，或者在高速段降低转矩需求。</p>
+<p>弱磁的边界是电流极限圆与电压极限椭圆的交点。工程上把工作区分为三段：低速恒转矩区（电流受限）、高速恒功率区（电压受限、弱磁）、更高速的恒滑差区（转矩按 <span class="math inline">1/\omega^2</span> 下降）。<strong>控制器必须知道自己在哪一段，否则会在弱磁区给出无法实现的电流指令，导致饱和与失控。</strong></p>
+<p>弱磁的效果可以估一个数。取 <span class="math inline">i_d=-2</span> A、<span class="math inline">L_d=1.2</span> mH，磁链减少 <span class="math inline">L_d|i_d|=2.4\times10^{-3}</span> Wb，占 <span class="math inline">\psi_f=0.02</span> Wb 的 12%，最高转速提高 <span class="math inline">1/(1-0.12)=13.6\%</span>，从 3307 r/min 到约 3757 r/min。代价是电流幅值从 5 A 增到 5.385 A，铜耗增加 16%。<strong>用 16% 的铜耗换 13.6% 的转速，在高速段通常值得；低速段则不划算，因为那里本来就不缺电压。</strong></p>
+<h3 id="电流环带宽取多少">11.5.3 电流环带宽取多少</h3>
+<p>§11.4.4 的相位预算给出了上限，实验二给出了实测，两者合起来可以定一条工程规则：<strong>采样 20 kHz 时，电流环带宽取 1 kHz，即采样频率的 1/20。</strong></p>
+<p>这条规则的理由有三层。第一层是相位裕度：1 kHz 时延迟滞后 <span class="math inline">27^\circ</span>，加上对象滞后约 <span class="math inline">-83.5^\circ</span>，总滞后约 <span class="math inline">-110^\circ</span>，裕度约 <span class="math inline">70^\circ</span>，超调 2.51%，是“快且稳”的平衡点。第二层是抗噪：带宽越高，越容易把 PWM 纹波与采样噪声放大，1 kHz 对应的 <span class="math inline">K_p=6.283</span> V/A，对 12 mA 的采样偏差只产生 0.075 V 的电压扰动。第三层是分层：速度环通常取电流环的 1/5–1/10，即 100–200 Hz，正好落在机械时间常数的倒数附近。</p>
+<p>抗噪这一层可以算一个数：5 A 平均、600 mA 纹波，纹波峰峰值占平均值的 12%；若采样不在中心，读到的值最多偏离平均值 300 mA，占 6%。若电流环要求 1% 的给定精度，6% 的采样偏差已经超标。<strong>带宽、纹波、采样精度三者互相约束：带宽高要求采样快，采样快往往纹波大，纹波大又要求滤波，滤波又加延迟。</strong> 工程上的折中点，通常就是“采样对齐 PWM 中心 + 带宽取 1/20”这一组。</p>
+<p>什么时候可以偏离这条规则？若采样频率提高到 40 kHz，带宽可以到 2 kHz；若必须用 10 kHz 采样，带宽应降到 500 Hz。<strong>带宽跟着采样频率走，不跟着“我想要多快”走。</strong> 若工艺要求更快的电流响应，正确的动作是提高开关频率或改用 FPGA 把延迟压到一个周期以内，而不是硬把带宽往上调。</p>
+<h3 id="死区导通压降与低速性能">11.5.4 死区、导通压降与低速性能</h3>
+<p>低速时，反电动势很小，相电压指令也很小。本章 24 V 母线、2 <span class="math inline">\mu</span>s 死区、20 kHz 开关频率，平均电压误差 0.960 V；若某时刻相电压指令只有 2 V，误差占比就是 48%。<strong>同一套参数，高速时死区只是小扰动，低速时它就是主要矛盾。</strong></p>
+<p>举一个具体的低速工作点：转速 25 rad/s（约 239 r/min），反电动势 <span class="math inline">K_e\omega=2.5</span> V，相电压指令约 3 V，死区误差 0.960 V 占 32%。若要求 1% 的转速精度，电压精度需 0.03 V，死区误差比它大 32 倍——不补偿就根本做不到。<strong>这不是“精度差一点”，而是“差一个数量级”。</strong></p>
+<p>死区误差的波形是方波，按电流方向取正负，因此它主要产生五次、七次谐波（三相系统中表现为六倍频的转矩脉动）。转速越低，这个脉动的相对幅值越大，表现为“低速爬行”或“转速在一转之内忽快忽慢”。</p>
+<p>补偿的办法有三类。第一类是<strong>电压前馈</strong>：按 (11-31) 算出 <span class="math inline">\Delta u</span>，按电流方向反向叠加到指令上。难点在电流过零附近的符号判断，常用滞环或基于指令电流的符号。第二类是<strong>电流闭环的高增益</strong>：让积分器把误差“吃”掉，但带宽受 §11.5.3 限制，只能补偿低频段。第三类是<strong>死区时间自适应</strong>：根据器件温度与母线电压实时修正 <span class="math inline">t_d</span>，因为 <span class="math inline">t_d</span> 本身随温度与驱动电阻漂移。</p>
+<p>导通压降与死区误差性质相同：都表现为与电流方向相关的电压损失。MOSFET 的 <span class="math inline">R_{ds,on}I</span> 随电流线性变化，IGBT 的 <span class="math inline">V_{ce}</span> 近似恒定，前者可以用电阻补偿，后者只能按常数补偿。<strong>低速性能的上限，往往由这两项非理想性的补偿精度决定，而不是由控制律决定。</strong></p>
+<h3 id="与相邻章节的分工">11.5.5 与相邻章节的分工</h3>
+<p>本章只回答“被控对象是什么”，不回答“控制器怎么调”。三处相邻内容的分工需要明确：</p>
+<ul>
+<li><strong>PID 整定</strong>：电流环、速度环的 PI 参数如何按带宽与相位裕度整定，见第 44 章与第 106 章。本章只给出 <span class="math inline">K_p=L\omega_c</span>、<span class="math inline">K_i=R\omega_c</span> 的零极点对消结论，不展开鲁棒性与抗扰设计。</li>
+<li><strong>模型预测控制</strong>：电机的预测模型、约束处理、滚动优化，见第 58 章与第 80 章。本章的离散状态方程 (11-33) 可以直接作为预测模型的基础。</li>
+<li><strong>Smith 预估与延迟补偿</strong>：本章 §11.4.4 的 <span class="math inline">1.5T_s</span> 延迟是典型的纯滞后，如何在闭环中补偿，见第 47 章与第 107 章。</li>
+</ul>
+<p><strong>分工的意义在于避免重复推导，也避免“以为本章的简化模型能直接用于高性能控制”。</strong> 本章的模型足够设计电流环，但若要做无差拍预测或死区观测，需要更细的模型，那些内容属于后续章节。</p>
+<h3 id="验收文件该写什么">11.5.6 验收文件该写什么</h3>
+<p>一套“电机 + 驱动器”交付时，验收文件里应当包含下面这些量。缺一项，后续调试就要多花一轮时间去猜。</p>
+<p><strong>电气参数</strong>：相电阻（冷态与热态）、相电感（d 轴与 q 轴分别给）、反电动势常数（线电压峰值每千转每分）、极对数、永磁磁链。</p>
+<p><strong>功率级参数</strong>：母线电压范围、开关频率、死区时间、器件型号与 <span class="math inline">R_{ds,on}</span> 或 <span class="math inline">V_{ce}</span>、最大连续电流与峰值电流、热阻与降额曲线。</p>
+<p><strong>传感器参数</strong>：电流采样分辨率与偏置、编码器线数与分辨率、采样时刻与 PWM 的相位关系。</p>
+<p><strong>保护阈值</strong>：过流倍数与延时、过压与欠压阈值、过温阈值、编码器断线判据。</p>
+<p><strong>验收测试</strong>：堵转电流、空载转速、阶跃响应（电流环与速度环各一组）、纹波峰峰值、死区补偿前后的低速波形。</p>
+<p>这张清单看起来繁琐，但它把本章所有公式的输入都固定下来了。<strong>参数齐了，§11.6 的六组实验可以在半小时内复现；参数缺一半，同样的实验要花几天去反推。</strong></p>
+<h2 id="仿真与验证">11.6 仿真与验证</h2>
+<h3 id="实验设计与判据">11.6.1 实验设计与判据</h3>
+<p>本章的六组实验覆盖“电机—变换器—坐标变换—调制”四个层面，全部离线完成。表 11-7 给出设计与判据。</p>
+<p>表 11-7　六组实验的设计与判据</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">编号</th>
+<th style="text-align: left;">对象</th>
+<th style="text-align: left;">测什么</th>
+<th style="text-align: left;">判据</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">一</td>
+<td style="text-align: left;">直流电机电压阶跃</td>
+<td style="text-align: left;">峰值电流、上升时间、稳态值</td>
+<td style="text-align: left;">与 <span class="math inline">L/R</span>、<span class="math inline">J/(b+K_tK_e/R)</span> 一致</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">二</td>
+<td style="text-align: left;">离散电流环</td>
+<td style="text-align: left;">超调、上升、调节时间</td>
+<td style="text-align: left;">带宽与采样比的关系单调</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">三</td>
+<td style="text-align: left;">单/双极性 PWM</td>
+<td style="text-align: left;">纹波峰峰值</td>
+<td style="text-align: left;">与 <span class="math inline">U_{dc}D(1-D)/(Lf_s)</span> 相差 5% 内</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">四</td>
+<td style="text-align: left;">d-q 变换</td>
+<td style="text-align: left;">功率、力矩</td>
+<td style="text-align: left;">与三相功率一致到机器精度</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">五</td>
+<td style="text-align: left;">感应电机稳态</td>
+<td style="text-align: left;">最大转矩、起动转矩</td>
+<td style="text-align: left;">与等效电路计算一致</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">六</td>
+<td style="text-align: left;">调制与死区</td>
+<td style="text-align: left;">电压利用率、误差占比</td>
+<td style="text-align: left;">与解析式一致</td>
+</tr>
+</tbody>
+</table>
+<p>判据的设计原则是“<strong>能用独立方法算出来的，就不靠肉眼看曲线</strong>”。上升时间有解析值，纹波有解析式，功率有两条独立路径，这些都能给出一个数，而不是“看起来差不多”。</p>
+<p>实验的参数在 <code>code/ch011_sim.py</code> 开头集中定义，六组实验共用。直流电机 <span class="math inline">R=0.7\ \Omega</span>、<span class="math inline">L=1</span> mH、<span class="math inline">K_t=K_e=0.10</span>、<span class="math inline">J=1.2\times10^{-4}</span> kg·m²、<span class="math inline">b=2\times10^{-4}</span>、<span class="math inline">U_{dc}=24</span> V；PMSM <span class="math inline">R_s=0.5\ \Omega</span>、<span class="math inline">L_d=1.2</span> mH、<span class="math inline">L_q=1.8</span> mH、<span class="math inline">\psi_f=0.02</span> Wb、<span class="math inline">p=4</span>；感应电机 <span class="math inline">R_s=0.5\ \Omega</span>、<span class="math inline">R_r=0.4\ \Omega</span>、<span class="math inline">X_{ls}=X_{lr}=1.2\ \Omega</span>、<span class="math inline">X_m=40\ \Omega</span>、<span class="math inline">U_s=220</span> V、<span class="math inline">f=50</span> Hz、<span class="math inline">p=2</span>。</p>
+<h3 id="直流电机阶跃两个时间常数">11.6.2 直流电机阶跃：两个时间常数</h3>
+<p>实验一给 24 V 电机的电枢加 12 V 阶跃，负载 0.05 N·m，用 RK4、步长 20 <span class="math inline">\mu</span>s 推进 100 ms。结果见图 11-1，具体数值如下。</p>
+<p>电气时间常数 <span class="math inline">L/R=1.429</span> ms，机电时间常数 <span class="math inline">J/(b+K_tK_e/R)=8.284</span> ms。稳态转速 114.892 rad/s，稳态电流 0.7298 A。电流峰值 13.4981 A，出现在 3.28 ms；峰值力矩 1.3498 N·m，是额定 1 N·m 的 1.35 倍。转速的 63.2% 上升时间是 8.620 ms，与一阶近似的 8.284 ms 相差 4.1%。</p>
+<p>三个数值得注意。第一，电流峰值出现在 3.28 ms，不是 <span class="math inline">t=0</span>。<span class="math inline">t=0</span> 时电流为零，随后按 <span class="math inline">L/R</span> 上升；上升过程中转速也在涨，反电动势跟着涨，两者竞争的结果是峰值出现在 3.28 ms。<strong>峰值电流不是 <span class="math inline">U/R=17.14</span> A，而是 13.50 A</strong>，因为反电动势已经削掉了一部分。</p>
+<p>第二，峰值电流是稳态电流的 18.5 倍。这个倍数是“电压阶跃起动”的固有特性，与控制器无关；若驱动器按稳态电流选，起动必然过流。<strong>软起动或电流限幅的作用，就是把这条 13.5 A 的尖峰压到允许范围内</strong>。</p>
+<p>第三，一阶近似与完整模型的最大偏差是 12.798 rad/s，占稳态的 11.14%，出现在起动初期。这说明在本章参数下（<span class="math inline">\tau_e/\tau_m=0.17</span>），忽略电感会带来超过一成的动态误差。若只关心稳态，一阶近似够用；若要标定上升时间与超调，必须保留电感。</p>
+<h3 id="电流环带宽与采样比">11.6.3 电流环：带宽与采样比</h3>
+<p>实验二用 RL 回路的零阶保持精确离散，配合同样离散的 PI，采样 20 kHz，给定 1 A 阶跃，含一拍计算延迟。四组带宽的结果见表 11-8，波形见图 11-5。</p>
+<p>表 11-8　电流环带宽与阶跃指标（采样 20 kHz）</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: right;">带宽/Hz</th>
+<th style="text-align: right;"><span class="math inline">K_p</span>/(V/A)</th>
+<th style="text-align: right;">超调/%</th>
+<th style="text-align: right;">上升/ms</th>
+<th style="text-align: right;">调节/ms</th>
+<th style="text-align: right;">末段摆幅/%</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">500</td>
+<td style="text-align: right;">3.142</td>
+<td style="text-align: right;">0.00</td>
+<td style="text-align: right;">0.500</td>
+<td style="text-align: right;">0.950</td>
+<td style="text-align: right;">0.00</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">1000</td>
+<td style="text-align: right;">6.283</td>
+<td style="text-align: right;">2.51</td>
+<td style="text-align: right;">0.150</td>
+<td style="text-align: right;">0.350</td>
+<td style="text-align: right;">0.00</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">2000</td>
+<td style="text-align: right;">12.566</td>
+<td style="text-align: right;">50.77</td>
+<td style="text-align: right;">0.050</td>
+<td style="text-align: right;">0.900</td>
+<td style="text-align: right;">0.00</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">4000</td>
+<td style="text-align: right;">25.133</td>
+<td style="text-align: right;">258.49</td>
+<td style="text-align: right;">0.000</td>
+<td style="text-align: right;">8.000</td>
+<td style="text-align: right;">512.53</td>
+</tr>
+</tbody>
+</table>
+<p>这张表把“带宽越高越好”的直觉打破了。500 Hz 时超调为零、调节 0.95 ms；1 kHz 时超调 2.51%、调节 0.35 ms，是综合指标最好的一档；2 kHz 时上升确实更快（0.05 ms），但超调 50.77%，调节时间反而退化到 0.9 ms；4 kHz 时环路已经不稳定，末段摆幅 512.53%，“调节时间 8 ms”只是仿真窗口的尽头。</p>
+<p><strong>上升时间与调节时间不是同一件事。</strong> 上升时间只反映环路的速度，调节时间还要求它能停下来；带宽超过相位裕度允许的范围，速度越快、振荡越久。选带宽时看调节时间与超调，不要只看上升时间。</p>
+<p>2 kHz 时的稳态误差是 0.004 mA，说明积分器工作正常，问题纯在动态。这也排除了“参数没算对”的可能：<span class="math inline">K_p=L\omega_c</span>、<span class="math inline">K_i=R\omega_c</span> 的整定是对的，错的是“以为闭环能跟上这么高的带宽”。</p>
+<p>离散化的影响单独做了对照：50 <span class="math inline">\mu</span>s 采样时，ZOH 的 <span class="math inline">b=0.049135</span>，一阶前向欧拉是 0.050000，相对差 1.76%；200 <span class="math inline">\mu</span>s 采样时，ZOH 是 0.186631，欧拉是 0.200000，相对差 7.16%。<strong>采样越慢，前向欧拉的增益误差越大，这正是 §11.4.1 要求用 ZOH 的定量依据。</strong></p>
+<h3 id="pwm-纹波解析与仿真互校">11.6.4 PWM 纹波：解析与仿真互校</h3>
+<p>实验三用 24 V 母线、20 kHz 开关频率、1 mH 电感、5 A 平均电流，分别在单极性与双极性下测量纹波。每个开关周期离散成 400 步，取第三个周期的峰峰值，结果见表 11-9 与图 11-4。</p>
+<p>表 11-9　PWM 电流纹波的解析值与仿真值</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: right;">占空比</th>
+<th style="text-align: right;">单极性解析/mA</th>
+<th style="text-align: right;">单极性仿真/mA</th>
+<th style="text-align: right;">双极性解析/mA</th>
+<th style="text-align: right;">双极性仿真/mA</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">0.2</td>
+<td style="text-align: right;">192.000</td>
+<td style="text-align: right;">194.451</td>
+<td style="text-align: right;">384.000</td>
+<td style="text-align: right;">388.902</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">0.4</td>
+<td style="text-align: right;">288.000</td>
+<td style="text-align: right;">290.754</td>
+<td style="text-align: right;">576.000</td>
+<td style="text-align: right;">581.508</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">0.5</td>
+<td style="text-align: right;">300.000</td>
+<td style="text-align: right;">302.390</td>
+<td style="text-align: right;">600.000</td>
+<td style="text-align: right;">604.780</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">0.6</td>
+<td style="text-align: right;">288.000</td>
+<td style="text-align: right;">289.836</td>
+<td style="text-align: right;">576.000</td>
+<td style="text-align: right;">579.671</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">0.8</td>
+<td style="text-align: right;">192.000</td>
+<td style="text-align: right;">192.615</td>
+<td style="text-align: right;">384.000</td>
+<td style="text-align: right;">385.229</td>
+</tr>
+</tbody>
+</table>
+<p>三件事得到验证。第一，纹波随占空比呈抛物线，<span class="math inline">D=0.5</span> 时最大，<span class="math inline">D=0.2</span> 与 <span class="math inline">D=0.8</span> 对称相等，都是 192 mA。第二，双极性纹波恰好是单极性的两倍，600 mA 对 300 mA。第三，仿真值系统性地比解析值大 0.3%–1.3%，误差随占空比偏离 0.5 而增大。</p>
+<p>偏差的来源可以定位。解析式假设电流在开关周期内严格线性，而真实电流是指数段；400 步离散把每个指数段用折线代替，步长越大、曲率越大，误差越大。<span class="math inline">D=0.5</span> 时两段对称，误差部分抵消，只有 0.8%；<span class="math inline">D=0.2</span> 时开通段短、电流变化快，误差升到 1.28%。<strong>这不是公式错了，而是“线性化”这个前提在短占空比下更勉强</strong>；若把每周期步数加倍，偏差会按一阶减小。</p>
+<p>纹波的实际意义有两个。第一，它决定电感会不会饱和：峰值电流是平均值加半个纹波，5 A 平均、600 mA 纹波，峰值就是 5.3 A。第二，它决定电流采样的信噪比：纹波越大，采样时刻稍有偏差，读到的值偏离平均值越多。<strong>选电感时，既要看平均值，也要看纹波峰值。</strong></p>
+<h3 id="d-q-变换的功率校验">11.6.5 d-q 变换的功率校验</h3>
+<p>实验四不测动态，只做一次代数校验：给定 <span class="math inline">i_d=0</span>、<span class="math inline">i_q=5</span> A、<span class="math inline">\omega_m=100</span> rad/s，用逆 Park 生成三相电流与三相电压，再把三相量正变换回 d-q，检查是否回到原值，并检查功率是否守恒。</p>
+<p>结果分三组。第一组是变换的可逆性：<span class="math inline">i_d</span> 的均值 <span class="math inline">-7.298\times10^{-19}</span> A，<span class="math inline">i_q</span> 的均值 5.000 A，<span class="math inline">u_d=-3.6000</span> V，<span class="math inline">u_q=10.5000</span> V。第二组是功率的两条路径：d-q 功率 78.7500 W，三相瞬时功率均值 78.7500 W，相对偏差 <span class="math inline">0.00\times10^{0}</span>。第三组是功率的分解：力矩 0.6000 N·m，机械功率 60.0000 W，铜耗 18.7500 W，两者之和 78.7500 W，残差 <span class="math inline">0.00\times10^{0}</span> W。</p>
+<p>三组数各验证一件事。可逆性验证变换矩阵与逆矩阵互逆；两条功率路径验证 <span class="math inline">3/2</span> 系数；功率分解验证力矩公式与铜耗公式。<strong>三者同时成立，才说明 d-q 模型是自洽的；只验证其中一条，可能两个错误互相抵消。</strong></p>
+<p><span class="math inline">u_d</span> 为负值这一点值得单独说。按 (11-10)，<span class="math inline">i_d=0</span> 时 <span class="math inline">u_d=-\omega_eL_qi_q=-3.6</span> V。这个负电压不是“算错了”，而是交轴电流在直轴上产生的旋转反电动势，必须由控制器主动抵消；若不前馈，d 轴电流会被它推离零，产生额外的铜耗与转矩误差。<strong>磁场定向控制里“<span class="math inline">i_d</span> 保持为零”从来不是免费的，代价就是这 3.6 V 的耦合电压。</strong></p>
+<p>这 3.6 V 本身不产生有功，因为 <span class="math inline">i_d=0</span>，<span class="math inline">u_di_d=0</span>；但它占用了电压裕度。48 V 母线、SVPWM 的相电压峰值上限是 27.7 V，q 轴已经用掉 10.5 V，d 轴再占 3.6 V，合成矢量 <span class="math inline">\sqrt{10.5^2+3.6^2}=11.1</span> V，占上限的 40%。转速再升高，<span class="math inline">u_q</span> 与 <span class="math inline">u_d</span> 都按比例增大，合成矢量先碰到 27.7 V 的天花板。<strong>耦合电压不耗功，但它决定“还能升多快”，这一点在弱磁设计里必须算进去。</strong></p>
+<p>校验还有一个副产品：它给出了“多大算错”的判据。相对偏差 <span class="math inline">10^{-16}</span> 量级是浮点舍入，<span class="math inline">10^{-6}</span> 量级是单精度或积分误差，<span class="math inline">10^{-3}</span> 量级就是公式或系数写错了。<strong>看到 0.1% 的功率偏差，不要归因于“仿真误差”，先查 <span class="math inline">3/2</span>。</strong></p>
+<h3 id="感应电机-t-s-曲线与调制利用率">11.6.6 感应电机 T-s 曲线与调制利用率</h3>
+<p>实验五扫转差从 0 到 1，步长足够密以捕捉峰值，结果已在图 11-3 给出。核心数字重列如下：最大转矩 150.808 N·m，临界转差 0.1655，对应转速 1251.8 r/min；起动转矩 54.623 N·m，是最大转矩的 0.362 倍；额定点 <span class="math inline">s=0.03</span> 转矩 59.208 N·m，过载倍数 2.55。</p>
+<p>三个特征点各有工程含义。起动点 <span class="math inline">s=1</span> 决定“能不能带载起动”：54.623 N·m 小于最大转矩的一半，说明这台电机直接起动时转矩裕度不大，重载起动需要降压或软起动。最大转矩点决定“会不会堵转”：负载超过 150.808 N·m，电机进入不稳定区，转速迅速下降到零。额定点决定“长期运行温升”：59.208 N·m 是连续工作的上限，短时过载可以到 2.55 倍。</p>
+<p>电压降到 90% 与 80% 时，最大转矩分别降到 122.155 N·m 与 96.517 N·m。把它们与额定电压的 150.808 N·m 相比，比值分别是 0.8100 与 0.6400，正好等于 <span class="math inline">0.9^2</span> 与 <span class="math inline">0.8^2</span>。<strong>这就是“电压平方定律”：感应电机的转矩能力随电压平方下降，电压掉 10%，转矩掉 19%。</strong> 临界转差在三种电压下都是 0.1655，与电压无关，因为临界转差只由阻抗比决定。</p>
+<p>实验六转向调制与死区。24 V 母线时，SPWM 最大相电压峰值 12.000 V，SVPWM 13.856 V，相对提升 15.47%；六阶梯 15.279 V，相对提升 27.32%。三个数与 <span class="math inline">U_{dc}/2</span>、<span class="math inline">U_{dc}/\sqrt3</span>、<span class="math inline">2U_{dc}/\pi</span> 完全对应，说明“利用率”不是一个模糊的概念，而是可以算到小数点后三位的几何比例。</p>
+<p>死区的结果更能说明问题。<span class="math inline">t_d=2\ \mu</span>s、<span class="math inline">f_s=20</span> kHz 时，24 V 母线的平均电压误差 0.960 V，基波幅值 1.222 V，占相电压峰值 12 V 的 10.19%；48 V 母线误差 1.920 V、基波 2.445 V，占比仍是 10.19%；300 V 母线误差 12.000 V、基波 15.279 V，占比还是 10.19%。<strong>绝对值随母线线性增长，占比恒定</strong>，因为误差与 <span class="math inline">U_{dc}</span> 成正比，而相电压峰值也与 <span class="math inline">U_{dc}</span> 成正比，两者相除消掉了。</p>
+<p>这个“占比恒定”有一个重要推论：<strong>死区误差不能用“提高母线电压”来稀释。</strong> 有人以为高压系统里死区影响小，其实占比一样。降低占比只有两条路：减小死区时间 <span class="math inline">t_d</span>，或降低开关频率 <span class="math inline">f_s</span>（但会增大纹波、恶化电流质量）。前者受器件与驱动能力限制，后者与控制带宽冲突，所以工程上更多是用补偿而不是“消除”。</p>
+<h3 id="误差来源与复现">11.6.7 误差来源与复现</h3>
+<p>本章六组实验的误差来源、量级与排查方法汇总于表 11-10。</p>
+<p>表 11-10　六组实验的误差来源与排查</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">误差源</th>
+<th style="text-align: left;">本章量级</th>
+<th style="text-align: left;">表现</th>
+<th style="text-align: left;">排查方法</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">步长离散</td>
+<td style="text-align: left;">纹波 0.3%–1.3%</td>
+<td style="text-align: left;">仿真值略大于解析值</td>
+<td style="text-align: left;">每周期步数加倍，看偏差是否减半</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">线性化假设</td>
+<td style="text-align: left;">短占空比下 1.28%</td>
+<td style="text-align: left;"><span class="math inline">D</span> 偏离 0.5 时偏差增大</td>
+<td style="text-align: left;">与指数解对比，或减小步长</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">一拍计算延迟</td>
+<td style="text-align: left;">2 kHz 超调 50.77%</td>
+<td style="text-align: left;">上升快、振荡久</td>
+<td style="text-align: left;">在模型中显式加入 <span class="math inline">u[k-1]</span></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">前向欧拉离散</td>
+<td style="text-align: left;">增益误差 1.76%/7.16%</td>
+<td style="text-align: left;">闭环带宽偏移</td>
+<td style="text-align: left;">换成 ZOH，比较 <span class="math inline">b</span> 系数</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">死区</td>
+<td style="text-align: left;">占相电压峰值 10.19%</td>
+<td style="text-align: left;">低速波形畸变、六倍频脉动</td>
+<td style="text-align: left;">补偿前后对比低速电流波形</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">参数容差</td>
+<td style="text-align: left;">未单独量化</td>
+<td style="text-align: left;">稳态值与手算不符</td>
+<td style="text-align: left;">先测 <span class="math inline">R</span>、<span class="math inline">L</span>、<span class="math inline">K_e</span>，再谈控制</td>
+</tr>
+</tbody>
+</table>
+<p>复现的方式很简单：在 <code>book</code> 目录下运行</p>
+<pre><code>python code/ch011_sim.py</code></pre>
+<p>六组实验按顺序打印，全部是确定性计算，没有随机数，也没有随机种子。同一台机器上重复运行，数字应当逐位相同；换机器时，浮点舍入可能让最后一位变化，但 <span class="math inline">10^{-12}</span> 以上的差异都属于实现问题，不属于数值误差。</p>
+<p>复现时建议按三步核对。第一步核对稳态：直流电机的 114.892 rad/s 与 0.7298 A 应当与手算的 (11-5) 一致到小数点后三位。第二步核对解析：纹波的五个解析值应当与 <span class="math inline">U_{dc}D(1-D)/(Lf_s)</span> 完全一致，若不一致，先查单位。第三步核对守恒：d-q 功率、三相功率、机械功率加铜耗，三者应当相等，残差在 <span class="math inline">10^{-12}</span> 以下。</p>
+<p><strong>三步里任何一步对不上，都不要继续往下调控制器。</strong> 模型错了，调出来的参数只是在拟合错误；先把稳态、解析、守恒三关过了，再谈动态指标。</p>
+<p>把三步摊开写清楚，读者才能照着做。</p>
+<p><strong>第一步，稳态手算对照。</strong> 直流电机稳态有两个条件：电压平衡与力矩平衡。电压平衡是 <span class="math inline">U=Ri+K_e\omega</span>，力矩平衡是 <span class="math inline">K_ti=T_L+b\omega</span>。把本章参数 <span class="math inline">U=12</span> V、<span class="math inline">R=0.7\ \Omega</span>、<span class="math inline">K_e=K_t=0.1</span>、<span class="math inline">b=2\times10^{-4}</span> N·m·s、<span class="math inline">T_L=0.05</span> N·m 代进去，第二个式子给出 <span class="math inline">i=0.5+0.002\omega</span>，代回第一个式子得</p>
+<p><span class="math display">12=0.7\left(0.5+0.002\omega\right)+0.1\omega=0.35+0.1014\,\omega \tag{11-38}</span></p>
+<p>解出 <span class="math inline">\omega=11.65/0.1014=114.8925</span> rad/s，回代得 <span class="math inline">i=0.729785</span> A。脚本打印 114.892 与 0.7298，一位不差。这一步的价值不是验证仿真器会不会解方程，而是验证<strong>参数有没有读错</strong>：若把 <span class="math inline">b</span> 错写成 <span class="math inline">2\times10^{-3}</span>，同样的代数会给出 <span class="math inline">\omega=102.19</span> rad/s、<span class="math inline">i=2.544</span> A，转速差 11%、电流是原来的 3.5 倍，一眼就能看出来。手算只需要两行代数，比读代码快。</p>
+<p><strong>第二步，纹波解析对照。</strong> 单极性纹波的解析式是 <span class="math inline">U_{dc}D(1-D)/(Lf_s)</span>。取 <span class="math inline">D=0.2</span>：<span class="math inline">24\times0.2\times0.8/(10^{-3}\times2\times10^4)=3.84/20=0.192</span> A，即 192 mA，与表 11-9 的 192.000 完全一致。取 <span class="math inline">D=0.5</span>：<span class="math inline">24\times0.25/20=0.3</span> A，即 300 mA，也一致。<span class="math inline">D=0.4</span> 与 <span class="math inline">D=0.6</span> 对称，都是 288 mA，这来自 <span class="math inline">D(1-D)</span> 关于 <span class="math inline">D=0.5</span> 的对称性——若脚本给出两个不等的值，说明占空比的定义或采样的起点有问题。双极性一列是单极性的两倍，384/576/600 三个数正好是 192/288/300 的两倍，这个倍率关系比绝对数值更容易查错。</p>
+<p>对照时有一个单位陷阱：<span class="math inline">f_s</span> 写成 kHz 的数值（20 而不是 20000），分母小 1000 倍，结果放大 1000 倍；<span class="math inline">L</span> 写成 mH 的数值（1 而不是 <span class="math inline">10^{-3}</span>），同样再放大 1000 倍。两个错误叠在一起就是 <span class="math inline">10^6</span> 倍，不是相互抵消。<strong>先统一成 SI 再代。</strong> 另外，解析值算的是峰峰值，仿真值取的是稳态后若干周期的 <span class="math inline">\max-\min</span>，两者相差 0.3%–1.3%，差值随每周期步数增加而单调减小；若仿真值比解析值<strong>小</strong>，那不是离散误差，而是采样窗口没覆盖完整的稳态，或者电感在代码里被写成了两个值。</p>
+<p><strong>第三步，守恒对照。</strong> d-q 侧的有功功率是 <span class="math inline">\frac32(u_di_d+u_qi_q)</span>，本章算例 <span class="math inline">u_d=-3.6</span> V、<span class="math inline">u_q=10.5</span> V、<span class="math inline">i_d\approx0</span>、<span class="math inline">i_q=5</span> A，得 <span class="math inline">\frac32\times52.5=78.75</span> W。这 78.75 W 必须被机械功率与铜耗全部吃掉：机械功率 <span class="math inline">T\omega_m=0.6\times100=60</span> W，铜耗 <span class="math inline">\frac32R_s(i_d^2+i_q^2)=\frac32\times0.5\times25=18.75</span> W，两者之和 78.75 W。残差 0.00e+00 是浮点下最理想的结果；实测在 <span class="math inline">10^{-15}</span> 量级也算通过。</p>
+<p>守恒式还能反查系数。假如把 <span class="math inline">\frac32</span> 漏掉，d-q 功率只有 52.5 W，比机械加铜耗少整整三分之一，残差 26.25 W，一眼可见。假如 Park 变换用了功率不变约定而 Clarke 用了幅值不变约定，残差会以 <span class="math inline">\sqrt{3}/2</span> 或 <span class="math inline">2/\sqrt3</span> 的比例出现。<strong>残差的大小直接指出错在哪一层</strong>：<span class="math inline">10^{-16}</span> 是舍入，<span class="math inline">10^{-6}</span> 是积分误差，<span class="math inline">10^{-3}</span> 是某个系数抄错，量级为 1 则是约定不配套。</p>
+<h2 id="小结与常见错误">11.7 小结与常见错误</h2>
+<h3 id="一页纸总结">11.7.1 一页纸总结</h3>
+<p>本章的内容可以压成一页纸。</p>
+<p><strong>模型</strong>：直流电机四个方程，(11-1)–(11-4)；PMSM 在 d-q 下两个电压方程加一个力矩方程，(11-10)–(11-12)；感应电机稳态用 T 型等效电路，(11-16)–(11-17)。三类电机的共同结构是“电压—电流—力矩—转速”的积分链，差别只在力矩如何由电流产生。</p>
+<p><strong>两个时间常数</strong>：<span class="math inline">\tau_e=L/R</span> 与 <span class="math inline">\tau_m=J/(b+K_tK_e/R)</span>。本章算例 1.429 ms 与 8.284 ms，比值 0.17。比值决定电流环与速度环能否分层设计。</p>
+<p><strong>坐标变换</strong>：Clarke 用幅值不变约定，系数 <span class="math inline">2/3</span>；Park 把正弦变直流；功率系数 <span class="math inline">3/2</span>。三者必须配套，混用会让力矩差 1.5 倍或 2/3 倍。</p>
+<p><strong>PWM</strong>：平均模型 <span class="math inline">\langle u\rangle=DU_{dc}</span>，纹波 <span class="math inline">\Delta i_{pp}=U_{dc}D(1-D)/(Lf_s)</span>，双极性翻倍。H 桥四象限，制动是电流反向的自然结果。死区误差 <span class="math inline">\Delta u=-U_{dc}t_df_s\mathrm{sign}(i)</span>，占相电压峰值 10.19%（<span class="math inline">t_df_s=0.04</span> 时）。</p>
+<p><strong>调制</strong>：SPWM 12.000 V、SVPWM 13.856 V（+15.47%）、六阶梯 15.279 V（+27.32%），对应 <span class="math inline">U_{dc}/2</span>、<span class="math inline">U_{dc}/\sqrt3</span>、<span class="math inline">2U_{dc}/\pi</span>。</p>
+<p><strong>离散</strong>：ZOH 精确离散 <span class="math inline">a=\mathrm{e}^{-RT_s/L}</span>、<span class="math inline">b=(1-a)/R</span>；PI 位置式加回写抗饱和；总延迟约 <span class="math inline">1.5T_s</span>，带宽取采样频率的 1/20 到 1/10。</p>
+<p><strong>三个时间尺度</strong>：开关周期 50 <span class="math inline">\mu</span>s、电气时间常数 1.429 ms、机电时间常数 8.284 ms。三者相差 28.6 倍与 5.8 倍，分别对应 PWM 更新、电流环、速度环。仿真步长跟着模型走：平均模型取 20 <span class="math inline">\mu</span>s，开关模型取 0.125 <span class="math inline">\mu</span>s（每周期 400 步）。<strong>把三个尺度混在一起，是仿真“看起来对、实际不对”的最常见原因。</strong></p>
+<p><strong>数字</strong>：13.4981 A 峰值、114.892 rad/s 稳态、50.77% 超调（2 kHz）、512.53% 摆幅（4 kHz）、78.7500 W 功率、0.00 残差、150.808 N·m 最大转矩、0.960 V 死区误差。这八个数是本章的“指纹”，改一个参数，它们都会跟着变。</p>
+<h3 id="十条常见错误">11.7.2 十条常见错误</h3>
+<p><strong>第一，把 <span class="math inline">K_t</span> 与 <span class="math inline">K_e</span> 当成两个独立的数。</strong> 国际单位制下二者数值相等（都等于磁链），只在单位上不同。若手册给的是 V/(r/min) 或 N·m/A 的混用单位，必须先换算，否则力矩会差 <span class="math inline">2\pi/60</span> 或 9.55 倍。</p>
+<p><strong>第二，用 <span class="math inline">U/R</span> 估起动电流。</strong> 本章 <span class="math inline">12/0.7=17.14</span> A，实际峰值 13.4981 A。反电动势在起动过程中已经建立，忽略它会高估 27%。反过来，若用稳态电流选器件，又会低估 18.5 倍。<strong>两个极端都错，必须解微分方程或查厂家曲线。</strong></p>
+<p><strong>第三，机电时间常数用 <span class="math inline">J/b</span>。</strong> 本章 <span class="math inline">J/b=0.6</span> s，实际 <span class="math inline">\tau_m=8.284</span> ms，差 72 倍。反电动势提供的电气阻尼远大于黏性阻尼，漏掉它会把“毫秒级”当成“秒级”。</p>
+<p><strong>第四，Clarke 变换系数用错。</strong> 幅值不变是 <span class="math inline">2/3</span>，功率不变是 <span class="math inline">\sqrt{2/3}</span>。用错会让 <span class="math inline">i_q</span> 偏离 22.5%，力矩跟着偏。判断方法：给三相幅值 5 A 的正弦，看 <span class="math inline">i_q</span> 是否等于 5.000 A。</p>
+<p><strong>第五，d-q 功率忘掉 <span class="math inline">3/2</span>。</strong> 直接用 <span class="math inline">u_di_d+u_qi_q</span> 算功率，会少算 33.3%。本章的判据是 78.7500 W，若算出 52.5 W，就是漏了 <span class="math inline">3/2</span>。</p>
+<p><strong>第六，电流环带宽取到采样频率的 1/5。</strong> 本章 4 kHz 带宽对应 20 kHz 采样，末段摆幅 512.53%，已经发散。经验值是 1/20 到 1/10，超过 1/10 就要逐案核算相位裕度。</p>
+<p><strong>第七，用前向欧拉离散电流环。</strong> 5 kHz 采样时增益误差 7.16%，闭环带宽跟着偏 7%。ZOH 只多一个指数，没有理由省。</p>
+<p><strong>第八，仿真里不写一拍延迟。</strong> 控制器算出的电压在下一个周期才生效，若仿真直接用当前值，会高估相位裕度 27°（1 kHz 时），实测与仿真对不上。</p>
+<p><strong>第九，以为提高母线电压能稀释死区误差。</strong> 误差绝对值随 <span class="math inline">U_{dc}</span> 线性增长，占比恒为 <span class="math inline">2t_df_s</span>（基波再乘 <span class="math inline">4/\pi</span>）。24 V、48 V、300 V 的占比都是 10.19%，一个都没少。</p>
+<p><strong>第十，用平均模型看纹波与损耗。</strong> 平均模型里没有纹波、没有死区、没有开关损耗。用它算电感饱和、算温升，结果一定偏乐观。<strong>平均模型管稳定性，开关模型管波形与损耗，两者不能互相替代。</strong></p>
+<h3 id="自检清单">11.7.3 自检清单</h3>
+<p>写完一套电机控制代码，按下面十条自检。每条都能给出一个数，不能只回答“应该没问题”。</p>
+<ol type="1">
+<li>稳态转速与电流是否与 (11-5) 一致到三位有效数字？</li>
+<li>电流峰值是否出现在毫秒级，而不是 <span class="math inline">t=0</span>？峰值是稳态的多少倍？</li>
+<li><span class="math inline">\tau_e</span> 与 <span class="math inline">\tau_m</span> 各是多少？比值是否小于 0.3？</li>
+<li>三相正弦输入下，<span class="math inline">i_d</span> 均值是否在 <span class="math inline">10^{-12}</span> 以下，<span class="math inline">i_q</span> 是否等于给定幅值？</li>
+<li>d-q 功率、三相功率、机械功率加铜耗，三者残差是否在 <span class="math inline">10^{-12}</span> 以下？</li>
+<li>电流环带宽是采样频率的几分之一？相位裕度算出来是多少？</li>
+<li>离散化用的是 ZOH 还是欧拉？<span class="math inline">b</span> 系数的误差是多少？</li>
+<li>仿真里有没有显式的一拍延迟？加与不加，超调差多少？</li>
+<li>纹波峰峰值与 <span class="math inline">U_{dc}D(1-D)/(Lf_s)</span> 差多少？峰值电流是否超过电感饱和电流？</li>
+<li>死区误差占相电压峰值的百分比是多少？低速时是否做过补偿前后对比？</li>
+</ol>
+<p>十条里若有三条以上答不出数，说明模型还没“拿到”，先回去补实验，不要急着调参数。</p>
+<h3 id="与其他章的连接">11.7.4 与其他章的连接</h3>
+<p>本章是“执行器”这一层的基础，向上向下各连三处。</p>
+<p>向下，第 12 章讲传感器与执行器基础，会把本章的电机放到“测量—执行”的闭环里，讨论编码器、电流采样、ADC 时序如何影响本章的模型精度。</p>
+<p>向上，第 44 章与第 106 章讲 PID 整定，会直接用本章的 <span class="math inline">K_p=L\omega_c</span>、<span class="math inline">K_i=R\omega_c</span> 与 <span class="math inline">1.5T_s</span> 延迟；第 58 章与第 80 章讲 MPC，会把 (11-33) 当作预测模型，把电压与电流限幅当作约束；第 47 章与第 107 章讲 Smith 预估，会把本章的延迟当作被补偿对象。</p>
+<p><strong>本章不重复这些章节的方法，只提供它们需要的对象模型与数量级。</strong> 若后续章节的参数与本章不一致，以那一章的任务卡为准，但数量级应当相近——本章的 13.5 A、8.284 ms、10.19% 可以作为“这套参数是否合理”的对照。</p>
+<h3 id="三个练习">11.7.5 三个练习</h3>
+<p><strong>练习一</strong>：本章直流电机，母线 24 V，负载 0.05 N·m，求电压阶跃到 12 V 时的电流峰值与出现时刻。若不仿真，能否用 <span class="math inline">\tau_e</span>、<span class="math inline">\tau_m</span> 估出量级？答案：13.4981 A、3.28 ms；量级上峰值介于 <span class="math inline">U/R=17.14</span> A 与稳态 0.7298 A 之间，时刻约为 <span class="math inline">\tau_e\ln(\tau_m/\tau_e)</span> 的量级。</p>
+<p><strong>推导过程</strong>。峰值不是电气动态自己产生的：若转速恒定，<span class="math inline">i(t)=(U/R)(1-\mathrm{e}^{-t/\tau_e})</span> 单调上升到 17.14 A，没有峰值。峰值来自反电动势的追赶——电流上升的同时转速也在上升，<span class="math inline">K_e\omega</span> 抵消掉一部分电压，电流到某一点转为下降。所以峰值时刻就是 <span class="math inline">\mathrm{d}i/\mathrm{d}t=0</span> 的时刻，即 <span class="math inline">U=Ri+K_e\omega</span> 成立的那一刻。</p>
+<p>不仿真时，用两条曲线求交：电流的上升包络 <span class="math inline">i_1(t)=(U/R)(1-\mathrm{e}^{-t/\tau_e})</span>，以及“转速已建立后电流该有的准稳态值” <span class="math inline">i_2(t)=\left[U-K_e\omega_{ss}(1-\mathrm{e}^{-t/\tau_m})\right]/R</span>。前者从 0 升向 17.14 A，后者从 <span class="math inline">(U-K_e\omega_{ss})/R</span> 降向稳态 0.7298 A，交点即峰值附近。代入本章数字，<span class="math inline">K_e\omega_{ss}=0.1\times114.892=11.489</span> V，方程变成</p>
+<p><span class="math display">12\,\mathrm{e}^{-t/1.429}=11.489\left(1-\mathrm{e}^{-t/8.284}\right) \tag{11-39}</span></p>
+<p>（<span class="math inline">t</span> 以 ms 计）。试 <span class="math inline">t=2.13</span> ms：左边 <span class="math inline">12\times0.2253=2.704</span>，右边 <span class="math inline">11.489\times0.2286=2.626</span>，两边已很接近，交点约在 2.15 ms。回代得峰值 <span class="math inline">17.143\times(1-\mathrm{e}^{-1.50})=17.143\times0.777=13.32</span> A。</p>
+<p>与实测比：峰值 13.32 A 对 13.4981 A，差 1.3%；时刻 2.15 ms 对 3.28 ms，偏早 34%。时刻偏早的原因很明确——准稳态式 <span class="math inline">i_2</span> 假定了电流瞬时跟随电压，忽略了电感；实际电流小于准稳态值，产生的力矩也小，转速上升慢于 <span class="math inline">1-\mathrm{e}^{-t/\tau_m}</span>，反电动势来得更晚，峰值自然被推后。<strong>峰值高度对这种时序误差不敏感，峰值时刻很敏感</strong>，这也是为什么工程上更愿意校核峰值电流而不是峰值时刻。</p>
+<p>若要更准的时刻，可以用 <span class="math inline">\tau_e\ln(\tau_m/\tau_e)</span> 作为上界估计：<span class="math inline">1.429\times\ln(5.797)=2.51</span> ms，仍偏早，但同一量级。真正的 3.28 ms 需要解二阶微分方程，或直接仿真。<strong>手算的价值在于给出 13 A 这个量级并且能解释它为什么低于 17.14 A，而不是精确到小数点后两位。</strong></p>
+<p><strong>练习二</strong>：要求电流环带宽 2 kHz，采样频率至少取多少？若只能取 20 kHz，相位裕度还剩多少？答案：按 <span class="math inline">\omega_cT_s\le0.3</span> 反推，<span class="math inline">f_s\ge2\pi\times2000/0.3=41.9</span> kHz，至少 40 kHz；20 kHz 时 <span class="math inline">\omega_cT_s=0.628</span>，延迟滞后 54°，加对象滞后约 <span class="math inline">-85^\circ</span>，裕度约 41°，对应超调约 50%。</p>
+<p><strong>推导过程</strong>。<span class="math inline">\omega_cT_s\le0.3</span> 这条经验规则来自相位预算。数字控制的总延迟取 <span class="math inline">\tau_d=1.5T_s</span>（一个采样周期的计算延迟加半个周期的零阶保持），它在 <span class="math inline">\omega_c</span> 处贡献的相位滞后是 <span class="math inline">\omega_c\tau_d=1.5\,\omega_cT_s</span>。若限定这部分滞后不超过 0.45 rad（约 25.8°），就得到 <span class="math inline">\omega_cT_s\le0.3</span>。反过来解：<span class="math inline">\omega_c=2\pi\times2000=12566.4</span> rad/s，<span class="math inline">T_s\le0.3/12566.4=23.87\ \mu</span>s，即 <span class="math inline">f_s\ge41.9</span> kHz。</p>
+<p>取整到工程上常见的 40 kHz 会略微越界（<span class="math inline">T_s=25\ \mu</span>s，<span class="math inline">\omega_cT_s=0.314</span>，滞后 27.0°），仍在可接受范围；若要留余量，取 50 kHz。若硬件只能 20 kHz，<span class="math inline">T_s=50\ \mu</span>s，<span class="math inline">\omega_cT_s=0.628</span>，延迟滞后 <span class="math inline">1.5\times0.628=0.942</span> rad，即 54.0°。对象本身是 <span class="math inline">1/(Ls+R)</span> 的一阶惯性，在 2 kHz 处的相位是 <span class="math inline">-\arctan(\omega_cL/R)=-\arctan(12566\times10^{-3}/0.7)=-\arctan(17.95)=-86.8^\circ</span>。两者相加 <span class="math inline">-140.8^\circ</span>，相位裕度 <span class="math inline">180-140.8=39.2^\circ</span>。按二阶近似，<span class="math inline">\mathrm{PM}\approx39^\circ</span> 对应阻尼比约 0.37，超调约 28%；而本章实验实测 50.77%，比二阶估计更差，原因是 PI 零点、限幅与一拍延迟的离散效应又吃掉了一部分裕度。<strong>用相位预算估超调只能定方向，具体数值必须靠仿真。</strong></p>
+<p>这也解释了一个常见困惑：“明明裕度还有 40°，为什么超调 50%？”因为 40° 是按连续对象算的，离散化把 <span class="math inline">(11-33)</span> 里的 <span class="math inline">b</span> 变成了有限值，等效增益随频率变化，低频段看起来正常，接近 <span class="math inline">\omega_c</span> 时相位掉得比连续模型快。<strong>裕度够不够，最终看离散模型的阶跃，而不是看连续域的 Bode 图。</strong></p>
+<p><strong>练习三</strong>：PMSM 参数 <span class="math inline">\psi_f=0.02</span> Wb、<span class="math inline">p=4</span>，要求最高转速 5000 r/min，母线至少多少伏？答案：<span class="math inline">\omega_m=523.6</span> rad/s，<span class="math inline">\omega_e=2094.4</span> rad/s，<span class="math inline">U_{dc}\ge\sqrt3\psi_f\omega_e=72.55</span> V；考虑死区与压降，实际取 80 V 以上。若母线只有 48 V，最高转速约 3307 r/min，超出的部分必须弱磁。</p>
+<p><strong>推导过程</strong>。先把机械转速换成电角频率：<span class="math inline">\omega_m=5000\times2\pi/60=523.60</span> rad/s，<span class="math inline">\omega_e=p\,\omega_m=4\times523.60=2094.4</span> rad/s。稳态下 <span class="math inline">i_d=0</span>、<span class="math inline">i_q</span> 由负载决定，d-q 电压为 <span class="math inline">u_d=-\omega_eL_qi_q</span>、<span class="math inline">u_q=Ri_q+\omega_e\psi_f</span>。忽略电阻压降（高速时 <span class="math inline">Ri_q</span> 远小于 <span class="math inline">\omega_e\psi_f</span>：本章算例 2.5 V 对 41.9 V），<span class="math inline">u_q\approx\omega_e\psi_f=2094.4\times0.02=41.89</span> V，<span class="math inline">u_d</span> 由负载电流决定，空载时接近 0。</p>
+<p>电压矢量幅值必须落在逆变器能输出的圆内，即 (11-36)：<span class="math inline">\sqrt{u_d^2+u_q^2}\le U_{dc}/\sqrt3</span>。空载时左边就是 41.89 V，得 <span class="math inline">U_{dc}\ge\sqrt3\times41.89=72.55</span> V。这就是答案里的 72.55 V，它等于 <span class="math inline">\sqrt3\psi_f\omega_e</span>。</p>
+<p>再留余量。死区造成的基波误差占相电压峰值 10.19%（<span class="math inline">t_df_s=0.04</span> 时），电阻压降在满载时还要再占几个百分点，两项叠加约 10%–15%。<span class="math inline">72.55\times1.10=79.8</span> V，所以工程上取 80 V 或 90 V，而不是 72.55 V。<strong>母线选型从来不是按理论最小值选，而是按“理论值 ×(1+死区+压降+调节余量)”选。</strong></p>
+<p>反过来，母线只有 48 V 时，<span class="math inline">U_{dc}/\sqrt3=27.71</span> V，允许的最大电角频率是 <span class="math inline">27.71/0.02=1385.6</span> rad/s，对应机械转速 <span class="math inline">1385.6/4=346.4</span> rad/s，即 3307 r/min。要跑到 5000 r/min，必须让 <span class="math inline">i_d&lt;0</span> 产生去磁通，把 <span class="math inline">\psi_f+L_di_d</span> 压下来——这就是弱磁。弱磁的代价是同样的力矩需要更大的 <span class="math inline">i_q</span>，铜耗上升、效率下降，且高速区可用转矩随转速反比衰减。<strong>弱磁不是“免费的提速”，是用电流换电压。</strong></p>
+<p>三个练习覆盖了本章的三条主线：起动过程的两个时间常数、离散延迟对带宽的限制、母线电压对转速的限制。<strong>能把它们手算出来，本章的公式才算真正掌握。</strong></p>
+
+<nav class="footnav"><a href="ch010.html">← 上一章</a><a href="index.html">返回目录</a><a href="ch012.html">下一章 →</a></nav>
+</body>
+</html>

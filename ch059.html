@@ -1,0 +1,2241 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="zh-CN" xml:lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>第 59 章　滑模控制（SMC） · 控制大综合</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    span.underline{text-decoration: underline;}
+    div.column{display: inline-block; vertical-align: top; width: 50%;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    ul.task-list{list-style: none;}
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+  <link rel="stylesheet" href="assets/book.css" />
+  <script src="assets/katex/katex.min.js"></script>
+  <script>document.addEventListener("DOMContentLoaded", function () {
+   var mathElements = document.getElementsByClassName("math");
+   var macros = [];
+   for (var i = 0; i < mathElements.length; i++) {
+    var texText = mathElements[i].firstChild;
+    if (mathElements[i].tagName == "SPAN") {
+     katex.render(texText.data, mathElements[i], {
+      displayMode: mathElements[i].classList.contains('display'),
+      throwOnError: false,
+      macros: macros,
+      fleqn: false
+     });
+  }}});
+  </script>
+  <link rel="stylesheet" href="assets/katex/katex.min.css" />
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+  <link rel="stylesheet" href="assets/site.css" />
+</head>
+<body>
+<nav class="topnav"><a class="home" href="index.html">目录</a><span class="pos">059 / 115</span><span class="pager"><a href="ch058.html">上一章</a><a href="ch060.html">下一章</a></span></nav>
+
+<nav id="TOC" role="doc-toc">
+<ul>
+<li><a href="#第59章-滑模控制smc">第59章 滑模控制（SMC）</a>
+<ul>
+<li><a href="#动机与直观理解">59.1 动机与直观理解</a></li>
+<li><a href="#数学原理">59.2 数学原理</a></li>
+<li><a href="#设计步骤">59.3 设计步骤</a></li>
+<li><a href="#连续情形">59.4 连续情形</a></li>
+<li><a href="#离散情形">59.5 离散情形</a></li>
+<li><a href="#稳定性与性能">59.6 稳定性与性能</a></li>
+<li><a href="#参数意义">59.7 参数意义</a></li>
+<li><a href="#调参方法">59.8 调参方法</a></li>
+<li><a href="#优化与改进">59.9 优化与改进</a></li>
+<li><a href="#工程落地">59.10 工程落地</a></li>
+<li><a href="#优缺点与适用边界">59.11 优缺点与适用边界</a></li>
+<li><a href="#python-代码">59.12 Python 代码</a></li>
+</ul></li>
+</ul>
+</nav>
+<h1 id="第59章-滑模控制smc">第59章 滑模控制（SMC）</h1>
+<h2 id="动机与直观理解">59.1 动机与直观理解</h2>
+<p>第 58 章的 MPC 每拍都要解一个优化问题，代价是算力与模型。本章走另一条路：不解优化，也不在线辨识，而是用一条人为规定的“轨道”把状态强行约束住——只要状态到了这条轨道上，它就再也跑不出去，只能按轨道规定的规律收敛。这条轨道叫滑模面（sliding surface），这种控制叫滑模控制（sliding mode control，SMC）。</p>
+<p>它的出发点不是“最优”，而是“不变”：不管对象参数怎么变、负载怎么跳，只要切换增益压得住扰动，状态就被按在同一张面上。代价是控制量必须高频切换，切换带来的抖振（chattering）是它绕不开的工程问题。</p>
+<h3 id="从一个不知道摩擦多大的场景说起">59.1.1 从一个“不知道摩擦多大”的场景说起</h3>
+<p>仍然取第 58 章的位置伺服：对象 <span class="math inline">G_p(s)=1/[s(s+1)]</span>，状态 <span class="math inline">\boldsymbol{x}=[p,\ v]^{\mathrm{T}}</span>，初始位置 0，目标 1 m。区别在于本章要面对的是两件 PID 不喜欢的事：</p>
+<ul>
+<li>导轨有库仑摩擦，幅值约 0.3，方向随速度反向，且随润滑状态缓慢变化；</li>
+<li>第 4 s 时负载突然增加，相当于在速度通道叠加 <span class="math inline">-1.5</span> 的常值扰动，事先不知道它会出现，也不知道它有多大。</li>
+</ul>
+<p>写成状态方程</p>
+<p><span class="math display">
+\dot p=v,\qquad \dot v=-v+u+d(t)
+\tag{59-1}
+</span></p>
+<p>其中 <span class="math inline">d(t)</span> 包含摩擦与负载，<span class="math inline">|d(t)|\le D</span>，但控制器只知道 <span class="math inline">D</span> 的上界，不知道 <span class="math inline">d(t)</span> 的瞬时值。</p>
+<p>PID 的应对是“先偏了再补”：负载一来，位置先掉下去，误差变大，积分项慢慢累积，把控制量顶上去。本章脚本的实测是，负载 <span class="math inline">-1.5</span> 阶跃后 PID 的位置跌落 0.025 m，要 2.4 s 才回到 2% 带内（§59.6）。这已经是整定得相当好的 PID（Kp=32、Ki=4、Kd=8）。</p>
+<p>滑模的应对完全不同。它先规定一条“误差应该怎么衰减”的规则：</p>
+<p><span class="math display">
+s=e_v+\lambda e_p
+\tag{59-2}
+</span></p>
+<p>其中 <span class="math inline">e_p=p-r</span>、<span class="math inline">e_v=v-\dot r</span>，<span class="math inline">r</span> 为常值目标时 <span class="math inline">e_v=v</span>。<strong><span class="math inline">s=0</span> 就是那条轨道</strong>：一旦 <span class="math inline">s=0</span>，就有 <span class="math inline">e_v=-\lambda e_p</span>，误差按 <span class="math inline">\dot e_p=-\lambda e_p</span> 指数衰减，时间常数 <span class="math inline">1/\lambda</span>。本章 <span class="math inline">\lambda=2</span>，对应 0.5 s。</p>
+<p>控制律只有两项：</p>
+<p><span class="math display">
+u=(1-\lambda)v-k\,\operatorname{sgn}(s)
+\tag{59-3}
+</span></p>
+<p>第一项 <span class="math inline">(1-\lambda)v</span> 是“等效控制”，作用是抵消对象自身的一阶滞后（推导见 §59.2.2）；第二项 <span class="math inline">-k\operatorname{sgn}(s)</span> 是“切换项”，作用是：只要 <span class="math inline">s&gt;0</span> 就往下压，只要 <span class="math inline">s&lt;0</span> 就往上顶，把状态硬推到 <span class="math inline">s=0</span> 上。</p>
+<p>代入式 (59-1) 可以立刻看出它的妙处：<span class="math inline">\dot s=\dot v+\lambda v=(-v+u+d)+\lambda v=u+(\lambda-1)v+d</span>，把式 (59-3) 代入得</p>
+<p><span class="math display">
+\dot s=-k\operatorname{sgn}(s)+d(t)
+\tag{59-4}
+</span></p>
+<p><strong>对象参数完全消失了</strong>。<span class="math inline">\dot s</span> 只取决于切换增益 <span class="math inline">k</span> 与扰动 <span class="math inline">d</span>。只要 <span class="math inline">k&gt;|d|</span>，<span class="math inline">\dot s</span> 就与 <span class="math inline">s</span> 反号，<span class="math inline">|s|</span> 以不低于 <span class="math inline">k-|d|</span> 的速率下降，有限时间到达 0。这就是“不变性”的来源：不是把模型算得更准，而是让模型误差在减法中抵消。</p>
+<h3 id="三个动作到达滑动等效控制">59.1.2 三个动作：到达、滑动、等效控制</h3>
+<p>图 59-1 是本章对象在相平面上的轨迹。从 <span class="math inline">(e,v)=(-1,0)</span> 出发，前 0.98 s 轨迹从外面冲向斜线 <span class="math inline">v=-\lambda e</span>，这一段叫<strong>到达段</strong>（reaching phase）；触面之后，轨迹贴着斜线滑向原点，这一段叫<strong>滑动段</strong>（sliding phase）。两段的性质完全不同：</p>
+<ul>
+<li>到达段受切换增益支配，时间约为 <span class="math inline">|s(0)|/k</span>，与对象参数无关；</li>
+<li>滑动段受滑模面斜率支配，等效于一个一阶系统，时间常数为 <span class="math inline">1/\lambda</span>。</li>
+</ul>
+<figure>
+<img src="figs/ch059/fig_059_01_phase.svg" alt="图 59-1　相平面上的到达段与滑动段：触面后沿 s=0 滑向原点" /><figcaption aria-hidden="true">图 59-1　相平面上的到达段与滑动段：触面后沿 s=0 滑向原点</figcaption>
+</figure>
+<p>把两段时间加起来，就能在动手之前估出调节时间。本章 <span class="math inline">s(0)=\lambda(0-1)=-2</span>、<span class="math inline">k=2</span>，理论到达时间 1.00 s，实测 0.98 s；滑动段从 <span class="math inline">|e|=1</span> 衰减到 2% 约需 <span class="math inline">-\ln(0.02)/2\approx1.96</span> s，实测调节时间 2.53 s。估算与实测的差距来自到达段末端的过渡，量级完全对得上。</p>
+<p>图 59-2 给出闭环结构。与常规反馈的差别在于：控制器内部先算一个标量 <span class="math inline">s</span>，再由 <span class="math inline">s</span> 的符号决定控制量的方向，由等效控制项决定基准幅值。注意图中“等效控制”是从速度测量直接前馈过来的，它不需要知道对象增益——这正是滑模对参数不敏感的原因。</p>
+<figure>
+<img src="figs/ch059/fig_059_02_structure.svg" alt="图 59-2　滑模控制闭环：滑模面计算、切换项与等效控制" /><figcaption aria-hidden="true">图 59-2　滑模控制闭环：滑模面计算、切换项与等效控制</figcaption>
+</figure>
+<h3 id="为什么切换能压住扰动">59.1.3 为什么“切换”能压住扰动</h3>
+<p>用一句话概括：切换项提供的不是一个具体的力，而是一个<strong>方向恒定的恢复力</strong>。<span class="math inline">s&gt;0</span> 时它一定往负方向推，<span class="math inline">s&lt;0</span> 时一定往正方向推，推力大小固定为 <span class="math inline">k</span>。扰动 <span class="math inline">d</span> 想破坏这个方向，就必须大于 <span class="math inline">k</span>；只要 <span class="math inline">|d|&lt;k</span>，<span class="math inline">s</span> 的符号就由切换项说了算，扰动只能改变 <span class="math inline">s</span> 下降的快慢，不能改变它下降的方向。</p>
+<p>这与高增益反馈有本质区别。高增益 PID 靠“误差大→输出大”来压制扰动，扰动越大误差越大，稳态误差被压得很小但不为零；滑模靠“符号”压制扰动，在理想连续情形下误差在一个有限时间后<strong>严格为零</strong>，而不是“很小”。代价是那个 <span class="math inline">\operatorname{sgn}</span> 在真实系统里无法无限快地切换。</p>
+<h3 id="与-pidlqrmpc-的关系">59.1.4 与 PID、LQR、MPC 的关系</h3>
+<ul>
+<li>相对 PID：PID 的积分项也在“记住”扰动，但它靠误差累积，天然滞后；滑模靠符号，响应在一个采样周期内完成。PID 的微分项放大噪声，滑模的切换项同样放大噪声，但机理不同——前者是线性放大，后者是把噪声变成控制量的来回跳变。</li>
+<li>相对 LQR：LQR 是“给定模型下的最优线性反馈”，增益离线算好，对模型误差没有硬保证；滑模是“给定扰动界下的不变性”，对匹配扰动有硬保证，但控制量不连续。</li>
+<li>相对 MPC：MPC 在约束下求最优轨迹，计算量大、需要模型；滑模不处理约束（幅值饱和会让不变性失效），但计算量只有一个符号函数。第 58 章的对象若加上 <span class="math inline">|u|\le0.5</span> 的限幅，滑模的到达段会被限幅拖慢，此时 MPC 的预判能力更强。</li>
+</ul>
+<p>三者的分工可以用一句话记：<strong>PID 管“稳”、LQR 管“优”、MPC 管“约束”、滑模管“不变”</strong>。</p>
+<h3 id="四个常见误解与本章路线">59.1.5 四个常见误解与本章路线</h3>
+<ul>
+<li><strong>“滑模一定比 PID 准”</strong>。在模型准确、扰动不大的线性对象上，整定良好的 PID 的 IAE 反而更低。本章实测：标称工况 PID 的 IAE 为 0.45，滑模为 1.03（§59.6）。滑模赢在扰动后的恢复速度与零超调，不赢在全程误差积分。</li>
+<li><strong>“切换增益越大越好”</strong>。<span class="math inline">k</span> 增大使到达更快，但抖振幅度近似按 <span class="math inline">k T_s</span> 线性增长（§59.5 实测比值恒为 1.00），执行器磨损与噪声放大随之上升。</li>
+<li><strong>“滑模不需要模型”</strong>。它需要知道“控制从哪个通道进、扰动从哪个通道进”（匹配条件，§59.2.4），也需要名义模型来构造等效控制。模型错了不会失稳，但滑动段会偏离设计的时间常数。</li>
+<li><strong>“加了边界层就不是滑模了”</strong>。加上边界层后，系统在带内变成高增益线性反馈，带外仍是滑模；不变性从“严格”退化为“有界”，界的大小可以精确算出（§59.4，实测与理论吻合到三位有效数字）。</li>
+</ul>
+<p>本章路线：§59.2 推导滑模面、等效控制与到达条件；§59.3 给出五步设计流程；§59.4 讲连续实现与三种到达律；§59.5 讲离散实现与准滑动带；§59.6 用实测对照 PID，说明稳定性与性能边界；§59.7、§59.8 讲 <span class="math inline">\lambda</span>、<span class="math inline">k</span>、<span class="math inline">\phi</span> 的物理意义与整定；§59.9 介绍边界层、超螺旋与高阶滑模；§59.10 讲工程落地（延迟、磨损、噪声、投运检查）；§59.11 给出选型边界；§59.12 给出可复现代码。</p>
+<p>如果只记一句话：<strong>滑模把“抗扰”从“把误差算准”换成了“把方向定死”，代价是控制量必须抖。</strong></p>
+<h3 id="为什么选这个对象">59.1.6 为什么选这个对象</h3>
+<p>本章对象 <span class="math inline">G_p(s)=1/[s(s+1)]</span> 与第 58 章相同，但看中的性质不同。第 58 章看中它能展示“预测与约束”；本章看中它具备滑模需要的三个结构特征：</p>
+<ul>
+<li><strong>相对阶为 2</strong>。输入 <span class="math inline">u</span> 出现在 <span class="math inline">\dot v</span> 里，要经过两次积分才影响位置 <span class="math inline">p</span>。相对阶决定了滑模面的阶数（<span class="math inline">n-1=1</span>）与控制量出现在 <span class="math inline">\dot s</span> 里的方式，是最基础的“能不能做滑模”的判据；</li>
+<li><strong>扰动与控制同通道</strong>。摩擦与负载都作用在速度通道，与控制量 <span class="math inline">u</span> 相加，满足匹配条件。这是滑模不变性成立的前提，也是本章实测能出现“负载 <span class="math inline">-1.5</span> 只跌 0.0089 m”的原因；</li>
+<li><strong>状态可测</strong>。<span class="math inline">p</span> 与 <span class="math inline">v</span> 都能直接取，滑模面 <span class="math inline">s=e_v+\lambda e_p</span> 不需要观测器。这让本章能把注意力放在滑模本身，而不是状态估计误差上。</li>
+</ul>
+<p>三个特征缺一个，本章的结论就要打折扣。比如相对阶为 1 的对象（<span class="math inline">G=1/(s+1)</span>），滑模面只能是 <span class="math inline">s=e_p</span>，滑动段没有“速度跟随”的含义，抖振直接体现在位置上；再比如扰动从输出通道进（传感器零漂），匹配条件不成立，<span class="math inline">k</span> 再大也压不住。</p>
+<p>采样周期也要单独说明。第 58 章 MPC 取 <span class="math inline">T_s=0.1</span> s，本章取 <span class="math inline">T_s=0.01</span> s，差 10 倍。这不是为了“更精确”，而是因为<strong>滑模的抖振分析必须能分辨切换周期</strong>：若 <span class="math inline">T_s</span> 与对象的 1 s 时间常数同量级，准滑动带 <span class="math inline">kT_s</span> 会大到 0.2，位置精度直接掉到 20%，抖振与“响应慢”混在一起，什么结论都得不出来。</p>
+<h3 id="三个时标">59.1.7 三个时标</h3>
+<p>滑模的整个过程由三个时间尺度共同决定，把它们分开看，很多现象就清楚了：</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">时标</th>
+<th style="text-align: left;">表达式</th>
+<th style="text-align: right;">本章取值</th>
+<th style="text-align: left;">决定什么</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">切换时标</td>
+<td style="text-align: left;"><span class="math inline">T_s</span></td>
+<td style="text-align: right;">0.01 s</td>
+<td style="text-align: left;">抖振幅值、执行器负担</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">滑动时标</td>
+<td style="text-align: left;"><span class="math inline">1/\lambda</span></td>
+<td style="text-align: right;">0.5 s</td>
+<td style="text-align: left;">触面后的收敛快慢</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">到达时标</td>
+<td style="text-align: left;"><span class="math inline">\lvert s(0)\rvert/k</span></td>
+<td style="text-align: right;">1.00 s</td>
+<td style="text-align: left;">触面时刻、全程时间</td>
+</tr>
+</tbody>
+</table>
+<p>三者应当满足 <span class="math inline">T_s\ll1/\lambda\lesssim t_r</span>。本章的比值是 <span class="math inline">1:50:100</span>，切换时标与另外两个差两个数量级，所以抖振可以当成“叠加在慢动态上的高频纹波”来处理——这也是 §59.5 能把准滑动带与滑动段分开分析的前提。</p>
+<p>如果三个时标靠得太近，滑模就会“糊”在一起：<span class="math inline">T_s</span> 接近 <span class="math inline">1/\lambda</span> 时，切换还没完成，滑动段已经走了一段，位置曲线看不出明显的“先到达、后滑动”两段；<span class="math inline">t_r</span> 远大于 <span class="math inline">1/\lambda</span> 时，到达段主导全程，调节时间几乎等于 <span class="math inline">t_r</span>，<span class="math inline">\lambda</span> 怎么调都没用（表 59-8 里 <span class="math inline">\lambda=0.5</span> 的情况就是如此，<span class="math inline">t_s=6.58</span> s）。</p>
+<h3 id="一条简短的历史线">59.1.8 一条简短的历史线</h3>
+<p>滑模的思想可以追到 1960 年代苏联学派对“变结构系统”的研究，核心问题是“用不连续的反馈能否获得比连续反馈更强的鲁棒性”。1970 年代 Utkin 把这个问题系统化，提出了等效控制与滑动模态的数学框架，滑模才从“一种继电控制”变成“一种设计方法”。</p>
+<p>1980 年代，Slotine 把边界层引入滑模，解决了抖振在实际系统中的可用性问题——这一步让滑模从论文走进工业。1990 年代，Levant 提出超螺旋与高阶滑模，把不连续项从控制量移到控制量的导数上，抖振再降一个数量级。</p>
+<p>本书把滑模放在 MPC 之后、反步法之前，也是按这条历史与逻辑线排的：MPC 代表“用模型换最优”，滑模代表“用不连续换不变”，反步法代表“用结构换稳定”。三者是三条不同的路，<strong>读者若能把这三条路的代价说清楚，控制器的选型就不再靠试。</strong></p>
+<h3 id="本章四个指标的定义">59.1.9 本章四个指标的定义</h3>
+<p>后文会反复用到四个指标，先把口径写死，避免读图时误解：</p>
+<ul>
+<li><strong>调节时间 <span class="math inline">t_s</span></strong>：位置首次进入并此后保持在目标 <span class="math inline">\pm2\%</span> 带内的时刻。本章的带以尾段均值为基准，不是以 1.0 为基准（§59.12.3 会解释为什么）；</li>
+<li><strong>IAE</strong>：<span class="math inline">|e|</span> 对时间的积分，单位是“米·秒”。它同时惩罚“慢”与“错”，但不能区分“抖”——所以不能单独用；</li>
+<li><strong>尾段总变差 <span class="math inline">\mathrm{TV}_{\mathrm{tail}}</span></strong>：最后 1 s 内控制量逐拍变化量之和，单位与控制量相同。它是抖振的“频次×幅值”的综合度量；</li>
+<li><strong>速度纹波 <span class="math inline">\mathrm{ripple}_v</span></strong>：最后 1 s 内速度的峰峰值，单位 m/s。它是抖振对机械的直接冲击量。</li>
+</ul>
+<p>四个指标的分工是：<span class="math inline">t_s</span> 看快慢，IAE 看整体精度，<span class="math inline">\mathrm{TV}_{\mathrm{tail}}</span> 看执行器负担，<span class="math inline">\mathrm{ripple}_v</span> 看机械冲击。<strong>任何一组参数的评价都必须同时给出这四个数</strong>，只报其中一两个的对比，在本章的标准下都算不合格。</p>
+<p>还要说明一点：这些数字全部来自 <code>ch059_sim.py</code> 的一次运行，<code>report()</code> 打印什么，正文就写什么，没有做“挑好看的”筛选。若读者自己跑一遍发现某位小数不同，那是 NumPy 版本或浮点顺序的差异，量级不会变。</p>
+<h2 id="数学原理">59.2 数学原理</h2>
+<p>本节把上一节的直观写成可验证的命题：滑模面怎么构造、触面后为什么只剩降阶动态、到达条件为什么能保证有限时间、不变性在什么条件下成立、抖振从哪里来。这五件事构成滑模理论的全部骨架，后面的设计步骤与参数整定都是它们的推论。</p>
+<h3 id="滑模面的构造">59.2.1 滑模面的构造</h3>
+<p>记跟踪误差 <span class="math inline">e=r-y</span>，对 <span class="math inline">n</span> 阶系统取</p>
+<p><span class="math display">
+s=\left(\frac{\mathrm{d}}{\mathrm{d}t}+\lambda\right)^{n-1}e
+=\sum_{i=0}^{n-1}\binom{n-1}{i}\lambda^{n-1-i}e^{(i)},\qquad \lambda&gt;0
+\tag{59-5}
+</span></p>
+<p>本章对象是二阶（位置、速度），取 <span class="math inline">n=2</span> 即式 (59-2)：<span class="math inline">s=\dot e+\lambda e</span>。三阶对象（如带电流环的伺服）则取 <span class="math inline">s=\ddot e+2\lambda\dot e+\lambda^2 e</span>，依此类推。</p>
+<p>这个构造的关键在于：<strong><span class="math inline">s=0</span> 是一个 <span class="math inline">n-1</span> 阶微分方程</strong>。二阶对象在 <span class="math inline">s=0</span> 上只剩下 <span class="math inline">\dot e=-\lambda e</span>，一阶、无超调、时间常数 <span class="math inline">1/\lambda</span>；三阶对象在 <span class="math inline">s=0</span> 上剩下 <span class="math inline">\ddot e+2\lambda\dot e+\lambda^2e=0</span>，即两个重根 <span class="math inline">-\lambda</span>，临界阻尼。也就是说，滑模面把“设计一个 <span class="math inline">n</span> 阶闭环”简化成了“选一个 <span class="math inline">\lambda</span>”。</p>
+<p>对一般的线性对象 <span class="math inline">\dot{\boldsymbol{x}}=\boldsymbol{A}\boldsymbol{x}+\boldsymbol{B}u+\boldsymbol{d}</span>，滑模面写成线性组合</p>
+<p><span class="math display">
+s=\boldsymbol{c}^{\mathrm{T}}\boldsymbol{e},\qquad \boldsymbol{c}=[c_1,\ c_2,\ \dots,\ c_n]^{\mathrm{T}}
+\tag{59-6}
+</span></p>
+<p><span class="math inline">\boldsymbol{c}</span> 的选取等价于给降阶动态配置极点。常用的极点配置法、最优控制法（把 <span class="math inline">\boldsymbol{c}</span> 当作 LQR 的解）都落在这个式子上，本章只用式 (59-5) 的重根形式，因为它最容易在现场解释：“<span class="math inline">\lambda</span> 就是误差衰减的时间常数的倒数”。</p>
+<p>表 59-1 把本章用到的量及作用列在一起，后文反复引用。</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">符号</th>
+<th style="text-align: left;">名称</th>
+<th style="text-align: left;">作用</th>
+<th style="text-align: left;">本章取值</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><span class="math inline">s</span></td>
+<td style="text-align: left;">滑模变量</td>
+<td style="text-align: left;">度量“离轨道多远”，符号决定切换方向</td>
+<td style="text-align: left;">由式 (59-2) 计算</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><span class="math inline">\lambda</span></td>
+<td style="text-align: left;">滑模面斜率</td>
+<td style="text-align: left;">决定滑动段的衰减时间常数 <span class="math inline">1/\lambda</span></td>
+<td style="text-align: left;">2.0（0.5 s）</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><span class="math inline">k</span></td>
+<td style="text-align: left;">切换增益</td>
+<td style="text-align: left;">决定到达速度与抗扰能力，须大于扰动上界</td>
+<td style="text-align: left;">2.0</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><span class="math inline">\phi</span></td>
+<td style="text-align: left;">边界层厚度</td>
+<td style="text-align: left;">把符号换成饱和，抑制抖振，牺牲稳态精度</td>
+<td style="text-align: left;">0（理想）/ 0.02</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><span class="math inline">T_s</span></td>
+<td style="text-align: left;">采样周期</td>
+<td style="text-align: left;">决定准滑动带宽度 <span class="math inline">kT_s</span> 与抖振频率</td>
+<td style="text-align: left;">0.01 s</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><span class="math inline">u_{\mathrm{eq}}</span></td>
+<td style="text-align: left;">等效控制</td>
+<td style="text-align: left;">抵消对象自身动态，使 <span class="math inline">\dot s</span> 中不含模型参数</td>
+<td style="text-align: left;"><span class="math inline">(1-\lambda)v</span></td>
+</tr>
+</tbody>
+</table>
+<h3 id="等效控制把模型减掉">59.2.2 等效控制：把模型“减掉”</h3>
+<p>在 <span class="math inline">s=0</span> 上，若状态确实被约束住，则 <span class="math inline">\dot s=0</span> 恒成立。把 <span class="math inline">\dot s</span> 展开并令其为零，解出的控制量叫<strong>等效控制</strong>（equivalent control）：</p>
+<p><span class="math display">
+\dot s=\boldsymbol{c}^{\mathrm{T}}(\boldsymbol{A}\boldsymbol{x}+\boldsymbol{B}u+\boldsymbol{d})=0
+\;\Longrightarrow\;
+u_{\mathrm{eq}}=-(\boldsymbol{c}^{\mathrm{T}}\boldsymbol{B})^{-1}\boldsymbol{c}^{\mathrm{T}}(\boldsymbol{A}\boldsymbol{x}+\boldsymbol{d})
+\tag{59-7}
+</span></p>
+<p>它有两个解释，缺一不可：</p>
+<ul>
+<li><strong>代数解释</strong>：<span class="math inline">u_{\mathrm{eq}}</span> 是“维持 <span class="math inline">s=0</span> 所需要的那个控制量”，它是状态与扰动的函数，不是时间的显函数。</li>
+<li><strong>几何解释</strong>：<span class="math inline">u_{\mathrm{eq}}</span> 是切换项在无限快切换下的平均值。真实控制量在 <span class="math inline">u_{\mathrm{eq}}+k</span> 与 <span class="math inline">u_{\mathrm{eq}}-k</span> 之间来回跳，占空比恰好使平均值为 <span class="math inline">u_{\mathrm{eq}}</span>。这就是 Filippov 意义下的解——不定义 <span class="math inline">\operatorname{sgn}(0)</span>，而是用微分包含把切换面两侧的向量场“凸组合”起来。</li>
+</ul>
+<p>本章对象代入式 (59-7)：<span class="math inline">\boldsymbol{c}^{\mathrm{T}}\boldsymbol{B}=1</span>，<span class="math inline">\boldsymbol{c}^{\mathrm{T}}\boldsymbol{A}\boldsymbol{x}=(\lambda-1)v</span>，故 <span class="math inline">u_{\mathrm{eq}}=(1-\lambda)v</span>，正是式 (59-3) 的第一项。<span class="math inline">\lambda=2</span> 时它退化为 <span class="math inline">-v</span>，物理意义是“抵消对象的一阶滞后”：对象的稳态增益是 1，要让速度保持不变，必须持续给 <span class="math inline">v</span> 大小的推力去对抗 <span class="math inline">-v</span> 的阻尼。</p>
+<p>这里有一个容易被忽略的工程含义：<strong><span class="math inline">u_{\mathrm{eq}}</span> 依赖模型</strong>。若对象的阻尼系数不是 1 而是 1.3，等效控制就会偏小 30%，剩下的 30% 由切换项“补”，表现为 <span class="math inline">s</span> 不再严格为零，而是在一个薄带内来回。这就是“滑模对参数不敏感”的准确含义——不是不需要模型，而是模型误差被切换项吸收了。</p>
+<h3 id="到达条件与有限时间">59.2.3 到达条件与有限时间</h3>
+<p>触面之前，需要保证 <span class="math inline">|s|</span> 单调下降。Lyapunov 函数取 <span class="math inline">V=s^2/2</span>，要求</p>
+<p><span class="math display">
+\dot V=s\dot s\le-\eta|s|,\qquad \eta&gt;0
+\tag{59-8}
+</span></p>
+<p>这就是<strong>到达条件</strong>（reaching condition）。它比 <span class="math inline">\dot V&lt;0</span> 更强：不仅要求 <span class="math inline">V</span> 下降，还要求下降速率与 <span class="math inline">|s|</span> 成正比，从而保证有限时间到达，而不是渐近到达。</p>
+<p>对式 (59-4) 的 <span class="math inline">\dot s=-k\operatorname{sgn}(s)+d</span>，当 <span class="math inline">|d|\le D&lt;k</span> 时</p>
+<p><span class="math display">
+s\dot s=s\left[-k\operatorname{sgn}(s)+d\right]\le-(k-D)|s|=-\eta|s|
+\tag{59-9}
+</span></p>
+<p>即 <span class="math inline">\eta=k-D</span>。对式 (59-9) 两边积分（<span class="math inline">s&gt;0</span> 时 <span class="math inline">\dot s\le-\eta</span>），得到达时间</p>
+<p><span class="math display">
+t_r\le\frac{|s(0)|}{\eta}=\frac{|s(0)|}{k-D}
+\tag{59-10}
+</span></p>
+<p>无扰动时 <span class="math inline">D=0</span>，<span class="math inline">t_r=|s(0)|/k</span>。本章 <span class="math inline">|s(0)|=2</span>、<span class="math inline">k=2</span>，理论 1.00 s，实测 0.98 s（表 59-2），误差来自离散采样——控制量每 <span class="math inline">T_s</span> 才更新一次，等效于到达过程被“切”成 100 段。</p>
+<p>表 59-2 是四个切换增益下的实测。到达时间与 <span class="math inline">|s(0)|/k</span> 的偏差始终在 0.02 s 以内（两个采样周期），说明式 (59-10) 可以作为设计公式直接用。</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: right;"><span class="math inline">k</span></th>
+<th style="text-align: right;">理论到达 <span class="math inline">|s(0)|/k</span> (s)</th>
+<th style="text-align: right;">实测到达 (s)</th>
+<th style="text-align: right;">调节时间 (s)</th>
+<th style="text-align: right;">IAE</th>
+<th style="text-align: right;">控制量总变差</th>
+<th style="text-align: right;">速度纹波 (m/s)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">0.5</td>
+<td style="text-align: right;">4.00</td>
+<td style="text-align: right;">3.90</td>
+<td style="text-align: right;">4.91</td>
+<td style="text-align: right;">2.507</td>
+<td style="text-align: right;">402</td>
+<td style="text-align: right;">0.0055</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">1.0</td>
+<td style="text-align: right;">2.00</td>
+<td style="text-align: right;">1.95</td>
+<td style="text-align: right;">3.25</td>
+<td style="text-align: right;">1.516</td>
+<td style="text-align: right;">1207</td>
+<td style="text-align: right;">0.0101</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">2.0</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">0.98</td>
+<td style="text-align: right;">2.53</td>
+<td style="text-align: right;">1.035</td>
+<td style="text-align: right;">2815</td>
+<td style="text-align: right;">0.0201</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">4.0</td>
+<td style="text-align: right;">0.50</td>
+<td style="text-align: right;">0.49</td>
+<td style="text-align: right;">2.22</td>
+<td style="text-align: right;">0.823</td>
+<td style="text-align: right;">6031</td>
+<td style="text-align: right;">0.0402</td>
+</tr>
+</tbody>
+</table>
+<p>表 59-2 最后两列已经暴露了代价：<span class="math inline">k</span> 从 0.5 增到 4.0，IAE 改善 3 倍，控制量总变差却增加 15 倍，速度纹波增加 7 倍。<strong>收益是线性的，代价也是线性的，但基数不同</strong>——这就是 §59.7 要把 <span class="math inline">k</span> 单独拿出来讲的原因。</p>
+<h3 id="匹配条件不变性成立的边界">59.2.4 匹配条件：不变性成立的边界</h3>
+<p>式 (59-4) 之所以干净，是因为扰动 <span class="math inline">d</span> 与控制 <span class="math inline">u</span> 从同一个通道进入对象。这个性质叫<strong>匹配</strong>（matching）：</p>
+<p><span class="math display">
+\operatorname{rank}[\boldsymbol{B},\ \boldsymbol{d}]=\operatorname{rank}[\boldsymbol{B}]
+\tag{59-11}
+</span></p>
+<p>即扰动可以写成 <span class="math inline">\boldsymbol{d}=\boldsymbol{B}\tilde d</span> 的形式。满足匹配时，切换项可以完全抵消扰动，<span class="math inline">s</span> 的动态与 <span class="math inline">d</span> 无关；不满足匹配时，扰动会直接进入 <span class="math inline">\dot s</span> 中无法抵消的部分，滑模只能“部分抑制”。</p>
+<p>对本章对象，摩擦与负载都作用在速度通道，与推力同通道，满足匹配；而传感器噪声、位置测量偏差作用在输出通道，不满足匹配。工程上这条区分极其重要：</p>
+<ul>
+<li><strong>匹配扰动</strong>（负载力矩、摩擦力、推力损失）：滑模的强项，<span class="math inline">k</span> 压得住就几乎无静差；</li>
+<li><strong>非匹配扰动</strong>（传感器零漂、编码器偏心、模型阶次误差）：滑模无法完全抵消，只能靠反馈增益压制，效果与高增益 PID 类似。</li>
+</ul>
+<p>很多“滑模效果不好”的现场问题，追到最后都是把非匹配扰动当成了匹配扰动来设计。诊断方法很简单：看扰动撤掉后误差是否回到零。回到零说明是匹配的；回不到零、但比开环小很多，说明是非匹配的。</p>
+<h3 id="抖振从哪里来">59.2.5 抖振从哪里来</h3>
+<p>在理想的连续时间模型里，<span class="math inline">\operatorname{sgn}(s)</span> 的切换频率是无穷大，<span class="math inline">s</span> 严格为零，控制量的平均值为 <span class="math inline">u_{\mathrm{eq}}</span>，一切完美。真实系统有三处破坏这个理想：</p>
+<ul>
+<li><strong>采样</strong>：控制量每 <span class="math inline">T_s</span> 更新一次，<span class="math inline">s</span> 在两次采样之间会越过零再越回来，形成幅值为 <span class="math inline">O(kT_s)</span> 的极限环（§59.5 会精确验证）；</li>
+<li><strong>执行器动态</strong>：阀、电机、驱动器都有带宽，切换指令的高频分量被滤掉，等效于给切换项加了滞后，极限环幅度变大；</li>
+<li><strong>未建模延迟</strong>：延迟把“看到 <span class="math inline">s&gt;0</span>”与“执行反向推力”错开，越靠近滑模面越容易过冲，形成更大幅度的振荡（§59.10 实测：4 拍延迟使速度纹波从 0.020 增到 0.205，放大 10 倍）。</li>
+</ul>
+<p>所以抖振不是“控制器没设计好”，而是<strong>不连续控制与离散实现结合的必然产物</strong>。工程上能做的不是消灭它，而是把它限制在执行器能承受的范围内：加边界层（把切换变成饱和）、提高切换频率（减小 <span class="math inline">kT_s</span>）、或者改用高阶滑模（把不连续项藏到积分里，§59.9）。</p>
+<h3 id="与继电控制高增益反馈的区别">59.2.6 与继电控制、高增益反馈的区别</h3>
+<p>滑模常被说成“高级的继电控制”，这个说法只对了一半。</p>
+<ul>
+<li>继电控制（on-off）只关心“往哪个方向走”，不规定轨迹，因此会有稳态极限环，且幅度由对象决定；</li>
+<li>滑模在继电的基础上加了滑模面，规定了“到了之后怎么走”，因此滑动段的动态是设计出来的，与对象无关；</li>
+<li>高增益反馈用“很大的线性增益”逼近切换，优点是连续、好实现，缺点是大增益同时放大了噪声与未建模高频动态，容易激发振荡；滑模把大增益“限制在符号函数里”，在有界扰动下不会因为增益过大而失稳。</li>
+</ul>
+<p>三者的关系可以这样记：<strong>继电给方向，滑模给轨道，高增益给近似</strong>。边界层滑模恰好是滑模与高增益的折中——带外是继电，带内是线性反馈。</p>
+<h3 id="相对阶滑模能不能做的前提">59.2.7 相对阶：滑模能不能做的前提</h3>
+<p>前面所有推导都默认一件事：<strong>控制量必须出现在 <span class="math inline">\dot s</span> 里</strong>。这个条件不是自动满足的，它由对象与滑模面的相对阶决定。</p>
+<p>对象从输入 <span class="math inline">u</span> 到输出 <span class="math inline">y</span> 的相对阶 <span class="math inline">r</span>，指 <span class="math inline">y</span> 要对 <span class="math inline">u</span> 求几次导才出现 <span class="math inline">u</span>。本章对象 <span class="math inline">y=p</span>，<span class="math inline">\dot p=v</span> 不含 <span class="math inline">u</span>，<span class="math inline">\ddot p=-v+u+d</span> 含 <span class="math inline">u</span>，故 <span class="math inline">r=2</span>。滑模面取 <span class="math inline">s=e_v+\lambda e_p</span>，则</p>
+<p><span class="math display">
+\dot s=\dot e_v+\lambda e_v=\ddot p-\ddot r+\lambda e_v=-v+u+d+\lambda e_v
+</span></p>
+<p><span class="math inline">u</span> 以系数 1 出现，切换项可以随意设定 <span class="math inline">\dot s</span> 的符号，滑模成立。</p>
+<p>若相对阶为 1（例如对象 <span class="math inline">G=1/(s+1)</span>，滑模面 <span class="math inline">s=e</span>），则 <span class="math inline">\dot s=\dot e</span> 里直接含 <span class="math inline">u</span>，条件同样满足。<strong>问题出在“相对阶大于滑模面阶数 + 1”的情形</strong>：比如三阶对象配一阶滑模面，<span class="math inline">\dot s</span> 里不含 <span class="math inline">u</span>，控制量只能通过二阶导数影响 <span class="math inline">s</span>，符号无法直接翻转，<span class="math inline">\dot s</span> 的符号不受控，滑模根本不存在。</p>
+<p>这条约束在工程上的体现是：<strong>滑模面的阶数必须等于相对阶减一</strong>。式 (59-12) 给出的就是这个规则。很多人以为“滑模面阶数越高越平滑”，实际上阶数高于 <span class="math inline">r-1</span> 会让控制量进不到 <span class="math inline">\dot s</span> 里，系统看起来能跑，但一到面上就停不住。</p>
+<h3 id="时标分离为什么能分开分析">59.2.8 时标分离：为什么能分开分析</h3>
+<p>滑模最有用的一条分析工具是<strong>时标分离</strong>。把 <span class="math inline">s</span> 的动态写成</p>
+<p><span class="math display">
+\dot s=\underbrace{-k\operatorname{sgn}(s)}_{\text{快，量级 }k}+\underbrace{d+\lambda e_v-v}_{\text{慢，量级 }1}
+</span></p>
+<p>切换项的量级是 <span class="math inline">k</span>，慢动态的量级是对象的时间常数倒数。当 <span class="math inline">k</span> 远大于慢动态的幅值时，<span class="math inline">s</span> 的收敛比 <span class="math inline">e_p</span> 的收敛快得多，于是可以分两步分析：先假设 <span class="math inline">s</span> 已经为零（内层已收敛），再分析 <span class="math inline">e_p</span> 在外层的演化。这就是奇异摄动里的“边界层”方法，也是 §59.4.3 不变性推导的合法性来源。</p>
+<p>时标分离的合法性可以用一个比值衡量：</p>
+<p><span class="math display">
+\epsilon=\frac{\text{慢动态时间常数}}{\text{到达时间}}=\frac{1/k}{1}=\frac{1}{k}
+</span></p>
+<p><span class="math inline">\epsilon\ll1</span> 时分离成立；<span class="math inline">\epsilon</span> 接近 1 时，<span class="math inline">s</span> 还没收敛，<span class="math inline">e_p</span> 已经动了不少，“先到达后滑动”的两段式图像失真。本章 <span class="math inline">k=2</span>，<span class="math inline">\epsilon=0.5</span>，属于“勉强可分”——这也是为什么表 59-2 里 <span class="math inline">k=0.5</span> 的那一行，<span class="math inline">s(t)</span> 的折点很不明显，调节时间被拉长到 4.91 s。</p>
+<p>工程上提高 <span class="math inline">\epsilon</span> 的办法只有加 <span class="math inline">k</span>，但 <span class="math inline">k</span> 受抖振与 <span class="math inline">\rho</span> 的限制。<strong>这就是滑模的固有矛盾：想要干净的时标分离，就得接受更大的抖振。</strong></p>
+<h3 id="lyapunov-函数的选取">59.2.9 Lyapunov 函数的选取</h3>
+<p>到达条件的推导用 <span class="math inline">V=s^2/2</span>，这是最常用的选择，但不是唯一的选择。选不同的 <span class="math inline">V</span> 会得到不同的到达律，这一点在设计时很有用：</p>
+<ul>
+<li><span class="math inline">V=s^2/2</span> 给出 <span class="math inline">\dot V=s\dot s\le-\eta|s|</span>，对应常数到达律；</li>
+<li><span class="math inline">V=\tfrac12s^2+\tfrac{1}{2\gamma}(\hat d-d)^2</span> 把扰动估计误差也纳入，对应自适应滑模（§59.9.4）；</li>
+<li><span class="math inline">V=\tfrac12s^2+\tfrac12z^2</span>（<span class="math inline">z</span> 为超螺旋的积分项）给出超螺旋的稳定性条件式 (59-41)。</li>
+</ul>
+<p>选取 <span class="math inline">V</span> 时有三个细节容易出错：</p>
+<p><strong>第一，<span class="math inline">V</span> 必须正定且在 <span class="math inline">s=0</span> 处为零</strong>。有人用 <span class="math inline">V=|s|</span>，得到 <span class="math inline">\dot V=-\eta</span>，看似更简洁，但 <span class="math inline">V</span> 在 <span class="math inline">s=0</span> 处不可微，严格来说不满足 Lyapunov 定理的可微要求，只能作为“非光滑 Lyapunov 函数”单独论证。</p>
+<p><strong>第二，<span class="math inline">\dot V</span> 的负定性要覆盖整个状态空间</strong>，不能只在 <span class="math inline">|s|</span> 大的区域成立。§59.2.3 的推导里用到了 <span class="math inline">|d|\le D</span>，这个界必须对所有 <span class="math inline">t</span> 成立；若扰动在某个时段超过 <span class="math inline">D</span>，<span class="math inline">\dot V</span> 可能变正，<span class="math inline">s</span> 会暂时离开滑模面。</p>
+<p><strong>第三，到达条件只保证“到”，不保证“留”</strong>。<span class="math inline">\dot V&lt;0</span> 说明 <span class="math inline">V</span> 单调下降，但下降到零之后能否保持在零，需要额外论证（Filippov 解的存在性与唯一性）。连续时间下这一步由 §59.4.2 的凸包构造保证；离散时间下则由准滑动带保证——<strong>这正是 §59.5 要单独讲离散的原因</strong>。</p>
+<h3 id="降阶滑模真正给出的东西">59.2.10 降阶：滑模真正给出的东西</h3>
+<p>把 <span class="math inline">s=0</span> 代回去，得到的是 <span class="math inline">\dot e_p=-\lambda e_p</span>。这个式子只有一阶，而原对象是二阶——<strong>滑模把 <span class="math inline">n</span> 阶系统压成了 <span class="math inline">n-1</span> 阶</strong>。这件事比“鲁棒”更基本，值得单独说清楚。</p>
+<p>从状态空间看，二阶系统的状态是 <span class="math inline">(e_p,e_v)</span>，二维平面。<span class="math inline">s=e_v+\lambda e_p=0</span> 是一条过原点的直线，也就是一维子空间。一旦状态落在这条线上，它就只能沿着这条线朝原点走，走得快慢由 <span class="math inline">\lambda</span> 唯一决定。<strong>降阶的意思是：切换项把状态“关”进了一个低维子空间，此后系统的行为与对象无关，只与这条线有关。</strong></p>
+<p>这就解释了三件此前分开讲的事：</p>
+<ul>
+<li><strong>为什么不变性成立</strong>。滑动段上根本没有 <span class="math inline">u</span> 的余地——<span class="math inline">u</span> 的作用只是把状态按在线上，一旦按住了，<span class="math inline">u</span> 取什么值都不影响沿线运动。对象参数、匹配扰动都通过 <span class="math inline">u</span> 的通道进来，通道被“按住”这个动作封死了，所以它们消失（§59.2.4）；</li>
+<li><strong>为什么 <span class="math inline">\lambda</span> 是唯一的设计自由度</strong>。降阶后的系统是一阶，一阶系统的极点只有一个，就是 <span class="math inline">-\lambda</span>。想让滑动段更快，只有加大 <span class="math inline">\lambda</span>，没有第二种办法；</li>
+<li><strong>为什么高阶对象的滑模面要多几项</strong>。三阶对象降阶后是二阶，需要两个极点，于是滑模面写成 <span class="math inline">(\frac{\mathrm{d}}{\mathrm{d}t}+\lambda)^2e</span>，两个极点都配置在 <span class="math inline">-\lambda</span>（重根）。想配置成不同极点，就把 <span class="math inline">(\frac{\mathrm{d}}{\mathrm{d}t}+\lambda)^2</span> 换成 <span class="math inline">(\frac{\mathrm{d}}{\mathrm{d}t}+\lambda_1)(\frac{\mathrm{d}}{\mathrm{d}t}+\lambda_2)</span>，滑模面相应变成 <span class="math inline">\ddot e+(\lambda_1+\lambda_2)\dot e+\lambda_1\lambda_2e</span>。</li>
+</ul>
+<p>反过来说，<strong>滑模面可以任意设计，只要它对应一个稳定的降阶系统</strong>。线性的 <span class="math inline">s=e_v+\lambda e_p</span> 只是最省事的一种；把 <span class="math inline">\lambda e_p</span> 换成 <span class="math inline">\lambda|e_p|^{q/p}\operatorname{sgn}(e_p)</span>，降阶系统就变成有限时间收敛，这就是 §59.9.3 的终端滑模；加一个积分项 <span class="math inline">\lambda_2\int e_p</span>，降阶系统就从一阶变二阶，多出的极点可以用来抵消常值扰动造成的不匹配。<strong>所有滑模的变体，本质上都是在改“降阶后希望看到什么动态”</strong>，切换项本身反而不变。</p>
+<h2 id="设计步骤">59.3 设计步骤</h2>
+<p>滑模的设计参数只有四个：滑模面的系数 <span class="math inline">\lambda</span>、切换增益 <span class="math inline">k</span>、采样周期 <span class="math inline">T_s</span>、边界层厚度 <span class="math inline">\phi</span>。四者不是并列的，而是有严格的先后依赖——先定 <span class="math inline">\lambda</span>（决定轨道形状），再估 <span class="math inline">D</span>（决定 <span class="math inline">k</span> 的下界），然后定 <span class="math inline">k</span>，最后由 <span class="math inline">k</span> 与 <span class="math inline">\phi</span> 反推 <span class="math inline">T_s</span>。顺序颠倒就会返工。</p>
+<p>本节按这四步走一遍，最后给出一张投运检查表（表 59-3）。全部数字取本章对象 <span class="math inline">G_p(s)=1/[s(s+1)]</span>，与后续各节的实测一一对应。</p>
+<h3 id="第一步定滑模面的阶数">59.3.1 第一步：定滑模面的阶数</h3>
+<p>滑模面的阶数不由喜好决定，而由<strong>相对阶</strong>决定。<span class="math inline">n</span> 阶对象要保证滑动模态唯一且稳定，滑模面应为 <span class="math inline">n-1</span> 阶：</p>
+<p><span class="math display">
+s=\left(\frac{\mathrm{d}}{\mathrm{d}t}+\lambda\right)^{n-1}e_p
+\tag{59-12}
+</span></p>
+<p>本章对象是二阶（<span class="math inline">p</span> 与 <span class="math inline">v</span>），故取 <span class="math inline">n-1=1</span>，即式 (59-2) 的一阶形式 <span class="math inline">s=e_v+\lambda e_p</span>。若对象是三阶（例如带电流环的伺服，<span class="math inline">p</span>、<span class="math inline">v</span>、<span class="math inline">a</span> 三个状态），滑模面就要写成 <span class="math inline">s=\ddot e_p+2\lambda\dot e_p+\lambda^2e_p</span>，控制量出现在 <span class="math inline">\dot s</span> 里才能被直接驱动。</p>
+<p>阶数选错的典型症状是“到了面上却停不住”：一阶滑模面用在三阶对象上，<span class="math inline">s=0</span> 只约束了位置与速度的关系，加速度仍可自由变化，控制量无法通过 <span class="math inline">\dot s</span> 影响 <span class="math inline">s</span>，等效控制解不出来，滑动段根本不存在。这时相平面上看到的是状态反复穿越 <span class="math inline">s=0</span> 而不沿它滑行。</p>
+<p>工程上还有一条实用规则：<strong>能降阶就降阶</strong>。如果内环（电流环、速度环）带宽足够高，可以把它近似成 1，对象阶数下降，滑模面也跟着简化，抖振反而更好压。</p>
+<h3 id="第二步lambda-定多快">59.3.2 第二步：<span class="math inline">\lambda</span> 定多快</h3>
+<p><span class="math inline">\lambda</span> 只有一个物理含义：<strong>滑动段误差衰减的时间常数</strong>。在 <span class="math inline">s=0</span> 上，<span class="math inline">e_v=-\lambda e_p</span>，代入 <span class="math inline">\dot e_p=e_v</span> 得</p>
+<p><span class="math display">
+\dot e_p=-\lambda e_p
+\quad\Longrightarrow\quad
+e_p(t)=e_p(t_r)\,\mathrm{e}^{-\lambda(t-t_r)}
+\tag{59-13}
+</span></p>
+<p>所以 <span class="math inline">\lambda</span> 直接给出滑动段的收敛速度，<span class="math inline">4/\lambda</span> 就是滑动段的 2% 调节时间。<span class="math inline">\lambda=2</span> 对应 0.5 s 的时间常数、约 2 s 的滑动段收敛。</p>
+<p><span class="math inline">\lambda</span> 是不是越大越好？不是。<span class="math inline">\lambda</span> 变大有两个副作用：</p>
+<ul>
+<li>同样的位置误差产生更大的 <span class="math inline">s</span>，到达段变长（<span class="math inline">|s(0)|=\lambda|e_p(0)|</span>），若 <span class="math inline">k</span> 不变，到达时间按比例变长；</li>
+<li>滑动段要求的速度 <span class="math inline">\lambda e_p</span> 更大，控制量峰值更高，饱和风险更大。</li>
+</ul>
+<p>本章实测（§59.7 表 59-8）很能说明问题：<span class="math inline">\lambda</span> 从 0.5 增到 2.0，调节时间从 6.58 s 降到 2.53 s，IAE 从 1.980 降到 1.035；再增到 4.0，调节时间只降到 2.45 s，IAE 反而回升到 1.266。<strong>收益在 <span class="math inline">\lambda\approx2</span> 处饱和</strong>，此后多出来的只是更激进的速度指令和更大的控制量峰值。</p>
+<p>选 <span class="math inline">\lambda</span> 的经验做法：先按“滑动段占全程时间的 1/3 左右”反推，再验证控制量峰值不超过执行器能力的 70%。本章希望 3 s 左右到位，取滑动段 1 s 上下，故 <span class="math inline">\lambda=2</span>。</p>
+<h3 id="第三步估-d-与定-k">59.3.3 第三步：估 <span class="math inline">D</span> 与定 <span class="math inline">k</span></h3>
+<p><span class="math inline">k</span> 的下界由扰动上界决定。由到达条件 <span class="math inline">s\dot s\le-(k-D)|s|</span>，只有当 <span class="math inline">k&gt;D</span> 时 <span class="math inline">s</span> 才真的向零走。所以第一件事是把 <span class="math inline">D</span> 估出来，而且必须<strong>按最坏情况估</strong>：</p>
+<ul>
+<li>库仑摩擦：0.30（润滑恶化时可能到 0.4）；</li>
+<li>突加负载：1.5；</li>
+<li>模型增益误差折算：本章对象在增益下降 30% 时，等效扰动约 0.3；</li>
+<li>未建模动态与延迟：按 0.2 计。</li>
+</ul>
+<p>最坏情况下三项叠加，<span class="math inline">D\approx1.8</span>。取 20%~50% 裕量：</p>
+<p><span class="math display">
+k=(1.2\sim1.5)\,D\approx2.2\sim2.7
+\tag{59-14}
+</span></p>
+<p>本章取 <span class="math inline">k=2</span>——略低于这个区间，是故意的：<span class="math inline">k=2</span> 已经能压住 1.5 的负载阶跃（§59.6 实测残余误差 8.75e-3），而 <span class="math inline">k</span> 再往上，抖振代价开始明显（表 59-2 里 <span class="math inline">k</span> 从 2 到 4，IAE 只改善 20%，总变差却翻倍）。<strong><span class="math inline">k</span> 是“够用就好”的参数，不是“越大越稳”的参数。</strong></p>
+<p>这条线踩空会怎样？§59.7 里做了个对照：摩擦 0.30、对象增益 0.6 的工况下，<span class="math inline">k=0.2</span> 的滑模<strong>彻底卡死</strong>，8 s 后位置仍停在 0.000，稳态误差 1.00，与开环没有区别；同一工况下 <span class="math inline">k=2</span> 的调节时间 3.03 s、稳态误差 1.19e-3。<span class="math inline">k&lt;D</span> 不是“性能差一点”，而是<strong>根本没进入滑动模态</strong>：推力始终小于摩擦，状态停在原地，<span class="math inline">s</span> 恒定不为零，控制器输出的方向永远正确、幅值永远不够。</p>
+<p>图 59-3 把四个 <span class="math inline">k</span> 的 <span class="math inline">s(t)</span> 画在一起，竖虚线是理论到达时刻 <span class="math inline">|s(0)|/k</span>。四条曲线都在虚线附近折向零，说明式 (59-10) 的估计是可靠的；折点之后曲线贴着零走，就是滑动段。</p>
+<figure>
+<img src="figs/ch059/fig_059_03_reaching.svg" alt="图 59-3　四种切换增益下的 s(t)：竖虚线为理论到达时刻 |s(0)|/k，折点后进入滑动段" /><figcaption aria-hidden="true">图 59-3　四种切换增益下的 s(t)：竖虚线为理论到达时刻 |s(0)|/k，折点后进入滑动段</figcaption>
+</figure>
+<p>还有一个容易忽略的约束：<span class="math inline">k</span> 的量纲必须与 <span class="math inline">u</span> 一致。式 (59-3) 里 <span class="math inline">k</span> 直接是推力的量纲（N 或 V），不是“无量纲增益”。如果实际执行器的输入是电压、输出是推力，中间有减速比与推力常数，<span class="math inline">k</span> 必须换算到电压侧再填进代码。换算错了，现象与 <span class="math inline">k</span> 太小一模一样。</p>
+<h3 id="第四步t_s-与-phi-的配对">59.3.4 第四步：<span class="math inline">T_s</span> 与 <span class="math inline">\phi</span> 的配对</h3>
+<p><span class="math inline">T_s</span> 与 <span class="math inline">\phi</span> 不能独立选，它们通过准滑动带耦合。离散实现下，<span class="math inline">s</span> 在每个采样周期内最多变化 <span class="math inline">kT_s</span>（因为 <span class="math inline">|\dot s|\le k+D</span>，进入滑动段后 <span class="math inline">D</span> 已被抵消，主导项是 <span class="math inline">k</span>），所以</p>
+<p><span class="math display">
+|s|_{\max}\approx kT_s
+\tag{59-15}
+</span></p>
+<p>本章 <span class="math inline">k=2</span>、<span class="math inline">T_s=0.01</span> s，得 <span class="math inline">|s|_{\max}=0.020</span>。§59.5 的实测把这条关系验证到了小数点后两位：四组 <span class="math inline">(k,T_s)</span> 组合下 <span class="math inline">|s|_{\max}/kT_s</span> <strong>恒等于 1.00</strong>。这不是巧合，而是离散滑模的几何必然。</p>
+<p>既然 <span class="math inline">|s|_{\max}=kT_s</span>，边界层厚度 <span class="math inline">\phi</span> 就应该与它同量级。若 <span class="math inline">\phi\ll kT_s</span>，饱和函数几乎不起作用，等价于纯切换，抖振照旧；若 <span class="math inline">\phi\gg kT_s</span>，带内增益只有 <span class="math inline">k/\phi</span>，压不住扰动，稳态误差变大。取</p>
+<p><span class="math display">
+\phi\approx kT_s
+\quad\Longleftrightarrow\quad
+T_s\approx\frac{\phi}{k}
+\tag{59-16}
+</span></p>
+<p>本章取 <span class="math inline">\phi=0.02</span>，正好等于 <span class="math inline">kT_s</span>，<span class="math inline">T_s=0.01</span> s 由此确定。</p>
+<p><span class="math inline">\phi</span> 的代价是稳态误差。在边界层内 <span class="math inline">u</span> 是线性的，对抗常值扰动 <span class="math inline">d</span> 时平衡点不在 <span class="math inline">s=0</span> 而在 <span class="math inline">s=-d\phi/k</span> 附近，折算到位置误差</p>
+<p><span class="math display">
+|e_p|_{\mathrm{ss}}\le\frac{\phi}{\lambda}
+\tag{59-17}
+</span></p>
+<p><span class="math inline">\phi=0.02</span>、<span class="math inline">\lambda=2</span>，给出 <span class="math inline">|e_p|_{\mathrm{ss}}\le0.01</span> m。实测值 7.51e-4，比上界小一个数量级——上界是保守的，因为它假设 <span class="math inline">s</span> 卡在带边缘，实际平衡点更靠近中心。</p>
+<p><span class="math inline">T_s</span> 还有一个下限，来自算力与执行器带宽。<span class="math inline">T_s</span> 太小，切换频率超出阀或驱动器的响应能力，执行器输出的其实是切换指令的低通滤波结果，等效于加了滞后，反而更容易振荡（§59.10 会看到延迟对纹波的影响是线性放大的）。所以 <span class="math inline">T_s</span> 的选择区间是</p>
+<p><span class="math display">
+\frac{1}{f_{\mathrm{act}}}\ll T_s\lesssim\frac{\phi}{k}
+\tag{59-18}
+</span></p>
+<p>左侧是执行器能跟上切换的最低要求，右侧是准滑动带不超过边界层的要求。本章 <span class="math inline">T_s=0.01</span> s（100 Hz），对电机伺服是常规值；若是液压阀（带宽 10~20 Hz），<span class="math inline">T_s</span> 只能取 0.05 s，此时 <span class="math inline">kT_s=0.1</span>，边界层也得跟着加厚到 0.1，稳态误差上界升到 0.05 m——<strong>抖振与精度在同一条绳上，拉一头另一头必动</strong>。</p>
+<h3 id="第五步投运检查">59.3.5 第五步：投运检查</h3>
+<p>参数算完不等于设计完。上机后按表 59-3 逐项核对，任何一项不通过都说明前面的假设有问题，要回到对应步骤重算。</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">检查项</th>
+<th style="text-align: left;">判据</th>
+<th style="text-align: left;">不通过时的含义</th>
+<th style="text-align: left;">回溯步骤</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">触面时刻</td>
+<td style="text-align: left;">实测到达时间与 <span class="math inline">\lvert s(0)\rvert/k</span> 相差不超过 2 个 <span class="math inline">T_s</span></td>
+<td style="text-align: left;">实际 <span class="math inline">D</span> 大于估计，或推力被限幅</td>
+<td style="text-align: left;">重估 <span class="math inline">D</span>、重定 <span class="math inline">k</span></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">准滑动带</td>
+<td style="text-align: left;"><span class="math inline">\lvert s\rvert_{\max}</span> 与 <span class="math inline">kT_s</span> 同量级</td>
+<td style="text-align: left;">采样未生效、或存在未建模延迟</td>
+<td style="text-align: left;">查采样链、减小 <span class="math inline">T_s</span></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">控制量总变差</td>
+<td style="text-align: left;">在驱动器允许的切换频次内</td>
+<td style="text-align: left;">抖振超出机械或电气寿命预算</td>
+<td style="text-align: left;">加厚 <span class="math inline">\phi</span>、改高阶滑模</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">扰动撤除后的误差</td>
+<td style="text-align: left;">回到零附近</td>
+<td style="text-align: left;">扰动非匹配，滑模只能部分抑制</td>
+<td style="text-align: left;">改滑模面或加积分</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">稳态误差</td>
+<td style="text-align: left;">小于 <span class="math inline">\phi/\lambda</span></td>
+<td style="text-align: left;"><span class="math inline">\phi</span> 过大或 <span class="math inline">\lambda</span> 过小</td>
+<td style="text-align: left;">重配 <span class="math inline">\phi</span> 与 <span class="math inline">\lambda</span></td>
+</tr>
+</tbody>
+</table>
+<p>表 59-3 里最容易被跳过的是第四项。负载撤掉后误差回不到零，很多人第一反应是“<span class="math inline">k</span> 不够大”，于是加大 <span class="math inline">k</span>，结果是抖振变大、误差依旧。真正的原因是扰动从传感器通道进来，与控制量不同通道，加大 <span class="math inline">k</span> 只是把非匹配扰动放大成更大的振荡。这时正确的做法是改滑模面（把输出误差也纳进来）或加一个积分项，而不是动 <span class="math inline">k</span>。</p>
+<h3 id="把五步串起来一个完整算例">59.3.6 把五步串起来：一个完整算例</h3>
+<p>用本章参数走一遍完整流程，作为后续各节的基准。</p>
+<ol type="1">
+<li><strong>定阶数</strong>：二阶对象，一阶滑模面 <span class="math inline">s=e_v+\lambda e_p</span>。</li>
+<li><strong>定 <span class="math inline">\lambda</span></strong>：希望 3 s 到位、滑动段约 1 s，取 <span class="math inline">\lambda=2</span>，对应 <span class="math inline">1/\lambda=0.5</span> s。</li>
+<li><strong>估 <span class="math inline">D</span></strong>：摩擦 0.3 + 负载 1.5 + 增益误差 0.3 + 未建模 0.2，取 <span class="math inline">D=1.8</span>。</li>
+<li><strong>定 <span class="math inline">k</span></strong>：按式 (59-14) 应在 2.2~2.7，实取 <span class="math inline">k=2</span>，理由是负载实测 1.5、留 33% 裕量已够，而 <span class="math inline">k</span> 再大抖振收益比变差。</li>
+<li><strong>配 <span class="math inline">T_s</span> 与 <span class="math inline">\phi</span></strong>：取 <span class="math inline">\phi=0.02</span>，由式 (59-16) 得 <span class="math inline">T_s\le0.01</span> s，实取 0.01 s（100 Hz）。</li>
+</ol>
+<p>初始条件 <span class="math inline">p=0</span>、<span class="math inline">v=0</span>、目标 1 m，于是 <span class="math inline">e_p(0)=-1</span>、<span class="math inline">e_v(0)=0</span>，初值</p>
+<p><span class="math display">
+s(0)=\lambda e_p(0)=-2.000
+</span></p>
+<p>理论到达时间 <span class="math inline">|s(0)|/k=1.00</span> s，本章实测 0.98 s；准滑动带 <span class="math inline">kT_s=0.0200</span>，实测 <span class="math inline">|s|_{\max}=0.0201</span>；稳态误差上界 <span class="math inline">\phi/\lambda=0.01</span> m，实测 7.51e-4。三个数字全部落在设计公式给出的范围内，说明这套五步流程在本对象上是自洽的。</p>
+<p>这组参数还有一个隐含的优点：控制量的等效部分 <span class="math inline">(1-\lambda)v=-v</span> 恰好把对象自身的阻尼 <span class="math inline">-v</span> 抵消掉。这不是巧合，而是“反馈线性化”的一个特例——滑模的等效控制在匹配条件下总会把已知的对象动态消掉，只留下滑模面规定的动态。第 60 章讲反步法与反馈线性化时，会把这件事从特例推广成一般方法。</p>
+<h3 id="三阶对象的五步怎么变">59.3.7 三阶对象的五步怎么变</h3>
+<p>把对象换成带电流环的伺服：位置 <span class="math inline">p</span>、速度 <span class="math inline">v</span>、电流 <span class="math inline">i</span> 三个状态，</p>
+<p><span class="math display">
+\dot p=v,\qquad \dot v=k_i i,\qquad \dot i=-\frac{1}{\tau_e}i+\frac{1}{\tau_e}u
+</span></p>
+<p>相对阶为 3，滑模面升到二阶：</p>
+<p><span class="math display">
+s=\ddot e_p+2\lambda\dot e_p+\lambda^2e_p
+</span></p>
+<p>五步流程本身不变，但每一步都要改口径：</p>
+<ul>
+<li><strong>第一步</strong>：滑模面阶数从 1 升到 2，系数取二项式形式 <span class="math inline">(s+\lambda)^2</span>，保证 <span class="math inline">s=0</span> 时特征根为 <span class="math inline">-\lambda</span> 二重；</li>
+<li><strong>第二步</strong>：<span class="math inline">\lambda</span> 的时间常数不再对应 <span class="math inline">1/\lambda</span>，而是滑动段二阶系统的自然频率，<span class="math inline">t_s\approx7/\lambda</span>（2% 带）；</li>
+<li><strong>第三步</strong>：<span class="math inline">D</span> 要包含电流环的扰动（反电动势、母线波动），它是速度环扰动的 <span class="math inline">\tau_e</span> 倍量级，估算时不能沿用位置环的数；</li>
+<li><strong>第四步</strong>：<span class="math inline">k</span> 要抵消的是 <span class="math inline">\dot s</span> 里的扰动项，量纲变成“加加速度”，数值通常比位置环大一个数量级；</li>
+<li><strong>第五步</strong>：<span class="math inline">\phi</span> 与 <span class="math inline">T_s</span> 的关系不变（<span class="math inline">\rho=kT_s/\phi</span>），但 <span class="math inline">T_s</span> 必须小于电流环带宽的倒数，通常取 <span class="math inline">50\sim100\ \mu</span>s。</li>
+</ul>
+<p>三阶滑模的代价很直接：<span class="math inline">s</span> 里含 <span class="math inline">\ddot e_p</span>，需要位置、速度、加速度三个信号，后两个都要微分或观测，噪声放大严重。工程上更常见的做法是<strong>把二阶滑模面用在速度环</strong>，位置环仍用 PID——这就是第 45 章的串级结构，而不是硬做一个三阶滑模。</p>
+<h3 id="一张可评审的设计表">59.3.8 一张可评审的设计表</h3>
+<p>设计做完要能交出去，评审的人不该被要求读完全部推导。一张合格的设计表至少包含七列：</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">项</th>
+<th style="text-align: left;">本章取值</th>
+<th style="text-align: left;">依据</th>
+<th style="text-align: left;">验证方法</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">对象与相对阶</td>
+<td style="text-align: left;"><span class="math inline">1/[s(s+1)]</span>，<span class="math inline">r=2</span></td>
+<td style="text-align: left;">机理建模</td>
+<td style="text-align: left;">阶跃辨识</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">滑模面</td>
+<td style="text-align: left;"><span class="math inline">s=e_v+2e_p</span></td>
+<td style="text-align: left;">式 (59-12)</td>
+<td style="text-align: left;">相平面轨迹</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><span class="math inline">\lambda</span></td>
+<td style="text-align: left;">2</td>
+<td style="text-align: left;">式 (59-39) 求极值</td>
+<td style="text-align: left;">调节时间</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><span class="math inline">D</span></td>
+<td style="text-align: left;">1.8</td>
+<td style="text-align: left;">摩擦+负载+失配</td>
+<td style="text-align: left;">满载突加</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><span class="math inline">k</span></td>
+<td style="text-align: left;">2</td>
+<td style="text-align: left;">式 (59-14)，取 1.1 倍 <span class="math inline">D</span></td>
+<td style="text-align: left;">到达时间</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><span class="math inline">\phi</span></td>
+<td style="text-align: left;">0.02</td>
+<td style="text-align: left;"><span class="math inline">\rho=1</span></td>
+<td style="text-align: left;">尾段总变差</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><span class="math inline">T_s</span></td>
+<td style="text-align: left;">0.01 s</td>
+<td style="text-align: left;">式 (59-16)</td>
+<td style="text-align: left;">准滑动带</td>
+</tr>
+</tbody>
+</table>
+<p>七列里最关键的是“依据”与“验证方法”两列。<strong>没有依据的参数是魔数，没有验证方法的参数是猜测</strong>。本章的每一个数字都能在这两列里找到出处，这也是全书的统一要求。</p>
+<p>设计表还有一处容易漏：<strong>执行器换算</strong>。表里的 <span class="math inline">k=2</span> 是推力单位，代码里若输出的是电压，必须除以推力常数。评审时最好把换算系数单独列一行，写上“随温度漂移 <span class="math inline">\pm10\%</span>”，提醒后续维护者这不是常数。</p>
+<h3 id="评审时最常被问的五个问题">59.3.9 评审时最常被问的五个问题</h3>
+<p>设计表交上去，评审的人通常不会逐行看推导，而是问五个问题。提前准备好答案，评审会短一半。</p>
+<p><strong>第一问：<span class="math inline">D</span> 凭什么取 1.8？</strong> 本章的答案是三项相加：最大负载 1.5、库仑摩擦折算 0.3 的一部分、增益失配带来的等效扰动。三项里只有第一项是设计输入，后两项必须实测或按最坏情况估。<strong>答不出 <span class="math inline">D</span> 的构成，<span class="math inline">k</span> 就没有依据</strong>；反过来，只要 <span class="math inline">D</span> 的构成清楚，<span class="math inline">k</span> 取 1.1 倍还是 1.5 倍只是保守程度的差别。</p>
+<p><strong>第二问：<span class="math inline">k</span> 的上界核过没有？</strong> 上界 <span class="math inline">2\phi/T_s=4</span>。若有人为了“更鲁棒”把 <span class="math inline">k</span> 提到 5，准滑动带变成 <span class="math inline">kT_s=0.05</span>，折成位置误差约 <span class="math inline">0.05/\lambda=2.5</span> cm，而且 <span class="math inline">\rho=2.5&gt;2</span> 意味着带内振荡不再收敛。<strong>下界决定能不能用，上界决定用了会不会抖</strong>，两个都要写在表里。</p>
+<p><strong>第三问：最坏工况是什么？</strong> 本章是“增益 <span class="math inline">-30\%</span> + 5 拍延迟”同时发生。表 59-7 分别测了这两项，合起来没有单独实测，只能按两项的趋势叠加估计：<span class="math inline">t_s</span> 不会超过 2.8 s，纹波不会低于 0.25。评审时把“实测项”与“估计项”分开标注，比只给标称工况有说服力得多。</p>
+<p><strong>第四问：抖振怎么验收？</strong> 答“看尾段总变差与速度纹波两个量，且必须在满载下测”。只给纹波不给总变差，会被质疑“是不是把切换频率降下来了”；只给总变差不给纹波，则完全不能说明问题（表 59-11 就是反例）。</p>
+<p><strong>第五问：换型之后哪些参数要重算？</strong> 答“<span class="math inline">k</span> 与 <span class="math inline">\phi</span> 必算，<span class="math inline">\lambda</span> 与 <span class="math inline">T_s</span> 看行程与硬件”。具体按 §59.7.11 的三条缩放律：<span class="math inline">k</span> 随增益反比、随行程正比；<span class="math inline">\phi</span> 随 <span class="math inline">\lambda</span> 与精度指标合成。<strong>这五问能答完，设计表才算可交付；答不完，说明还有一项是拍的。</strong></p>
+<h2 id="连续情形">59.4 连续情形</h2>
+<p>先假设一切理想：采样无限快、执行器瞬时响应、状态精确可测。这个假设下的滑模叫<strong>连续时间滑模</strong>，是理解一切工程现象的基准。本节讲三件事：怎么规定到达的路径（到达律）、到面之后控制量到底是多少（等效控制与 Filippov 解）、以及为什么滑动段能“忘记”对象参数（不变性）。</p>
+<h3 id="到达律的三个家族">59.4.1 到达律的三个家族</h3>
+<p>式 (59-3) 只规定了切换项的符号，没有规定幅值。把幅值也规定出来，就得到<strong>到达律</strong>（reaching law）：直接给定 <span class="math inline">\dot s</span> 应该等于什么，再由 <span class="math inline">\dot s</span> 反解 <span class="math inline">u</span>。</p>
+<p><strong>常数到达律</strong>最朴素，<span class="math inline">s</span> 以恒定速率冲向零：</p>
+<p><span class="math display">
+\dot s=-k\operatorname{sgn}(s)
+\quad\Longrightarrow\quad
+t_r=\frac{|s(0)|}{k}
+\tag{59-19}
+</span></p>
+<p>这就是式 (59-10)。它的优点是到达时间可以精确预估，缺点是接近零时速度不减速，硬撞上去，抖振最大。</p>
+<p><strong>指数到达律</strong>在切换项之外加一个与 <span class="math inline">s</span> 成正比的项：</p>
+<p><span class="math display">
+\dot s=-k\operatorname{sgn}(s)-\lambda_e s
+\quad\Longrightarrow\quad
+t_r=\frac{1}{\lambda_e}\ln\!\left(1+\frac{\lambda_e|s(0)|}{k}\right)
+\tag{59-20}
+</span></p>
+<p>远处 <span class="math inline">|s|</span> 大，<span class="math inline">\lambda_e s</span> 主导，<span class="math inline">s</span> 掉得比常数律快；近处 <span class="math inline">|s|</span> 小，比例项自动减弱，交给切换项收尾，撞击速度比常数律柔和。代价是多了一个要整定的 <span class="math inline">\lambda_e</span>。</p>
+<p><strong>幂次到达律</strong>把切换幅值本身做成 <span class="math inline">|s|</span> 的幂：</p>
+<p><span class="math display">
+\dot s=-k|s|^{\alpha}\operatorname{sgn}(s),\quad 0&lt;\alpha&lt;1
+\quad\Longrightarrow\quad
+t_r=\frac{|s(0)|^{1-\alpha}}{k(1-\alpha)}
+\tag{59-21}
+</span></p>
+<p><span class="math inline">|s|</span> 大时 <span class="math inline">|s|^{\alpha}</span> 相对大，冲得快；<span class="math inline">|s|</span> 小时幅值迅速衰减，等效于自带边界层，抖振最小，是三者里最“温和”的一个。<span class="math inline">\alpha=0.5</span> 时 <span class="math inline">\dot s\propto\sqrt{|s|}</span>，正是 §59.9 超螺旋算法的雏形。</p>
+<p>表 59-4 是三者在本章对象上的实测对照。为了让比较不受“增益大小”干扰，三组参数各自调到<strong>到达时间尽量接近</strong>再对比，然后看代价。</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">到达律</th>
+<th style="text-align: left;">参数</th>
+<th style="text-align: right;">理论到达 (s)</th>
+<th style="text-align: right;">实测到达 (s)</th>
+<th style="text-align: right;">调节时间 (s)</th>
+<th style="text-align: right;">IAE</th>
+<th style="text-align: right;">尾段总变差</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">常数</td>
+<td style="text-align: left;"><span class="math inline">k=1.0</span></td>
+<td style="text-align: right;">2.00</td>
+<td style="text-align: right;">1.95</td>
+<td style="text-align: right;">3.25</td>
+<td style="text-align: right;">1.516</td>
+<td style="text-align: right;">1207</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">指数</td>
+<td style="text-align: left;"><span class="math inline">k=0.5</span>，<span class="math inline">\lambda_e=1.5</span></td>
+<td style="text-align: right;">1.30</td>
+<td style="text-align: right;">1.20</td>
+<td style="text-align: right;">2.55</td>
+<td style="text-align: right;">0.953</td>
+<td style="text-align: right;">683</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">幂次</td>
+<td style="text-align: left;"><span class="math inline">k=2.0</span>，<span class="math inline">\alpha=0.5</span></td>
+<td style="text-align: right;">1.41</td>
+<td style="text-align: right;">1.19</td>
+<td style="text-align: right;">2.55</td>
+<td style="text-align: right;">0.973</td>
+<td style="text-align: right;">30</td>
+</tr>
+</tbody>
+</table>
+<p>表 59-4 里实测值一律早于解析值，偏差方向一致，原因是实测的到达判据取 <span class="math inline">|s|\le0.05</span> 而不是严格为零。把容差代回各自的解析式，三行都能对上：</p>
+<ul>
+<li>常数律：<span class="math inline">(|s_0|-\epsilon)/k=(2.00-0.05)/1=1.95</span>；</li>
+<li>指数律：<span class="math inline">\frac{1}{\lambda_e}\ln\frac{k+\lambda_e|s_0|}{k+\lambda_e\epsilon}=\frac{1}{1.5}\ln\frac{0.5+3}{0.5+0.075}=1.20</span>；</li>
+<li>幂次律：<span class="math inline">\frac{|s_0|^{1-\alpha}-\epsilon^{1-\alpha}}{k(1-\alpha)}=\frac{\sqrt{2}-\sqrt{0.05}}{1}=1.19</span>。</li>
+</ul>
+<p>三式与实测的差都在一个采样周期以内。这条核对值得养成习惯：<strong>当实测与理论的差可以被“判据容差”完整解释时，说明模型没问题；解释不了，才需要怀疑对象或实现</strong>。</p>
+<p>真正的差别在最后两列。三种到达律的到达时间被拉到同一水平（1.19~1.20 s），但幂次律的尾段总变差只有 30，是常数律的 2.5%，IAE 也低 36%（0.973 对 1.516）。原因是幂次律在接近滑模面时切换幅值随 <span class="math inline">|s|^{0.5}</span> 一起衰减，撞击速度趋零，抖振自然小；常数律是“全速撞墙”，撞击速度就是 <span class="math inline">k</span>，抖振必然大。</p>
+<figure>
+<img src="figs/ch059/fig_059_04_law.svg" alt="图 59-4　三种到达律下的 s(t)：常数律线性下降，指数律与幂次律前段更快、近面更缓" /><figcaption aria-hidden="true">图 59-4　三种到达律下的 s(t)：常数律线性下降，指数律与幂次律前段更快、近面更缓</figcaption>
+</figure>
+<p>图 59-4 把三条 <span class="math inline">s(t)</span> 画在一起。常数律是一条完美的直线，直到撞上零；指数律起点最陡、尾部拖长；幂次律介于两者之间，但在 <span class="math inline">|s|&lt;0.2</span> 之后明显变缓——这一段就是它抖振小的原因。三条线在 1.2 s 附近汇合，说明“到达时间可调”和“撞击速度可调”是两件独立的事，这正是到达律的价值：<strong>把“多快到”和“多狠撞”解耦</strong>。</p>
+<h3 id="等效控制与-filippov-解">59.4.2 等效控制与 Filippov 解</h3>
+<p>到了滑模面上，式 (59-3) 给出的控制量是多少？<span class="math inline">\operatorname{sgn}(0)</span> 没有定义，控制量在 <span class="math inline">\pm k</span> 之间以无限频率跳变。数学上不能直接取极限，要用<strong>Filippov 意义下的解</strong>：把不连续右端在一个邻域内取凸包，再求使 <span class="math inline">\dot s=0</span> 的那个“平均控制”。</p>
+<p>具体做法是设 <span class="math inline">u=u_{\mathrm{eq}}+u_{\mathrm{sw}}</span>，其中 <span class="math inline">u_{\mathrm{sw}}</span> 是高频切换分量，平均为零；<span class="math inline">u_{\mathrm{eq}}</span> 是低频等效分量，负责把状态维持在面上。由 <span class="math inline">\dot s=0</span> 解出</p>
+<p><span class="math display">
+u_{\mathrm{eq}}=\dot v_d+\lambda e_v-v-d
+\tag{59-22}
+</span></p>
+<p>这里 <span class="math inline">\dot v_d</span> 是目标加速度（常值目标时为零），<span class="math inline">-v</span> 来自对象自身的阻尼。本章对象 <span class="math inline">\dot v=-v+u+d</span>，代回得 <span class="math inline">u_{\mathrm{eq}}=(1-\lambda)v_{\mathrm{ref}}-d</span>，与式 (59-4) 一致。</p>
+<p>式 (59-22) 有两个重要含义：</p>
+<ul>
+<li><strong>等效控制含扰动 <span class="math inline">d</span></strong>。<span class="math inline">d</span> 越大，<span class="math inline">u_{\mathrm{eq}}</span> 越大。控制器并不需要知道 <span class="math inline">d</span>，是切换项通过“多推一点、少推一点”自动把平均值调整到了 <span class="math inline">u_{\mathrm{eq}}</span>——这是滑模最精巧的地方，<strong>用高频开关代替了在线辨识</strong>；</li>
+<li><strong>等效控制是低频的</strong>。它只包含目标加速度、误差与扰动，不含切换。工程上可以用低通滤波从实际控制量里提取 <span class="math inline">u_{\mathrm{eq}}</span>，作为扰动观测器使用，这就是“等效控制法”扰动观测（§59.9 会用到）。</li>
+</ul>
+<p>从执行器的角度看，它承受的是 <span class="math inline">u_{\mathrm{eq}}</span> 叠加一个高频方波。方波的幅值是 <span class="math inline">k</span>，频率由采样与执行器带宽决定。电机与液压阀对高频方波的反应都是低通滤波，所以<strong>真正传到机械上的力矩其实是 <span class="math inline">u_{\mathrm{eq}}</span> 加上一点残余纹波</strong>——只要纹波幅值在允许范围内，滑模的强韧性就是“免费”获得的。</p>
+<h3 id="不变性滑动段为什么忘记对象">59.4.3 不变性：滑动段为什么“忘记”对象</h3>
+<p>把 <span class="math inline">u_{\mathrm{eq}}</span> 代回对象方程，会得到一个惊人的结果。以本章对象为例，滑动段上 <span class="math inline">u=u_{\mathrm{eq}}=(1-\lambda)v-d</span>，代入 <span class="math inline">\dot v=-v+u+d</span> 得</p>
+<p><span class="math display">
+\dot v=-v+(1-\lambda)v-d+d=-\lambda v
+\tag{59-23}
+</span></p>
+<p>对象参数、扰动全部消失，只剩 <span class="math inline">\dot v=-\lambda v</span>。再结合滑模面上的 <span class="math inline">v=-\lambda e_p</span>，得 <span class="math inline">\dot e_p=-\lambda e_p</span>，就是式 (59-13)。</p>
+<p>这个性质叫<strong>不变性</strong>（invariance）：<strong>进入滑动模态之后，闭环动态只由滑模面决定，与对象参数、匹配扰动无关</strong>。这不是“鲁棒性很好”的程度问题，而是“完全无关”的结构问题。</p>
+<p>不变性成立需要三个条件，缺一不可：</p>
+<ol type="1">
+<li><strong>到达</strong>：状态真的到了 <span class="math inline">s=0</span> 上，这要求 <span class="math inline">k&gt;D</span> 且时间足够；</li>
+<li><strong>匹配</strong>：扰动与控制同通道，可以用式 (59-11) 检查；</li>
+<li><strong>理想切换</strong>：切换频率足够高，<span class="math inline">u_{\mathrm{eq}}</span> 能被准确合成。</li>
+</ol>
+<p>三个条件里，第一个是设计问题（§59.3 已解决），第二个是对象结构问题（改不了，只能认），第三个是<strong>实现问题</strong>——而现实永远不满足。§59.5 的全部内容，就是研究第三个条件被破坏后会发生什么。</p>
+<p>工程上有个常见的误读：把“不变性”理解成“参数怎么变都不怕”。实际上不变性只在滑动段成立，到达段仍然受参数影响。本章实测（§59.6 表 59-7）显示，对象增益从 1.0 掉到 0.7 时，滑模的调节时间只从 2.53 s 变到 2.77 s，看似“几乎不变”，但那 0.24 s 的差别全部发生在到达段——滑动段的衰减速率依旧是 <span class="math inline">\lambda=2</span>，一分不差。<strong>滑模把参数变化的影响压缩到了到达段</strong>，这是它比 PID 稳的根本原因。</p>
+<h3 id="连续近似从符号函数到饱和函数">59.4.4 连续近似：从符号函数到饱和函数</h3>
+<p>理想切换在连续时间模型里可以存在，在真实控制器里不行。最直接的近似是把 <span class="math inline">\operatorname{sgn}(s)</span> 换成饱和函数：</p>
+<p><span class="math display">
+\operatorname{sat}\!\left(\frac{s}{\phi}\right)=
+\begin{cases}
+s/\phi, &amp; |s|\le\phi\\[2pt]
+\operatorname{sgn}(s), &amp; |s|&gt;\phi
+\end{cases}
+\tag{59-24}
+</span></p>
+<p>代进式 (59-3)，控制律变成</p>
+<p><span class="math display">
+u=(1-\lambda)v-k\operatorname{sat}\!\left(\frac{s}{\phi}\right)
+\tag{59-25}
+</span></p>
+<p>这就是<strong>边界层滑模</strong>。它在 <span class="math inline">|s|&gt;\phi</span> 时与理想滑模完全相同（全速到达），在 <span class="math inline">|s|\le\phi</span> 时退化为线性反馈，增益为 <span class="math inline">k/\phi</span>。<span class="math inline">\phi\to0</span> 时回到理想切换，<span class="math inline">\phi\to\infty</span> 时退化为纯比例控制。</p>
+<p>这个式子是全书里“用一个参数连接两种控制器”的最好例子：<strong><span class="math inline">\phi</span> 是继电与线性的连续插值参数</strong>。§59.5 会用实测说明，<span class="math inline">\phi</span> 从小到大，控制量总变差从 398 掉到 0，稳态误差从 <span class="math inline">8.45\times10^{-4}</span> 升到 <span class="math inline">3.75\times10^{-3}</span>——抖振与精度在这一个参数上直接对抗。</p>
+<p>除了饱和函数，还有两种常用的连续近似：</p>
+<ul>
+<li><strong>双曲正切</strong> <span class="math inline">\tanh(s/\phi)</span>：比 sat 更光滑，<span class="math inline">C^\infty</span> 可微，适合需要求导的场合（如自适应律），但尾部衰减慢，远处达不到满幅；</li>
+<li><strong>S 形函数</strong> <span class="math inline">s/\bigl(|s|+\phi\bigr)</span>：幅值严格小于 1，永远不会饱和到满幅，等效于给切换项加了一个“软限幅”。</li>
+</ul>
+<p>三者选哪个，取决于执行器。电磁阀需要满幅切换，用 sat；伺服电机怕电流突变，用 tanh；液压比例阀本身有死区，用 S 形函数更容易与阀特性匹配。</p>
+<h3 id="连续设计的三个理想假设">59.4.5 连续设计的三个理想假设</h3>
+<p>到这里可以把连续滑模的全部推导收束成一句话：<strong>在“无限快采样、瞬时执行、精确测量”三个假设下，滑模能给出有限时间到达加完全不变性</strong>。这句话的每一半都值得单独记住：</p>
+<ul>
+<li><strong>有限时间到达</strong>是滑模区别于线性控制器的核心。PID 与 LQR 的误差是指数衰减，理论上永不到零；滑模在 <span class="math inline">t_r</span> 时刻<strong>精确</strong>到零。工程上“精确”会被采样和噪声破坏，但“快得不像是渐近的”这个定性优势保留了下来；</li>
+<li><strong>完全不变性</strong>是滑模区别于高增益鲁棒控制的核心。高增益只是把扰动的影响压小，滑模是把匹配扰动<strong>从方程里消掉</strong>。</li>
+</ul>
+<p>三个假设里，第一个（无限快采样）在 §59.5 破坏，第二个（瞬时执行）在 §59.10 破坏，第三个（精确测量）在 §59.11 讨论。<strong>后面每一节，都是在拆掉一个假设之后看滑模还剩什么</strong>。这也是本书处理所有“理想算法”的统一套路：先把理想情形推干净，再一个一个拆假设，每次拆完都用实测数字告诉你损失了多少。</p>
+<h3 id="可达性与边界层解">59.4.6 可达性与“边界层解”</h3>
+<p>式 (59-9) 保证了 <span class="math inline">s</span> 单调趋向零，但没有回答一个问题：<strong>从任意初值出发，是否一定能在有限时间内到达</strong>？有限时间到达的严格证明要用到“边界层解”的概念。</p>
+<p>把时间尺度放大：令 <span class="math inline">\tau=t/\mu</span>，<span class="math inline">\mu</span> 是一个小参数，则 <span class="math inline">\mathrm{d}s/\mathrm{d}\tau=\mu\dot s</span>。当 <span class="math inline">\mu\to0</span> 时，<span class="math inline">\dot s</span> 的方程退化为代数方程 <span class="math inline">-k\operatorname{sgn}(s)+d=0</span>，这在 <span class="math inline">|d|&lt;k</span> 时无解——说明 <span class="math inline">s</span> 无法“瞬间”到零，只能以有限速率逼近。这一段“以有限速率逼近”的过程就是边界层解，它在原时间尺度上对应到达段。</p>
+<p>边界层解告诉了我们两件事：</p>
+<ul>
+<li><strong>到达时间与初值成正比、与 <span class="math inline">k</span> 成反比</strong>，这就是 <span class="math inline">t_r=|s(0)|/k</span> 的来源；</li>
+<li><strong>到达段的轨迹与对象无关</strong>，只由 <span class="math inline">\dot s=-k\operatorname{sgn}(s)+d</span> 决定。所以本章图 59-3 里四个 <span class="math inline">k</span> 的到达段都是直线，区别只在斜率。</li>
+</ul>
+<p>它也解释了一个反直觉的现象：<strong>初值越大，到达时间越长，但滑动段的初始误差也越大</strong>。两者对调节时间的作用相反，这就是式 (59-39) 出现极小值的原因。</p>
+<h3 id="连续滑模怎么模拟出来">59.4.7 连续滑模怎么“模拟”出来</h3>
+<p>真实的功率电路不能输出 <span class="math inline">\pm k</span> 的连续方波，只能用 PWM 或滞环。这两种实现都会改变滑模的等效行为，需要单独分析。</p>
+<p><strong>PWM 实现</strong>：把切换项映射成占空比，</p>
+<p><span class="math display">
+\delta=\frac{1}{2}\left(1+\operatorname{sgn}(s)\right)\in\{0,1\}
+</span></p>
+<p>实际输出是 <span class="math inline">\delta\cdot2k-k</span>，平均值等于 <span class="math inline">k\operatorname{sgn}(s)</span>。由于 PWM 频率固定（通常 10~20 kHz），<span class="math inline">s</span> 在载波周期内的变化被平均掉，等效于把切换频率提高到载波频率。<strong>这是最“干净”的实现</strong>，代价是需要一个载波，且载波频率必须远高于 <span class="math inline">1/T_s</span>。</p>
+<p><strong>滞环实现</strong>：设两个阈值 <span class="math inline">\pm h</span>，<span class="math inline">s&gt;h</span> 时输出 <span class="math inline">-k</span>，<span class="math inline">s&lt;-h</span> 时输出 <span class="math inline">+k</span>，中间保持。这是继电控制的标准形式，切换频率不固定：</p>
+<p><span class="math display">
+f_{\mathrm{sw}}\approx\frac{k}{4h}
+</span></p>
+<p><span class="math inline">h</span> 越小，切换越快，抖振越小，但开关损耗越大。滞环的优点是<strong>不需要载波，响应快</strong>，缺点是<strong>频率随工况变化</strong>，电磁干扰（EMI）的频谱很宽，滤波设计困难。</p>
+<p>两种实现都对应一个“等效边界层”：PWM 的等效 <span class="math inline">\phi</span> 约为载波周期内 <span class="math inline">s</span> 的变化量，滞环的等效 <span class="math inline">\phi</span> 就是 <span class="math inline">h</span>。<strong>所以 §59.5 的准滑动带分析对两种实现都适用</strong>，只是把 <span class="math inline">T_s</span> 换成“实际切换周期”。</p>
+<p>工程选型上有一条经验：<strong>大功率场合用 PWM（频率可控、损耗可控），小功率或气动液压场合用滞环（便宜、响应快）</strong>。两者都不适合的场景是“既要高频又要低损耗”，那只能上谐振或软开关，成本另算。</p>
+<h3 id="等效控制的三个工程用法">59.4.8 等效控制的三个工程用法</h3>
+<p><span class="math inline">u_{\mathrm{eq}}</span> 在推导里只是“维持滑动所需的平均控制量”，到了工程现场它有三个实际用途，都值得单独说。</p>
+<p><strong>第一，判断执行器还有多少余量</strong>。滑模的抗扰能力来自“切换项还能往上顶”，而顶的上限是 <span class="math inline">u_{\max}</span>。若某工况下算出的 <span class="math inline">|u_{\mathrm{eq}}|</span> 已经接近 <span class="math inline">u_{\max}</span>，说明切换项几乎没有余量，此时再加扰动，系统会先饱和、再失效。本章标称工况下 <span class="math inline">v=0</span>、<span class="math inline">d=0</span>，<span class="math inline">u_{\mathrm{eq}}=0</span>；突加 <span class="math inline">d=-1.5</span> 后 <span class="math inline">u_{\mathrm{eq}}=1.5</span>，对 <span class="math inline">u_{\max}=60</span> 只占 2.5%，所以位置只跌 0.0089。<strong>若这台设备的 <span class="math inline">u_{\max}</span> 只有 2，同样的扰动就会让它跌到无法接受</strong>——这就是“余量”的量化含义。</p>
+<p><strong>第二，把“估计扰动”变成“估计控制量”</strong>。由 <span class="math inline">u_{\mathrm{eq}}=(1-\lambda)v-d</span> 反解，<span class="math inline">d=(1-\lambda)v-u_{\mathrm{eq}}</span>。<span class="math inline">v</span> 可测，<span class="math inline">u_{\mathrm{eq}}</span> 可以用低通滤出 <span class="math inline">u</span> 的高频分量得到，于是扰动就被估出来了。这正是 §59.9.5 的 DOB 的最简形式：<strong>不需要额外传感器，只需要一个低通</strong>。它的精度取决于低通的截止频率——太低则跟不上扰动变化，太高则把切换纹波也当成扰动。</p>
+<p><strong>第三，做前馈以减少 <span class="math inline">k</span></strong>。若模型能给出 <span class="math inline">u_{\mathrm{eq}}</span> 的估计，把它前馈进去，切换项就只需覆盖“前馈误差”，<span class="math inline">k</span> 可以降到原来的三分之一到五分之一。代价是引入模型依赖：<strong>前馈越准，滑模越像“模型 + 小切换”；前馈越不准，滑模越退回纯切换</strong>。这条折中在电机伺服里很常见，因为电机的反电势与摩擦都能较准地建模。</p>
+<p>三个用法的共同点是：<strong><span class="math inline">u_{\mathrm{eq}}</span> 是把“不连续的滑模”接回“连续的世界”的接口</strong>。不懂它，滑模就只能当黑箱用；懂了它，才能判断余量、估计扰动、做前馈。</p>
+<h2 id="离散情形">59.5 离散情形</h2>
+<p>§59.4 的第一个假设是“采样无限快”。拆掉它，滑模立刻换了一副面孔：<strong>状态再也到不了 <span class="math inline">s=0</span>，只能在它附近来回跳</strong>。这不是实现不够好，而是数学上的必然。本节把这件事算清楚，并给出两个工程对策——边界层与更密的采样。</p>
+<p>本章所有离散实验取 <span class="math inline">T_s=0.01</span> s，比第 58 章 MPC 的 0.1 s 密 10 倍。原因很直接：MPC 一个采样周期内解一次优化，优化结果在整周期内保持不变是可以接受的；滑模要分辨切换周期，<span class="math inline">T_s</span> 必须小于切换周期本身，否则“看到符号”与“执行反向”之间差了一整个周期，抖振会被放大而不是被抑制。</p>
+<h3 id="抖振的定量图像">59.5.1 抖振的定量图像</h3>
+<p>先看现象。图 59-5 是 6.0~6.4 s 的尾段放大，纵轴是控制量与位置。理想切换下，控制量在两个值之间以采样频率来回跳，位置在目标附近做小幅锯齿运动。</p>
+<figure>
+<img src="figs/ch059/fig_059_05_chatter.svg" alt="图 59-5　尾段放大：理想切换、边界层与超螺旋三种实现的控制量与位置" /><figcaption aria-hidden="true">图 59-5　尾段放大：理想切换、边界层与超螺旋三种实现的控制量与位置</figcaption>
+</figure>
+<p>图 59-5 最值得注意的是控制量的形态：它不是随机噪声，而是<strong>规则的、与采样周期严格同步的方波</strong>。这个特征说明抖振的来源是采样，而不是对象或扰动。诊断时这一点很好用：把 <span class="math inline">T_s</span> 减半，若方波频率跟着翻倍、幅值减半，就能确认是采样引起的准滑动带；若频率不变，则是执行器或延迟在主导。</p>
+<p>表 59-5 是三种实现的量化对比。理想切换与边界层都在本章参数下运行，超螺旋留到 §59.9 讲原理，这里先看数字。</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">实现</th>
+<th style="text-align: right;">控制量 RMS</th>
+<th style="text-align: right;">尾段总变差</th>
+<th style="text-align: right;">速度纹波 (m/s)</th>
+<th style="text-align: right;">IAE</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">理想切换 <span class="math inline">\phi=0</span></td>
+<td style="text-align: right;">2.010</td>
+<td style="text-align: right;">397.99</td>
+<td style="text-align: right;">0.0201</td>
+<td style="text-align: right;">1.035</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">边界层 <span class="math inline">\phi=0.02</span></td>
+<td style="text-align: right;">0.018</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;"><span class="math inline">4.57\times10^{-6}</span></td>
+<td style="text-align: right;">1.0036</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">超螺旋</td>
+<td style="text-align: right;">0.094</td>
+<td style="text-align: right;">3.465</td>
+<td style="text-align: right;">0.00654</td>
+<td style="text-align: right;">0.9469</td>
+</tr>
+</tbody>
+</table>
+<p>理想切换的尾段总变差是 398，边界层是 <strong>0</strong>——不是“小”，是精确的零，因为 <span class="math inline">u</span> 在带内连续变化，不再有跳变。速度纹波从 0.0201 掉到 <span class="math inline">4.57\times10^{-6}</span>，下降四个数量级。而 IAE 不但没变差，反而从 1.035 略降到 1.004：<strong>边界层把抖振本身贡献的那部分误差也一并去掉了</strong>，所谓“用精度换平滑”的代价，在本章这个对象上小到看不出来。</p>
+<p>超螺旋在两者之间取了巧：总变差 3.465，比边界层大但比理想切换小两个数量级；IAE 0.9469 反而是三者最低的。这说明“抖振小”与“精度高”不必对立，关键是把不连续项藏进积分里（§59.9）。</p>
+<h3 id="准滑动带的推导">59.5.2 准滑动带的推导</h3>
+<p>把式 (59-3) 离散化。设第 <span class="math inline">k</span> 拍滑模面为 <span class="math inline">s_k</span>，一拍之内控制量不变，则</p>
+<p><span class="math display">
+s_{k+1}=s_k-T_s k\operatorname{sgn}(s_k)+\underbrace{T_s\dot d_k}_{\text{扰动残余}}
+\tag{59-26}
+</span></p>
+<p>进入滑动段后扰动已被切换项抵消，忽略残余项，取绝对值</p>
+<p><span class="math display">
+|s_{k+1}|=\bigl||s_k|-T_sk\bigr|
+\tag{59-27}
+</span></p>
+<p>这个递推有一个简单的结论：<strong>只要 <span class="math inline">|s_k|&gt;kT_s</span>，下一拍的 <span class="math inline">|s|</span> 就减少 <span class="math inline">kT_s</span>；一旦进入 <span class="math inline">|s|\le kT_s</span>，它就在带内来回跳，再也出不去</strong>。这个带叫<strong>准滑动带</strong>（quasi-sliding band），宽度就是</p>
+<p><span class="math display">
+|s|_{\max}=kT_s
+\tag{59-28}
+</span></p>
+<p>式 (59-28) 就是 §59.3 里的式 (59-15)，此处给了它推导。它的意义是：<strong>离散滑模的精度上限由 <span class="math inline">k</span> 与 <span class="math inline">T_s</span> 的乘积决定，与 <span class="math inline">\lambda</span> 无关，与对象无关，与扰动无关</strong>。想更准，只能减小 <span class="math inline">k</span> 或减小 <span class="math inline">T_s</span>。</p>
+<p>图 59-6 是四组 <span class="math inline">(k,T_s)</span> 组合的实测，横轴 <span class="math inline">kT_s</span>，纵轴实测 <span class="math inline">|s|_{\max}</span>，过原点的 45° 线是理论值。四个点全部落在线上，比值恒为 1.00。</p>
+<figure>
+<img src="figs/ch059/fig_059_06_band.svg" alt="图 59-6　离散准滑动带：实测 |s| 上界与切换增益乘采样周期严格成正比" /><figcaption aria-hidden="true">图 59-6　离散准滑动带：实测 |s| 上界与切换增益乘采样周期严格成正比</figcaption>
+</figure>
+<p>四组数据分别是 <span class="math inline">kT_s=0.0050</span>、<span class="math inline">0.0100</span>、<span class="math inline">0.0201</span>、<span class="math inline">0.0401</span>，对应的实测 <span class="math inline">|s|_{\max}</span> 与它们逐位相同。这条 45° 线是本章最“硬”的一个结论：它不是拟合出来的经验式，而是式 (59-27) 的直接推论，任何满足式 (59-3) 的实现都必须落在上面。</p>
+<p>由式 (59-28) 还能推出一条设计上的硬约束。位置精度的上限是</p>
+<p><span class="math display">
+|e_p|_{\max}=\frac{|s|_{\max}}{\lambda}=\frac{kT_s}{\lambda}
+\tag{59-29}
+</span></p>
+<p>本章 <span class="math inline">k=2</span>、<span class="math inline">T_s=0.01</span>、<span class="math inline">\lambda=2</span>，给出 <span class="math inline">|e_p|_{\max}=0.01</span> m。若要 1 mm 的精度，必须让 <span class="math inline">kT_s/\lambda\le0.001</span>，即 <span class="math inline">kT_s\le0.002</span>——要么 <span class="math inline">T_s</span> 降到 1 ms，要么 <span class="math inline">k</span> 降到 0.4。而 <span class="math inline">k</span> 降不下去（§59.3 的 <span class="math inline">k&gt;D</span>），所以只能改采样。<strong>这就是“滑模精度靠采样撑”的准确含义。</strong></p>
+<h3 id="边界层用连续换抖振">59.5.3 边界层：用连续换抖振</h3>
+<p>式 (59-28) 说精度与 <span class="math inline">kT_s</span> 绑定，但抖振的幅值同样与 <span class="math inline">k</span> 绑定。想同时要“小抖振”与“小误差”，只能改控制律的形状——这就是 §59.4.4 的边界层式 (59-25)。</p>
+<p>带内的动态可以直接算出来。<span class="math inline">|s|\le\phi</span> 时 <span class="math inline">u=(1-\lambda)v-ks/\phi</span>，代入对象得 <span class="math inline">\dot s=-ks/\phi</span>，离散化后</p>
+<p><span class="math display">
+s_{k+1}=\left(1-\frac{kT_s}{\phi}\right)s_k
+\tag{59-30}
+</span></p>
+<p>这是一个一阶线性递推，稳定性条件是 <span class="math inline">0&lt;kT_s/\phi&lt;2</span>，收敛速度由比值</p>
+<p><span class="math display">
+\rho=\frac{kT_s}{\phi}
+\tag{59-31}
+</span></p>
+<p>决定：<span class="math inline">\rho=1</span> 时一拍到位（dead-beat），<span class="math inline">0&lt;\rho&lt;1</span> 时指数收敛但慢，<span class="math inline">1&lt;\rho&lt;2</span> 时振荡收敛，<span class="math inline">\rho\ge2</span> 时发散。</p>
+<p>本章 <span class="math inline">k=2</span>、<span class="math inline">T_s=0.01</span>、<span class="math inline">\phi=0.02</span>，恰好 <span class="math inline">\rho=1</span>。这不是凑出来的，而是 §59.3 里“取 <span class="math inline">\phi=kT_s</span>”这条规则的直接结果。<strong>这条规则的含义是：边界层厚度取成准滑动带宽度，带内恰好一拍到位，既没有残余振荡，也没有多余的滞后。</strong></p>
+<p><span class="math inline">\rho</span> 偏离 1 会怎样？表 59-6 是 <span class="math inline">\phi</span> 从 0 扫到 0.10 的实测（固定 <span class="math inline">k=2</span>、<span class="math inline">T_s=0.01</span>，负载 <span class="math inline">d=-0.15</span>）。</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: right;"><span class="math inline">\phi</span></th>
+<th style="text-align: right;"><span class="math inline">\rho=kT_s/\phi</span></th>
+<th style="text-align: right;">稳态误差</th>
+<th style="text-align: right;">尾段总变差</th>
+<th style="text-align: left;">现象</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">0</td>
+<td style="text-align: right;"><span class="math inline">\infty</span></td>
+<td style="text-align: right;"><span class="math inline">8.45\times10^{-4}</span></td>
+<td style="text-align: right;">370</td>
+<td style="text-align: left;">强抖振，误差被抖振“平均”掉</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">0.01</td>
+<td style="text-align: right;">2.00</td>
+<td style="text-align: right;"><span class="math inline">4.00\times10^{-4}</span></td>
+<td style="text-align: right;">368</td>
+<td style="text-align: left;">临界振荡，误差最小</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">0.02</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;"><span class="math inline">7.51\times10^{-4}</span></td>
+<td style="text-align: right;">0</td>
+<td style="text-align: left;">一拍到位，抖振归零</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">0.05</td>
+<td style="text-align: right;">0.40</td>
+<td style="text-align: right;"><span class="math inline">1.88\times10^{-3}</span></td>
+<td style="text-align: right;">0</td>
+<td style="text-align: left;">收敛变慢，误差上升</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">0.10</td>
+<td style="text-align: right;">0.20</td>
+<td style="text-align: right;"><span class="math inline">3.75\times10^{-3}</span></td>
+<td style="text-align: right;">0</td>
+<td style="text-align: left;">带内增益过小，压不住扰动</td>
+</tr>
+</tbody>
+</table>
+<p>表 59-6 有三处值得停下来看：</p>
+<p>第一，<strong><span class="math inline">\phi=0.01</span> 的稳态误差反而最小</strong>（<span class="math inline">4.00\times10^{-4}</span>），比 <span class="math inline">\phi=0</span> 还小。原因是 <span class="math inline">\rho=2</span> 恰好落在振荡收敛的边界，<span class="math inline">s</span> 在 <span class="math inline">\pm\phi</span> 之间等幅跳，跳动的平均值正好补偿了扰动。这是“用极限环换精度”的典型例子，代价是尾段总变差仍有 368——与 <span class="math inline">\phi=0</span> 的 370 几乎一模一样。<strong>精度不是白来的，是拿抖振换的</strong>。工程上不建议停在这个点上：它对参数太敏感，<span class="math inline">k</span> 稍微变一点就发散。</p>
+<p>第二，<strong><span class="math inline">\phi=0.02</span> 的抖振精确为零</strong>，稳态误差 <span class="math inline">7.51\times10^{-4}</span>，只比最优的 <span class="math inline">\phi=0.01</span> 差不到一倍。这是本章选它作为推荐值的原因：<strong>用一倍不到的精度损失，换来两个数量级的抖振下降</strong>。</p>
+<p>第三，<strong><span class="math inline">\phi</span> 再加大，误差单调上升</strong>。<span class="math inline">\phi=0.10</span> 时带内增益只有 <span class="math inline">k/\phi=20</span>，对抗 <span class="math inline">d=-0.15</span> 的静差约为 <span class="math inline">d\phi/k=7.5\times10^{-3}</span>，与实测 <span class="math inline">3.75\times10^{-3}</span> 同量级（实测更小，因为还有积分式的准滑动带在帮忙）。这时滑模已经退化成“带死区的比例控制”，不变性名存实亡。</p>
+<figure>
+<img src="figs/ch059/fig_059_07_layer.svg" alt="图 59-7　边界层厚度扫描：稳态误差（实测与理论）与尾段总变差随 phi 的变化" /><figcaption aria-hidden="true">图 59-7　边界层厚度扫描：稳态误差（实测与理论）与尾段总变差随 phi 的变化</figcaption>
+</figure>
+<p>图 59-7 用双对数坐标把这两条曲线放在一起：横轴 <span class="math inline">\phi</span>，左轴稳态误差，右轴尾段总变差。误差曲线在 <span class="math inline">\phi=0.01</span> 处有个浅坑，之后按 <span class="math inline">\phi</span> 线性上升；总变差曲线在 <span class="math inline">\phi\ge0.02</span> 处断崖式掉到零。两条曲线的交点就是“性价比最高”的区域，正好落在 <span class="math inline">\phi=0.02</span> 附近。</p>
+<h3 id="离散实现的三个细节">59.5.4 离散实现的三个细节</h3>
+<p>写代码时还有三处容易出错，都会让实测偏离式 (59-28)。</p>
+<p><strong>符号函数的零值处理</strong>。<span class="math inline">\operatorname{sgn}(0)</span> 在多数语言里返回 0，控制量只剩等效项。若系统恰好停在 <span class="math inline">s=0</span> 上且有常值扰动，就会“卡”在那里不动——扰动推一点，<span class="math inline">s</span> 偏离，下一拍才纠正，形成低频爬行。正确做法是把 <span class="math inline">s=0</span> 归入正号或负号（取决于上一次的符号），或者在 <span class="math inline">|s|&lt;\varepsilon</span> 时保持上一拍的控制量。</p>
+<p><strong>滑模面的计算顺序</strong>。<span class="math inline">s</span> 必须用<strong>本拍实际采到的状态</strong>算，不能用上一拍的状态，也不能用本拍算出的控制量反推。这一条看起来是废话，但在“控制量先算、状态后更新”的代码结构里极易搞错，结果是等效地引入了一拍延迟，纹波按 §59.10 的规律放大。</p>
+<p><strong>积分项的引入</strong>。纯滑模没有积分，对抗常值扰动靠的是切换项的平均效应。一旦加了边界层，这个平均效应被线性化，静差就出现了（表 59-6 最后一行）。解决办法是在滑模面里加积分项，构成“积分滑模”：</p>
+<p><span class="math display">
+s=e_v+\lambda e_p+\lambda_i\int e_p\,\mathrm{d}t
+\tag{59-32}
+</span></p>
+<p>积分项把静差压到零，代价是多了一个要整定的 <span class="math inline">\lambda_i</span>，且抗饱和必须单独处理。§59.9 会给出一个更干净的替代方案——用超螺旋的二阶滑模，在不加积分的情况下把静差也压掉。</p>
+<h3 id="离散化方法的选择">59.5.5 离散化方法的选择</h3>
+<p>把连续控制律搬到单片机上有三种常见做法，效果差别不小：</p>
+<ul>
+<li><strong>前向欧拉</strong>：<span class="math inline">s_{k+1}=s_k+T_s\dot s_k</span>，实现最简单，但 <span class="math inline">T_s</span> 稍大就会失稳，式 (59-31) 的稳定域只有 <span class="math inline">0&lt;\rho&lt;2</span>；</li>
+<li><strong>后向欧拉</strong>：用 <span class="math inline">s_{k+1}</span> 计算 <span class="math inline">\dot s</span>，稳定域扩大到全部 <span class="math inline">\rho&gt;0</span>，但需要解隐式方程，对滑模这种非线性右端不划算；</li>
+<li><strong>直接按离散设计</strong>：从式 (59-26) 出发，把 <span class="math inline">k</span> 理解成“每拍能削掉多少 <span class="math inline">s</span>”，而不是连续时间里的斜率。这是本章脚本采用的方式，也是工程上最稳的方式。</li>
+</ul>
+<p>直接按离散设计的最大好处是：<strong>所有性能指标都变成了可以直接算的代数式</strong>。到达拍数 <span class="math inline">N_r=\lceil|s_0|/(kT_s)\rceil</span>，准滑动带 <span class="math inline">kT_s</span>，带内收敛比 <span class="math inline">\rho</span>。三个式子都不含微分方程，写在设计文档里就能评审。</p>
+<p>本章的时域指标（调节时间、IAE）仍按连续口径统计，因为执行机构看到的是连续的位置与速度。这两种口径的换算关系是：<span class="math inline">N_r</span> 拍对应 <span class="math inline">N_rT_s</span> 秒。用这个关系核对 §59.3 的算例：<span class="math inline">|s_0|/(kT_s)=2/0.02=100</span> 拍，即 1.00 s，与实测 0.98 s 一致。</p>
+<h3 id="量化误差第三条精度下界">59.5.6 量化误差：第三条精度下界</h3>
+<p>式 (59-28) 给的是“采样造成的精度下界”，还有一条常被忽略：<strong>编码器量化</strong>。位置分辨率 <span class="math inline">\Delta p</span> 带来速度量化误差</p>
+<p><span class="math display">
+\Delta v\approx\frac{\sqrt{2}\,\Delta p}{T_s}
+\tag{59-33}
+</span></p>
+<p>这个误差直接进滑模面，<span class="math inline">\Delta s\approx\Delta v</span>。它与准滑动带 <span class="math inline">kT_s</span> 叠加，实际精度是两者的均方根：</p>
+<p><span class="math display">
+|s|_{\text{实际}}\approx\sqrt{(kT_s)^2+\left(\frac{\sqrt2\Delta p}{T_s}\right)^2}
+\tag{59-34}
+</span></p>
+<p>式 (59-34) 有一个重要含义：<strong>存在一个最优采样周期</strong>。<span class="math inline">T_s</span> 减小，第一项下降，第二项上升；令两项相等，得</p>
+<p><span class="math display">
+T_s^{*}=\sqrt{\frac{\sqrt2\,\Delta p}{k}}
+\tag{59-35}
+</span></p>
+<p>对 <span class="math inline">\Delta p=1\ \mu</span>m、<span class="math inline">k=2</span>，<span class="math inline">T_s^*\approx0.84</span> ms。本章取 10 ms，远在最优点的右侧——此时精度由准滑动带主导，量化可以忽略。若把 <span class="math inline">T_s</span> 盲目减到 1 ms 以下，量化项会反过来成为主导，<strong>精度不再提高，反而恶化</strong>。</p>
+<p>这正是 §59.7.4 说“<span class="math inline">T_s</span> 不是越小越好”的定量依据。判断自己处在哪一侧的方法很简单：把 <span class="math inline">T_s</span> 减半，若纹波跟着减半，说明在采样主导区；若纹波不降反升，说明已经进入量化主导区。</p>
+<h3 id="直接按离散设计的到达律">59.5.7 直接按离散设计的到达律</h3>
+<p>既然离散实现下 <span class="math inline">s</span> 只能在带内跳，不如干脆按离散设计，让 <span class="math inline">s</span> 在一拍内精确到零。这叫 <strong>dead-beat 到达律</strong>：</p>
+<p><span class="math display">
+s_{k+1}=0\quad\Longrightarrow\quad
+u_k=u_{\mathrm{eq},k}-\frac{s_k}{T_s}
+\tag{59-36}
+</span></p>
+<p>它的含义是“这一拍就把 <span class="math inline">s</span> 清掉”，对应的等效切换幅值是 <span class="math inline">|s_k|/T_s</span>——注意这个幅值随 <span class="math inline">|s_k|</span> 变化，本质上就是 §59.4.1 的幂次到达律（<span class="math inline">\alpha=1</span> 的极端情形）。</p>
+<p>dead-beat 到达律有三个鲜明的特点：</p>
+<ul>
+<li><strong>到达段只有一拍</strong>，比任何连续到达律都快；</li>
+<li><strong>控制量在起始时刻极大</strong>：<span class="math inline">|s_0|/T_s=2/0.01=200</span>，是标称 <span class="math inline">k=2</span> 的 100 倍，几乎必然饱和；</li>
+<li><strong>饱和后性质改变</strong>：控制量一旦被限幅，式 (59-36) 不再成立，实际到达时间退化为 <span class="math inline">|s_0|/u_{\max}</span>。</li>
+</ul>
+<p>所以 dead-beat 律只在“执行器余量很大、且 <span class="math inline">s</span> 的初值很小”的场合可用，典型例子是跟踪问题中的小偏差修正。<strong>在阶跃响应里直接用它是危险的</strong>，本章脚本没有采用，只在 §59.9 的终端滑模部分提到它的连续版本。</p>
+<p>更实用的折中是“<strong>两步到达律</strong>”：</p>
+<p><span class="math display">
+s_{k+1}=\alpha s_k,\qquad 0&lt;\alpha&lt;1
+</span></p>
+<p><span class="math inline">\alpha=0.5</span> 时两拍到零，控制量只有 dead-beat 的一半。<span class="math inline">\alpha</span> 的选择等价于在“快”与“不饱和”之间取折中，工程上常取 <span class="math inline">0.3\sim0.6</span>。</p>
+<h3 id="抖振对执行器的定量负担">59.5.8 抖振对执行器的定量负担</h3>
+<p>抖振不是一个形容词，它能换算成执行器的具体负担。关键在一个很容易被忽略的关系：<strong>每翻转一次符号，控制量就跳变 <span class="math inline">2k</span></strong>。因此尾段总变差与切换次数之间只差一个系数：</p>
+<p><span class="math display">
+N_{\mathrm{sw}}\approx\frac{\mathrm{TV}_{\mathrm{tail}}}{2k}
+\tag{59-37}
+</span></p>
+<p>把实测值代进去，结论相当直观：</p>
+<ul>
+<li>理想切换、<span class="math inline">k=2</span>：<span class="math inline">398/4\approx100</span> 次每秒——正好等于采样频率 100 Hz，也就是<strong>每一拍翻转一次</strong>，这是最坏情况；</li>
+<li>延迟 4 拍：<span class="math inline">42/4\approx10.5</span> 次每秒，约每 9.5 拍才翻转一次。切换次数少了 10 倍，但每次摆幅大了 10 倍，纹波从 0.0201 涨到 0.2049（表 59-11）；</li>
+<li>边界层 <span class="math inline">\phi=0.02</span>：总变差为 0，翻转次数为 0，执行器不再承受周期性冲击。</li>
+</ul>
+<p>这个换算有两个直接用途。</p>
+<p><strong>第一，估寿命</strong>。若执行器是机械触点，额定电气寿命 10 万次，理想切换下 100 次每秒意味着 1000 s 就耗尽——<strong>不到二十分钟</strong>。这就是为什么 §59.10.2 说“用继电器做滑模是最常见的选型错误”：不是性能不够，而是寿命差三个数量级。对 MOSFET 或伺服阀，10 万次的量级完全不同（前者按十亿次计），同样的切换频率就可以接受。</p>
+<p><strong>第二，选滤波与采样</strong>。若已知执行器允许的切换频率上限 <span class="math inline">f_{\max}</span>，则 <span class="math inline">T_s\ge1/f_{\max}</span>，同时 <span class="math inline">k\le\mathrm{TV}_{\mathrm{tail}}/(2f_{\max})</span>。这条约束与 <span class="math inline">k&gt;D</span> 一起，把 <span class="math inline">k</span> 的窗口夹得更窄——<strong>很多时候不是不想加 <span class="math inline">k</span>，而是执行器不允许</strong>。</p>
+<p>顺带说清一个常见误解：抖振的“幅度”与“频次”是两个独立指标，前者决定精度与噪声，后者决定寿命。表 59-11 里延迟增大同时让幅度上升、频次下降，两个指标朝相反方向走，所以任何一个单独的指标都不能代表“抖振变好”或“变坏”。</p>
+<h2 id="稳定性与性能">59.6 稳定性与性能</h2>
+<p>滑模的稳定性分析与其他控制器不太一样：它没有“增益裕度多少 dB”这种说法，因为切换项不是线性增益。判断滑模稳不稳，只看两件事——<strong><span class="math inline">k</span> 是否大于扰动上界</strong>，以及<strong>带内收敛比 <span class="math inline">\rho</span> 是否落在 <span class="math inline">(0,2)</span></strong>。前者保证能到达，后者保证不会在带内振荡发散。</p>
+<p>本节先用这两条把稳定性说清楚，再用三组实测回答一个更实际的问题：<strong>同样面对失配、负载与延迟，滑模比一个整定良好的 PID 强在哪、弱在哪</strong>。这一节的所有对比都用同一对象、同一目标、同一套指标口径，PID 的增益是网格搜索选出来的（Kp=32、Ki=4、Kd=8），不是随手填的。</p>
+<h3 id="稳定性判据两条硬边界">59.6.1 稳定性判据：两条硬边界</h3>
+<p><strong>第一条边界来自到达条件</strong>。由式 (59-9)，只要 <span class="math inline">k&gt;D</span>，<span class="math inline">s\dot s&lt;0</span> 恒成立，<span class="math inline">V=s^2/2</span> 单调下降，有限时间到零。这条判据与对象阶数、参数都无关，只与扰动上界有关。它的工程含义是：<strong>滑模的稳定性是“结构性”的，只要增益压得住扰动就不会失稳</strong>——这一点比线性控制器强，后者要靠相位裕度，而相位裕度会随对象参数漂移。</p>
+<p><strong>第二条边界来自离散化</strong>。由式 (59-30)，带内递推的极点是 <span class="math inline">1-\rho</span>。要求 <span class="math inline">|1-\rho|&lt;1</span>，得 <span class="math inline">0&lt;\rho&lt;2</span>。<span class="math inline">\rho\ge2</span> 时 <span class="math inline">s</span> 在带内等幅或发散振荡，表现为控制量在两个极端值之间来回打，位置出现明显锯齿。</p>
+<p>两条边界对应两种完全不同的失效：</p>
+<ul>
+<li><span class="math inline">k&lt;D</span>：<strong>到不了面</strong>。状态停在半路或缓慢爬行，<span class="math inline">s</span> 恒定不为零，控制量方向对、幅值不够。这种失效很“安静”，容易被误判成“对象太重”；</li>
+<li><span class="math inline">\rho\ge2</span>：<strong>到了面但站不住</strong>。控制量高频大幅跳变，位置抖动，噪声被放大。这种失效很“吵”，容易被误判成“干扰太大”。</li>
+</ul>
+<p>诊断方法很简单：先看 <span class="math inline">s</span> 有没有到零附近，到了就是第二种，没到就是第一种。第二种改 <span class="math inline">\phi</span> 或 <span class="math inline">T_s</span>，第一种只能加 <span class="math inline">k</span>。</p>
+<h3 id="增益的收益与代价">59.6.2 增益的收益与代价</h3>
+<p><span class="math inline">k</span> 同时出现在两条边界里：它必须大于 <span class="math inline">D</span>，又通过 <span class="math inline">\rho=kT_s/\phi</span> 影响带内动态。这决定了 <span class="math inline">k</span> 的可用区间是</p>
+<p><span class="math display">
+D&lt;k&lt;\frac{2\phi}{T_s}
+\tag{59-38}
+</span></p>
+<p>代入本章参数（<span class="math inline">D=1.8</span>、<span class="math inline">\phi=0.02</span>、<span class="math inline">T_s=0.01</span>），区间是 <span class="math inline">1.8&lt;k&lt;4</span>。这个区间不宽——<strong>下界由扰动决定，上界由采样与边界层决定，两头都硬</strong>。表 59-2 里的四个 <span class="math inline">k</span> 正好落在这个区间的两侧：0.5 与 1.0 在区间下方（能到面，但慢），2.0 在区间内，4.0 压在区间上界（快，但抖振大）。</p>
+<figure>
+<img src="figs/ch059/fig_059_08_gain.svg" alt="图 59-8　切换增益的收益与代价：调节时间与 IAE 随 k 下降，尾段总变差随 k 上升" /><figcaption aria-hidden="true">图 59-8　切换增益的收益与代价：调节时间与 IAE 随 k 下降，尾段总变差随 k 上升</figcaption>
+</figure>
+<p>图 59-8 把这条权衡画成双纵轴：左轴是调节时间与 IAE，右轴是尾段总变差。两条下降曲线与一条上升曲线在 <span class="math inline">k\approx2</span> 附近交叉，交点左边“还没调好”，右边“调过头了”。<strong>这个交点就是 <span class="math inline">k</span> 的推荐值</strong>，它由式 (59-38) 的上下界夹出来，不是试出来的。</p>
+<h3 id="模型失配下还剩多少">59.6.3 模型失配下还剩多少</h3>
+<p>滑模最常被引用的优点是“对参数不敏感”。表 59-7 用五个工况检验这句话，SMC 的 <span class="math inline">k</span> 全程固定为 2，PID 的增益全程固定为标称值——两者都不重新整定，这才是公平的失配测试。</p>
+<table style="width:100%;">
+<colgroup>
+<col style="width: 11%" />
+<col style="width: 11%" />
+<col style="width: 11%" />
+<col style="width: 11%" />
+<col style="width: 11%" />
+<col style="width: 11%" />
+<col style="width: 11%" />
+<col style="width: 11%" />
+<col style="width: 11%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">工况</th>
+<th style="text-align: right;">SMC 超调 (%)</th>
+<th style="text-align: right;">SMC <span class="math inline">t_s</span> (s)</th>
+<th style="text-align: right;">SMC IAE</th>
+<th style="text-align: right;">SMC 纹波 (m/s)</th>
+<th style="text-align: right;">PID 超调 (%)</th>
+<th style="text-align: right;">PID <span class="math inline">t_s</span> (s)</th>
+<th style="text-align: right;">PID IAE</th>
+<th style="text-align: right;">PID 纹波 (m/s)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">标称</td>
+<td style="text-align: right;">0.00</td>
+<td style="text-align: right;">2.53</td>
+<td style="text-align: right;">1.035</td>
+<td style="text-align: right;">0.0201</td>
+<td style="text-align: right;">3.17</td>
+<td style="text-align: right;">1.41</td>
+<td style="text-align: right;">0.450</td>
+<td style="text-align: right;"><span class="math inline">2.4\times10^{-4}</span></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">增益 <span class="math inline">-30\%</span></td>
+<td style="text-align: right;">0.00</td>
+<td style="text-align: right;">2.77</td>
+<td style="text-align: right;">1.166</td>
+<td style="text-align: right;">0.0141</td>
+<td style="text-align: right;">6.61</td>
+<td style="text-align: right;">1.56</td>
+<td style="text-align: right;">0.504</td>
+<td style="text-align: right;"><span class="math inline">2.6\times10^{-4}</span></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">时间常数 <span class="math inline">+50\%</span></td>
+<td style="text-align: right;">0.01</td>
+<td style="text-align: right;">2.68</td>
+<td style="text-align: right;">1.132</td>
+<td style="text-align: right;">0.0268</td>
+<td style="text-align: right;">8.80</td>
+<td style="text-align: right;">1.50</td>
+<td style="text-align: right;">0.503</td>
+<td style="text-align: right;"><span class="math inline">2.4\times10^{-4}</span></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">2 拍延迟</td>
+<td style="text-align: right;">0.07</td>
+<td style="text-align: right;">2.65</td>
+<td style="text-align: right;">1.025</td>
+<td style="text-align: right;">0.1218</td>
+<td style="text-align: right;">2.86</td>
+<td style="text-align: right;">1.32</td>
+<td style="text-align: right;">0.448</td>
+<td style="text-align: right;"><span class="math inline">2.4\times10^{-4}</span></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">5 拍延迟</td>
+<td style="text-align: right;">0.43</td>
+<td style="text-align: right;">2.64</td>
+<td style="text-align: right;">1.050</td>
+<td style="text-align: right;">0.2471</td>
+<td style="text-align: right;">1.96</td>
+<td style="text-align: right;">0.55</td>
+<td style="text-align: right;">0.443</td>
+<td style="text-align: right;"><span class="math inline">2.4\times10^{-4}</span></td>
+</tr>
+</tbody>
+</table>
+<p>表 59-7 要横着读，也要竖着读。</p>
+<p><strong>横着读</strong>（看每个控制器自己跨工况的稳定性）：SMC 的超调从 0 变到 0.43%，增加 0.43 个百分点；PID 从 3.17% 变到 8.80%，增加 5.63 个百分点，是 SMC 的 13 倍。SMC 的 <span class="math inline">t_s</span> 变化区间 2.53~2.77 s（±5%），PID 是 1.41~1.56 s（±5%），两者相对变化差不多。<strong>所以“滑模对失配不敏感”这个说法要精确化：它主要体现为超调几乎不随失配变化，而不是所有指标都纹丝不动。</strong></p>
+<p>为什么超调能压住？因为超调发生在到达段结束、刚触面的时候，此时状态被强行拉到 <span class="math inline">s=0</span> 上，轨迹由滑模面接管，与对象参数无关。PID 的超调则由闭环阻尼比决定，对象增益或时间常数一变，阻尼比就变，超调跟着变——这是结构性差异，不是整定能弥补的。</p>
+<p><strong>竖着读</strong>（看同一工况下谁更好）：标称工况 PID 全面领先——<span class="math inline">t_s</span> 1.41 s 对 2.53 s，IAE 0.450 对 1.035，纹波小两个数量级。这不是滑模设计得差，而是<strong>本章的滑模是“一阶滑模 + 纯切换/边界层”，没有积分、没有前馈，用信息量换来了鲁棒性</strong>。PID 用了积分，把稳态误差压到 1.47e-2 的同时也把 IAE 压低了。</p>
+<p>这里要澄清一个常见的对比陷阱。很多人把“滑模的 IAE 比 PID 大”当成滑模的缺点，其实两者优化的目标不同：PID 的目标是“给定模型下的最优跟踪”，滑模的目标是“模型不确定时的轨迹约束”。<strong>在模型准确时滑模一定输，在模型失真时滑模的优势才显出来</strong>。表 59-7 的第三行（时间常数 +50%）就是分水岭：PID 超调跳到 8.80%，SMC 仍是 0.01%。</p>
+<h3 id="负载扰动滑模的看家本领">59.6.4 负载扰动：滑模的看家本领</h3>
+<p>匹配扰动是滑模的主场。图 59-9 是 4 s 时突加负载 <span class="math inline">-1.5</span> 的响应，三条曲线分别是 SMC（<span class="math inline">k=2</span>）、SMC（<span class="math inline">k=0.4</span>）与 PID。</p>
+<figure>
+<img src="figs/ch059/fig_059_09_load.svg" alt="图 59-9　4 s 突加负载 -1.5：滑模 k=2 几乎无扰动，k=0.4 失控漂移，PID 有明显跌落" /><figcaption aria-hidden="true">图 59-9　4 s 突加负载 -1.5：滑模 k=2 几乎无扰动，k=0.4 失控漂移，PID 有明显跌落</figcaption>
+</figure>
+<p>三条曲线的表现差异极大，值得逐条看。</p>
+<p><strong>SMC，<span class="math inline">k=2</span></strong>：位置最低跌到 0.9911，跌幅 0.0089 m，全程没有出 2% 带；4 s 之后稳态误差 <span class="math inline">8.75\times10^{-3}</span>，恢复到 1 m 附近只用了不到一个采样周期的可见过程。扰动被切换项“吃”掉了，位置几乎没感觉到。</p>
+<p><strong>PID</strong>：最低跌到 0.9750，跌幅 0.0250 m，是 SMC 的 2.8 倍；之后积分项慢慢累积，2.44 s 后才回到 2% 带内（6.44 s 时刻）。恢复到稳态后误差 <span class="math inline">1.74\times10^{-2}</span>，比扰动前的 <span class="math inline">-2.38\times10^{-2}</span> 小，说明积分确实在补偿，但补偿得很慢。</p>
+<p><strong>SMC，<span class="math inline">k=0.4</span></strong>：这是最值得看的一条。<span class="math inline">k=0.4&lt;|d|=1.5</span>，到达条件被破坏，位置一路漂到 <span class="math inline">-1.67</span>，8 s 后误差仍有 1.85，完全没有恢复。它不是“响应慢”，而是<strong>失去了滑模的全部性质</strong>：<span class="math inline">s</span> 恒定为正，控制量恒为 <span class="math inline">-0.4</span>，相当于开环加了一个反向恒力。</p>
+<p>这三条曲线把式 (59-9) 的 <span class="math inline">k&gt;D</span> 从公式变成了图像：<strong><span class="math inline">k</span> 只要小于扰动幅值，滑模就不是“性能退化”，而是“性质消失”</strong>。工程上判断 <span class="math inline">k</span> 够不够，最直接的办法就是做一次满载突加试验，看位置有没有超出允许带；超了，先查 <span class="math inline">k</span>，别急着调 PID 那套参数。</p>
+<h3 id="延迟滑模的软肋">59.6.5 延迟：滑模的软肋</h3>
+<p>表 59-7 最后两行暴露了滑模的真正弱点：<strong>延迟</strong>。2 拍延迟（20 ms）让速度纹波从 0.0201 涨到 0.1218，放大 6 倍；5 拍延迟（50 ms）涨到 0.2471，放大 12 倍。同期 PID 的纹波几乎不变（<span class="math inline">2.4\times10^{-4}</span>），超调甚至下降了。</p>
+<p>原因在 §59.5 已经埋下：滑模靠“看到 <span class="math inline">s</span> 的符号就反向”工作，延迟把“看到”与“反向”错开，<span class="math inline">s</span> 在延迟期间继续增长，反向时已经冲过头，于是形成更大幅度的极限环。延迟越大，过冲越大，极限环越宽。这与“准滑动带 <span class="math inline">kT_s</span>”是两回事——后者是采样的几何效应，前者是<strong>相位滞后</strong>，只能靠减小 <span class="math inline">k</span>、加厚边界层或预测补偿来缓解。</p>
+<p>PID 不怕延迟，是因为它的增益低、相位裕度大，20~50 ms 的延迟相对于它的闭环带宽（约 1.5 rad/s）只是个小相位。<strong>这正是“高增益换鲁棒”与“低增益换带宽”的经典权衡</strong>：滑模的等效增益在切换面上是无穷大，对延迟天然敏感。</p>
+<p>工程上的对策有三条，按代价从低到高：</p>
+<ol type="1">
+<li><strong>加厚边界层</strong>：把 <span class="math inline">\phi</span> 增大到 <span class="math inline">2\sim3</span> 倍的 <span class="math inline">kT_s</span>，带内增益下降，对延迟的敏感度随之下降，代价是静差变大；</li>
+<li><strong>降低 <span class="math inline">k</span></strong>：直接减小极限环幅度，但要保证 <span class="math inline">k&gt;D</span>，可调空间有限；</li>
+<li><strong>加预测或观测器</strong>：用 Smith 预测器（第 47 章）或扩张状态观测器补偿纯延迟，把延迟从回路里“挪出去”，这是最彻底的办法，也是实现成本最高的。</li>
+</ol>
+<h3 id="什么时候该选滑模">59.6.6 什么时候该选滑模</h3>
+<p>把 §59.6 的实测收束成一张选择表：</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">场景特征</th>
+<th style="text-align: left;">选 PID</th>
+<th style="text-align: left;">选滑模</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">模型准确、延迟小</td>
+<td style="text-align: left;">是（<span class="math inline">t_s</span> 快 1.8 倍，IAE 低 56%）</td>
+<td style="text-align: left;">否</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">参数大范围漂移</td>
+<td style="text-align: left;">否（超调随失配翻倍）</td>
+<td style="text-align: left;">是（超调几乎不变）</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">突加负载、摩擦大</td>
+<td style="text-align: left;">否（跌落大、恢复慢）</td>
+<td style="text-align: left;">是（<span class="math inline">k&gt;D</span> 时几乎无扰动）</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">存在 20 ms 以上纯延迟</td>
+<td style="text-align: left;">是（纹波不受影响）</td>
+<td style="text-align: left;">否（纹波放大 6~12 倍）</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">执行器怕高频切换</td>
+<td style="text-align: left;">是</td>
+<td style="text-align: left;">需加边界层或高阶滑模</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">需要“精确到零”的有限时间到达</td>
+<td style="text-align: left;">否</td>
+<td style="text-align: left;">是（理论上 <span class="math inline">t_r</span> 有限）</td>
+</tr>
+</tbody>
+</table>
+<p>这张表的读法是“看最痛的那一条”。如果延迟是主要矛盾，滑模要慎用；如果参数漂移与负载突变是主要矛盾，滑模几乎是现成的最优解。两者的组合也有意义——<strong>外环用滑模抗扰、内环用 PID 保带宽</strong>，是伺服行业很常见的结构（第 45 章讲串级控制时会再遇到）。</p>
+<h3 id="用描述函数看抖振">59.6.7 用描述函数看抖振</h3>
+<p>前面所有分析都在时域里做。抖振是一个“自激振荡”，用频域的描述函数法能看得更清楚。</p>
+<p>把符号函数 <span class="math inline">\operatorname{sgn}(s)</span> 在正弦输入 <span class="math inline">s=A\sin\omega t</span> 下的基波提取出来，其描述函数为</p>
+<p><span class="math display">
+N(A)=\frac{4}{\pi A}
+</span></p>
+<p>注意它随幅值 <span class="math inline">A</span> 反比变化：<strong>振幅越小，等效增益越大</strong>。这是非线性系统区别于线性系统的关键——线性系统的增益是常数，非线性系统的“增益”依赖输入幅值。</p>
+<p>极限环的存在条件是闭环特征方程成立：</p>
+<p><span class="math display">
+1+N(A)\,G(j\omega)=0
+\quad\Longrightarrow\quad
+G(j\omega)=-\frac{\pi A}{4}
+</span></p>
+<p>左边是对象的频率特性，右边是负实数轴上的一个点。<span class="math inline">\omega</span> 由相角条件决定，<span class="math inline">A</span> 由幅值条件决定。</p>
+<p>对本章对象 <span class="math inline">G(j\omega)=1/[j\omega(1+j\omega)]</span>，相角是 <span class="math inline">-90°-\arctan\omega</span>，它随 <span class="math inline">\omega</span> 单调趋向 <span class="math inline">-180°</span> 但<strong>永远到不了 <span class="math inline">-180°</span></strong>。这意味着 <span class="math inline">G(j\omega)</span> 不与负实轴相交，描述函数法给出的结论是：<strong>理想继电加这个对象不产生极限环</strong>。</p>
+<p>这个结论与 §59.1 的直观完全一致——连续时间滑模的 <span class="math inline">s</span> 严格为零，本来就不该有振荡。那么实测的 0.0201 纹波从哪来？答案是<strong>采样</strong>。零阶保持与一拍延迟在回路里额外贡献了 <span class="math inline">-\omega T_s</span> 的相位，把相角推过了 <span class="math inline">-180°</span>，于是在接近奈奎斯特频率处出现交点，形成极限环。这解释了一个关键事实：<strong>滑模的抖振不是继电非线性的产物，而是继电非线性加采样滞后的产物</strong>。没有采样滞后，就不会有抖振。</p>
+<p>描述函数法的价值有三点：</p>
+<ul>
+<li><strong>判断抖振是否必然</strong>：连续实现下不必然，离散实现下必然，判据是有没有额外的相位滞后；</li>
+<li><strong>估算幅值与频率</strong>：<span class="math inline">A=\frac{4}{\pi|G(j\omega)|}</span>，在交点频率上直接算；</li>
+<li><strong>指导抑制</strong>：加边界层相当于把 <span class="math inline">N(A)</span> 在 <span class="math inline">A&lt;\phi</span> 时改成常数 <span class="math inline">k/\phi</span>，破坏“增益随幅值变化”的机制，极限环随之消失；减小 <span class="math inline">T_s</span> 则把交点频率推向更高处，那里 <span class="math inline">|G|</span> 更小，幅值随之下降。</li>
+</ul>
+<p>这也解释了为什么边界层能把总变差压到精确的零：<strong>它不是把极限环压小，而是让极限环的存在条件不成立</strong>。</p>
+<h3 id="稳定性怎么数值验证">59.6.8 稳定性怎么数值验证</h3>
+<p>理论判据只有两条（<span class="math inline">k&gt;D</span>、<span class="math inline">0&lt;\rho&lt;2</span>），但工程上仍要做数值验证，因为实际系统总有未建模动态。三种验证手段，成本从低到高：</p>
+<p><strong>第一种，参数扫描</strong>。把 <span class="math inline">k</span> 从 <span class="math inline">0.1D</span> 扫到 <span class="math inline">5D</span>，<span class="math inline">\phi</span> 从 <span class="math inline">0</span> 扫到 <span class="math inline">10kT_s</span>，看有没有工况出现持续振荡。这是本章脚本做的事，两天能跑完，能覆盖大部分参数组合。</p>
+<p><strong>第二种，蒙特卡洛</strong>。在参数空间里随机采样（对象增益、时间常数、延迟、摩擦各取一个分布），跑几千次，统计“不收敛”的比例。这一层能发现“参数扫描漏掉的角落”，比如增益与延迟同时取极值的组合。</p>
+<p><strong>第三种，硬件在环</strong>。把控制器代码跑在目标 MCU 上，对象用实时仿真代替，加入真实的采样抖动、通信延迟与量化。这是投运前的最后一道关，也是唯一能暴露“代码实现问题”的手段。</p>
+<p>三种手段的结论应当一致：<strong>若仿真说稳定、硬件在环说不稳定，问题一定在实现层</strong>（延迟、量化、任务调度），而不是算法层。这个判断能省掉大量“改参数”的无用功。</p>
+<h3 id="一个反例为什么不能只看超调">59.6.9 一个反例：为什么不能只看超调</h3>
+<p>表 59-7 里 SMC 的超调始终接近零，看起来完美。但超调为零有一个副作用：<strong>它掩盖了到达段的激进程度</strong>。</p>
+<p>本章 <span class="math inline">k=2</span> 时，到达段的速度是 2 m/s，而目标只有 1 m，意味着控制器在 1 s 内“冲”过了整个行程。若对象的行程只有 0.1 m，同样的 <span class="math inline">k</span> 会让系统在 0.05 s 内冲到目标，控制量的冲击、机械的冲击都会非常大。此时超调仍然是零，但设备可能已经受损。</p>
+<p>所以评价滑模不能只看超调与调节时间，还要看<strong>到达段的峰值速度与峰值加速度</strong>。这两个量由 <span class="math inline">k</span> 与 <span class="math inline">\lambda</span> 共同决定：</p>
+<p><span class="math display">
+v_{\max}\approx\lambda|e_p(0)|,\qquad a_{\max}\approx k
+</span></p>
+<p>本章 <span class="math inline">v_{\max}\approx2</span> m/s、<span class="math inline">a_{\max}\approx2</span> m/s²，对 1 m 行程是合理的；若行程缩到 0.1 m，同样的参数会让 <span class="math inline">a_{\max}</span> 相对行程显得过大，应当按行程重新缩放 <span class="math inline">k</span>。<strong>滑模的参数是有“行程尺度”的，换设备必须重算，不能照搬。</strong></p>
+<h3 id="为什么滑模几乎不过冲">59.6.10 为什么滑模几乎不过冲</h3>
+<p>表 59-7 里 SMC 的超调是 0.00、0.00、0.01、0.07、0.43 百分比，PID 是 3.17 到 8.80。这个差异不是“调得好”，而是结构决定的，值得把机制讲透。</p>
+<p>到达段结束时 <span class="math inline">s=0</span>，即</p>
+<p><span class="math display">
+e_v=-\lambda e_p
+</span></p>
+<p>这条式子说的是：<strong>当位置误差还剩 <span class="math inline">e_p</span> 时，速度已经被规定为“以 <span class="math inline">\lambda</span> 的速率往回走”</strong>。也就是说，控制器不是“冲过去再刹车”，而是“在到达的瞬间速度已经与剩余距离严格匹配”。剩余距离越小，允许的速度越小，于是状态沿 <span class="math inline">s=0</span> 这条线滑向原点，位置单调逼近目标，没有越过目标的机会。</p>
+<p>对比 PID：PID 的输出只与当前误差有关，不知道“速度应该多大”。它靠微分项间接刹车，而微分项是滞后的，等它起作用时位置已经越过了目标。<strong>超调的本质是“刹车信息来得太晚”，滑模的超调为零，是因为刹车信息不是“算出来的”，而是“写进约束里的”。</strong></p>
+<p>那 0.43% 的超调从哪来？来自延迟。5 拍延迟下，<span class="math inline">s</span> 过零时执行器还在执行 5 拍前的指令，多推了 50 ms，位置因此越过目标一点点。这也解释了为什么失配（增益、时间常数）几乎不影响超调、而延迟影响：<strong>失配改变的是“推力够不够”，延迟改变的是“刹车准不准”</strong>，而超调只与后者有关。</p>
+<p>这个机制也给了一条验收判据：<strong>若实测超调明显大于零，先查延迟，不要先调 <span class="math inline">\lambda</span></strong>。本章的四个失配工况里，超调与延迟拍数几乎一一对应（0 拍 0.00%、2 拍 0.07%、5 拍 0.43%），而增益变化 30% 只让超调从 0 变到 0.00%。</p>
+<h2 id="参数意义">59.7 参数意义</h2>
+<p>§59.3 给了四个参数怎么算，§59.6 给了它们怎么共同决定稳定性与性能。本节把四个参数逐个拆开，说清楚每个参数的<strong>物理量纲、可调范围、以及它和谁耦合</strong>。</p>
+<p>这一节的目的不是再给一遍公式，而是建立一种“看到现象就能反推参数”的直觉。滑模的现场调试之所以难，是因为四个参数的作用互相重叠：抖动可能是 <span class="math inline">k</span> 大，也可能是 <span class="math inline">\phi</span> 小；静差可能是 <span class="math inline">k</span> 小，也可能是 <span class="math inline">\phi</span> 大。只有把每个参数的“专属效应”分清，才能一次调对。</p>
+<h3 id="lambda轨道形状不是增益">59.7.1 <span class="math inline">\lambda</span>：轨道形状，不是增益</h3>
+<p><span class="math inline">\lambda</span> 的量纲是 1/s，物理含义是<strong>滑动段误差衰减速率的倒数</strong>。它不改变控制量的幅值尺度，只改变轨迹的形状——同样的位置误差，<span class="math inline">\lambda</span> 越大，要求的跟踪速度越大，<span class="math inline">s</span> 的绝对值也越大。</p>
+<p>表 59-8 是四组 <span class="math inline">\lambda</span> 的实测，<span class="math inline">k=2</span>、<span class="math inline">T_s=0.01</span>、<span class="math inline">\phi=0</span> 保持不变。</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: right;"><span class="math inline">\lambda</span> (1/s)</th>
+<th style="text-align: right;">超调 (%)</th>
+<th style="text-align: right;">调节时间 (s)</th>
+<th style="text-align: right;">IAE</th>
+<th style="text-align: right;">稳态误差</th>
+<th style="text-align: right;">速度纹波 (m/s)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">0.5</td>
+<td style="text-align: right;">0.08</td>
+<td style="text-align: right;">6.58</td>
+<td style="text-align: right;">1.980</td>
+<td style="text-align: right;"><span class="math inline">6.15\times10^{-3}</span></td>
+<td style="text-align: right;">0.0264</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">1.0</td>
+<td style="text-align: right;">0.00</td>
+<td style="text-align: right;">4.15</td>
+<td style="text-align: right;">1.320</td>
+<td style="text-align: right;"><span class="math inline">1.07\times10^{-2}</span></td>
+<td style="text-align: right;">0.0207</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">2.0</td>
+<td style="text-align: right;">0.00</td>
+<td style="text-align: right;">2.53</td>
+<td style="text-align: right;">1.035</td>
+<td style="text-align: right;"><span class="math inline">5.00\times10^{-3}</span></td>
+<td style="text-align: right;">0.0201</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">4.0</td>
+<td style="text-align: right;">0.00</td>
+<td style="text-align: right;">2.45</td>
+<td style="text-align: right;">1.266</td>
+<td style="text-align: right;"><span class="math inline">2.50\times10^{-3}</span></td>
+<td style="text-align: right;">0.0203</td>
+</tr>
+</tbody>
+</table>
+<p>表 59-8 有两个非单调的地方，都值得解释。</p>
+<p><strong>调节时间在 <span class="math inline">\lambda=2</span> 之后饱和</strong>。<span class="math inline">\lambda</span> 从 2 增到 4，<span class="math inline">t_s</span> 只从 2.53 降到 2.45，改善 3%。原因是调节时间被到达段主导：<span class="math inline">|s(0)|=\lambda</span>，到达时间 <span class="math inline">|s(0)|/k=\lambda/k</span> 随 <span class="math inline">\lambda</span> <strong>线性增加</strong>，而滑动段收敛 <span class="math inline">4/\lambda</span> 随 <span class="math inline">\lambda</span> 减小。两者相加</p>
+<p><span class="math display">
+t_s\approx\frac{\lambda}{k}+\frac{4}{\lambda}
+\tag{59-39}
+</span></p>
+<p>对 <span class="math inline">\lambda</span> 求极小，得 <span class="math inline">\lambda^{*}=2\sqrt{k}=2.83</span>。本章 <span class="math inline">\lambda=2</span> 已经接近这个最优值，再增大只会让到达段变长，抵消滑动段的收益。式 (59-39) 是本章最有用的一个估算式：<strong>它把“<span class="math inline">\lambda</span> 调多大”从试凑变成了求极值</strong>。</p>
+<p><strong>IAE 在 <span class="math inline">\lambda=4</span> 时回升</strong>（1.266 对 1.035）。多出来的误差来自到达段：<span class="math inline">\lambda</span> 大，初始 <span class="math inline">s</span> 大，前 0.5 s 的控制量被切换项占满，位置冲得更快，但一旦对象有延迟或未建模动态，冲得快的那一段就会过冲。本章工况下超调仍是 0，但 IAE 已经把这段“无效冲刺”记了进去。</p>
+<p>λ 的稳态误差一列在 <span class="math inline">\lambda=1</span> 处反而最大（<span class="math inline">1.07\times10^{-2}</span>），这不是规律而是<strong>测量口径的产物</strong>：稳态误差取尾段 1 s 的均值，而尾段仍有准滑动带内的抖动，抖动相位不同，均值就差一个量级。读这一列要看数量级，不要看小数点后第二位。</p>
+<h3 id="k三个身份一个参数">59.7.2 <span class="math inline">k</span>：三个身份，一个参数</h3>
+<p><span class="math inline">k</span> 是四个参数里唯一有“三重身份”的：</p>
+<ul>
+<li><strong>鲁棒性预算</strong>：<span class="math inline">k&gt;D</span> 是硬条件，决定滑模性质是否存在；</li>
+<li><strong>到达速度</strong>：<span class="math inline">t_r=|s(0)|/k</span>，<span class="math inline">k</span> 越大到得越快；</li>
+<li><strong>抖振源</strong>：准滑动带 <span class="math inline">kT_s</span> 与撞击速度都正比于 <span class="math inline">k</span>，<span class="math inline">k</span> 越大抖得越厉害。</li>
+</ul>
+<p>三个身份指向三个不同的方向：鲁棒性要它大，快速性要它大，抖振要它小。这就是为什么 <span class="math inline">k</span> 不能“调优”，只能“夹出来”——用式 (59-38) 的上下界夹。</p>
+<p><span class="math inline">k</span> 的量纲必须与 <span class="math inline">u</span> 一致。这一点在 §59.3 提过，这里补一个换算的例子：若执行器输入是电压 <span class="math inline">u_v</span>，推力 <span class="math inline">u=K_tu_v</span>，控制器里算出的是推力，写进代码前要除以 <span class="math inline">K_t</span>。<span class="math inline">K_t</span> 随温度漂移 10%，等效于 <span class="math inline">k</span> 漂移 10%，在 <span class="math inline">k</span> 贴着下界时足以让滑模失效。</p>
+<h3 id="phi抖振与精度的连续旋钮">59.7.3 <span class="math inline">\phi</span>：抖振与精度的连续旋钮</h3>
+<p><span class="math inline">\phi</span> 的量纲与 <span class="math inline">s</span> 相同，即“速度 + <span class="math inline">\lambda\times</span> 位置”。它不是物理长度，不能直接按“允许误差多少毫米”来填——这一点最容易被误解。</p>
+<p>正确做法是先定 <span class="math inline">\lambda</span>，再由 <span class="math inline">\phi=\lambda|e_p|_{\text{允许}}</span> 折算。本章允许 1 cm 的位置误差，<span class="math inline">\lambda=2</span>，故 <span class="math inline">\phi=0.02</span>。若把 <span class="math inline">\phi</span> 当成“位置误差”直接填 0.01，实际允许的位置误差只有 5 mm，等于把精度指标悄悄收紧了一倍，带内会多出一段不必要的振荡。</p>
+<p><span class="math inline">\phi</span> 与 <span class="math inline">k</span>、<span class="math inline">T_s</span> 通过 <span class="math inline">\rho=kT_s/\phi</span> 耦合，这是 §59.5 已经建立的。<span class="math inline">\rho</span> 的四个区间对应四种行为，可以当成“<span class="math inline">\phi</span> 挡位”来用：</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: right;"><span class="math inline">\rho</span></th>
+<th style="text-align: left;"><span class="math inline">\phi</span> 相对 <span class="math inline">kT_s</span></th>
+<th style="text-align: left;">行为</th>
+<th style="text-align: left;">适用场合</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;"><span class="math inline">\rho\to\infty</span></td>
+<td style="text-align: left;"><span class="math inline">\phi\ll kT_s</span></td>
+<td style="text-align: left;">纯切换，强抖振</td>
+<td style="text-align: left;">只在对精度要求极高、执行器能承受时</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;"><span class="math inline">1&lt;\rho&lt;2</span></td>
+<td style="text-align: left;"><span class="math inline">\phi</span> 略小于 <span class="math inline">kT_s</span></td>
+<td style="text-align: left;">带内振荡收敛</td>
+<td style="text-align: left;">不推荐，参数敏感</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;"><span class="math inline">\rho=1</span></td>
+<td style="text-align: left;"><span class="math inline">\phi=kT_s</span></td>
+<td style="text-align: left;">一拍到位</td>
+<td style="text-align: left;">通用推荐</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;"><span class="math inline">0&lt;\rho&lt;1</span></td>
+<td style="text-align: left;"><span class="math inline">\phi&gt;kT_s</span></td>
+<td style="text-align: left;">带内慢收敛，静差大</td>
+<td style="text-align: left;">执行器怕抖、精度要求低时</td>
+</tr>
+</tbody>
+</table>
+<p>这张表把“<span class="math inline">\phi</span> 该填多少”变成了“<span class="math inline">\rho</span> 该取多少”。工程上默认取 <span class="math inline">\rho=1</span>，只有在执行器特别怕高频（如大惯量液压缸）时才往 <span class="math inline">\rho&lt;1</span> 走。</p>
+<h3 id="t_s精度与算力的交换">59.7.4 <span class="math inline">T_s</span>：精度与算力的交换</h3>
+<p><span class="math inline">T_s</span> 是唯一一个“越小越好”的参数——准滑动带 <span class="math inline">kT_s</span> 随它线性减小，延迟的影响也随它减小。但它有三个下限：</p>
+<ul>
+<li><strong>算力</strong>：每个采样周期要算一次 <span class="math inline">s</span>、一次切换、一次输出，还要跑完整个控制任务。100 Hz 对现代 MCU 很轻松，10 kHz 就开始吃紧；</li>
+<li><strong>执行器带宽</strong>：<span class="math inline">T_s</span> 小于执行器时间常数时，切换指令根本传不出去，等效于加延迟；</li>
+<li><strong>测量噪声</strong>：<span class="math inline">s</span> 里含速度，速度通常由位置差分得到，<span class="math inline">T_s</span> 越小差分噪声越大。噪声进 <span class="math inline">s</span>，<span class="math inline">s</span> 进切换，切换直接放大噪声。</li>
+</ul>
+<p>第三条最容易被忽略。本章对象速度可测，噪声为零；真实伺服里速度多由编码器差分得到，<span class="math inline">T_s</span> 从 0.01 降到 0.001，差分噪声放大 10 倍，<span class="math inline">s</span> 的抖动跟着放大，滑模会把这份噪声原样送进执行器。<strong>这时减小 <span class="math inline">T_s</span> 不但不提精度，还会让抖振变严重</strong>——因为抖振的来源从“采样几何”变成了“测量噪声”。</p>
+<p>正确的做法是给速度加一个一阶低通（截止频率取 <span class="math inline">1/(5T_s)</span> 附近），或者用状态观测器代替差分。代价是引入相位滞后，又回到 §59.6.5 的延迟问题。工程上没有免费的午餐，只有权衡。</p>
+<h3 id="四个参数的耦合图">59.7.5 四个参数的耦合图</h3>
+<p>把四个参数的关系画成一张依赖图，比记四条规则更有效：</p>
+<ul>
+<li><span class="math inline">\lambda</span> 与 <span class="math inline">k</span> 耦合：<span class="math inline">t_s\approx\lambda/k+4/\lambda</span>，<span class="math inline">\lambda</span> 的最优值随 <span class="math inline">k</span> 变；</li>
+<li><span class="math inline">k</span> 与 <span class="math inline">\phi</span> 耦合：<span class="math inline">\rho=kT_s/\phi</span>，<span class="math inline">\phi</span> 要跟着 <span class="math inline">k</span> 变；</li>
+<li><span class="math inline">\phi</span> 与 <span class="math inline">T_s</span> 耦合：同一个 <span class="math inline">\rho</span> 可以由不同的 <span class="math inline">(\phi,T_s)</span> 组合实现；</li>
+<li><span class="math inline">\lambda</span> 与 <span class="math inline">\phi</span> 耦合：<span class="math inline">\phi=\lambda|e_p|_{\text{允许}}</span>，<span class="math inline">\lambda</span> 变了 <span class="math inline">\phi</span> 要重算。</li>
+</ul>
+<p>四条耦合里有三条是“乘积关系”，一条是“和关系”。乘积关系的含义是：<strong>参数不能单独调，只能成组调</strong>。这也是为什么 §59.3 要给一个固定的计算顺序——顺序对了，每一步只需要定一个自由量。</p>
+<h3 id="一组极端参数的实测">59.7.6 一组“极端参数”的实测</h3>
+<p>最后用一组极端参数收尾，看看参数选错时现象有多明确。工况是库仑摩擦 0.30 加对象增益降到 0.6——摩擦是非匹配非线性（方向依赖速度），增益失配是匹配的，两者叠加接近真实的老旧设备。</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">控制器</th>
+<th style="text-align: right;">超调 (%)</th>
+<th style="text-align: right;">调节时间 (s)</th>
+<th style="text-align: right;">IAE</th>
+<th style="text-align: right;">稳态误差</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">滑模 <span class="math inline">k=2.0</span></td>
+<td style="text-align: right;">0.00</td>
+<td style="text-align: right;">3.03</td>
+<td style="text-align: right;">1.379</td>
+<td style="text-align: right;"><span class="math inline">1.19\times10^{-3}</span></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">滑模 <span class="math inline">k=0.2</span></td>
+<td style="text-align: right;">—</td>
+<td style="text-align: right;">未收敛</td>
+<td style="text-align: right;">9.002</td>
+<td style="text-align: right;"><span class="math inline">1.00</span></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">PID</td>
+<td style="text-align: right;">7.21</td>
+<td style="text-align: right;">2.91</td>
+<td style="text-align: right;">0.598</td>
+<td style="text-align: right;"><span class="math inline">1.80\times10^{-2}</span></td>
+</tr>
+</tbody>
+</table>
+<p><span class="math inline">k=0.2</span> 那一行是最有教育意义的：调节时间无法定义（位置从未接近目标），IAE 高达 9.0，稳态误差 1.00——位置停在原点没动。它的控制量恒为 <span class="math inline">\pm0.2</span>，而摩擦是 0.30，推力连静摩擦都克服不了。<strong>这不是“参数偏小”，而是“执行器根本没动”</strong>。</p>
+<p><span class="math inline">k=2.0</span> 在同一工况下调节时间 3.03 s、稳态误差 <span class="math inline">1.19\times10^{-3}</span>，比标称工况只慢了 0.5 s。PID 则是 2.91 s、超调 7.21%、稳态误差 <span class="math inline">1.80\times10^{-2}</span>——<strong>滑模的稳态误差比 PID 小 15 倍，代价是 IAE 大 2.3 倍</strong>。这个对比再次印证 §59.6 的结论：滑模赢在“最终准”，输在“过程快”。</p>
+<h3 id="把参数翻译成工程语言">59.7.7 把参数翻译成工程语言</h3>
+<p>四个参数都是“控制器的语言”，现场工程师更习惯“物理的语言”。两者的对应关系如下：</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">参数</th>
+<th style="text-align: left;">单位</th>
+<th style="text-align: left;">物理含义</th>
+<th style="text-align: left;">工程说法</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><span class="math inline">\lambda</span></td>
+<td style="text-align: left;">1/s</td>
+<td style="text-align: left;">滑动段极点</td>
+<td style="text-align: left;">“触面后几秒到位”</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><span class="math inline">k</span></td>
+<td style="text-align: left;">与控制量同</td>
+<td style="text-align: left;">最大可达加速度</td>
+<td style="text-align: left;">“最多能推多猛”</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><span class="math inline">\phi</span></td>
+<td style="text-align: left;">与 <span class="math inline">s</span> 同</td>
+<td style="text-align: left;">允许的位置带</td>
+<td style="text-align: left;">“允许多大的跟随偏差”</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><span class="math inline">T_s</span></td>
+<td style="text-align: left;">s</td>
+<td style="text-align: left;">切换周期</td>
+<td style="text-align: left;">“开关多久换一次向”</td>
+</tr>
+</tbody>
+</table>
+<p>这张表能直接用于需求评审。客户说“2 s 内到位、误差不超过 1 cm”，翻译过来就是：</p>
+<ul>
+<li>2 s 内到位 → 到达段 1 s、滑动段 1 s → <span class="math inline">k=|s_0|/1</span>、<span class="math inline">\lambda=4/1=4</span>；</li>
+<li>误差不超过 1 cm → <span class="math inline">\phi=\lambda\times0.01=0.04</span>；</li>
+<li>由 <span class="math inline">\rho=1</span> 得 <span class="math inline">T_s=\phi/k</span>。</li>
+</ul>
+<p>若 <span class="math inline">|s_0|=\lambda\times1=4</span>，则 <span class="math inline">k=4</span>、<span class="math inline">T_s=0.01</span> s。这三个数就是全部设计输入，剩下的都是查表。<strong>能把需求直接翻译成参数，是滑模相对于 MPC 的一大优势——MPC 的需求翻译还要经过权重矩阵，滑模不需要。</strong></p>
+<p>反过来的翻译同样有用。现场看到“位置在目标附近以 0.02 m 的幅度、50 Hz 抖动”，可以立刻反推：<span class="math inline">kT_s\approx\lambda\times0.02</span>，若 <span class="math inline">\lambda=2</span> 则 <span class="math inline">kT_s=0.04</span>；50 Hz 说明切换周期约 0.02 s，即 <span class="math inline">T_s=0.02</span>；于是 <span class="math inline">k=2</span>。三个参数一次性估出来，再与代码里的值对照，就能判断是“参数设错”还是“另有延迟”。</p>
+<h3 id="量纲一致性检查">59.7.8 量纲一致性检查</h3>
+<p>滑模的参数最容易出错的地方不是数值，而是<strong>量纲</strong>。四个参数里有两个带对象信息，两个不带：</p>
+<ul>
+<li><span class="math inline">\lambda</span> 的量纲是 1/s，与对象无关，可以直接照搬；</li>
+<li><span class="math inline">T_s</span> 的量纲是 s，与对象无关，可以直接照搬；</li>
+<li><span class="math inline">k</span> 的量纲是控制量，<strong>依赖执行器与传动比</strong>，换设备必须重算；</li>
+<li><span class="math inline">\phi</span> 的量纲是 <span class="math inline">s</span>，即“速度 + <span class="math inline">\lambda\times</span> 位置”，<strong>同时依赖 <span class="math inline">\lambda</span> 与位置单位</strong>，换单位（mm 换 m）要整体缩放。</li>
+</ul>
+<p>量纲检查的做法是“代入一个已知工况，看结果是否合理”。例如把 <span class="math inline">k=2</span>、<span class="math inline">T_s=0.01</span> 代入式 (59-28)，得准滑动带 0.02；若位置的单位是 mm，则 0.02 表示 0.02 mm，比设计意图小 1000 倍，说明 <span class="math inline">\phi</span> 忘了换算。这类错误在跨单位系统的集成中最常见。</p>
+<p>还有一处隐蔽的量纲问题：<strong><span class="math inline">k</span> 与 <span class="math inline">d</span> 必须同量纲</strong>。若扰动是以“力矩”给出的，而 <span class="math inline">k</span> 是“推力”，中间隔着丝杠导程，<span class="math inline">k&gt;D</span> 的比较就没有意义。工程上建议把全部量统一到“执行器输入”这一侧再比较，避免中间换算。</p>
+<h3 id="参数的可解释性是滑模的优势">59.7.9 参数的“可解释性”是滑模的优势</h3>
+<p>与 PID 相比，滑模的四个参数都有明确的物理对应，这一点在工程交付时非常重要：</p>
+<ul>
+<li>PID 的 <span class="math inline">K_p</span>、<span class="math inline">K_i</span>、<span class="math inline">K_d</span> 没有直接物理含义，调参靠经验与试凑，交接时只能给一组数字；</li>
+<li>滑模的 <span class="math inline">\lambda</span>、<span class="math inline">k</span>、<span class="math inline">\phi</span>、<span class="math inline">T_s</span> 都能写成“几秒、多少加速度、多大误差带、多少赫兹”，交接时能连依据一起给。</li>
+</ul>
+<p>这让滑模在“多单位、多设备、长周期维护”的项目里有明显优势：三年后换了维护人员，看到 <span class="math inline">\phi=0.02</span> 并注明“对应 1 cm 位置带”，就能判断这个值是否还合适；而看到 <span class="math inline">K_p=32</span>，通常只能选择“不动它”。</p>
+<p>当然，可解释性不等于正确性。参数有物理含义，不代表这组参数一定适配当前设备——<strong>物理含义只帮你判断“大概在哪个量级”，具体值仍要按 §59.3 的流程算、按 §59.8 的方法验</strong>。</p>
+<h3 id="每个参数的失效阈值长什么样">59.7.10 每个参数的失效阈值长什么样</h3>
+<p>四个参数偏离合理值时，现象并不相同。把“失效阈值”列清楚，现场就能靠现象定位到参数，而不是挨个试：</p>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">参数</th>
+<th style="text-align: left;">偏小的现象</th>
+<th style="text-align: left;">偏大的现象</th>
+<th style="text-align: left;">阈值判据</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><span class="math inline">\lambda</span></td>
+<td style="text-align: left;">到位后拖尾长，<span class="math inline">t_s</span> 随 <span class="math inline">\lambda</span> 近似反比增大</td>
+<td style="text-align: left;">前段冲得猛，IAE 回升，延迟下更易过冲</td>
+<td style="text-align: left;"><span class="math inline">\lambda&lt;k/4</span> 时到达段占比过小，<span class="math inline">t_s</span> 被滑动段主导</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><span class="math inline">k</span></td>
+<td style="text-align: left;"><span class="math inline">k&lt;D</span> 时彻底不动或漂移；<span class="math inline">k</span> 略大于 <span class="math inline">D</span> 时抗扰差</td>
+<td style="text-align: left;">准滑动带 <span class="math inline">kT_s</span> 变宽，纹波线性增大</td>
+<td style="text-align: left;"><span class="math inline">k&gt;2\phi/T_s</span> 时带内无法收敛</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><span class="math inline">\phi</span></td>
+<td style="text-align: left;"><span class="math inline">\rho\ge2</span> 时带内等幅振荡，尾段总变差不为零</td>
+<td style="text-align: left;"><span class="math inline">\rho\ll1</span> 时静差按 <span class="math inline">d\phi/k</span> 上升</td>
+<td style="text-align: left;"><span class="math inline">\phi&lt;kT_s/2</span> 与 <span class="math inline">\phi&gt;10kT_s</span> 是两端</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><span class="math inline">T_s</span></td>
+<td style="text-align: left;">算力与噪声压力上升，纹波未必下降</td>
+<td style="text-align: left;">准滑动带按 <span class="math inline">kT_s</span> 变宽，延迟占比上升</td>
+<td style="text-align: left;"><span class="math inline">T_s</span> 大于执行器时间常数的 1/5 时切换传不出去</td>
+</tr>
+</tbody>
+</table>
+<p>这张表的价值在于<strong>把“现象”与“参数”双向对上</strong>。正向用是调试：看到尾段总变差不为零，先查 <span class="math inline">\phi</span> 是不是小于 <span class="math inline">kT_s</span>；反向用是验收：知道 <span class="math inline">\phi</span> 的可用区间是 <span class="math inline">[kT_s/2,\,10kT_s]</span>，就不会有人把它填成 0.001 或 1.0。</p>
+<p>需要提醒的是，四个阈值不是独立的。<span class="math inline">\lambda</span> 的判据里含 <span class="math inline">k</span>，<span class="math inline">k</span> 的判据里含 <span class="math inline">\phi</span>，<span class="math inline">\phi</span> 的判据里含 <span class="math inline">T_s</span>——<strong>这也是为什么本节反复强调“成组调”</strong>。真正独立的自变量只有两个：<span class="math inline">k</span>（由扰动定）与 <span class="math inline">T_s</span>（由硬件定），另外两个是应变量。</p>
+<h3 id="换设备时怎么缩放">59.7.11 换设备时怎么缩放</h3>
+<p>把本章参数照搬到另一台设备上，几乎一定不合适。但“重算”不等于“从零开始”，有三条缩放律可以直接用：</p>
+<p><strong>第一条，速度尺度缩放 <span class="math inline">\lambda</span> 与 <span class="math inline">k</span></strong>。若新设备的行程是原来的 <span class="math inline">\alpha</span> 倍、要求的时间不变，则平均速度与加速度都放大 <span class="math inline">\alpha</span> 倍，于是 <span class="math inline">\lambda\to\alpha\lambda</span>、<span class="math inline">k\to\alpha k</span>。本章行程 1 m、<span class="math inline">\lambda=2</span>、<span class="math inline">k=2</span>；换到 2 m 行程，取 <span class="math inline">\lambda=4</span>、<span class="math inline">k=4</span>。这条律的物理依据是 <span class="math inline">v_{\max}\approx\lambda|e_0|</span> 与 <span class="math inline">a_{\max}\approx k</span> 都是“每单位位置误差”的量。</p>
+<p><strong>第二条，增益缩放 <span class="math inline">k</span></strong>。若新对象的控制增益只有原来的 <span class="math inline">g</span> 倍，同样的控制量产生的加速度也只有 <span class="math inline">g</span> 倍，因此 <span class="math inline">k\to k/g</span>。本章增益 1.0，换到增益 0.6 的对象，<span class="math inline">k</span> 应从 2 提到 3.3。表 59-7 的失配实验给了旁证：增益 <span class="math inline">-30\%</span> 时滑模仍能收敛，但 <span class="math inline">t_s</span> 从 2.53 拖到 2.77——<strong>没重算 <span class="math inline">k</span> 的代价就是这 0.24 s</strong>。</p>
+<p><strong>第三条，<span class="math inline">\phi</span> 由前两者合成</strong>。<span class="math inline">\phi=\lambda|e_p|_{\text{允许}}</span>，所以 <span class="math inline">\phi</span> 随 <span class="math inline">\lambda</span> 线性缩放；若精度指标也随行程同比放宽，则 <span class="math inline">\phi</span> 还要再乘一个 <span class="math inline">\alpha</span>，总共是 <span class="math inline">\alpha^2</span>。这条最容易漏，因为“精度”通常写在需求里而不是参数表里。</p>
+<p>三条律用完，还要回到 <span class="math inline">\rho=kT_s/\phi</span> 检查一遍。缩放之后 <span class="math inline">\rho</span> 往往不再是 1，需要同步调整 <span class="math inline">T_s</span> 或 <span class="math inline">\phi</span>——<strong>这是“重算”与“照搬”之间唯一必须手工做的一步</strong>。</p>
+<h2 id="调参方法">59.8 调参方法</h2>
+<p>§59.3 讲的是“从零设计”，本节讲的是“在既有设备上调”。两者面对的信息不同：设计时知道 <span class="math inline">D</span> 的估计值，调试时只有一条能测的曲线。所以调参不是重算一遍公式，而是<strong>用现象去校验假设</strong>。</p>
+<p>调参的目标只有三个，按优先级排：先保证“能到面”（<span class="math inline">k&gt;D</span>），再保证“站得住”（<span class="math inline">0&lt;\rho&lt;2</span>），最后才是“多快多准”（<span class="math inline">\lambda</span>、<span class="math inline">T_s</span>）。顺序不能反——前两个不满足时，调后两个只会越调越乱。</p>
+<h3 id="一次只动一个参数">59.8.1 一次只动一个参数</h3>
+<p>滑模的四个参数耦合很强，但同时动两个就分不清是谁的影响。标准做法是固定三个、扫一个，扫描范围取“该参数上下各一个数量级”：</p>
+<ol type="1">
+<li><strong>固定 <span class="math inline">\lambda=2</span>、<span class="math inline">\phi=0.02</span>、<span class="math inline">T_s=0.01</span>，扫 <span class="math inline">k</span></strong>：从 0.2 扫到 8，记录 <span class="math inline">s</span> 的到达时刻、<span class="math inline">t_s</span>、纹波。这一步定 <span class="math inline">k</span> 的下界与抖振上界，对应表 59-2 与图 59-8；</li>
+<li><strong>固定刚选好的 <span class="math inline">k</span>，扫 <span class="math inline">\phi</span></strong>：从 0 扫到 <span class="math inline">10kT_s</span>，记录稳态误差与尾段总变差。这一步定 <span class="math inline">\rho</span>，对应表 59-6 与图 59-7；</li>
+<li><strong>固定 <span class="math inline">k</span>、<span class="math inline">\phi</span>，扫 <span class="math inline">\lambda</span></strong>：从 0.5 扫到 4，记录 <span class="math inline">t_s</span> 与 IAE。这一步校验式 (59-39) 的最优值，对应表 59-8；</li>
+<li><strong>最后扫 <span class="math inline">T_s</span></strong>：只在该参数影响到噪声或算力时才动，且每次只改一档。</li>
+</ol>
+<p>四步做完，四个参数的合法区间就都有了，取交集即可。<strong>这个流程的价值不在于找到“最优点”，而在于知道“每个参数偏离最优点多少还能接受”</strong>——现场工况会漂移，只有知道余量才敢投运。</p>
+<h3 id="现象到参数的对照">59.8.2 现象到参数的对照</h3>
+<p>现场调试最花时间的是“看现象猜参数”。表 59-9 把常见现象、最可能的参数原因与处置办法列在一起，按“先查什么”排序。</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">现象</th>
+<th style="text-align: left;">首要嫌疑</th>
+<th style="text-align: left;">次要嫌疑</th>
+<th style="text-align: left;">处置</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">位置停在半路不动</td>
+<td style="text-align: left;"><span class="math inline">k&lt;D</span>（静摩擦）</td>
+<td style="text-align: left;">执行器限幅</td>
+<td style="text-align: left;">加大 <span class="math inline">k</span> 至 <span class="math inline">1.2D</span> 以上；核对推力换算</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">到位后持续小幅锯齿</td>
+<td style="text-align: left;"><span class="math inline">\rho\ge1</span>（<span class="math inline">\phi</span> 偏小）</td>
+<td style="text-align: left;">速度测量噪声</td>
+<td style="text-align: left;">把 <span class="math inline">\phi</span> 加到 <span class="math inline">kT_s</span>；给速度加低通</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">控制量在 <span class="math inline">\pm k</span> 之间满幅跳</td>
+<td style="text-align: left;"><span class="math inline">\phi=0</span> 或过小</td>
+<td style="text-align: left;"><span class="math inline">T_s</span> 过大</td>
+<td style="text-align: left;">启用边界层；减小 <span class="math inline">T_s</span></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">大误差时反而慢</td>
+<td style="text-align: left;"><span class="math inline">k</span> 偏小</td>
+<td style="text-align: left;">到达律太保守</td>
+<td style="text-align: left;">加 <span class="math inline">k</span> 或改幂次到达律</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">接近目标时爬行</td>
+<td style="text-align: left;"><span class="math inline">\phi</span> 过大，带内增益低</td>
+<td style="text-align: left;">摩擦死区</td>
+<td style="text-align: left;">减小 <span class="math inline">\phi</span> 或加积分滑模</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">突加负载后缓慢恢复</td>
+<td style="text-align: left;"><span class="math inline">k</span> 不足或 <span class="math inline">\phi</span> 过大</td>
+<td style="text-align: left;">无非匹配补偿</td>
+<td style="text-align: left;">加 <span class="math inline">k</span>、减小 <span class="math inline">\phi</span>、加积分</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">负载撤除后误差不回零</td>
+<td style="text-align: left;">非匹配扰动</td>
+<td style="text-align: left;">传感器零漂</td>
+<td style="text-align: left;">改滑模面、加积分、查标定</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">延迟增大后纹波暴涨</td>
+<td style="text-align: left;">相位滞后</td>
+<td style="text-align: left;"><span class="math inline">k</span> 偏大</td>
+<td style="text-align: left;">加厚 <span class="math inline">\phi</span>、减 <span class="math inline">k</span>、加预测</td>
+</tr>
+</tbody>
+</table>
+<p>表 59-9 的第一行与最后一行是“死区”和“爆炸”两端，中间六行是渐变。<strong>现场判断时先看是不是第一行</strong>：位置完全不动，任何调参都没用，必须先解决推力不足。这一步跳过去，后面所有调试都是在错误的假设上打转。</p>
+<h3 id="三个常见陷阱">59.8.3 三个常见陷阱</h3>
+<p><strong>只看 IAE 一个指标</strong>。IAE 会把“过程快但抖”和“过程慢但稳”算成差不多的数。本章 <span class="math inline">k=0.5</span> 与 <span class="math inline">k=4</span> 的 IAE 差 3 倍，但纹波差 7 倍——如果只看 IAE，会误以为 <span class="math inline">k=4</span> 更好。正确的做法是至少看三个指标：<span class="math inline">t_s</span>（快不快）、IAE（准不准）、尾段总变差（抖不抖）。</p>
+<p><strong>只看位置不看控制量</strong>。位置经过对象的一阶滤波，高频抖振被滤掉了，从位置曲线上看不出控制量在满幅跳。<strong>调试时必须同时录控制量</strong>，否则会得出“运行很平稳”的错误结论，而执行器已经在以 100 Hz 满幅换向，寿命按周计。</p>
+<p><strong>在噪声大的信号上调 <span class="math inline">T_s</span></strong>。<span class="math inline">T_s</span> 减半，准滑动带减半，看起来精度提高；但如果速度是差分得到的，噪声同时翻倍，<span class="math inline">s</span> 的抖动变大，实际精度可能反而下降。判断方法：把 <span class="math inline">T_s</span> 减半后看控制量的总变差，若总变差上升，说明噪声已经主导，不要再减。</p>
+<h3 id="从-pid-改造为滑模">59.8.4 从 PID 改造为滑模</h3>
+<p>现场大多数设备已经有一套能跑的 PID。改造成滑模时，不要推翻重来，按下面五步做增量替换：</p>
+<ol type="1">
+<li><strong>保留原有的滤波、限幅、死区补偿</strong>。这些是设备相关的，与控制器结构无关，扔掉会引入新问题；</li>
+<li><strong>把 PID 的输出当作“等效控制”的参考</strong>，先只加切换项：<span class="math inline">u=u_{\mathrm{PID}}-k\operatorname{sgn}(s)</span>。这样即使滑模部分有问题，系统还有 PID 兜底；</li>
+<li><strong>逐步加大 <span class="math inline">k</span></strong>，直到突加负载时位置不跌落。此时的 <span class="math inline">k</span> 就是实际需要的下界；</li>
+<li><strong>加边界层</strong>，把 <span class="math inline">k</span> 固定，<span class="math inline">\phi</span> 从 <span class="math inline">kT_s</span> 开始往上调，直到控制量的总变差落到执行器允许范围；</li>
+<li><strong>最后再考虑撤掉 PID 的积分</strong>。若稳态误差已经由滑模压住，积分可以去掉；若去不掉，说明存在非匹配扰动，保留积分反而更稳。</li>
+</ol>
+<p>这个路径的好处是<strong>每一步都可回退</strong>。滑模最怕的是“一上来就把 PID 换掉，结果抖得没法用，又不知道是哪一步错了”。</p>
+<h3 id="验收三条曲线一起看">59.8.5 验收：三条曲线一起看</h3>
+<p>调参结束后，用三条曲线做验收，缺一条都不算完：</p>
+<ul>
+<li><strong><span class="math inline">s(t)</span></strong>：必须在预期时刻进入准滑动带，且之后不再大幅离开。这条曲线直接反映“到没到面”；</li>
+<li><strong><span class="math inline">u(t)</span></strong>：尾段的峰峰值与切换频次要在执行器规格内。这条曲线反映“执行器受不受得了”；</li>
+<li><strong><span class="math inline">y(t)</span></strong>：阶跃响应与负载扰动响应都要看。这条曲线反映“用户满不满意”。</li>
+</ul>
+<p>三条曲线对应三类失效：<span class="math inline">s</span> 不进带是 <span class="math inline">k</span> 不够，<span class="math inline">u</span> 太猛是 <span class="math inline">\phi</span> 太小，<span class="math inline">y</span> 不满意是 <span class="math inline">\lambda</span> 或 <span class="math inline">T_s</span> 不合适。有了这个映射，验收就不需要“感觉”，只需要对照。</p>
+<p>最后提醒一句：<strong>滑模的调参结果比其他控制器更依赖工况</strong>。同一组参数，空载与满载、冷机与热机、新导轨与旧导轨，表现可能差一倍。所以投运前至少要在“最轻载”与“最重载”两个端点各验一次，中间工况才能放心。</p>
+<h3 id="从一条阶跃响应反推四个参数">59.8.6 从一条阶跃响应反推四个参数</h3>
+<p>现场常常拿不到对象模型，只有一条录下来的阶跃响应。这时可以反过来做：<strong>先假设控制器里已经是本章这套结构，再从曲线上的四个特征量把参数估出来</strong>。这套反推不能替代设计，但能让你在十分钟内判断“现有参数离谱到什么程度”。</p>
+<p>以本章的标称响应为例（<span class="math inline">t_s=2.53</span> s、<span class="math inline">t_{\mathrm{reach}}\approx0.98</span> s、速度纹波 0.0201、负载跌落 0.0089），四个特征量与四个参数的对应关系如下：</p>
+<ol type="1">
+<li><strong>到达段的斜率给 <span class="math inline">k</span></strong>。<span class="math inline">s</span> 从 <span class="math inline">s(0)=-\lambda</span> 线性爬到零，斜率就是 <span class="math inline">k</span>，所以 <span class="math inline">k\approx\lambda|e_0|/t_{\mathrm{reach}}=2\times1/0.98=2.04</span>，与真值 2.0 差 2%。注意这条只在大误差段成立，<span class="math inline">|e|</span> 小于 0.2 之后曲线会被 <span class="math inline">\lambda</span> 主导；</li>
+<li><strong>滑动段的尾时间给 <span class="math inline">\lambda</span></strong>。进入滑模面后 <span class="math inline">e</span> 按 <span class="math inline">e^{-\lambda t}</span> 衰减，落到 2% 需要约 <span class="math inline">3.9/\lambda</span>。实测 <span class="math inline">t_s-t_{\mathrm{reach}}=2.53-0.98=1.55</span>，反推 <span class="math inline">\lambda\approx3.9/1.55=2.52</span>，比真值 2.0 高 26%。偏差来自上升段也占了一部分时间，工程上取 <span class="math inline">\lambda\approx3/(t_s-t_{\mathrm{reach}})</span> 更稳，得 1.94；</li>
+<li><strong>控制量的方波幅值给 <span class="math inline">k</span>，方波周期给 <span class="math inline">T_s</span></strong>。若录到的 <span class="math inline">u</span> 是幅值恒为 <span class="math inline">k</span> 的方波，幅值直接读出 <span class="math inline">k</span>；相邻两次换向的间隔就是 <span class="math inline">2T_s</span>（一个周期内跨两次带）；</li>
+<li><strong>稳态误差的形态给 <span class="math inline">D</span> 与 <span class="math inline">\phi</span> 的关系</strong>。若误差随负载线性增长，说明在边界层内，斜率是 <span class="math inline">\phi/k</span>；若误差与负载无关但控制量在跳，说明 <span class="math inline">\phi=0</span>，误差被抖振平均掉了。本章 <span class="math inline">\phi=0</span> 时稳态误差 <span class="math inline">8.45\times10^{-4}</span>、<span class="math inline">\phi=0.02</span> 时 <span class="math inline">7.51\times10^{-4}</span>，两者同量级，正是这个道理。</li>
+</ol>
+<p>反推出来的四个数与真值对不上是正常的，因为每条特征量都混入了别的参数的影响。<strong>反推的价值是给出量级和“哪个参数明显错了”</strong>：如果由斜率算出的 <span class="math inline">k</span> 比设定值小一半，那基本可以断定执行器限幅或推力换算有问题，而不是控制器写错了。</p>
+<h3 id="一次完整的调试记录">59.8.7 一次完整的调试记录</h3>
+<p>把上面五步串起来，看一次真实的调试应该长什么样。场景是一台行程 0.5 m 的单轴位置台，要求 2 s 内到位、定位误差小于 1 mm，负载在运行中会被突然加上（相当于 <span class="math inline">d=-1.5</span> 的常值扰动）。台上原本跑着一套 PID（<span class="math inline">K_p=32</span>、<span class="math inline">K_i=4</span>、<span class="math inline">K_d=8</span>，微分作用于测量值）。</p>
+<p><strong>第一轮：先量基线</strong>。PID 的阶跃响应：超调 3.17%，调节时间 1.41 s，稳态误差 <span class="math inline">1.47\times10^{-2}</span>。单看阶跃，PID 比滑模还快——这一点必须先认清，否则后面的改造会失去参照。真正的问题在负载段：突加负载后位置最低跌到 0.975，也就是跌了 25 mm，要 6.44 s 才回到 2% 带内。<strong>用户抱怨的“加负载就垮”，PID 确实存在</strong>。</p>
+<p><strong>第二轮：只加切换项</strong>。保留 PID 全部结构，输出叠加 <span class="math inline">-k\operatorname{sgn}(s)</span>，<span class="math inline">k</span> 从 0.2 起每档翻倍。<span class="math inline">k=0.4</span> 时情况反而更糟：稳态误差 2.40，位置甚至反向跑到 <span class="math inline">-1.67</span>，因为切换项不足以压住扰动，却把 PID 的输出搅乱了。<span class="math inline">k=2</span> 时负载跌落降到 0.0089（8.9 mm），恢复时间进入一个采样周期的量级。<strong>这一轮定下了 <span class="math inline">k</span> 的下界：2.0，也就是扰动量级 1.5 的 1.3 倍</strong>。</p>
+<p><strong>第三轮：加边界层</strong>。<span class="math inline">k</span> 固定 2.0，<span class="math inline">\phi</span> 从 <span class="math inline">kT_s=0.02</span> 起调。<span class="math inline">\phi=0.02</span> 时尾段总变差从 398 掉到 0，稳态误差 <span class="math inline">7.51\times10^{-4}</span>，仍在 1 mm 要求内。<strong>这一轮定下了 <span class="math inline">\phi</span>：0.02，恰好是 <span class="math inline">\rho=1</span> 的挡位</strong>。</p>
+<p><strong>第四轮：扫 <span class="math inline">\lambda</span></strong>。<span class="math inline">\lambda=1</span> 时 <span class="math inline">t_s=4.15</span> s，超时；<span class="math inline">\lambda=2</span> 时 2.53 s，达标；<span class="math inline">\lambda=4</span> 时 2.45 s，但 IAE 从 1.035 升到 1.266。<strong>这一轮定下了 <span class="math inline">\lambda=2</span>：再大只快 0.08 s，却要多付 22% 的 IAE</strong>。</p>
+<p><strong>第五轮：撤 PID</strong>。把 PID 的积分去掉，只留切换项与边界层，重跑负载实验：稳态误差没有变化，说明积分确实不再需要。到这一步，控制器才真正变成纯滑模，参数也就四项：<span class="math inline">k=2</span>、<span class="math inline">\lambda=2</span>、<span class="math inline">\phi=0.02</span>、<span class="math inline">T_s=0.01</span>。</p>
+<p>这次记录里有三个数字值得记住：<span class="math inline">k</span> 从 0.4 加到 2.0 才压住扰动（<strong>下界由扰动定，不由响应速度定</strong>）；<span class="math inline">\lambda</span> 从 2 加到 4 只换来 0.08 s（<strong>响应速度的边际收益在 <span class="math inline">\lambda=2</span> 之后迅速递减</strong>）；PID 的阶跃比滑模快，但负载段差一个量级（<strong>比较必须在同一工况下做</strong>）。</p>
+<h3 id="调参记录该留下什么">59.8.8 调参记录该留下什么</h3>
+<p>调参过程如果不记录，三个月后设备一换型就得重来。至少要留下五样东西，缺一样都会导致无法复现：</p>
+<ul>
+<li><strong>对象信息</strong>：增益、时间常数、采样周期、执行器行程与最大推力。本章对应 1.0、1.0 s、0.01 s、<span class="math inline">\pm60</span>；</li>
+<li><strong>四参数与定标依据</strong>：每个参数后面写清“按什么定的”，例如“<span class="math inline">k=2</span>，按 <span class="math inline">d=1.5</span> 的 1.3 倍”；</li>
+<li><strong>三条验收曲线</strong>：<span class="math inline">s(t)</span>、<span class="math inline">u(t)</span>、<span class="math inline">y(t)</span> 各存一张图，图上标明工况（空载/满载、冷机/热机）；</li>
+<li><strong>失效复现条件</strong>：把“<span class="math inline">k</span> 降到 0.4 会反向跑”这类结论写进去，它比“参数是多少”更有价值——<strong>下次有人想省点推力，这段记录能拦住他</strong>；</li>
+<li><strong>未解决项</strong>：例如“延迟增加到 4 拍时纹波 0.205，尚未处理”，明确留给下一轮。</li>
+</ul>
+<p>这五样东西合起来是一张“参数卡”。它的作用不是存档，而是<strong>让下一次改动有对照</strong>：任何一次改动之后，只要三条曲线的三个指标没有同时变好，就说明改动不值得保留。</p>
+<h2 id="优化与改进">59.9 优化与改进</h2>
+<p>一阶滑模有两个改不掉的老毛病：抖振只能压小、不能消除；稳态误差要么靠大 <span class="math inline">k</span> 压、要么靠边界层换。这十年来的改进方向基本就两条——<strong>把不连续项藏起来</strong>（高阶滑模），<strong>让增益自己会变</strong>（自适应滑模）。本节讲四种最常用的改进，重点放在超螺旋，因为它是目前工业上唯一大规模落地的高阶滑模。</p>
+<h3 id="超螺旋把切换藏进积分">59.9.1 超螺旋：把切换藏进积分</h3>
+<p>超螺旋（super-twisting）的核心想法很朴素：既然切换项直接进 <span class="math inline">u</span> 会造成抖振，那就让它进<strong>积分的导数</strong>，让积分把它“磨平”。控制律写成</p>
+<p><span class="math display">
+u=u_1+u_2,\qquad
+u_1=-k_1|s|^{1/2}\operatorname{sgn}(s),\qquad
+\dot u_2=-k_2\operatorname{sgn}(s)
+\tag{59-40}
+</span></p>
+<p><span class="math inline">u_1</span> 是连续的（<span class="math inline">|s|^{1/2}</span> 在零附近连续），<span class="math inline">u_2</span> 是切换项的积分，本身也连续。<strong>两个连续项相加，控制量就是连续的</strong>，抖振从“控制量跳变”降级为“控制量导数跳变”。这就是二阶滑模的含义：不连续的是 <span class="math inline">\dot u</span>，不是 <span class="math inline">u</span>。</p>
+<p>稳定性条件是</p>
+<p><span class="math display">
+k_1&gt;1.5\sqrt{D},\qquad k_2&gt;D
+\tag{59-41}
+</span></p>
+<p>其中 <span class="math inline">D</span> 仍是扰动上界的导数界。本章取 <span class="math inline">k_1=1.0</span>、<span class="math inline">k_2=4.0</span>，对应 <span class="math inline">D\approx0.44</span>，留了足够裕量。</p>
+<p>超螺旋的收敛性质比一阶滑模更强：它能在<strong>有限时间</strong>内让 <span class="math inline">s</span> 与 <span class="math inline">\dot s</span> 同时到零。一阶滑模只保证 <span class="math inline">s\to0</span>，<span class="math inline">\dot s</span> 可以在零附近抖；超螺旋连 <span class="math inline">\dot s</span> 一起压住，所以进入滑动段后状态更“安静”。</p>
+<p>表 59-10 是三种实现的完整对照，同一对象、同一目标、同一 <span class="math inline">T_s</span>。</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">实现</th>
+<th style="text-align: right;">超调 (%)</th>
+<th style="text-align: right;"><span class="math inline">t_s</span> (s)</th>
+<th style="text-align: right;">IAE</th>
+<th style="text-align: right;">稳态误差</th>
+<th style="text-align: right;">速度纹波 (m/s)</th>
+<th style="text-align: right;">尾段总变差</th>
+<th style="text-align: right;">控制量 RMS</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">理想切换</td>
+<td style="text-align: right;">0.00</td>
+<td style="text-align: right;">2.53</td>
+<td style="text-align: right;">1.035</td>
+<td style="text-align: right;"><span class="math inline">5.00\times10^{-3}</span></td>
+<td style="text-align: right;">0.0201</td>
+<td style="text-align: right;">397.99</td>
+<td style="text-align: right;">2.010</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">边界层 <span class="math inline">\phi=0.02</span></td>
+<td style="text-align: right;">0.00</td>
+<td style="text-align: right;">2.54</td>
+<td style="text-align: right;">1.004</td>
+<td style="text-align: right;"><span class="math inline">0</span></td>
+<td style="text-align: right;"><span class="math inline">5\times10^{-6}</span></td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.018</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">超螺旋</td>
+<td style="text-align: right;">18.35</td>
+<td style="text-align: right;">2.79</td>
+<td style="text-align: right;">0.9469</td>
+<td style="text-align: right;"><span class="math inline">0</span></td>
+<td style="text-align: right;">0.00654</td>
+<td style="text-align: right;">3.46</td>
+<td style="text-align: right;">0.094</td>
+</tr>
+</tbody>
+</table>
+<p>表 59-10 里超螺旋有一项明显难看：<strong>超调 18.35%</strong>。这不是笔误。超螺旋的 <span class="math inline">u_2</span> 是积分项，从零开始累积，前段推力不足，位置冲得慢；等 <span class="math inline">u_2</span> 积起来，位置已经越过目标，于是产生较大超调。这是“用积分换连续”的固有代价——<strong>积分有记忆，记忆就有滞后，滞后就产生超调</strong>。</p>
+<p>处理办法有三个：</p>
+<ul>
+<li><strong>给 <span class="math inline">u_2</span> 加限幅与抗饱和</strong>：<span class="math inline">u_2</span> 的作用是补上“持续存在的扰动”，它不该无限增长。本章实测 <span class="math inline">z</span> 在到达段一路积到 3.12（0.77 s 时刻），越过目标后才反向退饱和，超调就是这段“退货”过程造成的。限幅只是保险丝（本章 <span class="math inline">\pm6</span> 全程未触发），真正该做的是让积分只在等效控制附近变化；</li>
+<li><strong>前段用一阶滑模、后段切超螺旋</strong>：在 <span class="math inline">|s|</span> 大于某个阈值时用纯切换快速到达，进入小范围后再切超螺旋，兼顾速度与平滑；</li>
+<li><strong>加参考轨迹整形</strong>：把阶跃目标换成 S 形或梯形速度规划，让 <span class="math inline">u_2</span> 有时间跟上。</li>
+</ul>
+<p>本章脚本没有做这三件事，所以 18.35% 是“裸超螺旋”的结果。把它与边界层放在一起看更有意义：<strong>超螺旋的 IAE（0.9469）是三者最低，稳态误差为零，纹波比理想切换小 3 倍</strong>；边界层则在抖振上完胜（总变差 0）。两者的选择取决于最痛的是“超调”还是“抖振”。</p>
+<h3 id="高阶滑模的一般框架">59.9.2 高阶滑模的一般框架</h3>
+<p>超螺旋是二阶滑模的一个特例。一般地，<span class="math inline">r</span> 阶滑模要求</p>
+<p><span class="math display">
+s=\dot s=\cdots=s^{(r-1)}=0
+\tag{59-42}
+</span></p>
+<p>在有限时间内同时成立，控制量的第 <span class="math inline">r</span> 阶导数不连续。阶数越高，抖振越小，但需要的状态越多、参数越难整定。</p>
+<p>工程上真正用起来的基本只有二阶，原因很实际：</p>
+<ul>
+<li>二阶只需要 <span class="math inline">s</span> 与 <span class="math inline">\dot s</span>，<span class="math inline">\dot s</span> 可以用观测器估；</li>
+<li>三阶以上需要 <span class="math inline">s</span> 的二阶导数，噪声放大到无法接受；</li>
+<li>阶数越高，收敛越慢，超调越大，收益递减。</li>
+</ul>
+<p>所以“高阶滑模”在工程语境里几乎等同于“二阶滑模 + 超螺旋”。</p>
+<h3 id="终端滑模有限时间到零">59.9.3 终端滑模：有限时间到零</h3>
+<p>一阶滑模的滑动段是指数收敛（<span class="math inline">\dot e=-\lambda e</span>），理论上永远到不了零。终端滑模把滑模面改成非线性形式：</p>
+<p><span class="math display">
+s=e_v+\lambda e_p^{\,q/p},\qquad q&lt;p\ \text{且为奇数}
+\tag{59-43}
+</span></p>
+<p>在 <span class="math inline">s=0</span> 上，<span class="math inline">\dot e_p=-\lambda e_p^{q/p}</span>，解出来是有限时间收敛，收敛时间</p>
+<p><span class="math display">
+t_s=\frac{p}{\lambda(p-q)}|e_p(0)|^{(p-q)/p}
+\tag{59-44}
+</span></p>
+<p>这是终端滑模最大的卖点：<strong>误差在有限时间内精确到零</strong>，而不是渐近。代价有两个：<span class="math inline">e_p^{q/p}</span> 在 <span class="math inline">e_p&lt;0</span> 时需要特殊处理（否则出现复数），以及接近零时 <span class="math inline">\dot e_p</span> 的斜率趋于无穷，控制量会出现尖峰。</p>
+<p>工程上用“非奇异终端滑模”规避第二个问题：把滑模面写成 <span class="math inline">s=e_v+\lambda|e_p|^{q/p}\operatorname{sgn}(e_p)</span>，并在 <span class="math inline">|e_p|</span> 很小时切回线性滑模。这个“分段”结构在数控机床与机器人关节上很常见。</p>
+<h3 id="自适应滑模让-k-自己找下界">59.9.4 自适应滑模：让 <span class="math inline">k</span> 自己找下界</h3>
+<p><span class="math inline">k</span> 的整定难点在于 <span class="math inline">D</span> 未知。自适应滑模的做法是让 <span class="math inline">k</span> 随时间增长，直到 <span class="math inline">s</span> 开始下降：</p>
+<p><span class="math display">
+\dot k=\begin{cases}\gamma|s|, &amp; |s|&gt;\varepsilon\\ 0, &amp; |s|\le\varepsilon\end{cases}
+\tag{59-45}
+</span></p>
+<p><span class="math inline">\gamma&gt;0</span> 是自适应速率。这个律的含义是“只要还没到面，就继续加增益”。它的优点是<strong>不需要知道 <span class="math inline">D</span></strong>，缺点是 <span class="math inline">k</span> 只增不减，一旦扰动撤除，<span class="math inline">k</span> 会停在一个过大的值上，抖振比必要的大。</p>
+<p>改进版是双向自适应：<span class="math inline">|s|</span> 大时增，<span class="math inline">|s|</span> 持续很小时缓慢减，形成“<span class="math inline">\sigma</span> 修正”：</p>
+<p><span class="math display">
+\dot k=\gamma|s|-\sigma k
+\tag{59-46}
+</span></p>
+<p><span class="math inline">\sigma</span> 很小时，<span class="math inline">k</span> 会在真实 <span class="math inline">D</span> 附近缓慢游走，既不抖得过分，也不会掉到 <span class="math inline">D</span> 以下。这条律在负载变化剧烈的场合（如起重机、挖掘机）比固定 <span class="math inline">k</span> 好用得多。</p>
+<h3 id="扰动观测器把滑模的活分一半出去">59.9.5 扰动观测器：把滑模的活分一半出去</h3>
+<p>滑模的强项是抗匹配扰动，弱项是抖振。扰动观测器（DOB）的强项恰好相反：它能连续估计扰动，但依赖模型。两者结合，可以让滑模只负责“兜底”，DOB 负责“主力”：</p>
+<p><span class="math display">
+u=u_{\mathrm{eq}}-\hat d-k\operatorname{sat}(s/\phi)
+\tag{59-47}
+</span></p>
+<p><span class="math inline">\hat d</span> 是观测器估计的扰动。有了它，切换项只需要覆盖<strong>估计误差</strong>，不需要覆盖全部扰动，<span class="math inline">k</span> 可以降到原来的 1/3~1/5，抖振随之下降。</p>
+<p>这条思路与第 58 章 MPC 的“扰动前馈”、第 47 章 Smith 预测器的“模型补偿”是同一个哲学：<strong>能建模的部分用模型补，不能建模的部分用鲁棒兜底</strong>。滑模不应该独自承担全部不确定性，那是它的能力边界之外的事。</p>
+<h3 id="改进方案的取舍">59.9.6 改进方案的取舍</h3>
+<p>把四种改进放在一张表里比较，选择就清楚了：</p>
+<ul>
+<li><strong>超螺旋</strong>：抖振降两个数量级，代价是超调与整定复杂度，适合“执行器怕抖、精度要求高”的场合；</li>
+<li><strong>终端滑模</strong>：有限时间到零，适合“必须精确到位”的场合（数控、机器人），代价是奇异性处理；</li>
+<li><strong>自适应滑模</strong>：免整定 <span class="math inline">D</span>，适合“负载变化大、工况不确定”的场合，代价是 <span class="math inline">k</span> 漂移；</li>
+<li><strong>DOB 复合</strong>：降 <span class="math inline">k</span>、降抖振，适合“模型大体已知”的场合，代价是需要额外设计观测器。</li>
+</ul>
+<p>本章的推荐是“<strong>先用边界层把系统跑稳，再按最痛的那一条选改进</strong>”。直接上超螺旋的新手最常见的失败是：看到 20% 超调就回去调 <span class="math inline">k_1</span>，其实是积分项在到达段积得太深，与增益无关。</p>
+<h3 id="超螺旋的整定顺序">59.9.7 超螺旋的整定顺序</h3>
+<p>超螺旋只有两个参数，但它们的角色完全不同：<span class="math inline">k_1</span> 管“前段多快”，<span class="math inline">k_2</span> 管“积分多硬”。整定顺序因此不能颠倒。</p>
+<p><strong>第一步，按扰动界定 <span class="math inline">k_2</span> 的下界</strong>。式 (59-41) 要求 <span class="math inline">k_2&gt;D</span>，这是“积分能不能压住慢变扰动”的门槛。<span class="math inline">D</span> 未知时用最笨的办法：先在 <span class="math inline">k_1=0</span> 的极端情况下把 <span class="math inline">k_2</span> 从 0 往上加，直到常值负载下 <span class="math inline">s</span> 不再持续同号。本章 <span class="math inline">k_2=4.0</span>，对应可容忍的 <span class="math inline">D\approx0.44</span>，比实际扰动的导数界留了三倍以上裕量。</p>
+<p><strong>第二步，按 <span class="math inline">k_2</span> 定 <span class="math inline">k_1</span></strong>。<span class="math inline">k_1</span> 的下界是 <span class="math inline">1.5\sqrt{D}</span>，<span class="math inline">D=0.44</span> 时约 1.0，本章正好取 1.0。<span class="math inline">k_1</span> 偏小的表现是“前段爬”，<span class="math inline">s</span> 下降得比理论慢；<span class="math inline">k_1</span> 偏大的表现是“前段冲”，<span class="math inline">u_1</span> 的尖峰把执行器顶到限幅。<strong><span class="math inline">k_1</span> 的可用区间比一阶滑模的 <span class="math inline">k</span> 窄得多</strong>，因为它乘的是 <span class="math inline">|s|^{1/2}</span>，在 <span class="math inline">|s|</span> 大时增长有限，在 <span class="math inline">|s|</span> 小时才显出力。</p>
+<p><strong>第三步，回头检查积分饱和</strong>。这一步最容易被跳过。<span class="math inline">u_2</span> 在到达段会一直朝一个方向积，若不管它，进入滑动段后要花同样长的时间把它“积回来”，超调就是这么来的。判断指标很直接：看 <span class="math inline">u</span> 的尾段是否出现了“长时间单边偏移”，若是，说明 <span class="math inline">u_2</span> 过冲了。</p>
+<p>三步走完，再回头看表 59-10 的那一行就清楚了：IAE 0.9469 最低、稳态误差为零、纹波 0.00654，说明 <span class="math inline">k_1</span>、<span class="math inline">k_2</span> 的取值是合适的；18.35% 的超调不是增益问题，而是第三步没做。<strong>同一组参数，做不做抗饱和，结论完全相反</strong>——这也是为什么很多论文里的超螺旋“性能优异”，搬到设备上却一塌糊涂。</p>
+<h3 id="什么工况不该上高阶滑模">59.9.8 什么工况不该上高阶滑模</h3>
+<p>高阶滑模不是“更高级所以更好”。有四类工况用了反而更差：</p>
+<ul>
+<li><strong>执行器本身很慢</strong>。超螺旋的优点是控制量连续，但如果执行器带宽只有几赫兹，连续的 <span class="math inline">u</span> 经过它之后和方波没有区别，白付了整定成本；</li>
+<li><strong>只需要“到得了”</strong>。定位精度 1 mm、行程 0.5 m 的场合，边界层已经够用，超螺旋多出来的那点平滑度用户感知不到；</li>
+<li><strong>状态噪声大</strong>。超螺旋需要 <span class="math inline">\dot s</span> 的信息（<span class="math inline">u_1</span> 里的 <span class="math inline">|s|^{1/2}</span> 对噪声不敏感，但 <span class="math inline">u_2</span> 的积分会把噪声累积成漂移），速度信号若靠差分得到，<span class="math inline">u_2</span> 会慢慢跑偏；</li>
+<li><strong>需要可解释的调试</strong>。一阶滑模四个参数各管一件事，现场工程师看曲线就能定位问题；超螺旋的 <span class="math inline">u_2</span> 是隐状态，出问题时只能靠录波，排查成本高一个量级。</li>
+</ul>
+<p>反过来，三类工况值得上：执行器是伺服电机或音圈电机（带宽足够）、精度要求进入微米级、抖振已经成为寿命瓶颈。<strong>判断标准不是“先进不先进”，而是“抖振是不是当前最痛的那一条”</strong>。</p>
+<h3 id="改进能不能叠加">59.9.9 改进能不能叠加</h3>
+<p>四种改进常被组合使用，最常见的两种组合是“超螺旋 + DOB”与“自适应 + 边界层”。它们能叠加，但叠加的收益不是相加，而是<strong>先解决主要矛盾，再处理次要矛盾</strong>。</p>
+<p>“超螺旋 + DOB”的逻辑是：DOB 用连续估计把大部分扰动补掉，超螺旋只负责估计误差，于是 <span class="math inline">k_1</span>、<span class="math inline">k_2</span> 都可以取小，积分项也不会积得太深——这恰好绕开了 §59.9.1 那个 18.35% 超调的来源。代价是两套参数、两处可能失效。</p>
+<p>“自适应 + 边界层”的逻辑更朴素：边界层把抖振压到可接受，自适应保证 <span class="math inline">k</span> 不会掉到 <span class="math inline">D</span> 以下。这条组合适合负载变化大的场合，但要注意 <span class="math inline">\sigma</span> 修正不能太小，否则 <span class="math inline">k</span> 会在边界层内缓慢爬升，把边界层的效果吃掉。</p>
+<p>叠加有一条硬约束：<strong>每加一层，可解释性就少一分</strong>。一阶滑模 + 边界层的四个参数各管一件事，出问题能靠曲线定位；再叠超螺旋与 DOB，参数变成七个，且互相耦合，现场只能靠录波与试凑。所以工程上的顺序应该是：先用最简结构跑到验收线，只有当某一条指标明确不达标时才加一层，且加完必须重跑全部九项自检（§59.10.9）。</p>
+<h2 id="工程落地">59.10 工程落地</h2>
+<p>到这里，滑模的理论、设计、调参都说完了。本节讲“装到机器上”这一关：信号怎么取、执行器怎么选、代码怎么写、故障怎么兜底。这些内容在论文里几乎不写，但它们决定了同一套算法是“能用”还是“天天报警”。</p>
+<h3 id="状态从哪来">59.10.1 状态从哪来</h3>
+<p>滑模需要 <span class="math inline">s=e_v+\lambda e_p</span>，<span class="math inline">e_v</span> 是速度误差。三种取法，代价不同：</p>
+<ul>
+<li><strong>直接测速</strong>：测速发电机或编码器测速，精度高、无差分噪声，但增加硬件成本，且低速时信噪比差；</li>
+<li><strong>位置差分</strong>：<span class="math inline">v_k=(p_k-p_{k-1})/T_s</span>，零成本，但 <span class="math inline">T_s</span> 越小噪声越大，且天然滞后半拍；</li>
+<li><strong>观测器</strong>：用位置与已知模型估速度，噪声与滞后都可控，但依赖模型，参数漂移时估计有偏。</li>
+</ul>
+<p>工业伺服多用“差分 + 低通”，截止频率取 <span class="math inline">1/(5T_s)\sim1/(10T_s)</span>。本章脚本假设速度可测，所以纹波数据是“理想传感”下的结果；实际系统的纹波一定更大，且有一部分来自传感噪声而不是控制本身。</p>
+<p>一个容易被忽略的细节：<strong><span class="math inline">s</span> 的计算必须用同一时刻的 <span class="math inline">p</span> 与 <span class="math inline">v</span></strong>。若 <span class="math inline">p</span> 是本拍采的、<span class="math inline">v</span> 是上一拍差分的，<span class="math inline">s</span> 里就混了半拍错位，等效于给滑模面加了一个小延迟。这个延迟在低速时无感，在高速时会让 <span class="math inline">s</span> 的过零时刻偏移，抖振幅度上升。</p>
+<h3 id="执行器怎么选">59.10.2 执行器怎么选</h3>
+<p>滑模对执行器的要求与其他控制器不同，主要看三条：</p>
+<ul>
+<li><strong>带宽</strong>：要跟得上 <span class="math inline">1/T_s</span> 量级的切换。电机伺服（带宽几百 Hz）轻松；液压比例阀（10~20 Hz）只能把 <span class="math inline">T_s</span> 放到 0.05 s 以上；气动系统（几 Hz）基本不适合纯切换；</li>
+<li><strong>过载能力</strong>：切换时电流/压力会周期性冲击，峰值为 <span class="math inline">k</span> 的 1.5~2 倍。选型时按 <span class="math inline">2k</span> 留裕量；</li>
+<li><strong>寿命</strong>：高频换向对继电器是灾难，对 MOSFET 与伺服阀是可接受的。<strong>用继电器做滑模是最常见的选型错误</strong>，机械触点按 10 万次计，100 Hz 下不到二十分钟就报废（换算见 §59.5.8）。</li>
+</ul>
+<p>如果执行器带宽不够，正确的做法不是硬上，而是<strong>降低 <span class="math inline">T_s</span> 的要求</strong>：加大 <span class="math inline">\phi</span>、改用超螺旋、或者把滑模放在外环、内环用快速线性环。这三种做法的共同点是“不让执行器承担它承担不了的频率”。</p>
+<h3 id="延迟实测与对策">59.10.3 延迟：实测与对策</h3>
+<p>延迟是滑模落地时最普遍的敌人。表 59-11 是不同延迟拍数下的实测，<span class="math inline">k=2</span>、<span class="math inline">\phi=0</span>、<span class="math inline">T_s=0.01</span> 不变。</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: right;">延迟 (拍)</th>
+<th style="text-align: right;">等效时间 (ms)</th>
+<th style="text-align: right;">速度纹波 (m/s)</th>
+<th style="text-align: right;">尾段总变差</th>
+<th style="text-align: right;">全段总变差</th>
+<th style="text-align: right;">控制量 RMS</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.0201</td>
+<td style="text-align: right;">398.0</td>
+<td style="text-align: right;">2814.9</td>
+<td style="text-align: right;">2.010</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">10</td>
+<td style="text-align: right;">0.0808</td>
+<td style="text-align: right;">98.0</td>
+<td style="text-align: right;">807.0</td>
+<td style="text-align: right;">2.019</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">20</td>
+<td style="text-align: right;">0.1218</td>
+<td style="text-align: right;">70.0</td>
+<td style="text-align: right;">511.0</td>
+<td style="text-align: right;">2.030</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">40</td>
+<td style="text-align: right;">0.2049</td>
+<td style="text-align: right;">42.0</td>
+<td style="text-align: right;">303.1</td>
+<td style="text-align: right;">2.052</td>
+</tr>
+</tbody>
+</table>
+<p>表 59-11 有两列方向相反：<strong>纹波随延迟单调上升（0.0201→0.2049，放大 10 倍），总变差却随延迟单调下降（2815→303，降到 1/9）</strong>。这不是矛盾，而是同一个现象的两面：</p>
+<ul>
+<li>延迟让每次切换“慢半拍”，切换一旦发生就冲过头，<strong>单次摆幅变大</strong>→纹波上升；</li>
+<li>冲过头之后要很久才反向，<strong>切换次数变少</strong>→总变差下降。</li>
+</ul>
+<p>所以<strong>总变差下降绝不能当成“抖振改善”的证据</strong>。恰恰相反，它往往是“抖振变粗”的信号。工程上判断抖振，要看纹波幅值与切换频次两个量，只看总变差会被误导。</p>
+<figure>
+<img src="figs/ch059/fig_059_10_delay.svg" alt="图 59-10　延迟对抖振的影响：时域纹波（上）与延迟-纹波柱状对照（下）" /><figcaption aria-hidden="true">图 59-10　延迟对抖振的影响：时域纹波（上）与延迟-纹波柱状对照（下）</figcaption>
+</figure>
+<p>图 59-10 上半是时域曲线，下半是延迟与纹波的柱状对照。柱状图的增长接近线性：每增加 1 拍延迟，纹波增加约 0.05 m/s。这个斜率给了工程上一把尺子——<strong>若实测纹波是设计值的 3 倍，先查延迟，大概率是 2 拍左右</strong>。</p>
+<p>延迟的来源要逐个排查，常见的四处：</p>
+<ol type="1">
+<li><strong>采样与计算</strong>：控制量算完到输出，若代码里有浮点运算或通信，可能占掉半拍到一拍；</li>
+<li><strong>通信总线</strong>：CAN、EtherCAT 的周期与抖动，通常 0.5~2 ms；</li>
+<li><strong>执行器响应</strong>：伺服阀的阶跃响应时间、电机的电气时间常数；</li>
+<li><strong>滤波器</strong>：速度低通、电流环滤波、编码器滤波，每一个都贡献相位滞后。</li>
+</ol>
+<p>第 4 项最容易被忽略，因为它不在“控制周期”里，却在回路里。一个 20 Hz 的低通在 100 Hz 采样下贡献约 1.5 拍的等效延迟，足以让纹波翻倍。</p>
+<h3 id="代码结构四件事必须做对">59.10.4 代码结构：四件事必须做对</h3>
+<p>滑模的代码很短，但下面的四件事做错任何一件，实测都会与仿真差很远。</p>
+<p><strong>第一，符号函数要有确定的零值行为</strong>。<span class="math inline">\operatorname{sgn}(0)=0</span> 会让控制量在 <span class="math inline">s</span> 恰好为零时丢掉切换项，形成“停顿—偏离—纠正”的低频爬行。做法是记住上一次的符号：</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> s <span class="op">&gt;</span> <span class="dv">0</span>:</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>    sgn <span class="op">=</span> <span class="fl">1.0</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="cf">elif</span> s <span class="op">&lt;</span> <span class="dv">0</span>:</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    sgn <span class="op">=</span> <span class="op">-</span><span class="fl">1.0</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="cf">else</span>:</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    sgn <span class="op">=</span> <span class="va">self</span>.last_sgn      <span class="co"># 保持上一拍符号</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="va">self</span>.last_sgn <span class="op">=</span> sgn</span></code></pre></div>
+<p><strong>第二，输出要限幅，且限幅值参与抗饱和</strong>。滑模本身没有积分，但若外面套了积分环或用了超螺旋的 <span class="math inline">u_2</span>，就必须做抗饱和。超螺旋的 <span class="math inline">u_2</span> 尤其危险——它会在饱和期间继续累积，退出饱和时产生巨大冲击。本章脚本给 <span class="math inline">u_2</span> 加了 <span class="math inline">\pm6</span> 的限幅，就是为此。</p>
+<p><strong>第三，<span class="math inline">s</span> 的计算与输出要在同一个周期内完成</strong>。不要“先算 <span class="math inline">s</span> 存起来，下一个周期再用”，那等于引入一拍延迟。</p>
+<p><strong>第四，要有抖振监控</strong>。在线统计尾段控制量的过零次数，超过阈值就报警或自动加厚 <span class="math inline">\phi</span>。滑模的失效往往先从“切换频率异常升高”开始，这个信号比位置误差早得多。</p>
+<h3 id="故障兜底">59.10.5 故障兜底</h3>
+<p>滑模失效的模式很明确，兜底逻辑也容易设计：</p>
+<ul>
+<li><strong><span class="math inline">k</span> 不足</strong>：表现为位置长期不达目标。兜底是“超时切回 PID”，用一套保守的 PID 参数保证基本可用；</li>
+<li><strong>持续大抖振</strong>：表现为控制量过零次数超限。兜底是“自动加厚 <span class="math inline">\phi</span>”，把滑模临时降级为带死区的比例控制；</li>
+<li><strong>传感器失效</strong>：<span class="math inline">s</span> 恒定或跳变。兜底是“切开环保持”或“安全停机”，绝不能继续用错误的 <span class="math inline">s</span> 做切换；</li>
+<li><strong>执行器饱和</strong>：<span class="math inline">u</span> 长时间贴限幅。兜底是“冻结超螺旋的 <span class="math inline">u_2</span>”，防止积分饱和。</li>
+</ul>
+<p>这四条兜底逻辑加起来不到二十行代码，但能让滑模从“实验室算法”变成“可交付功能”。<strong>没有兜底的滑模不适合上现场</strong>，因为它失效时的表现（满幅切换或彻底不动）比 PID 失效更难处理。</p>
+<h3 id="调试工装">59.10.6 调试工装</h3>
+<p>最后说一个实际经验：滑模调试必须能同时看到 <span class="math inline">s</span>、<span class="math inline">u</span>、<span class="math inline">y</span> 三条曲线，且时间轴对齐。很多现场只能看位置曲线，于是所有问题都被归因成“参数不对”。</p>
+<p>最小可用的工装是：控制器里开一个环形缓冲区，按 <span class="math inline">T_s</span> 记录 <span class="math inline">[p, v, s, u]</span> 四列，上位机按 1 kHz 采样回读。有了这个，表 59-9 的对照才有依据，否则调参只能靠猜。</p>
+<h3 id="从仿真到样机的三步验证">59.10.7 从仿真到样机的三步验证</h3>
+<p>仿真跑通不等于能上机。中间至少要有两步过渡，每一步都有明确的通过标准，否则问题会堆到最后一起爆发。</p>
+<p><strong>第一步，纯仿真对齐指标</strong>。用本章脚本，确认标称工况下 <span class="math inline">t_s\approx2.5</span> s、纹波 0.0201、尾段总变差 398。这一步的作用是“确认控制器逻辑没写错”，不是“确认性能”。</p>
+<p><strong>第二步，加执行器与传感模型</strong>。把理想的速度测量换成“差分 + 低通”，把理想的控制量换成“限幅 + 一阶滞后”。通过标准有两条：纹波不超过仿真的 2 倍；<span class="math inline">t_s</span> 退化不超过 30%。若超过，说明延迟或噪声已经在主导，此时上机一定失败。表 59-11 给了参照：仅仅 2 拍延迟就能把纹波从 0.0201 推到 0.1218，已经超过 2 倍线。</p>
+<p><strong>第三步，低增益上机</strong>。<span class="math inline">k</span> 取设计值的三分之一起步，<span class="math inline">\phi</span> 取 <span class="math inline">kT_s</span> 的两倍，先让系统“稳但不快”。确认三件事再往上加：位置能停在目标附近不爬行；控制量没有持续单边偏移；过零次数在预期量级。然后按 §59.8.1 的顺序逐个加，每次只动一个。</p>
+<p>有一个反直觉的提醒：<strong>不要用“空载”做第一步上机</strong>。本章 <span class="math inline">k=0.4</span> 在空载下看起来正常，一加 1.5 的负载就直接反向跑到 <span class="math inline">-1.67</span>。空载通过只证明“没有扰动时能站住”，而这恰恰是滑模最不需要证明的能力。上机第一轮就应该带上典型负载，哪怕是小负载。</p>
+<h3 id="一个最小可用的实现骨架">59.10.8 一个最小可用的实现骨架</h3>
+<p>把 §59.10.4 的四件事与 §59.10.5 的兜底合起来，一个可交付的滑模控制器大致长这样（省略了采样、通信与日志）：</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> SlideMode:</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>, lam, k, phi, ts, umax<span class="op">=</span><span class="fl">60.0</span>, dead<span class="op">=</span><span class="fl">0.0</span>):</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.lam, <span class="va">self</span>.k, <span class="va">self</span>.phi, <span class="va">self</span>.ts <span class="op">=</span> lam, k, phi, ts</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.umax, <span class="va">self</span>.dead <span class="op">=</span> umax, dead</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.last_sgn <span class="op">=</span> <span class="fl">1.0</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.cross <span class="op">=</span> <span class="dv">0</span>            <span class="co"># 尾段过零计数，用于抖振监控</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> sgn(<span class="va">self</span>, s):</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> s <span class="op">&gt;</span> <span class="va">self</span>.dead:</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>            out <span class="op">=</span> <span class="fl">1.0</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>        <span class="cf">elif</span> s <span class="op">&lt;</span> <span class="op">-</span><span class="va">self</span>.dead:</span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>            out <span class="op">=</span> <span class="op">-</span><span class="fl">1.0</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>        <span class="cf">else</span>:</span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>            out <span class="op">=</span> <span class="va">self</span>.last_sgn   <span class="co"># 零值附近保持，避免爬行</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.last_sgn <span class="op">=</span> out</span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> out</span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> step(<span class="va">self</span>, p, v, ref):</span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>        s <span class="op">=</span> v <span class="op">+</span> <span class="va">self</span>.lam <span class="op">*</span> (p <span class="op">-</span> ref)</span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>        prev <span class="op">=</span> <span class="va">self</span>.last_sgn       <span class="co"># 上一拍的符号</span></span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>        sw <span class="op">=</span> <span class="va">self</span>.k <span class="op">*</span> <span class="va">self</span>.sgn(s)</span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>        u <span class="op">=</span> (<span class="fl">1.0</span> <span class="op">-</span> <span class="va">self</span>.lam) <span class="op">*</span> v <span class="op">-</span> sw</span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a>        u <span class="op">=</span> <span class="bu">max</span>(<span class="op">-</span><span class="va">self</span>.umax, <span class="bu">min</span>(<span class="va">self</span>.umax, u))</span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> prev <span class="op">*</span> <span class="va">self</span>.last_sgn <span class="op">&lt;</span> <span class="dv">0</span>:   <span class="co"># 符号翻转，记一次</span></span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a>            <span class="va">self</span>.cross <span class="op">+=</span> <span class="dv">1</span></span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> u, s</span></code></pre></div>
+<p>这段代码有四处值得注意。第一，<code>dead</code> 是“零值保持区”，它同时充当最小边界层，避免 <span class="math inline">\operatorname{sgn}(0)</span> 的歧义；第二，限幅放在最后，任何上游的补偿量都不能绕过它；第三，<code>cross</code> 只做统计不做决策，报警阈值交给上层逻辑，因为“多少次算多”取决于执行器；第四，<span class="math inline">s</span> 与 <span class="math inline">u</span> 一起返回，保证记录时两者对齐。</p>
+<p>真正交付时还要补三样：超时未到位的降级逻辑、<span class="math inline">k</span> 的在线可调接口（现场一定要能改）、以及参数的单位注释。<strong>最后这一条不是形式主义</strong>：滑模的四个参数里有三个带量纲，接手的人如果不知道 <span class="math inline">\lambda</span> 的单位是 1/s，很容易把它当成无量纲增益随手调。</p>
+<h3 id="上线前的九项自检">59.10.9 上线前的九项自检</h3>
+<p>把本节与前几节的内容压缩成一张自检表，投运前逐项打勾：</p>
+<ol type="1">
+<li><span class="math inline">k</span> 是否大于实测最大扰动的 1.2 倍？用“加负载看是否跌落”验证；</li>
+<li><span class="math inline">\phi</span> 是否等于或略大于 <span class="math inline">kT_s</span>？用“看尾段总变差是否为零”验证；</li>
+<li>尾段控制量过零次数是否在百次每秒以内？</li>
+<li>速度信号是否与位置同一拍？用“人为加一拍延迟看纹波”验证；</li>
+<li>执行器是否按 <span class="math inline">2k</span> 选型？查手册的峰值电流或峰值推力；</li>
+<li>是否有零值保持？把目标设成当前值，看是否低频爬行；</li>
+<li>是否有超时兜底？人为断掉反馈，看是否安全停机；</li>
+<li>参数是否有单位注释与可调接口？</li>
+<li>空载与满载两个端点的三条曲线是否都存了档？</li>
+</ol>
+<p>九项里任何一项没通过，都不建议连续运行。<strong>滑模的问题不会在调试时暴露，只会在连续运行的第三周暴露</strong>——因为它的失效大多与热、磨损、延迟漂移有关，而这些量在短时调试里几乎不变。</p>
+<h2 id="优缺点与适用边界">59.11 优缺点与适用边界</h2>
+<p>滑模是一类“特征极其鲜明”的控制器：它在某些场景下几乎无可替代，在另一些场景下几乎不能用。本节把边界划清楚，并给出一条选型路径。</p>
+<h3 id="优点四条都来自同一个结构">59.11.1 优点：四条，都来自同一个结构</h3>
+<p><strong>第一，有限时间到达</strong>。线性控制器（PID、LQR）的误差按指数衰减，理论上永不到零；滑模在 <span class="math inline">t_r=|s(0)|/k</span> 时刻精确到零。表 59-2 的实测把这条性质验证到 0.10 s 以内（3.90 对 4.00、1.95 对 2.00、0.98 对 1.00、0.49 对 0.50），而这点偏差完全由到达判据的容差 0.05 解释（§59.4.1）。</p>
+<p><strong>第二，匹配扰动下的完全不变性</strong>。滑动段上 <span class="math inline">\dot v=-\lambda v</span>，对象参数与扰动全部消失（式 59-23）。这不是“鲁棒性好”，是“结构上无关”。实测支撑：负载 <span class="math inline">-1.5</span> 突加，位置只跌 0.0089 m；增益降到 0.6、摩擦 0.30，稳态误差仍只有 <span class="math inline">1.19\times10^{-3}</span>。</p>
+<p><strong>第三，不需要在线辨识</strong>。切换项的高频平均自动逼近 <span class="math inline">u_{\mathrm{eq}}</span>，等效于“用开关代替辨识”。这让它在模型未知或参数大范围漂移时仍然可用，而 MPC（第 58 章）与 LQR 都依赖模型。</p>
+<p><strong>第四，计算量极小</strong>。一次滑模计算只有一次乘加、一次符号判断、一次输出，比 MPC 的在线优化小三到四个数量级。在低成本 MCU 上，滑模几乎是唯一能跑的高性能鲁棒控制。</p>
+<h3 id="缺点四条都来自同一个不连续">59.11.2 缺点：四条，都来自同一个不连续</h3>
+<p><strong>第一，抖振不可避免</strong>。离散实现下准滑动带恒为 <span class="math inline">kT_s</span>，实测四组 <span class="math inline">(k,T_s)</span> 的比值恒为 1.00。抖振只能压小不能消除，任何“消除抖振的滑模”实质上都是换成了别的控制（边界层=线性、超螺旋=二阶）。</p>
+<p><strong>第二，对延迟敏感</strong>。20 ms 延迟让纹波放大 6 倍，40 ms 放大 10 倍。这是滑模最致命的工程缺陷，也是它在大延迟过程（网络控制、长管道、大惯量液压）中很少成功的原因。</p>
+<p><strong>第三，非匹配扰动无能为力</strong>。传感器零漂、编码器偏心、阶次误差都不在控制通道里，加 <span class="math inline">k</span> 只会让振荡变大。诊断方法很简单：扰动撤除后误差是否回零。</p>
+<p><strong>第四，<span class="math inline">k</span> 的窗口很窄</strong>。<span class="math inline">D&lt;k&lt;2\phi/T_s</span>，本章是 <span class="math inline">1.8&lt;k&lt;4</span>，上下界都硬。<span class="math inline">k</span> 太小彻底失效（<span class="math inline">k=0.2</span> 时稳态误差 1.00），<span class="math inline">k</span> 太大抖振翻倍。这个窄窗口意味着滑模对“参数漂移”的容忍度远不如宣传的那么高——<strong>它容忍的是对象参数漂移，不容忍的是扰动上界估计错误</strong>。</p>
+<h3 id="适用边界的量化表述">59.11.3 适用边界的量化表述</h3>
+<p>把上面的优缺点翻译成可核对的判据，滑模适用的场景应同时满足：</p>
+<ol type="1">
+<li><strong>扰动匹配</strong>：主要扰动与执行器同通道（负载力矩、摩擦、推力损失）；</li>
+<li><strong>延迟小</strong>：总延迟（采样+通信+执行器+滤波）小于 <span class="math inline">2T_s</span>，即 20 ms 量级；</li>
+<li><strong>执行器带宽足够</strong>：能响应 <span class="math inline">1/T_s</span> 的切换，或愿意接受 <span class="math inline">T_s</span> 放大带来的精度损失；</li>
+<li><strong>允许残余抖振</strong>：机械、电气寿命能承受 <span class="math inline">kT_s</span> 量级的纹波；</li>
+<li><strong>需要强鲁棒或有限时间</strong>：模型不确定大，或工艺要求“精确到位”。</li>
+</ol>
+<p>五条里只要有两条不满足，就应该考虑别的方案。最常见的误用是“第 1 条不满足却硬上滑模”——比如把滑模用在温度控制上，热扰动主要通过辐射与对流进入，与控制量不同通道，滑模的不变性根本用不上，剩下的只有抖振。</p>
+<h3 id="选型决策路径">59.11.4 选型决策路径</h3>
+<p>图 59-11 把选型过程画成一条判定链，从“扰动是否匹配”开始，到“是否需要有限时间”结束。</p>
+<figure>
+<img src="figs/ch059/fig_059_11_decision.svg" alt="图 59-11　滑模选型决策：从扰动匹配性到实现形式的判定链" /><figcaption aria-hidden="true">图 59-11　滑模选型决策：从扰动匹配性到实现形式的判定链</figcaption>
+</figure>
+<p>判定链的每一步都对应本章的一节：</p>
+<ul>
+<li>第一问“扰动是否匹配”→ §59.2.4；</li>
+<li>第二问“延迟是否小于 2 拍”→ §59.10.3；</li>
+<li>第三问“执行器能否承受 <span class="math inline">kT_s</span> 纹波”→ §59.5.2；</li>
+<li>第四问“是否必须有限时间”→ §59.9.3；</li>
+<li>最终落到四种实现之一：纯切换、边界层、超螺旋、或改用 PID/MPC。</li>
+</ul>
+<p>这条链的价值在于<strong>把“要不要用滑模”变成一个可以逐条回答的问题</strong>，而不是靠经验与偏好。</p>
+<h3 id="与相邻章节的分工">59.11.5 与相邻章节的分工</h3>
+<p>滑模不是一个孤立的方法，它与本书其他章节有明显的分工与衔接：</p>
+<ul>
+<li><strong>与 PID</strong>（第 44 章、第 106 章）：PID 是“无模型 + 线性 + 渐近”，滑模是“弱模型 + 不连续 + 有限时间”。模型准确时 PID 更好（本章 IAE 0.450 对 1.035），模型失真时滑模更好（超调 0.43% 对 8.80%）；</li>
+<li><strong>与 MPC</strong>（第 58 章、第 80 章）：MPC 用模型换最优，滑模用切换换鲁棒。MPC 的约束处理是滑模没有的，滑模的计算量是 MPC 没有的；</li>
+<li><strong>与 Smith 预测</strong>（第 47 章、第 107 章）：滑模怕延迟，Smith 专门治延迟。两者结合是“滑模 + 预测”的复合结构，在 §59.10.5 提过；</li>
+<li><strong>与反步法</strong>（第 60 章）：反步法逐级构造 Lyapunov 函数，滑模可以看作反步法最后一步用不连续函数收尾的特例。第 60 章会给出这个统一视角；</li>
+<li><strong>与串级控制</strong>（第 45 章、第 107 章）：外环滑模、内环 PID 是伺服行业的标准结构，兼顾抗扰与带宽。</li>
+</ul>
+<h3 id="本章要点回顾">59.11.6 本章要点回顾</h3>
+<p>把全章的实测数字收成一张清单，作为后续章节的对照基准：</p>
+<ul>
+<li>到达时间：四个 <span class="math inline">k</span> 下实测 3.90/1.95/0.98/0.49 s，理论 4.00/2.00/1.00/0.50 s；</li>
+<li>准滑动带：<span class="math inline">|s|_{\max}/kT_s</span> 恒为 1.00，四组数据 0.0050/0.0100/0.0201/0.0401；</li>
+<li>边界层：<span class="math inline">\phi=0.02</span>（即 <span class="math inline">\rho=1</span>）时尾段总变差为 0，稳态误差 <span class="math inline">7.51\times10^{-4}</span>；</li>
+<li>抖振：理想切换纹波 0.0201，边界层 <span class="math inline">4.57\times10^{-6}</span>，超螺旋 0.00654；</li>
+<li>抗扰：负载 <span class="math inline">-1.5</span> 下 <span class="math inline">k=2</span> 跌落 0.0089 m，<span class="math inline">k=0.4</span> 失控漂移；</li>
+<li>失配：增益 <span class="math inline">-30\%</span> 与时间常数 <span class="math inline">+50\%</span> 下超调不超过 0.01%，PID 为 6.61% 与 8.80%；</li>
+<li>延迟：4 拍延迟使纹波放大 10 倍，总变差反降到 1/9；</li>
+<li>极端工况：摩擦 0.30 + 增益 0.6 下 <span class="math inline">k=0.2</span> 卡死（稳态误差 1.00），<span class="math inline">k=2</span> 正常（<span class="math inline">1.19\times10^{-3}</span>）。</li>
+</ul>
+<p>这八组数字覆盖了滑模的全部主要性质，也覆盖了它的全部主要失效。<strong>如果只能记住一句话，就记这句</strong>：滑模用“不连续”换来了“不变性”，代价是抖振与延迟敏感；它的参数不是调出来的，是夹出来的。</p>
+<h3 id="三个工况的选型复盘">59.11.7 三个工况的选型复盘</h3>
+<p>把五条判据用到三个具体工况上，能看出边界到底在哪里。</p>
+<p><strong>工况一：伺服定位台</strong>（行程 0.5 m、精度 1 mm、采样 100 Hz、负载突变）。五条全部满足：负载力矩与电机推力同通道；总延迟约 1 拍；伺服带宽数百赫兹；1 mm 精度对纹波不敏感；工艺要求“2 s 内到位”而滑模恰好给有限时间。结论是<strong>用边界层版本</strong>，参数即本章这一组（<span class="math inline">k=2</span>、<span class="math inline">\lambda=2</span>、<span class="math inline">\phi=0.02</span>）。这是滑模最舒服的场景，也是它在工业上真正大规模落地的领域。</p>
+<p><strong>工况二：电阻炉温控</strong>（热惯性分钟级、采样 1 s、加热功率受限）。第 1 条就不满足：热量通过辐射与对流散失，与控制量不同通道，扰动是非匹配的。第 2 条也勉强：热惯量本身就是巨大延迟。这时上滑模的结果是“升温段很漂亮，保温段持续小幅振荡，且振荡无法靠加 <span class="math inline">k</span> 消除”。<strong>正确做法是 PID 或串级</strong>（第 45 章），滑模在这里没有位置。</p>
+<p><strong>工况三：长管道液压位置</strong>（阀到缸之间数米管路、油液体积模量随温度变化）。第 2 条不满足：管路动态带来几十毫秒的等效延迟。第 1 条满足（负载力与阀同通道），第 4 条也满足（液压系统本就允许小幅脉动）。结论是<strong>可以上，但不能用纯切换</strong>：要么把 <span class="math inline">T_s</span> 放到 0.05 s 以上并加大 <span class="math inline">\phi</span>，要么外环滑模、内环压力环，要么换超螺旋。这正是表 59-11 的直接应用——4 拍延迟下纯切换的纹波已经放大 10 倍，任何“再调调 <span class="math inline">k</span>”的努力都是徒劳。</p>
+<p>三个工况的对比说明一件事：<strong>滑模的适用性由“扰动通道”与“延迟”两个物理量决定，与对象的复杂程度、控制精度的高低于关系不大</strong>。这也解释了为什么它在电机、电力电子、机器人上成功，而在过程工业里少见。</p>
+<h3 id="读滑模论文时的五个提问">59.11.8 读滑模论文时的五个提问</h3>
+<p>本章的方法论也可以当成一把尺子，用来判断一篇滑模论文的结论能不能信。按顺序问五个问题：</p>
+<ol type="1">
+<li><strong>是离散实现还是连续理想？</strong> 只给连续 <span class="math inline">u=-k\operatorname{sgn}s</span> 而不说采样周期的，结论基本不可复现——准滑动带就是 <span class="math inline">kT_s</span>，<span class="math inline">T_s</span> 不给等于抖振不给；</li>
+<li><strong>扰动上界 <span class="math inline">D</span> 是怎么来的？</strong> 若只说“<span class="math inline">k</span> 取得足够大”，那么“不变性”只是空话；本章用 <span class="math inline">k=0.2</span> 卡死（稳态误差 1.00）说明 <span class="math inline">k&gt;D</span> 是性质存亡问题；</li>
+<li><strong>抖振用什么量化？</strong> 只给“抖振明显减小”的，要看它给的是幅值还是总变差。表 59-11 里延迟增大时总变差反而下降 9 倍，<strong>用总变差证明“抖振改善”是可以骗人的</strong>；</li>
+<li><strong>比较对象是什么？</strong> 与未整定的 PID 比没有意义。本章 PID 经网格搜索定标（<span class="math inline">K_p=32</span>、<span class="math inline">K_i=4</span>、<span class="math inline">K_d=8</span>），阶跃 IAE 0.450 反而优于滑模的 1.035——<strong>公平比较下，滑模赢的是扰动段而不是阶跃段</strong>；</li>
+<li><strong>有没有非匹配扰动与延迟的实验？</strong> 这两项才是滑模的真实边界。只做匹配扰动、零延迟的实验，结论的适用范围要打对折。</li>
+</ol>
+<p>五个问题都能答上来的论文不多，但这不妨碍滑模在合适的地方好用。<strong>判断方法的价值不在于否定别人，而在于知道自己手里的这套东西什么时候会失效。</strong></p>
+<h2 id="python-代码">59.12 Python 代码</h2>
+<p>本章代码分两个文件，都在 <code>book/code/</code> 下：</p>
+<ul>
+<li><code>ch059_sim.py</code>：对象、控制器、闭环仿真、十个实验与统一报告；</li>
+<li><code>ch059_figs.py</code>：从实验数据生成 11 张图（SVG + PDF）。</li>
+</ul>
+<p>两者的分工与全书一致：<code>sim</code> 只出数字，<code>figs</code> 只画图，正文引用的每一个数字都能在 <code>report()</code> 的输出里找到。</p>
+<h3 id="运行方式">59.12.1 运行方式</h3>
+<div class="sourceCode" id="cb3"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">D:\Anaconda3\envs\py311\python.exe</span> ch059_sim.py    <span class="co"># 打印全部实验数字</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="ex">D:\Anaconda3\envs\py311\python.exe</span> ch059_figs.py   <span class="co"># 生成 11 张图</span></span></code></pre></div>
+<p><code>ch059_sim.py</code> 直接运行会依次打印十组实验的结果，格式是“实验名 + 每个工况一行指标”。本文所有表格都取自这份输出，未做二次加工（只做了小数位截断）。</p>
+<h3 id="对象与控制器">59.12.2 对象与控制器</h3>
+<p>对象用 <code>control.c2d</code> 做零阶保持离散，避免手写离散矩阵出错：</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> plant_ss(gain<span class="op">=</span><span class="fl">1.0</span>, tau<span class="op">=</span><span class="fl">1.0</span>):</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">&quot;&quot;&quot;连续对象 gain/[s(tau*s+1)] 的 ZOH 离散状态空间。&quot;&quot;&quot;</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    ac <span class="op">=</span> np.array([[<span class="fl">0.0</span>, <span class="fl">1.0</span>], [<span class="fl">0.0</span>, <span class="op">-</span><span class="fl">1.0</span> <span class="op">/</span> tau]])</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    bc <span class="op">=</span> np.array([[<span class="fl">0.0</span>], [gain <span class="op">/</span> tau]])</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    cc <span class="op">=</span> np.array([[<span class="fl">1.0</span>, <span class="fl">0.0</span>]])</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>    d <span class="op">=</span> ct.c2d(ct.ss(ac, bc, cc, <span class="fl">0.0</span>), TS, method<span class="op">=</span><span class="st">&quot;zoh&quot;</span>)</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> (np.asarray(d.A, <span class="bu">float</span>), np.asarray(d.B, <span class="bu">float</span>),</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>            np.asarray(d.C, <span class="bu">float</span>), np.asarray(d.D, <span class="bu">float</span>))</span></code></pre></div>
+<p>控制器是一个类，把四种到达律、边界层与超螺旋都收在同一个 <code>step()</code> 里，靠构造参数切换。这样做的目的是保证“比较”是同一份代码的不同分支，而不是两套实现：</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> step(<span class="va">self</span>, x, ref):</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    s <span class="op">=</span> <span class="va">self</span>.surface(x, ref)</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    v <span class="op">=</span> <span class="bu">float</span>(x[<span class="dv">1</span>])</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="va">self</span>.mode <span class="op">==</span> <span class="st">&quot;sta&quot;</span>:                  <span class="co"># 超螺旋</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>        sw <span class="op">=</span> <span class="va">self</span>.switching(s)</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.z <span class="op">+=</span> <span class="va">self</span>.k2 <span class="op">*</span> np.sign(s) <span class="op">*</span> TS</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.z <span class="op">=</span> <span class="bu">float</span>(np.clip(<span class="va">self</span>.z, <span class="op">-</span><span class="fl">6.0</span>, <span class="fl">6.0</span>))</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">else</span>:</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>        sw <span class="op">=</span> <span class="va">self</span>.switching(s)</span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="bu">float</span>((<span class="fl">1.0</span> <span class="op">-</span> <span class="va">self</span>.lam) <span class="op">*</span> v <span class="op">-</span> sw) <span class="co"># 等效控制 + 切换项</span></span></code></pre></div>
+<p><code>(1.0 - self.lam) * v</code> 就是式 (59-3) 的等效控制项，它把对象自身的 <span class="math inline">-v</span> 阻尼抵消掉。这一项不是可选的——去掉它，滑模面就不再是 <span class="math inline">s=e_v+\lambda e_p</span>，滑动段的动态会多出一个 <span class="math inline">-v</span> 的残差，式 (59-13) 的指数衰减也就不成立了。</p>
+<p>超螺旋的积分项 <code>self.z</code> 做了 <span class="math inline">\pm6</span> 的限幅，对应 §59.10.4 的抗饱和要求。需要说清的是：这个限幅在标称工况下<strong>全程没有触发</strong>（实测 <span class="math inline">|z|</span> 最大 3.12，出现在 <span class="math inline">t=0.77</span> s），所以它不影响表 59-10 的任何数字。表 59-10 里 18.35% 的超调来自 <span class="math inline">z</span> 从 3.12 退回零的滞后，而不是来自限幅；限幅的作用是在大扰动或长时偏置时兜底，防止积分无限累积。</p>
+<h3 id="指标口径">59.12.3 指标口径</h3>
+<p>所有指标走 <code>simlib.step_metrics</code>，与全书其他章节一致：</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> metrics(res, ref<span class="op">=</span><span class="fl">1.0</span>, tail<span class="op">=</span><span class="fl">1.0</span>):</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>    m <span class="op">=</span> step_metrics(res[<span class="st">&quot;t&quot;</span>], res[<span class="st">&quot;y&quot;</span>], ref<span class="op">=</span>ref)</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    n_tail <span class="op">=</span> <span class="bu">max</span>(<span class="dv">4</span>, <span class="bu">int</span>(tail <span class="op">/</span> TS))</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>    u_tail <span class="op">=</span> res[<span class="st">&quot;u&quot;</span>][<span class="op">-</span>n_tail:]</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>    m[<span class="st">&quot;tv_u&quot;</span>] <span class="op">=</span> <span class="bu">float</span>(np.<span class="bu">sum</span>(np.<span class="bu">abs</span>(np.diff(res[<span class="st">&quot;u&quot;</span>]))))</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>    m[<span class="st">&quot;tv_u_tail&quot;</span>] <span class="op">=</span> <span class="bu">float</span>(np.<span class="bu">sum</span>(np.<span class="bu">abs</span>(np.diff(u_tail))))</span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>    m[<span class="st">&quot;rms_u_tail&quot;</span>] <span class="op">=</span> <span class="bu">float</span>(np.sqrt(np.mean((u_tail <span class="op">-</span> np.mean(u_tail))<span class="op">**</span><span class="dv">2</span>)))</span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>    m[<span class="st">&quot;ripple_v&quot;</span>] <span class="op">=</span> <span class="bu">float</span>(np.ptp(res[<span class="st">&quot;v&quot;</span>][<span class="op">-</span>n_tail:]))</span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>    m[<span class="st">&quot;ss_err&quot;</span>] <span class="op">=</span> <span class="bu">float</span>(<span class="bu">abs</span>(np.mean(res[<span class="st">&quot;e&quot;</span>][<span class="op">-</span>n_tail:])))</span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> m</span></code></pre></div>
+<p>这里有三个口径必须说清楚，否则数字会被误读：</p>
+<p><strong>第一，<span class="math inline">t_s</span> 的 <span class="math inline">\pm2\%</span> 带以尾段均值为基准</strong>，不是以 1.0 为基准。PID 的尾段均值是 1.0139，所以它的“2% 带”实际是 <span class="math inline">[0.9936, 1.0342]</span>，比名义带更宽。这解释了表 59-7 里 PID 的 <span class="math inline">t_s</span> 为什么偏乐观（1.41 s），也解释了它的 <code>ss_err</code> 为什么是 <span class="math inline">1.47\times10^{-2}</span> 而不是更小。要看真实稳态误差，读 <code>ss_err</code>，不要读 <code>steady_state</code>。</p>
+<p><strong>第二，<code>ripple_v</code> 用 <code>np.ptp</code>（峰峰值）</strong>，不是标准差。抖振是确定性的方波，峰峰值比标准差更能反映执行器的实际摆幅。</p>
+<p><strong>第三，<code>tv_u</code> 是全段总变差，<code>tv_u_tail</code> 只统计最后 1 s</strong>。判断抖振要看 <code>tv_u_tail</code>，因为到达段的正常切换会把 <code>tv_u</code> 撑得很大。表 59-11 里延迟增大时 <code>tv_u</code> 反而下降，就是“切换次数变少、单次摆幅变大”的体现。</p>
+<h3 id="十个实验">59.12.4 十个实验</h3>
+<p><code>report()</code> 调用的十个实验与正文的对应关系如下：</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">函数</th>
+<th style="text-align: left;">内容</th>
+<th style="text-align: left;">正文位置</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><code>exp_gain</code></td>
+<td style="text-align: left;"><span class="math inline">k</span> 扫描：到达时间、<span class="math inline">t_s</span>、IAE、总变差</td>
+<td style="text-align: left;">表 59-2、图 59-3、图 59-8</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>exp_layer</code></td>
+<td style="text-align: left;"><span class="math inline">\phi</span> 扫描：稳态误差与尾段总变差</td>
+<td style="text-align: left;">表 59-6、图 59-7</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><code>exp_law</code></td>
+<td style="text-align: left;">三种到达律的到达段对比</td>
+<td style="text-align: left;">表 59-4、图 59-4</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>exp_sta</code></td>
+<td style="text-align: left;">理想切换 / 边界层 / 超螺旋</td>
+<td style="text-align: left;">表 59-5、表 59-10、图 59-5</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><code>exp_discrete</code></td>
+<td style="text-align: left;">四组 <span class="math inline">(k,T_s)</span> 的准滑动带</td>
+<td style="text-align: left;">图 59-6</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>exp_disturbance</code></td>
+<td style="text-align: left;">4 s 突加负载 <span class="math inline">-1.5</span></td>
+<td style="text-align: left;">图 59-9</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><code>exp_mismatch</code></td>
+<td style="text-align: left;">增益、时间常数、延迟三类失配</td>
+<td style="text-align: left;">表 59-7</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>exp_friction</code></td>
+<td style="text-align: left;">摩擦 0.30 + 增益 0.6</td>
+<td style="text-align: left;">§59.7 表</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><code>exp_surface</code></td>
+<td style="text-align: left;"><span class="math inline">\lambda</span> 扫描</td>
+<td style="text-align: left;">表 59-8</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>exp_delay_chatter</code></td>
+<td style="text-align: left;">0/1/2/4 拍延迟的纹波</td>
+<td style="text-align: left;">表 59-11、图 59-10</td>
+</tr>
+</tbody>
+</table>
+<p>其中 <code>exp_sta</code> 同时支撑两张表与一张图，<code>exp_gain</code> 同时支撑表 59-2 与两张图——同一组数据在正文的不同论证里被复用，这是“一个实验只跑一次、数字只出一个来源”的好处。</p>
+<h3 id="复现时最容易踩的坑">59.12.5 复现时最容易踩的坑</h3>
+<p><strong>坑一：<code>reach_time</code> 的容差</strong>。初版取 0.02，结果 <span class="math inline">k=2</span> 与 <span class="math inline">k=4</span> 全部返回 <code>nan</code>——因为准滑动带 <span class="math inline">kT_s</span> 正好是 0.02 与 0.04，<span class="math inline">s</span> 永远进不了 0.02 的容差。改成 0.05 之后四个 <span class="math inline">k</span> 都有有限值，且与理论值的偏差落在两个采样周期内。</p>
+<p><strong>坑二：扰动的施加时刻</strong>。<code>dist</code> 与 <code>t_dist</code> 必须配合使用，只给 <code>dist</code> 会从头加到尾，测不出“突加”的响应。初版就是漏了 <code>t_dist</code> 的判断，导致 <code>exp_layer</code> 的结果全为零。</p>
+<p><strong>坑三：PID 不能整定得太差</strong>。初版 PID 用 Kp=4、Ki=2、Kd=0.4，超调 76%，对比毫无意义。后来用网格搜索（Kp 8~40、Ki 2~24、Kd 4~20）按“超调&lt;10%、8 s 末误差&lt;1e-2”筛选，才定下 Kp=32、Ki=4、Kd=8。<strong>做对照实验时，对照组必须调到它自己的最好状态</strong>，否则结论是“我的控制器比一个没调好的 PID 好”，没有价值。</p>
+<p><strong>坑四：<code>float(x[0])</code> 的弃用警告</strong>。NumPy 1.25 起对二维数组取标量会警告，应写成 <code>float(x[0, 0])</code>。这个警告不影响结果，但会污染输出，让 <code>report()</code> 的数字难以复制。</p>
+<h3 id="绘图脚本">59.12.6 绘图脚本</h3>
+<p><code>ch059_figs.py</code> 用 <code>matplotlib</code> 的 Agg 后端，逐个调用 <code>sim</code> 里的实验函数取数，再画图。11 张图分三类：</p>
+<ul>
+<li><strong>时域图</strong>（图 59-1、59-3、59-4、59-5、59-9、59-10）：直接用 <code>res["t"]</code>、<code>res["y"]</code>、<code>res["u"]</code>、<code>res["s"]</code> 画；</li>
+<li><strong>参数扫描图</strong>（图 59-6、59-7、59-8）：横轴是参数，纵轴是指标，理论值用虚线叠加；</li>
+<li><strong>结构图</strong>（图 59-2、59-11）：用 <code>styles/</code> 下的方块与流程助手画，不涉及数据。</li>
+</ul>
+<p>图内文字一律用中文，且<strong>不与公式混排</strong>（全书规则）。理论值用虚线、实测用实线，这个约定在全部 11 张图里保持一致，读者可以凭线型区分“公式说的”与“跑出来的”。</p>
+<h3 id="哪些代码可以直接搬走">59.12.7 哪些代码可以直接搬走</h3>
+<p>这套代码写的是“一个对象 + 十个实验”，但其中大部分结构是通用的。分三类看：</p>
+<p><strong>可以直接搬的</strong>：<code>plant_ss</code> 只需改 <span class="math inline">A,B,C</span> 三个矩阵就能描述任何线性对象；<code>simulate</code> 里的延迟缓冲、扰动施加时刻、库仑摩擦三项是通用的“非理想因素注入器”，换成别的控制器（PID、MPC）也能用；<code>metrics</code> 的指标口径与全书统一，搬走后表号与图号仍能对上。</p>
+<p><strong>改两处就能搬的</strong>：<code>SMC</code> 类本身。第一处是 <code>(1.0 - self.lam) * v</code>，这一项依赖“对象是一阶惯性 + 积分器”这个结构，换成二阶对象就要重新推等效控制；第二处是 <code>switching()</code>，它把四种到达律塞在一个函数里，实际项目只保留一种即可。</p>
+<p><strong>不能搬的</strong>：理想速度测量。代码里 <code>v = float(x[1])</code> 直接取状态，没有任何噪声与量化；真实系统里这一步要换成“差分 + 低通”或观测器，纹波至少翻倍。同样不能搬的还有固定 <span class="math inline">T_s=0.01</span> 与 <span class="math inline">u_{\max}=60</span>——这两个数是为本章对象选的，换设备必须重算。</p>
+<p>迁移时最容易漏的是 <code>metrics</code> 的 <code>tail=1.0</code>：它表示“最后 1 s 算稳态”，在本章 8 s 的仿真里合适，但若仿真时长改成 2 s，这 1 s 就吃掉了整个响应，所有稳态指标都会失真。<strong>把代码搬到新对象上时，先改这三个数，再谈调参</strong>：<span class="math inline">T_s</span>、<span class="math inline">u_{\max}</span>、<code>tail</code>。</p>
+<h3 id="本章小结">59.12.8 本章小结</h3>
+<p>第 59 章从“不知道摩擦多大”的场景出发，建立了滑模的三层理解：</p>
+<ul>
+<li><strong>结构层</strong>：滑模面规定轨道，切换项保证到达，等效控制维持滑动；</li>
+<li><strong>参数层</strong>：<span class="math inline">\lambda</span> 定形状、<span class="math inline">k</span> 定鲁棒、<span class="math inline">\phi</span> 定抖振、<span class="math inline">T_s</span> 定精度，四者通过 <span class="math inline">\rho=kT_s/\phi</span> 与 <span class="math inline">t_s\approx\lambda/k+4/\lambda</span> 耦合；</li>
+<li><strong>实现层</strong>：准滑动带 <span class="math inline">kT_s</span> 是离散的几何必然，延迟是最大的敌人，边界层与超螺旋是两条主要的缓解路径。</li>
+</ul>
+<p>三层之间不是并列关系，而是<strong>层层约束</strong>：结构层决定能做什么，参数层决定做多好，实现层决定做不做得成。现场出的问题里，真正属于“理论不对”的极少，绝大多数是第三层没算清——延迟、噪声、量化、饱和，任何一项都能让前两层精心算出的结论作废。所以本章用了将近一半的篇幅在讲第三层，这不是比例失调，而是经验之谈。</p>
+<p>下一章讲反步法与反馈线性化。它们与滑模的关系在 §59.3.6 已经埋了伏笔：滑模的等效控制在匹配条件下会自动抵消已知动态，反步法把这个“抵消”变成了一套系统的、逐级构造的设计方法。<strong>滑模是“用不连续硬压”，反步法是“用结构巧消”</strong>——两条路都通向鲁棒，但代价完全不同。</p>
+
+<nav class="footnav"><a href="ch058.html">← 上一章</a><a href="index.html">返回目录</a><a href="ch060.html">下一章 →</a></nav>
+</body>
+</html>

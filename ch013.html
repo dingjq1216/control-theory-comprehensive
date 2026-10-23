@@ -1,0 +1,916 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="zh-CN" xml:lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>第 13 章　测量数据处理与不确定度分析 · 控制大综合</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    span.underline{text-decoration: underline;}
+    div.column{display: inline-block; vertical-align: top; width: 50%;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    ul.task-list{list-style: none;}
+  </style>
+  <link rel="stylesheet" href="assets/book.css" />
+  <script src="assets/katex/katex.min.js"></script>
+  <script>document.addEventListener("DOMContentLoaded", function () {
+   var mathElements = document.getElementsByClassName("math");
+   var macros = [];
+   for (var i = 0; i < mathElements.length; i++) {
+    var texText = mathElements[i].firstChild;
+    if (mathElements[i].tagName == "SPAN") {
+     katex.render(texText.data, mathElements[i], {
+      displayMode: mathElements[i].classList.contains('display'),
+      throwOnError: false,
+      macros: macros,
+      fleqn: false
+     });
+  }}});
+  </script>
+  <link rel="stylesheet" href="assets/katex/katex.min.css" />
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+  <link rel="stylesheet" href="assets/site.css" />
+</head>
+<body>
+<nav class="topnav"><a class="home" href="index.html">目录</a><span class="pos">013 / 115</span><span class="pager"><a href="ch012.html">上一章</a><a href="ch014.html">下一章</a></span></nav>
+
+<nav id="TOC" role="doc-toc">
+<ul>
+<li><a href="#第13章-测量数据处理与不确定度分析">第13章 测量数据处理与不确定度分析</a>
+<ul>
+<li><a href="#动机与要解决的问题">13.1 动机与要解决的问题</a></li>
+<li><a href="#定义与数学基础">13.2 定义与数学基础</a></li>
+<li><a href="#推导与性质">13.3 推导与性质</a></li>
+<li><a href="#离散对应与数值实现">13.4 离散对应与数值实现</a></li>
+<li><a href="#工程含义与适用边界">13.5 工程含义与适用边界</a></li>
+<li><a href="#仿真与验证">13.6 仿真与验证</a></li>
+<li><a href="#小结与常见错误">13.7 小结与常见错误</a></li>
+</ul></li>
+</ul>
+</nav>
+<h1 id="第13章-测量数据处理与不确定度分析">第13章 测量数据处理与不确定度分析</h1>
+<h2 id="动机与要解决的问题">13.1 动机与要解决的问题</h2>
+<h3 id="同一台设备两次标定给出两套数">13.1.1 同一台设备，两次标定给出两套数</h3>
+<p>一支量程 500 N 的应变式力传感器，上周标定得到零点 0.8 N、灵敏度 1.996 mV/V，这周在同一台标定机上重标，零点变成 <span class="math inline">-1.3</span> N、灵敏度 1.989 mV/V。两次都“通过”了出厂指标，但把它们分别写进控制器，同一给定力下的稳态值会差出千分之几的满量程。若这套力环用于张力控制、带材允许偏差是 1%，这千分之几就是可观的余量损失。</p>
+<p>两次标定差的不是传感器坏了，而是四件在现场无法完全复现的事：环境温度差了几摄氏度，敏感元的零点漂移没有补偿；安装螺栓的拧紧力矩不同，弹性体的预紧应变不同；电缆位置变了，屏蔽层感应到的干扰不同；标定机自身的标准器也带着自己的不确定度。<strong>标定不是把误差清零，而是把误差连同它的不确定度一起记录下来。</strong> 只记一个数、不记这个数有多可信，等于把系统误差伪装成了真值。</p>
+<p>这一章要回答的正是这个问题：一次测量给出的数，凭什么信、信到什么程度、下一次测量会不会给出同样的数。</p>
+<h3 id="从原始采样到可用结论的六步">13.1.2 从原始采样到可用结论的六步</h3>
+<p>测量数据处理不是“采完数据再滤波”这么一步，而是一条有先后依赖的链。表 13-1 把这条链拆成六步，并写明每一步能压掉什么、压不掉什么、以及它自己会引入什么新问题。</p>
+<p>表 13-1　测量数据处理链的六步与各自的能力边界</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">步骤</th>
+<th style="text-align: left;">典型方法</th>
+<th style="text-align: left;">能压掉</th>
+<th style="text-align: left;">压不掉</th>
+<th style="text-align: left;">自身引入的问题</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">去趋势</td>
+<td style="text-align: left;">减去线性或多项式基线</td>
+<td style="text-align: left;">温漂、零点缓慢漂移</td>
+<td style="text-align: left;">阶跃型偏置、增益误差</td>
+<td style="text-align: left;">把慢变真实信号一并减掉</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">异常值剔除</td>
+<td style="text-align: left;"><span class="math inline">3\sigma</span>、MAD、中位数</td>
+<td style="text-align: left;">脉冲干扰、丢帧、错码</td>
+<td style="text-align: left;">系统性偏离、整段偏移</td>
+<td style="text-align: left;">误删真实瞬态、掩盖故障</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">滤波</td>
+<td style="text-align: left;">低通、滑动平均、中值</td>
+<td style="text-align: left;">带外噪声、量化抖动</td>
+<td style="text-align: left;">带内噪声、偏置</td>
+<td style="text-align: left;">相位滞后、瞬态拖尾</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">同步与重采样</td>
+<td style="text-align: left;">时间戳对齐、插值</td>
+<td style="text-align: left;">通道间时差</td>
+<td style="text-align: left;">时钟漂移本身</td>
+<td style="text-align: left;">插值引入相关性与平滑</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">平均</td>
+<td style="text-align: left;">时域多次、频域多次</td>
+<td style="text-align: left;">随机噪声（<span class="math inline">1/\sqrt{N}</span>）</td>
+<td style="text-align: left;">系统误差</td>
+<td style="text-align: left;">把时变系统平均成“假稳态”</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">拟合与合成</td>
+<td style="text-align: left;">最小二乘、GUM、蒙特卡洛</td>
+<td style="text-align: left;">——</td>
+<td style="text-align: left;">——</td>
+<td style="text-align: left;">模型失配被算进参数不确定度</td>
+</tr>
+</tbody>
+</table>
+<p>这张表的读法是自上而下：<strong>越靠前的步骤越“物理”，越靠后的步骤越“数学”。</strong> 去趋势和异常值剔除处理的是信号本身的问题，做错了会永久损失信息且无法恢复；滤波、平均、拟合处理的是统计问题，做错了至少还能从原始数据重来。所以工程上的顺序必须是先存原始数据、再做不可逆处理，原始数据要留到项目结束。</p>
+<p>一个常见的错误顺序是“先滤波再剔异常值”。滤波器把脉冲干扰摊平成一串小幅波动，<span class="math inline">3\sigma</span> 判据就再也认不出它，异常值被平滑成“正常数据”混进结果。正确顺序是先去异常值（或先用中值滤波压制脉冲），再低通滤波。<strong>先做不可逆的、针对明确物理原因的处理，再做可逆的、针对统计特性的处理。</strong></p>
+<h3 id="误差与不确定度不是一回事">13.1.3 误差与不确定度不是一回事</h3>
+<p>工程文献里这两个词经常混用，但它们的含义完全不同。</p>
+<p><strong>误差</strong>是测量值与真值之差，<span class="math inline">e=x-\mu</span>，它是一个确定的数，只是我们不知道它是多少。<strong>不确定度</strong>是对误差可能范围的量化，<span class="math inline">u</span> 的单位与被测量相同，含义是“真值落在 <span class="math inline">x\pm ku</span> 内的可信程度”。若把误差当成一个随机变量，不确定度就是它的标准差（标准不确定度），扩展不确定度则乘上包含因子 <span class="math inline">k</span>。</p>
+<p>这个区分有三条实际后果：</p>
+<ol type="1">
+<li><strong>误差不可知，不确定度可算。</strong> 真值永远拿不到，所以误差永远不知道；但不确定度可以由重复测量的分散性、器件的技术指标、标定链的溯源信息算出来。</li>
+<li><strong>误差有符号，不确定度没有。</strong> 说“这个传感器有 <span class="math inline">-0.3\%</span> 的增益误差”需要标准器比它准一个量级；说“增益的扩展不确定度是 <span class="math inline">0.3\%</span>（<span class="math inline">k=2</span>）”只需要重复标定几次。</li>
+<li><strong>误差可以修正，不确定度只能合成。</strong> 已知的系统偏置应当修正掉，修不干净的残余部分折进不确定度；把已知偏置留在数据里、却用一个大不确定度去“包住”它，是掩盖问题而不是解决问题。</li>
+</ol>
+<p>按来源，误差分两个家族。<strong>系统误差</strong>在重复测量中保持不变或按确定规律变化：零点偏置、增益误差、非线性、温漂、安装应力。<strong>随机误差</strong>在重复测量中不可预测地变化：热噪声、散粒噪声、量化误差、时基抖动、机械振动。两者的处理手段不通用：系统误差靠标定、溯源、对称布置、差分测量来减小；随机误差靠平均、滤波来减小。<strong>用平均去对付系统误差，平均一万次也还是那个偏置；用标定去对付随机误差，标定得再准，单次读数照样抖。</strong></p>
+<h3 id="六个必须算出数来的问题">13.1.4 六个必须算出数来的问题</h3>
+<p>拿到一组测量数据、或者准备设计一次辨识实验，在把数写进报告之前，有六个问题必须能给出定量答案：</p>
+<ol type="1">
+<li><strong>单次测量的标准差是多少？</strong> 同一工况重复 <span class="math inline">N</span> 次，样本标准差 <span class="math inline">s</span> 是多少？要把它压到允许值，需要平均多少次？平均的代价是时间，时间够不够？</li>
+<li><strong>哪些点是异常值，判据的代价是什么？</strong> 用 <span class="math inline">3\sigma</span> 还是 MAD？剔除比例是多少？被剔掉的点里有没有真实瞬态？剔错一个点对拟合结果的影响有多大？</li>
+<li><strong>拟合参数的不确定度是多少？</strong> 斜率和截距的标准误各是多少？两者是否强相关？把参数不确定度折算到被控量，占允许误差的多少？</li>
+<li><strong>系统误差和随机误差各占多少？</strong> 总不确定度里，重复性贡献多少、标准器贡献多少、分辨率贡献多少？只压住占比最大的那一项才有意义。</li>
+<li><strong>标定点怎么分配？</strong> 全量程均匀取 5 点、10 点，还是在工作区间加密？端点的杠杆作用有多强？少一个端点，斜率不确定度会变大多少？</li>
+<li><strong>不确定度多大才算够？</strong> 常见工程准则是测量不确定度不超过被测量允许误差的 <span class="math inline">1/3</span>；达不到时，要么换器件，要么改测量方案，不能靠“多算几位小数”解决。</li>
+</ol>
+<p>这六个问题对应 §13.6 的六组实验。它们也是“数据处理”这件事的边界：<strong>数据处理只能把已有信息提取得更充分，不能创造信息。</strong> 采样时没采到的频段、标定时没覆盖的量程、同步时没对齐的通道，事后都无法补回来。</p>
+<h3 id="一句话核心与本章路线">13.1.5 一句话核心与本章路线</h3>
+<p><strong>本章的核心是：任何一次测量结果都必须连同它的不确定度一起给出；不确定度由随机分量与系统分量合成，随机分量靠平均与滤波压缩，系统分量只能靠标定与溯源压缩，二者不可互相替代。</strong></p>
+<p>路线是：§13.2 建立误差、不确定度、统计量的定义，包括样本标准差、标准误、协方差、A 类与 B 类评定，并给出线性化失效时的蒙特卡洛传播、稳健回归与修约规则；§13.3 推导不确定度传播律、加权最小二乘、异常值判据的统计性质，以及标定点数与参数不确定度的关系，另含 Allan 方差与残差诊断；§13.4 讲离散实现，包括在线均值与方差的递推、滑动中值、异常值剔除的工程判据、标定表的存储与插值、定点标度与数据完整性；§13.5 讲工程边界，包括什么情况下不能平均、什么情况下不能滤波、标定周期怎么定、在线标定与不确定度到控制误差的折算；§13.6 用六组实验把解析式核对一遍；§13.7 收束。</p>
+<p>与相邻章的分工：传感器的物理原理与信号链见第 12 章，滤波器的频域设计见第 14 章，辨识实验的激励设计与数据采集见第 16 章与第 17 章，控制器对测量噪声的敏感度见第 41 章。PID 整定见第 44 章与第 106 章，MPC 见第 58 章与第 80 章，Smith 预估见第 47 章与第 107 章。本章只讲“数据怎么处理和怎么定量地说明它有多准”，不重复这些章的内容。</p>
+<h3 id="三个错误直觉">13.1.6 三个错误直觉</h3>
+<p><strong>第一个错误直觉：多测几次就准了。</strong> 平均只能压随机误差，压不了系统误差。一个带 <span class="math inline">-0.5\%</span> 增益误差的传感器，平均 <span class="math inline">10^6</span> 次，读数的不确定度可以小到 <span class="math inline">0.001\%</span>，但那个 <span class="math inline">-0.5\%</span> 的偏置一分不少。此时报告的“高精度”是虚假的：读数高度可重复，却一致地偏离真值。<strong>重复性不等于准确度</strong>，这是测量领域最容易混淆的一对概念。</p>
+<p><strong>第二个错误直觉：拟合的 <span class="math inline">R^2</span> 高就说明模型对。</strong> <span class="math inline">R^2</span> 只衡量残差占总变异的比例，对系统性偏差不敏感。用一条直线拟合一段轻微弯曲的标定曲线，<span class="math inline">R^2</span> 可以到 0.9999，但在量程两端残差可能是中段的十几倍。<strong>要看残差图，不看 <span class="math inline">R^2</span>。</strong> 残差若呈现明显的弯曲、喇叭口或分段跳变，说明模型形式选错了，此时提高多项式阶数往往只是把系统误差藏进系数里。</p>
+<p><strong>第三个错误直觉：不确定度就是标准差。</strong> 标准差只描述重复测量的分散性，属于 A 类分量；器件指标、标准器溯源、分辨率量化、安装应力这些 B 类分量不在其中。一个重复性极好的传感器，其合成不确定度可能主要由 B 类分量决定。只报标准差，等于把系统误差那一半藏了起来。</p>
+<h2 id="定义与数学基础">13.2 定义与数学基础</h2>
+<h3 id="五个统计量及其分工">13.2.1 五个统计量及其分工</h3>
+<p>一组 <span class="math inline">n</span> 次重复测量 <span class="math inline">x_1,\dots,x_n</span>，工程上真正用到的统计量只有五个，它们的分工互不重叠。</p>
+<p>样本均值估计被测量的最佳值：</p>
+<p><span class="math display">\bar{x}=\frac{1}{n}\sum_{i=1}^{n}x_i \tag{13-1}</span></p>
+<p>样本方差估计单次测量的分散性：</p>
+<p><span class="math display">s^2=\frac{1}{n-1}\sum_{i=1}^{n}(x_i-\bar{x})^2 \tag{13-2}</span></p>
+<p>均值的标准误估计“<span class="math inline">\bar{x}</span> 这个数本身有多不确定”：</p>
+<p><span class="math display">s_{\bar{x}}=\frac{s}{\sqrt{n}} \tag{13-3}</span></p>
+<p>极差 <span class="math inline">R=x_{\max}-x_{\min}</span> 用于快速估计分散性，小样本时 <span class="math inline">s\approx R/1.128</span>（<span class="math inline">n=2</span>）、<span class="math inline">R/2.059</span>（<span class="math inline">n=4</span>）、<span class="math inline">R/2.326</span>（<span class="math inline">n=5</span>）、<span class="math inline">R/3.078</span>（<span class="math inline">n=10</span>）。中位数与 MAD 用于稳健估计，见 §13.2.7。</p>
+<p>这五个量里最容易被误用的是 <span class="math inline">s</span> 与 <span class="math inline">s_{\bar{x}}</span>。<span class="math inline">s</span> 描述“下一次单次读数会偏离多少”，<span class="math inline">s_{\bar{x}}</span> 描述“平均值偏离真值多少”。报告测量结果时写的是后者：<strong>“测得 10.02 mm，重复 10 次的标准差 0.03 mm”是错的，应该说“10 次平均 10.02 mm，单次标准差 0.03 mm，均值的标准误 0.0095 mm”。</strong> 前者把单次分散性当成了平均值的不确定度，夸大了三倍多。</p>
+<h3 id="分母为什么是-n-1">13.2.2 分母为什么是 <span class="math inline">n-1</span></h3>
+<p>式 (13-2) 除以 <span class="math inline">n-1</span> 而不是 <span class="math inline">n</span>，原因不是“修正小样本偏差”这么一句口号，而是 <span class="math inline">\bar{x}</span> 本身用掉了数据的一个自由度。</p>
+<p>若真值 <span class="math inline">\mu</span> 已知，离差 <span class="math inline">x_i-\mu</span> 是 <span class="math inline">n</span> 个独立量，<span class="math inline">\sum(x_i-\mu)^2/n</span> 是 <span class="math inline">\sigma^2</span> 的无偏估计。但 <span class="math inline">\mu</span> 未知，只能用 <span class="math inline">\bar{x}</span> 代替，而 <span class="math inline">\bar{x}</span> 是这 <span class="math inline">n</span> 个数的线性组合。把 <span class="math inline">x_i</span> 分解成“均值方向”与“离差方向”，离差向量被约束在 <span class="math inline">n-1</span> 维子空间里，满足 <span class="math inline">\sum(x_i-\bar{x})=0</span>。约束掉一个自由度，平方和就少了一份独立信息，除以 <span class="math inline">n-1</span> 才还原成 <span class="math inline">\sigma^2</span> 的无偏估计。</p>
+<p>工程上的推论很直接：<strong><span class="math inline">n=2</span> 时 <span class="math inline">s</span> 的自由度只有 1，<span class="math inline">s</span> 本身极不可靠。</strong> 两次读数算出的 <span class="math inline">s</span> 与真实 <span class="math inline">\sigma</span> 可能差一倍以上，用它去定 <span class="math inline">3\sigma</span> 阈值，等于用一个不确定的尺子去量另一个不确定的量。<span class="math inline">n\ge5</span> 是做统计判断的最低要求，<span class="math inline">n\ge10</span> 才谈得上稳定。</p>
+<h3 id="标准误置信区间与-t-分布">13.2.3 标准误、置信区间与 <span class="math inline">t</span> 分布</h3>
+<p><span class="math inline">s_{\bar{x}}=s/\sqrt{n}</span> 只给出了“平均值的标准差”，要给出区间还得乘一个包含因子。当 <span class="math inline">\sigma</span> 未知、只能用 <span class="math inline">s</span> 代替时，这个因子不是正态分布的 1.96，而是 <span class="math inline">t</span> 分布的分位数：</p>
+<p><span class="math display">\bar{x}\pm t_{1-\alpha/2,\,\nu}\cdot\frac{s}{\sqrt{n}},\qquad \nu=n-1 \tag{13-4}</span></p>
+<p><span class="math inline">t</span> 分布比正态“胖”，因为分母 <span class="math inline">s</span> 本身有随机性。自由度越小，尾巴越厚。<span class="math inline">\alpha=0.05</span> 时，<span class="math inline">\nu=1</span> 的 <span class="math inline">t=12.71</span>，<span class="math inline">\nu=4</span> 的 <span class="math inline">t=2.776</span>，<span class="math inline">\nu=9</span> 的 <span class="math inline">t=2.262</span>，<span class="math inline">\nu\to\infty</span> 才趋于 1.96。</p>
+<p>这张表解释了工程上一条经验：<strong>小样本的置信区间比直觉宽得多。</strong> 重复 5 次、<span class="math inline">s=0.03</span> mm，均值的 95% 区间半宽是 <span class="math inline">2.776\times0.03/\sqrt{5}=0.037</span> mm，比均值本身的不确定度还接近单次标准差；重复 20 次才降到 <span class="math inline">2.093\times0.03/\sqrt{20}=0.014</span> mm。想靠增加次数把区间压窄，收益是 <span class="math inline">1/\sqrt{n}</span>：从 5 次到 20 次，次数翻四倍，区间只窄了 2.6 倍。</p>
+<h3 id="a-类评定与-b-类评定">13.2.4 A 类评定与 B 类评定</h3>
+<p>不确定度的评定按信息来源分两类，这个划分决定了“能不能靠多测几次改善”。</p>
+<p><strong>A 类评定</strong>用重复测量的统计分散性估计，<span class="math inline">u_A=s/\sqrt{n}</span>，自由度 <span class="math inline">\nu_A=n-1</span>。它只反映随机分量。</p>
+<p><strong>B 类评定</strong>用一切非统计的信息估计：器件手册的精度指标、标定证书的扩展不确定度、分辨率的量化宽度、环境条件的界限。B 类不给标准差，给的是一个“区间半宽” <span class="math inline">a</span>，再按假定的分布折算成标准不确定度：</p>
+<p><span class="math display">u_B=\frac{a}{k_B} \tag{13-5}</span></p>
+<p>常用折算：均匀分布 <span class="math inline">k_B=\sqrt{3}</span>（只知道界限、不知分布，如量化、手册的“<span class="math inline">\pm</span>”指标）；三角分布 <span class="math inline">k_B=\sqrt{6}</span>（两个均匀量之和，如两次装夹的偏心）；正态分布 <span class="math inline">k_B=2</span>（证书给出 95% 扩展不确定度）；反正弦分布 <span class="math inline">k_B=\sqrt{2}</span>（正弦振动、失配）。</p>
+<p>均匀分布用得最多，也最容易被误用。手册写“精度 <span class="math inline">\pm0.1\%</span> FS”，这个 <span class="math inline">\pm0.1\%</span> 通常是极限误差，落在区间内任何位置的可能性相近，折算成标准不确定度是 <span class="math inline">0.1\%/\sqrt{3}=0.058\%</span>，而不是 <span class="math inline">0.1\%/2=0.05\%</span>，更不是直接拿 <span class="math inline">0.1\%</span> 当标准差。<strong>把极限误差当标准差，会把 B 类分量高估约 1.7 倍；反过来拿它当 <span class="math inline">2\sigma</span>，又会低估 15%。</strong></p>
+<h3 id="合成标准不确定度与有效自由度">13.2.5 合成标准不确定度与有效自由度</h3>
+<p>各分量相互独立时，合成标准不确定度是方和根：</p>
+<p><span class="math display">u_c=\sqrt{\sum_{i=1}^{m}u_i^2} \tag{13-6}</span></p>
+<p>这条式子的含义是“方差相加”，不是“误差相加”。两个各为 <span class="math inline">1</span> 的分量合成后是 <span class="math inline">\sqrt{2}=1.414</span>，不是 <span class="math inline">2</span>；十个各为 <span class="math inline">1</span> 的分量合成后是 <span class="math inline">3.16</span>，不是 <span class="math inline">10</span>。<strong>只要有一个分量显著大于其余，它就是主导项，压其他项没有意义。</strong> 这是不确定度分析最实用的结论：先找主导项，再决定改哪里。</p>
+<p>合成后的自由度按 Welch–Satterthwaite 公式折算：</p>
+<p><span class="math display">\nu_{\mathrm{eff}}=\frac{u_c^4}{\sum_{i=1}^{m}\dfrac{u_i^4}{\nu_i}} \tag{13-7}</span></p>
+<p>B 类分量的自由度通常取 <span class="math inline">\infty</span>（认为其区间可靠），因此当 B 类占主导时 <span class="math inline">\nu_{\mathrm{eff}}</span> 很大，包含因子接近 1.96；当 A 类小样本占主导时 <span class="math inline">\nu_{\mathrm{eff}}</span> 接近 <span class="math inline">n-1</span>，包含因子要取 <span class="math inline">t</span> 分布的值。工程上常见的错误是：合成时用了 <span class="math inline">t</span> 分布的 2.776，却按正态的 1.96 报扩展不确定度，或者反过来。</p>
+<h3 id="不确定度传播律">13.2.6 不确定度传播律</h3>
+<p>被测量 <span class="math inline">y</span> 由 <span class="math inline">m</span> 个直接测量量经 <span class="math inline">y=f(x_1,\dots,x_m)</span> 算出时，一阶近似下：</p>
+<p><span class="math display">u_c^2(y)=\sum_{i=1}^{m}\left(\frac{\partial f}{\partial x_i}\right)^2u^2(x_i)+2\sum_{i&lt;j}\frac{\partial f}{\partial x_i}\frac{\partial f}{\partial x_j}u(x_i,x_j) \tag{13-8}</span></p>
+<p>各输入量独立时第二项为零，只剩灵敏度系数的平方加权。这条式子在工程上有三个常用特例：</p>
+<ol type="1">
+<li><strong>加减</strong>：<span class="math inline">y=x_1\pm x_2</span>，<span class="math inline">u_c=\sqrt{u_1^2+u_2^2}</span>，与符号无关。</li>
+<li><strong>乘除</strong>：<span class="math inline">y=x_1x_2</span> 或 <span class="math inline">x_1/x_2</span>，相对不确定度方和根，<span class="math inline">\dfrac{u_c}{y}=\sqrt{\left(\dfrac{u_1}{x_1}\right)^2+\left(\dfrac{u_2}{x_2}\right)^2}</span>。</li>
+<li><strong>幂</strong>：<span class="math inline">y=x^p</span>，<span class="math inline">\dfrac{u_c}{y}=|p|\dfrac{u}{x}</span>，指数把相对不确定度放大 <span class="math inline">|p|</span> 倍。</li>
+</ol>
+<p>第三条最容易被忽略。用压差测流量，<span class="math inline">q\propto\sqrt{\Delta p}</span>，压差 <span class="math inline">1\%</span> 的不确定度变成流量 <span class="math inline">0.5\%</span>；反过来，用流量反推压差，<span class="math inline">1\%</span> 的流量误差放大成 <span class="math inline">2\%</span> 的压差误差。<strong>在传播链上，指数大于 1 的那一环是误差放大器，应当优先改善。</strong></p>
+<p>式 (13-8) 的线性化假设在非线性强、不确定度大时失效（相对不确定度超过 10% 量级），此时应当用蒙特卡洛传播：对每个输入量按其分布抽样，计算 <span class="math inline">y</span> 的样本分布，直接取分位数。GUM 补充文件把蒙特卡洛列为与线性传播并列的方法，不是“更精确的替代”。</p>
+<h3 id="异常值的三个判据">13.2.7 异常值的三个判据</h3>
+<p>异常值判据的核心矛盾是：阈值定得松，异常值漏网；定得紧，正常点被误删。</p>
+<p><strong><span class="math inline">3\sigma</span> 判据</strong>：<span class="math inline">|x_i-\bar{x}|&gt;3s</span> 判为异常。问题是 <span class="math inline">\bar{x}</span> 与 <span class="math inline">s</span> 都被异常值本身污染——一个偏离 20 倍的点会把 <span class="math inline">s</span> 抬高好几倍，反而使自己“落回” <span class="math inline">3\sigma</span> 以内。这个现象叫掩蔽效应，样本越小时越严重。</p>
+<p><strong>MAD 判据</strong>：用中位数与中位绝对偏差代替均值与标准差：</p>
+<p><span class="math display">\mathrm{MAD}=\operatorname{median}\left(|x_i-\tilde{x}|\right),\qquad \hat{\sigma}=1.4826\,\mathrm{MAD} \tag{13-9}</span></p>
+<p>常数 1.4826 使 <span class="math inline">\hat{\sigma}</span> 在正态数据下与标准差一致。中位数与 MAD 的崩溃点是 50%，即少于一半的点异常时估计不受影响，所以掩蔽效应基本消失。判据取 <span class="math inline">|x_i-\tilde{x}|&gt;3\hat{\sigma}</span>。</p>
+<p><strong>Grubbs 检验</strong>：对“只有一个异常值”的假设做正式检验，统计量</p>
+<p><span class="math display">G=\frac{\max_i|x_i-\bar{x}|}{s} \tag{13-10}</span></p>
+<p>超过临界值（<span class="math inline">n=10</span>、<span class="math inline">\alpha=0.05</span> 时 <span class="math inline">G_{\mathrm{crit}}=2.290</span>；<span class="math inline">n=20</span> 时 <span class="math inline">2.709</span>）才剔除。它的优点是给了明确的显著性水平，缺点同样是被 <span class="math inline">\bar{x}</span> 与 <span class="math inline">s</span> 污染，且一次只能剔一个，多个异常值要迭代。</p>
+<p>三个判据的选择不看“哪个更先进”，看两件事：<strong>异常值的比例</strong>与<strong>是否允许误删</strong>。比例低于 5%、且异常值来源明确（通信错码、传感器饱和），用 <span class="math inline">3\sigma</span> 足够；比例可能超过 10%、或异常值幅度极大，必须用 MAD；需要写进报告、给出显著性依据，用 Grubbs。</p>
+<h3 id="标定的最小二乘表述">13.2.8 标定的最小二乘表述</h3>
+<p>标定的本质是估计映射 <span class="math inline">y=c_0+c_1x</span> 的两个系数。写成矩阵形式，<span class="math inline">n</span> 个标定点满足</p>
+<p><span class="math display">\mathbf{y}=\mathbf{X}\boldsymbol{\beta}+\boldsymbol{\varepsilon},\qquad \mathbf{X}=\begin{bmatrix}1&amp;x_1\\ \vdots&amp;\vdots\\ 1&amp;x_n\end{bmatrix},\quad \boldsymbol{\beta}=\begin{bmatrix}c_0\\ c_1\end{bmatrix} \tag{13-11}</span></p>
+<p>最小二乘解 <span class="math inline">\hat{\boldsymbol{\beta}}=(\mathbf{X}^{\mathsf{T}}\mathbf{X})^{-1}\mathbf{X}^{\mathsf{T}}\mathbf{y}</span>，参数协方差</p>
+<p><span class="math display">\operatorname{cov}(\hat{\boldsymbol{\beta}})=\sigma^2(\mathbf{X}^{\mathsf{T}}\mathbf{X})^{-1} \tag{13-12}</span></p>
+<p><span class="math inline">\sigma^2</span> 由残差估计：<span class="math inline">\hat{\sigma}^2=\dfrac{\|\mathbf{y}-\mathbf{X}\hat{\boldsymbol{\beta}}\|^2}{n-2}</span>，分母的 <span class="math inline">n-2</span> 与式 (13-2) 的 <span class="math inline">n-1</span> 同源——两个系数用掉了两个自由度。</p>
+<p>式 (13-12) 的对角线开方就是截距与斜率的标准误。这个式子还直接给出两条工程结论：<strong>标定点越多、<span class="math inline">x</span> 的分布越宽，参数越准</strong>；<strong>截距与斜率负相关，<span class="math inline">x</span> 的均值离零点越远，相关性越强</strong>。后者解释了为什么只在小量程内标定的传感器，外推到大量程时误差会迅速放大：斜率的不确定度被杠杆臂放大到了外推点上。</p>
+<h3 id="线性化失效时蒙特卡洛传播">13.2.9 线性化失效时：蒙特卡洛传播</h3>
+<p>式 (13-8) 的传播律来自一阶泰勒展开，它把每个输入量的影响近似成线性。这个近似什么时候不够用，可以看二阶项的相对大小：</p>
+<p><span class="math display">\Delta y\approx f&#39;u+\frac{1}{2}f&#39;&#39;u^{2} \tag{13-13}</span></p>
+<p>第二项与第一项之比约为 <span class="math inline">\frac{1}{2}(f&#39;&#39;/f&#39;)u</span>，即“相对不确定度乘以一个曲率因子”。相对不确定度小于 10%、曲率因子在 1 附近时，二阶项贡献不到 5%，一阶展开够用；一旦相对不确定度到 50%，二阶项就能改掉结论。</p>
+<p>一个能当场算的例子是 <span class="math inline">y=e^{x}</span>、<span class="math inline">x=0\pm0.5</span>。线性传播给出 <span class="math inline">u_y=e^{0}\times0.5=0.5</span>；用 20 万次抽样直接算，输出的均值 1.133774、标准差 0.604965，比线性结果大 21%；95% 区间是 <span class="math inline">[0.3771,\,2.6623]</span>，而不是线性化给出的对称区间 <span class="math inline">[0.0200,\,1.9800]</span>。<strong>标准差只差 21%，区间下限却差了一个数量级</strong>——指数函数的左尾被压扁、右尾被拉长，用一个对称的 <span class="math inline">\pm</span> 去描述它，形状本身就是错的。</p>
+<p>蒙特卡洛传播只有四步：给每个输入量指定分布（正态由 <span class="math inline">u</span> 与 <span class="math inline">\nu</span> 定，均匀由半宽定）；独立抽样 <span class="math inline">M</span> 组；逐组代入测量模型算出 <span class="math inline">y</span>；对 <span class="math inline">y</span> 的样本取均值、标准差与规定包含概率的分位数。<span class="math inline">M</span> 取多大由收敛速度定，抽样本身带来的相对误差约为</p>
+<p><span class="math display">\varepsilon_{\mathrm{MC}}\approx\frac{1}{\sqrt{2M}} \tag{13-14}</span></p>
+<p><span class="math inline">M=10^{4}</span> 时 0.7%，<span class="math inline">M=10^{6}</span> 时 0.07%。工程上取 <span class="math inline">10^{5}</span>–<span class="math inline">10^{6}</span> 已足够，再多只是在和浮点舍入较劲。</p>
+<p>输入量相关时不能各自独立抽样。做法是对协方差矩阵做 Cholesky 分解 <span class="math inline">\mathbf{C}=\mathbf{L}\mathbf{L}^{\mathsf{T}}</span>，先抽标准正态向量 <span class="math inline">\mathbf{z}</span>，再令 <span class="math inline">\mathbf{x}=\boldsymbol{\mu}+\mathbf{L}\mathbf{z}</span>，样本的经验协方差就会收敛到 <span class="math inline">\mathbf{C}</span>。忽略相关性是本方法最常见的误用，它造成的低估往往比线性化误差还大。</p>
+<p>蒙特卡洛还有一个副产品：包含因子。线性传播里 <span class="math inline">k=2</span> 约对应 95%，非正态输出下这个对应关系失效。上例的 95% 区间半宽是 <span class="math inline">(2.6623-0.3771)/2=1.1426</span>，除以标准差 0.604965 得 <span class="math inline">k_{\mathrm{MC}}=1.889</span>——同样的置信水平，<span class="math inline">k</span> 从 2 掉到 1.89。报告里若仍写 <span class="math inline">k=2</span>，实际包含概率会高于名义值，看似保守，实则掩盖了分布的不对称。</p>
+<p>必须改用蒙特卡洛的场合有五类：相对不确定度超过 10%；测量模型强非线性（指数、幂次大于 3、饱和）；输入量分布明显非正态（均匀、三角、截断）；输出接近物理边界（不能为负的浓度、有上限的力）；输出分布出现双峰（两种工况混在一起）。这五种情况下，线性传播给出的不只是一个偏小的数，而是一个形状错误的结论。控制器里不做蒙特卡洛，它属于标定与验收环节的工具；实时通道仍用式 (13-8)，但要把“这条式子在当前工况下是否成立”作为设计输入写进文档。</p>
+<p>可复现性也要交代清楚：随机数发生器、种子、抽样次数。本章脚本固定种子 20261013，读者重跑会得到同一组数——<strong>一个不能复现的不确定度，和没有不确定度是一样的。</strong></p>
+<h3 id="稳健回归theilsen-与迭代重加权">13.2.10 稳健回归：Theil–Sen 与迭代重加权</h3>
+<p>最小二乘的崩溃点是 0：一个点只要离得足够远，就能把斜率拉到任意值，因为平方项给了它无界的杠杆。标定现场恰恰容易出现这种点——量具没放稳、加载时碰了一下、砝码读数抄错一位。</p>
+<p>Theil–Sen 估计不用平方，而是把所有点对的斜率取中位数：</p>
+<p><span class="math display">\hat{c}_1^{\mathrm{TS}}=\operatorname{median}_{i&lt;j}\frac{y_j-y_i}{x_j-x_i} \tag{13-15}</span></p>
+<p><span class="math inline">n</span> 个点共 <span class="math inline">n(n-1)/2</span> 个斜率，中位数只由排序中间的那几个决定，少数离谱的点挪不动它。它的崩溃点是 29.3%，即<strong>近三成的点同时被污染才会失效</strong>，而最小二乘一个点就够了；代价是正态数据下的渐近效率约 0.744，要达到同等精度需要多约三分之一的样本。</p>
+<p>用一个 6 点算例看清差别。真斜率 1.0，前 5 点带轻微噪声（1.02、2.05、2.94、4.08、4.97），第 6 点被误记成 12.0。最小二乘给出斜率 1.85143、截距 <span class="math inline">-0.11857</span>，斜率偏了 85%；Theil–Sen 在 15 个点对斜率上取中位数得 1.02000，只偏 2%；把第 6 点剔除后重做最小二乘得 0.99300。<strong>一个坏点让最小二乘的结论彻底作废，却几乎没碰动 Theil–Sen。</strong> 15 个点对里有 5 个含异常点，占三分之一，但中位数落在干净的 10 个里，所以结果不受影响——这正是崩溃点 29.3% 的直观含义：按“异常点个数占比”算，本例只有 1/6。</p>
+<p>Theil–Sen 的代价是计算量 <span class="math inline">O(n^2)</span>。<span class="math inline">n=20</span> 只有 190 个点对，随手可算；<span class="math inline">n=1000</span> 是 50 万对，就不合适了。大数据量改用迭代重加权最小二乘：先做一次普通最小二乘，用残差定权重 <span class="math inline">w_i=\min\left(1,\,c/|r_i|\right)</span>（Huber 权，<span class="math inline">c</span> 通常取 <span class="math inline">1.345\hat{\sigma}</span>），再解加权问题，重复三到五轮。它保留了 <span class="math inline">O(n)</span> 的规模，崩溃点不如 Theil–Sen，但足以对付零星的粗大误差。</p>
+<p>工程上的分工是清楚的：<strong>标定点点数少（5–20 个）、异常机制明确，用 Theil–Sen 做一次交叉核对；在线数据流长，用 IRLS 或中值滤波。</strong> 两者都不该替代对异常来源的追查——稳健估计能给出一个可用的斜率，但不会告诉你那个 12.0 是怎么来的。</p>
+<h3 id="拟合优度不能代替不确定度">13.2.11 拟合优度不能代替不确定度</h3>
+<p>标定报告里最常见的一个数是决定系数</p>
+<p><span class="math display">R^{2}=1-\frac{\sum_{i=1}^{n}\left(y_i-\hat{y}_i\right)^{2}}{\sum_{i=1}^{n}\left(y_i-\bar{y}\right)^{2}} \tag{13-16}</span></p>
+<p>它常被当成“标定做得好不好”的判据，0.999 以上就放心，0.99 就皱眉。这个用法是错的，因为分母 <span class="math inline">\sum(y_i-\bar y)^2</span> 与标定跨度直接挂钩，而跨度是实验设计选的，不是精度指标。</p>
+<p>用本章的参数算一遍就清楚了：残差标准差 0.5 N、20 个等距标定点，跨度取 500 N 时 <span class="math inline">R^2=0.999990</span>；跨度缩到 100 N，<span class="math inline">R^2=0.999756</span>；缩到 15.6 N，<span class="math inline">R^2=0.989962</span>；再缩到 10 N，<span class="math inline">R^2=0.975571</span>。<strong>同一条测量链、同样的噪声，只因为标定跨度从 500 N 改成 15.6 N，<span class="math inline">R^2</span> 就从五个 9 掉到两个 9。</strong> 精度一点没变，变的是分母。</p>
+<p>反过来更危险：把跨度拉大可以把 <span class="math inline">R^2</span> 刷得很漂亮，但预测标准误一点没降——式 (13-23) 里只有 <span class="math inline">n</span> 与 <span class="math inline">S_{xx}</span> 决定精度，而 <span class="math inline">S_{xx}</span> 随跨度平方增长，<span class="math inline">R^2</span> 的分母也跟着平方增长，两者同步，<span class="math inline">R^2</span> 对“标定点该多密”完全不敏感。</p>
+<p>真正该报告的是三个量：残差标准差 <span class="math inline">\hat\sigma</span>（噪声水平）、参数标准误（式 (13-12) 对角线开方）、规定工作点处的预测标准误（式 (13-23)）。三个都带物理单位，读者能直接判断“这个数够不够用”。<span class="math inline">R^2</span> 无量纲，又是跨度与噪声的混合体，不承担这个职责。</p>
+<p>外推场合 <span class="math inline">R^2</span> 更具有欺骗性。实验四里只在 0–100 N 内标定 6 点，<span class="math inline">R^2</span> 依然很高，但外推到 500 N 的预测标准误是 2.6970 N。<strong>高 <span class="math inline">R^2</span> 只说明“标定点附近的点落在一条直线附近”，对直线能延伸多远一个字都没说。</strong> 这也是为什么外推必须单独给出不确定度，而不能拿拟合优度顶替。</p>
+<h3 id="有效数字修约与相对量的分母">13.2.12 有效数字、修约与相对量的分母</h3>
+<p>修约本身就是一次量化，它的不确定度可以算：末位单位为 <span class="math inline">q</span> 时，舍入误差在 <span class="math inline">[-q/2,\,q/2]</span> 内均匀分布，标准差为</p>
+<p><span class="math display">u_{\mathrm{round}}=\frac{q}{2\sqrt{3}} \tag{13-17}</span></p>
+<p>读数记到 0.01 mm 时 <span class="math inline">u_{\mathrm{round}}=0.0029</span> mm，相对重复性 0.030 mm 可以忽略；若为了“看起来简洁”只记到 0.1 mm，<span class="math inline">u_{\mathrm{round}}=0.029</span> mm，与重复性同量级，这时记录位数就成了误差源。<strong>记录位数要由测量能力定，不能由书写习惯定。</strong></p>
+<p>报告里的有效数字有两条硬规则。第一，扩展不确定度 <span class="math inline">U</span> 只保留一至两位有效数字，通常两位；第二，测量结果的末位与 <span class="math inline">U</span> 的末位对齐。<span class="math inline">U=0.7178</span> N 应写成 0.72 N，结果写成 100.20 N 而不是 100.2 N——写成 100.2 N 就暗示末位是 0.1 N，与 <span class="math inline">U=0.72</span> N 不匹配。反过来，把 <span class="math inline">U</span> 写成 0.7178 N 是伪精度：多出来的两位没有任何统计意义。</p>
+<p>修约只能做一次。中途把中间量修约再代入后续计算，会引入额外的舍入误差，且方向不可控。工程做法是全程用双精度，只在最终输出时按规则修约一次；若必须手工计算，中间量至少多留两位。</p>
+<p>相对量的分母是现场争议的高发区。同一个 <span class="math inline">u_c=0.3589</span> N，除以满量程 500 N 得 0.0718% FS，除以 10 N 的当前读数得 3.589%——<strong>相差 50 倍，说的却是同一个不确定度。</strong> 指标书上写 “%FS” 还是 “%reading”，必须逐字确认：前者在大量程处宽松、小量程处苛刻；后者相反。选型时若把 %FS 当成 %reading 去核算小信号工况，会严重低估误差。</p>
+<p>单位换算同样会埋雷。<span class="math inline">1\ \mathrm{kgf}=9.80665</span> N，工程上常按 9.8 或 10 近似，两种近似分别带来 0.07% 与 2.0% 的偏差——后者已经超过多数力传感器的精度等级。<strong>换算常数要写进程序常量并注明来源，不要在注释里写“约等于”。</strong></p>
+<h2 id="推导与性质">13.3 推导与性质</h2>
+<h3 id="平均为什么只能压随机分量">13.3.1 平均为什么只能压随机分量</h3>
+<p>设单次测量 <span class="math inline">x_i=\mu+b+\varepsilon_i</span>，<span class="math inline">b</span> 是系统偏置，<span class="math inline">\varepsilon_i</span> 独立同分布、均值 0、方差 <span class="math inline">\sigma^2</span>。<span class="math inline">n</span> 次平均为</p>
+<p><span class="math display">\bar{x}=\mu+b+\frac{1}{n}\sum_{i=1}^{n}\varepsilon_i \tag{13-18}</span></p>
+<p>右边第三项的方差是 <span class="math inline">\sigma^2/n</span>，随 <span class="math inline">n</span> 趋向 0；第二项 <span class="math inline">b</span> 与 <span class="math inline">n</span> 无关。<strong>平均的作用是把随机项除以 <span class="math inline">\sqrt{n}</span>，对系统项连碰都没碰到。</strong></p>
+<p>实验一把这条性质量化了：真值 10.000 mm、偏置 <span class="math inline">+0.050</span> mm、单次标准差 0.030 mm，重复 5 次时 95% 区间半宽 0.0372 mm、真值覆盖率 17.0%；重复 100 次后半宽收到 0.0060 mm，覆盖率降到 0.0%。覆盖率下降不是统计方法出了问题，恰恰相反：<strong>区间越准，越清楚地暴露了它不含真值。</strong> 一个只含 A 类分量的区间，天生无法覆盖系统偏置，这正是不确定度评定必须把 B 类分量合进去的原因。</p>
+<p>这条推导也给出一条工程判据：如果增加平均次数后，测量结果稳定地停在某个偏离真值的值上，说明剩下的误差是系统误差，继续平均只是浪费时间——<strong>此时该做的是重新标定，不是继续采样。</strong></p>
+<figure>
+<img src="figs/ch013/fig_013_01_averaging.svg" alt="图 13-1　平均的标准误收缩与系统偏置的位置" /><figcaption aria-hidden="true">图 13-1　平均的标准误收缩与系统偏置的位置</figcaption>
+</figure>
+<p>图 13-1 把式 (13-18) 的两项画在同一张双对数图上：斜线是标准误 <span class="math inline">\sigma/\sqrt{n}</span>，斜率为 <span class="math inline">-1/2</span>，每把 <span class="math inline">n</span> 提高十倍，纵向只降 3.16 倍；水平线是系统偏置 0.050 mm，不随 <span class="math inline">n</span> 移动。本例中从 <span class="math inline">n=1</span> 起标准误就已在偏置线之下，继续平均只是在一条对总误差已无影响的曲线上往下走——<span class="math inline">n=100</span> 时标准误 0.0030 mm，只有偏置的 6%。<strong>判读这张图的方法不是找交点，而是看两条线哪一条在上：在上方的那一项才是总误差的实际控制者。</strong></p>
+<h3 id="平均次数的代价与收益">13.3.2 平均次数的代价与收益</h3>
+<p>由式 (13-18)，把标准误从 <span class="math inline">s</span> 压到目标值 <span class="math inline">s_{\mathrm{target}}</span> 所需次数</p>
+<p><span class="math display">n=\left(\frac{s}{s_{\mathrm{target}}}\right)^2 \tag{13-19}</span></p>
+<p>要压 10 倍，需要 100 次；压 100 倍，需要 10000 次。而每次测量要占用时间，若单次测量耗时 <span class="math inline">T_m</span>，总耗时 <span class="math inline">nT_m</span> 随目标精度的平方增长。<strong>精度每提高一个数量级，时间要付两个数量级的代价。</strong></p>
+<p>实验一的数据可以换成一张时间账：采样率 1 kHz、单次测量 1 ms，5 次平均耗时 5 ms，100 次平均耗时 100 ms。对一个带宽 10 Hz 的控制环，100 ms 的平均窗本身就是 1 Hz 的低通，相位滞后近 <span class="math inline">90^\circ</span>，环早就不能用了。<strong>平均是最便宜的降噪手段，也是最贵的时间开销</strong>，这就是为什么工程上更倾向用模拟滤波或提高单次测量精度，而不是无脑堆平均次数。</p>
+<p>还有一个隐藏条件：平均要求被测量在平均窗内不变。若被测量以斜率 <span class="math inline">\dot{y}</span> 变化，<span class="math inline">n</span> 次平均引入的滞后是 <span class="math inline">(n-1)T_m/2</span>，折算成误差是 <span class="math inline">\dot{y}(n-1)T_m/2</span>。当这个误差超过降噪收益时，平均就亏了。<strong>平均窗的长度必须与被测量的变化速率匹配</strong>，这一点在 §13.5 还会展开。</p>
+<h3 id="sigma-判据的掩蔽效应">13.3.3 <span class="math inline">3\sigma</span> 判据的掩蔽效应</h3>
+<p>设 <span class="math inline">n</span> 个点中有一个异常值，幅度 <span class="math inline">k\sigma</span>，其余为独立正态噪声。此时样本方差的期望可以精确算出：</p>
+<p><span class="math display">\frac{\mathbb{E}[s^2]}{\sigma^2}=\frac{n-1}{n}+k^2\frac{n-2}{n(n-1)} \tag{13-20}</span></p>
+<p><span class="math inline">n=20</span>、<span class="math inline">k=5</span> 时，右边 <span class="math inline">=0.95+25\times0.0474=2.134</span>，即 <span class="math inline">s</span> 被抬到 <span class="math inline">1.46\sigma</span>。异常值越大，<span class="math inline">s</span> 越大，<span class="math inline">3s</span> 这条线跟着水涨船高。</p>
+<p>检出条件是异常值到污染均值的距离超过 <span class="math inline">3s</span>：</p>
+<p><span class="math display">k\left(1-\frac{1}{n}\right)&gt;3\sqrt{\frac{n-1}{n}+k^2\frac{n-2}{n(n-1)}} \tag{13-21}</span></p>
+<p><span class="math inline">n=20</span> 解得 <span class="math inline">k&gt;4.24</span>。也就是说，<strong>一个 4 倍标准差的异常值，在 20 个样本里用 <span class="math inline">3\sigma</span> 判据是查不出来的</strong>——它把自己藏进了自己抬高的标准差里。实验三的数值扫描给出 5–6 倍才检出，比解析值更高，因为单次样本的 <span class="math inline">s</span> 还带随机波动。</p>
+<p>式 (13-21) 还说明掩蔽效应随样本量急剧减弱：<span class="math inline">n=5</span> 时右边恒大于左边，解析上<strong>永远检不出</strong>；<span class="math inline">n=10</span> 要 <span class="math inline">k&gt;28.5</span>；<span class="math inline">n=20</span> 要 <span class="math inline">k&gt;4.24</span>；<span class="math inline">n=100</span> 才回到 <span class="math inline">k&gt;3.2</span>。<strong>样本越少，<span class="math inline">3\sigma</span> 越不可信；<span class="math inline">n\le5</span> 时这条判据实际上等于没有。</strong></p>
+<figure>
+<img src="figs/ch013/fig_013_02_critical.svg" alt="图 13-2　3\sigma 判据的临界异常幅度随样本数的变化" /><figcaption aria-hidden="true">图 13-2　<span class="math inline">3\sigma</span> 判据的临界异常幅度随样本数的变化</figcaption>
+</figure>
+<p>图 13-2 是式 (13-21) 的数值解：横轴样本数取对数，纵轴是 <span class="math inline">3\sigma</span> 判据能检出的最小异常幅度。<span class="math inline">n=20</span> 处为 4.24 倍，<span class="math inline">n=10</span> 处升到 28.5 倍，<span class="math inline">n\le5</span> 时曲线冲出图外——解析上无解。随着 <span class="math inline">n</span> 增大，曲线缓慢趋近 3 倍渐近线，<span class="math inline">n=200</span> 时仍在 3 倍上方。图中另画了 4.5 倍参考线，代表 MAD 判据在大样本下的等效临界幅度，它几乎不随 <span class="math inline">n</span> 漂移，这正是稳健统计量的价值所在。<strong>小样本不要用 <span class="math inline">3\sigma</span>；若不得不用，就要接受它只能抓住离谱到几十倍的异常。</strong></p>
+<h3 id="mad-为什么免疫掩蔽">13.3.4 MAD 为什么免疫掩蔽</h3>
+<p>MAD 的崩溃点是 50%，这不是一句定性描述，而可以从影响函数看出来：中位数只由排序后中间的那个（或两个）值决定，单个点无论偏离多远，只要它不跨过中间位置，中位数就不变。因此异常值对 <span class="math inline">\tilde{x}</span> 与 MAD 的影响是有界的，<span class="math inline">s</span> 的影响则是无界的。</p>
+<p>代价是效率。正态数据下，MAD 估计量的渐近效率约为 0.368：<strong>要达到与样本标准差相同的精度，MAD 需要约 2.7 倍的样本量。</strong> 实验二里两者都正确检出了两个异常值，但这不是说 MAD 全面占优——在干净数据、大样本、只关心标准误的场合，<span class="math inline">s</span> 的精度更高。</p>
+<p>选择判据的正确姿势是先问“异常值比例可能多大”：低于 5%、来源明确（错码、饱和、丢帧），<span class="math inline">3\sigma</span> 够用且精度更高；超过 10%、或存在成片异常（通信中断、传感器脱落），必须用 MAD 或中位数类方法。<strong>判据的选择取决于对异常机制的了解，不取决于哪个算法看起来更稳健。</strong></p>
+<h3 id="标定点数如何决定参数精度">13.3.5 标定点数如何决定参数精度</h3>
+<p>均匀取 <span class="math inline">n</span> 点、跨度 <span class="math inline">L</span> 时，<span class="math inline">x</span> 的离差平方和为</p>
+<p><span class="math display">S_{xx}=\frac{n(n+1)}{12(n-1)}L^2 \tag{13-22}</span></p>
+<p>代入式 (13-12)，任意点 <span class="math inline">x_0</span> 处的预测标准误</p>
+<p><span class="math display">s_{y}(x_0)=\sigma\sqrt{\frac{1}{n}+\frac{(x_0-\bar{x})^2}{S_{xx}}} \tag{13-23}</span></p>
+<p>在量程中心 <span class="math inline">x_0=\bar{x}=L/2</span>，第二项为零，<span class="math inline">s_y=\sigma/\sqrt{n}</span>；在端点 <span class="math inline">x_0=L</span>，代入式 (13-22) 得</p>
+<p><span class="math display">s_{y}(L)=\sigma\sqrt{\frac{1}{n}+\frac{3(n-1)}{n(n+1)}}\;\xrightarrow[n\to\infty]{}\;\frac{2\sigma}{\sqrt{n}} \tag{13-24}</span></p>
+<p><strong>端点的预测不确定度是大样本下的 2 倍，与取多少点无关。</strong> 实验四的数据与此吻合：<span class="math inline">n=20</span> 时中心 0.1118 N、端点 0.2155 N，正好 1.93 倍；<span class="math inline">n=5</span> 时中心 0.2236 N、端点 0.3873 N，1.73 倍——点数少时还不到 2 倍，因为端点的杠杆还没完全展开。</p>
+<p>式 (13-24) 的 2 倍系数解释了一条现场经验：<strong>标定曲线在满量程附近最不可信，而控制系统偏偏最爱用满量程附近的数据做增益整定。</strong> 若工艺允许，工作点应尽量落在量程中段；若必须用端点，就要接受 2 倍的不确定度，或者在该点加密标定。</p>
+<p>外推的代价更大。实验四中只在 0–100 N 内标定 6 点，区间内 50 N 处预测标准误 0.2041 N，外推到 500 N 处变成 2.6970 N，放大 13.2 倍。放大倍数由式 (13-23) 的第二项主导：</p>
+<p><span class="math display">\frac{s_y(x_{\mathrm{ext}})}{s_y(\bar{x})}\approx\frac{|x_{\mathrm{ext}}-\bar{x}|}{\sqrt{S_{xx}/n}} \tag{13-25}</span></p>
+<p>分子是外推距离，分母是标定点的等效分布宽度。<strong>外推距离超过标定跨度的一半，不确定度就进入不可接受区。</strong> 这条判据比“不要外推”的口号更有用：它给出了“外推多远还算勉强可以”的边界。</p>
+<figure>
+<img src="figs/ch013/fig_013_03_prediction.svg" alt="图 13-3　标定点数对内插与端点预测标准误的影响" /><figcaption aria-hidden="true">图 13-3　标定点数对内插与端点预测标准误的影响</figcaption>
+</figure>
+<p>图 13-3 左图把式 (13-23) 画成四条曲线：<span class="math inline">n</span> 越大整条曲线越低，但形状不变，都是中间低、两端高的抛物线形，端点始终约为中段的 2 倍。右图把标定区间缩到 0–100 N 后外推到 500 N，曲线在对数坐标上近似直线上升，500 N 处达到 2.70 N，是同一区间 50 N 处 0.2041 N 的 13.2 倍。<strong>外推区的不确定度不是“略微变大”，而是随距离线性放大</strong>，这就是式 (13-25) 的几何含义：力臂越长，标定点对外推点的约束越弱。</p>
+<h3 id="合成不确定度的灵敏度为什么改主导项也只降一点">13.3.6 合成不确定度的灵敏度：为什么改主导项也只降一点</h3>
+<p>由式 (13-6)，若主导项占比 <span class="math inline">p=u_1^2/u_c^2</span>，把它减半（方差降到 1/4），新的合成不确定度为</p>
+<p><span class="math display">u_c&#39;=u_c\sqrt{1-\frac{3}{4}p} \tag{13-26}</span></p>
+<p><span class="math inline">p=0.647</span> 时，<span class="math inline">u_c&#39;=0.7175u_c</span>，只降 28.3%，与实验五的输出一致。若想降一半，需要 <span class="math inline">1-\frac{3}{4}p=0.25</span>，即 <span class="math inline">p=1</span>——<strong>只有把主导项完全消掉，才能把总不确定度减半。</strong></p>
+<p>这条结论的工程含义是：不确定度改善是“逐项逼近”的过程，而不是“改一项就灵”。实验五的预算表里，标准器占 64.7%、温漂与安装各占 16.2%、重复性只占 2.0%。把重复性改善十倍，总不确定度只降 0.1%；把标准器换成准一个量级的，<span class="math inline">u_c</span> 从 0.3589 N 降到 0.2134 N，约为原来的六成。<strong>预算表的作用就是告诉你钱该花在哪一项上。</strong></p>
+<p>有效自由度 22540.9 这个数也值得看一眼：它几乎完全由 B 类分量的 <span class="math inline">\nu=\infty</span> 拉高，说明此时用 <span class="math inline">k=2</span> 报扩展不确定度是合理的；若预算表里 A 类占主导，<span class="math inline">\nu_{\mathrm{eff}}</span> 会掉到 10 以下，<span class="math inline">k</span> 必须取 <span class="math inline">t</span> 分布的 2.2 以上。</p>
+<h3 id="异方差下的加权最小二乘">13.3.7 异方差下的加权最小二乘</h3>
+<p>普通最小二乘在所有点等权，隐含假设各点噪声同方差。当端点噪声是中间的 3 倍时，这个假设不成立：端点既噪声大、杠杆又长，对斜率的拉扯被放大。</p>
+<p>加权最小二乘按方差的倒数分配权重，<span class="math inline">w_i=1/\sigma_i^2</span>，解为</p>
+<p><span class="math display">\hat{\boldsymbol{\beta}}_W=(\mathbf{X}^{\mathsf{T}}\mathbf{W}\mathbf{X})^{-1}\mathbf{X}^{\mathsf{T}}\mathbf{W}\mathbf{y},\qquad \operatorname{cov}(\hat{\boldsymbol{\beta}}_W)=(\mathbf{X}^{\mathsf{T}}\mathbf{W}\mathbf{X})^{-1} \tag{13-27}</span></p>
+<p>在噪声方差已知且正确时，这是马尔可夫定理意义下的最优线性无偏估计，方差最小。实验六的结果：OLS 斜率标准差 0.02061，WLS 0.01216，比值 0.590，即方差降到 34.8%，等效于把标定次数提高到近三倍。</p>
+<p>权重用错时结论会反转。若把端点的实际噪声低估（比如按中间的 0.10 赋权，实际是 0.30），WLS 退化成 OLS 且不会更差；若把端点的噪声高估，权重过小，端点信息被浪费，斜率方差反而可能大于 OLS。<strong>加权的前提是知道各点方差的相对大小，而不是“觉得哪个点重要就给大权重”。</strong></p>
+<p>工程上获得权重的三条路：重复测量每点若干次、用样本方差作权重；按传感器在不同量程的指标曲线赋权；用残差的绝对值做迭代重加权（IRLS），先 OLS 拟合、再用残差估计权重、再拟合，两三轮即可收敛。</p>
+<h3 id="三条性质成立的前提">13.3.8 三条性质成立的前提</h3>
+<p>上面所有推导共享三条假设，越界时结论会失效，必须逐条检查。</p>
+<p><strong>第一，线性化。</strong> 式 (13-8) 与式 (13-23) 都是一阶近似，要求各输入量的相对不确定度足够小（经验上小于 10%）。当被测量的相对不确定度超过这个量级，一阶展开丢掉的二阶项不可忽略，应改用蒙特卡洛传播。典型失效场景：小信号、近零值、强非线性映射（如指数、幂次大于 3）。</p>
+<p><strong>第二，独立同分布。</strong> 式 (13-18) 的 <span class="math inline">\sigma^2/n</span> 依赖 <span class="math inline">\varepsilon_i</span> 相互独立。若噪声有自相关（相邻采样受同一扰动影响），有效样本量不是 <span class="math inline">n</span> 而是 <span class="math inline">n/\tau</span>，<span class="math inline">\tau</span> 是自相关时间折算的等效样本数损失。<strong>对自相关噪声做 <span class="math inline">n</span> 次平均，降噪效果远低于 <span class="math inline">1/\sqrt{n}</span>。</strong> 判断方法：看残差的自相关函数，或直接比较不同平均窗长度下的实测标准差。</p>
+<p><strong>第三，正态假设。</strong> <span class="math inline">3\sigma</span> 判据、<span class="math inline">t</span> 区间、Grubbs 临界值都建立在正态分布上。若噪声重尾（脉冲干扰、机械撞击），<span class="math inline">3\sigma</span> 的实际误删率会显著高于名义值；若噪声有界（量化主导），尾部根本没有 <span class="math inline">3\sigma</span> 以外的点，判据退化为无效。<strong>先看数据的分布形状，再决定用哪套统计工具。</strong></p>
+<p>三条前提里最容易被违反的是第二条。控制系统的采样数据几乎总有自相关，因为扰动本身是慢变的；把一串相关的采样当成独立样本去做平均与显著性检验，会把不确定度低估几倍。§13.5 会给出几条现场可用的诊断办法。</p>
+<h3 id="平均到多久为止allan-方差与漂移">13.3.9 平均到多久为止：Allan 方差与漂移</h3>
+<p>§13.3.2 把平均次数与标准误的关系写成 <span class="math inline">1/\sqrt{n}</span>，那条曲线一路向下，似乎只要肯等就能无限逼近真值。真实系统不是这样：平均时间一长，慢漂移开始主导，均值的离散程度反而回升。白噪声随平均时间按 <span class="math inline">\tau^{-1/2}</span> 下降，随机游走按 <span class="math inline">\tau^{+1/2}</span> 上升，两者相交处就是平均的最优时长。</p>
+<p>把这个过程量化要用 Allan 方差。把长度 <span class="math inline">T</span> 的数据切成 <span class="math inline">M</span> 段、每段平均成 <span class="math inline">\bar{y}_k</span>，相邻两段均值之差的平方取平均：</p>
+<p><span class="math display">\sigma_y^{2}(\tau)=\frac{1}{2}\left\langle\left(\bar{y}_{k+1}-\bar{y}_{k}\right)^{2}\right\rangle \tag{13-28}</span></p>
+<p>前面的 <span class="math inline">1/2</span> 是为了让白噪声下的结果与样本方差一致。对同时含角度随机游走（系数 <span class="math inline">A</span>）与速率随机游走（系数 <span class="math inline">K</span>）的噪声，Allan 方差写成两项之和：</p>
+<p><span class="math display">\sigma_y^{2}(\tau)=\frac{A^{2}}{\tau}+\frac{K^{2}\tau}{3},\qquad \tau_{\mathrm{opt}}=\frac{\sqrt{3}A}{K} \tag{13-29}</span></p>
+<p>第一项随 <span class="math inline">\tau</span> 下降，第二项随 <span class="math inline">\tau</span> 上升，求导置零即得最优平均时间。取 <span class="math inline">A=0.100</span>、<span class="math inline">K=0.010</span>，得 <span class="math inline">\tau_{\mathrm{opt}}=17.321</span> s，此时 Allan 方差 0.0012，对应标准差 0.0346——比单次采样小，但比 <span class="math inline">1/\sqrt{\tau}</span> 外推出来的值大得多。<strong>这条曲线给出了“平均多久”的硬上限，而这个上限由器件本身的漂移决定，与算法无关。</strong></p>
+<p>双对数坐标下 Allan 曲线的斜率是有含义的：<span class="math inline">-1</span> 段是白噪声主导，<span class="math inline">0</span> 段是闪烁噪声，<span class="math inline">+1</span> 段是随机游走。工程上先用斜率判断噪声类型，再决定对策：白噪声段可以继续平均；闪烁噪声段平均已无收益，只能靠调制或斩波；随机游走段平均会让结果更差，必须靠零位标定或参考通道补偿。</p>
+<p>曲线上的异常形状同样有诊断价值。某一 τ 处出现鼓包，通常对应一个周期性干扰源——压缩机启停、工频拍频、水泵周期；把 τ 取到该周期的整数倍，鼓包会被平均掉，取到半周期则会放大。<strong>Allan 方差因此不只用于选平均时间，也是排查干扰周期的工具。</strong></p>
+<p>计算量与参数选择：一条覆盖四个十倍频程的 Allan 曲线，每个倍频程取 4–5 个 τ 点，共约 20 个点；每点用全部可用段数做平均。数据长度至少要是最长 τ 的 10 倍，否则长 τ 端只有几段，曲线抖动到无法判读。这条要求常被忽略——用 1 分钟数据画到 60 s 的 τ 上，最后几个点根本没有统计意义。</p>
+<p>回到本章主线：Allan 方差回答的是“平均还能不能继续”，§13.3.2 回答的是“平均要付多少时间”。两条结论合起来才是完整答案——<strong>先看 Allan 曲线定出 <span class="math inline">\tau_{\mathrm{opt}}</span>，再用式 (13-19) 看在这个时长内能平均多少次、够不够达到目标精度。</strong> 若 <span class="math inline">\tau_{\mathrm{opt}}</span> 内达不到精度，问题不在统计方法，而在传感器稳定性，只能换器件或加零位补偿。</p>
+<h3 id="标定残差的四项诊断">13.3.10 标定残差的四项诊断</h3>
+<p>拟合出参数只是开始，残差里还藏着“模型是否成立”的信息。四项诊断按顺序做，每项对应一类具体故障。</p>
+<p><strong>第一项，残差对拟合值。</strong> 若残差呈喇叭形（大值端更散），说明异方差，应改用加权最小二乘；若呈弯曲的抛物线，说明一次模型不够，需要二次项或分段线性。均匀的带状分布才是“模型与噪声匹配”的样子。</p>
+<p><strong>第二项，残差的正态概率图。</strong> 点列沿对角线走说明正态假设成立；两端向上翘说明重尾，此时 <span class="math inline">3\sigma</span> 判据会误删正常点；呈 S 形说明分布有界（量化或饱和截断），尾部判据整体失效，应改用基于分位数的判据。</p>
+<p><strong>第三项，残差对采样顺序。</strong> 这一项最容易被跳过，也最能暴露问题。若残差在时间上缓慢爬升或呈周期性起伏，说明存在未建模的漂移或干扰，此时式 (13-12) 的标准误是低估的——它假设残差独立同分布。判据很直接：把残差序列的自相关系数算出来，超过 <span class="math inline">2/\sqrt{n}</span> 就认为相关显著。<span class="math inline">n=20</span> 时阈值是 0.447。</p>
+<p><strong>第四项，杠杆与 Cook 距离。</strong> 杠杆 <span class="math inline">h_{ii}</span> 衡量第 <span class="math inline">i</span> 个点对拟合的“话语权”，等距标定下端点最大：</p>
+<p><span class="math display">D_i=\frac{r_i^{2}}{p\,\hat{\sigma}^{2}}\cdot\frac{h_{ii}}{\left(1-h_{ii}\right)^{2}} \tag{13-30}</span></p>
+<p><span class="math inline">p</span> 是参数个数（直线为 2）。20 个等距点、跨度 500 N 时，端点杠杆 0.1857，中点只有 0.0500，相差 3.7 倍。同样是 <span class="math inline">3\hat\sigma</span> 的残差，落在端点处 <span class="math inline">D=1.260</span>，落在中点处只有 0.249；按常用判据 <span class="math inline">D&gt;1</span> 即“强影响点”，端点的一个大残差足以把整条线拽偏，中点的大残差则无关紧要。</p>
+<p><strong>这解释了为什么端点的标定点要格外小心。</strong> 端点既噪声大（式 13-19 的 2 倍律）、杠杆又长（3.7 倍），两个劣势叠加，使得一个端点的读数错误能造成比中点同样错误大得多的后果。工程上的对策不是删点，而是端点重复测三次取中值——用测量次数换掉杠杆带来的脆弱性。</p>
+<h2 id="离散对应与数值实现">13.4 离散对应与数值实现</h2>
+<h3 id="在线均值与方差的递推">13.4.1 在线均值与方差的递推</h3>
+<p>控制器里没有“先存一万个点再算”的奢侈，统计量必须逐拍递推。均值用</p>
+<p><span class="math display">\bar{x}_k=\bar{x}_{k-1}+\frac{1}{k}\left(x_k-\bar{x}_{k-1}\right) \tag{13-31}</span></p>
+<p>方差用 Welford 形式：</p>
+<p><span class="math display">M_k=M_{k-1}+(x_k-\bar{x}_{k-1})(x_k-\bar{x}_k),\qquad s_k^2=\frac{M_k}{k-1} \tag{13-32}</span></p>
+<p>这两条式子每拍只做几次乘法，内存只有两个状态量。更重要的是数值稳定性：直接按 <span class="math inline">\sum x_i^2-n\bar{x}^2</span> 算方差，在均值远大于标准差时会因两个大数相减而丢失有效位——测量值 10.000 V、波动 1 mV、单精度浮点只有 7 位有效数字，相减后可能只剩两三位。Welford 形式只累加离差乘积，不存在大数相消。</p>
+<p>单精度实现的判据可以算出来：若 <span class="math inline">\bar{x}/s&gt;10^3</span>，单精度的 <span class="math inline">s^2</span> 只剩约 1% 的相对精度；双精度要到 <span class="math inline">\bar{x}/s&gt;10^8</span> 才出现同样问题。<strong>控制器的统计量一律用双精度，除非已经算过比值。</strong></p>
+<p>递推还有一个初始化陷阱：<span class="math inline">k=1</span> 时式 (13-32) 的分母为零。工程做法是前两个点特殊处理，<span class="math inline">s^2=(x_2-x_1)^2/2</span>，从第三点起进入递推。若直接从零初始化，前几十拍的方差会明显偏小，用这个方差去定 <span class="math inline">3\sigma</span> 阈值会大量误删。</p>
+<h3 id="滑动平均指数加权与滑动中值">13.4.2 滑动平均、指数加权与滑动中值</h3>
+<p>三种常用平滑器在内存、相位、抗脉冲能力上各有取舍，见表 13-2。</p>
+<p>表 13-2　三种平滑器的实现代价与特性</p>
+<table style="width:100%;">
+<colgroup>
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">平滑器</th>
+<th style="text-align: left;">递推式</th>
+<th style="text-align: left;">内存</th>
+<th style="text-align: left;">噪声抑制</th>
+<th style="text-align: left;">群延迟</th>
+<th style="text-align: left;">抗单点脉冲</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">滑动平均</td>
+<td style="text-align: left;"><span class="math inline">\dfrac{1}{N}\sum_{j=0}^{N-1}x_{k-j}</span></td>
+<td style="text-align: left;"><span class="math inline">N</span> 个</td>
+<td style="text-align: left;"><span class="math inline">1/\sqrt{N}</span></td>
+<td style="text-align: left;"><span class="math inline">(N-1)/2</span> 拍</td>
+<td style="text-align: left;">差（脉冲扩散到 <span class="math inline">N</span> 拍）</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">指数加权</td>
+<td style="text-align: left;"><span class="math inline">\bar{x}_k=\alpha x_k+(1-\alpha)\bar{x}_{k-1}</span></td>
+<td style="text-align: left;">2 个</td>
+<td style="text-align: left;"><span class="math inline">\sqrt{\alpha/(2-\alpha)}</span></td>
+<td style="text-align: left;"><span class="math inline">(1-\alpha)/\alpha</span> 拍</td>
+<td style="text-align: left;">中（按指数衰减）</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">滑动中值</td>
+<td style="text-align: left;">窗口内排序取中位</td>
+<td style="text-align: left;"><span class="math inline">N</span> 个</td>
+<td style="text-align: left;">依赖分布</td>
+<td style="text-align: left;"><span class="math inline">(N-1)/2</span> 拍</td>
+<td style="text-align: left;">好（<span class="math inline">N</span> 点内脉冲被完全剔除）</td>
+</tr>
+</tbody>
+</table>
+<p>指数加权的等效窗口长度 <span class="math inline">N_{\mathrm{eq}}\approx(2-\alpha)/\alpha</span>，<span class="math inline">\alpha=0.1</span> 时约 19 拍，噪声抑制与 19 点滑动平均相当，但内存只有两个数。它的代价是尾部无限长：一个脉冲会以 <span class="math inline">(1-\alpha)^j</span> 的规律拖尾几十拍，而滑动平均在 <span class="math inline">N</span> 拍后彻底切断。</p>
+<p>滑动中值的排序开销是 <span class="math inline">O(N\log N)</span>（或用插入排序维护 <span class="math inline">O(N)</span>），在 1 kHz 以上的控制环里通常只用于异常值预处理，不用于主平滑。<strong>它的价值不在降噪，而在“脉冲不扩散”</strong>：一个 10 倍标准差的脉冲进入滑动平均，会摊成 <span class="math inline">N</span> 个 <span class="math inline">1/N</span> 幅度的台阶，后续的 <span class="math inline">3\sigma</span> 判据再也认不出来；进入中值窗口，它直接被扔掉。</p>
+<p>三者的相位滞后都可以换算成控制环里的相位损失。<span class="math inline">N=10</span>、采样周期 1 ms，滑动平均的群延迟 4.5 ms，在 10 Hz 处折算 <span class="math inline">-16.2^\circ</span>；这个数与第 12 章相位预算里的采样保持滞后同量级，必须一起计入裕度。</p>
+<h3 id="异常值剔除的工程实现">13.4.3 异常值剔除的工程实现</h3>
+<p>教科书上的判据是“一次判断、立即剔除”，工程实现必须加三道保险，否则误删会变成新的故障源。</p>
+<p><strong>第一道，连续计数。</strong> 单点超限只记一次可疑，连续 <span class="math inline">m</span> 次（典型 <span class="math inline">m=3</span>）超限才判为异常。真实的物理突变通常是持续的，脉冲干扰通常是孤立的，连续计数把两者分开。代价是检测延迟 <span class="math inline">m</span> 拍。</p>
+<p><strong>第二道，保持与超时。</strong> 判为异常后不能简单跳过，否则下游拿到的是“缺拍”，滤波器会把它当零处理。正确做法是保持上一个有效值，同时启动超时计数；超过 <span class="math inline">T_{\mathrm{hold}}</span>（典型 50–200 ms）仍无有效值，就上报故障而不是继续保持。<strong>保持过久等于用旧数据假装系统正常，这是最危险的失效模式。</strong></p>
+<p><strong>第三道，滚动统计。</strong> 均值与 <span class="math inline">\hat{\sigma}</span> 必须用滑动窗口或指数加权递推，不能用全体历史。设备工况会变，三个月前的方差对今天没有意义。窗口长度的选择与 §13.4.2 相同：太长跟不上工况变化，太短统计量本身抖动大。</p>
+<p>一个常见的实现错误是把剔除后的数据又送回统计量更新。这样异常值虽然没进输出，却污染了阈值，下一次判据会更松。<strong>统计量的更新必须用剔除前的原始数据，或者用中位数类稳健统计量</strong>，否则剔除逻辑会逐步“学会”接受异常。</p>
+<h3 id="标定表的存储与插值">13.4.4 标定表的存储与插值</h3>
+<p>传感器的标定结果在控制器里通常存成“分段线性表 + 端点外推”，而不是存一个多项式。原因有三条：分段线性不会在区间外发散；系数少、便于现场改；查表与插值的计算量固定，适合实时。</p>
+<p>分段线性插值写成</p>
+<p><span class="math display">y=y_i+\frac{y_{i+1}-y_i}{x_{i+1}-x_i}\left(x-x_i\right),\qquad x\in[x_i,x_{i+1}] \tag{13-33}</span></p>
+<p>实现上有三个细节决定精度。</p>
+<p><strong>一是分段点要按非线性程度分配，不按等距分配。</strong> 传感器在量程两端弯曲得快，中间接近线性，等距取 5 点会把误差集中在两端。等误差分配的做法是让每段的二阶导数乘段长平方近似相等。</p>
+<p><strong>二是零点与增益分开存。</strong> 存“码值—物理量”的完整表，温漂后整表平移，改起来要重标；存“零点 + 增益 + 非线性修正表”，温漂只需更新零点，量程变更只需更新增益。<strong>把可分离的误差源分开存，是标定表设计的第一原则。</strong></p>
+<p><strong>三是定点数的量化误差要算进去。</strong> 用 16 位定点存系数、范围 <span class="math inline">\pm10</span> V，量化步长 0.3 mV；若标定表的残差本身只有 0.1 mV，定点化就把精度吃光了。系数用 32 位浮点或 32 位定点（Q16.16），表项才用 16 位。</p>
+<h3 id="时间同步与时间戳">13.4.5 时间同步与时间戳</h3>
+<p>多通道测量的第一号误差源不是噪声，是时间错位。两路 1 kHz 采样、触发相差半拍，对 100 mm/s 的运动就是 0.05 mm 的位置差；对加速度信号，半拍错位在 100 Hz 处折算的相位误差是 <span class="math inline">18^\circ</span>，足以让模态参数识别出偏差。</p>
+<p>同步分三个层次，精度依次提高：</p>
+<ol type="1">
+<li><strong>软件轮询</strong>：各通道依次读取，通道间差一个转换与通信时间，典型几十微秒到几毫秒，只适合慢过程。</li>
+<li><strong>硬件同步采样</strong>：同一触发信号启动所有 ADC，通道间差在纳秒级，误差主要来自各通道的模拟前端延迟差（不同滤波器、不同线缆），典型几微秒。</li>
+<li><strong>统一时钟 + 时间戳</strong>：每个采样点带硬件时间戳（IEEE 1588 或专用同步线），事后可按时间戳重采样对齐，适合分布式采集。</li>
+</ol>
+<p>工程上最容易被忽略的是第二层里的“模拟延迟差”。两路抗混叠滤波器截止频率差 10%，在 100 Hz 处的相位差约 <span class="math inline">1.4^\circ</span>，折算成时间差 39 μs——比 ADC 同步误差大三个量级。<strong>同步做好之后，还要检查各通道的滤波器是否一致。</strong></p>
+<p>对齐到同一时间基之后，插值会引入新的相关性：线性插值把相邻两点平均，噪声方差降到 2/3，且相邻样本不再独立。做频谱分析或显著性检验时必须把这一点算进去，否则会低估高频段的噪声。</p>
+<h3 id="数值实现里的四个陷阱">13.4.6 数值实现里的四个陷阱</h3>
+<p><strong>陷阱一：用单精度累加长序列。</strong> 累加 <span class="math inline">10^6</span> 个量级相近的数，单精度的舍入误差按 <span class="math inline">\sqrt{n}</span> 增长，相对误差可达 <span class="math inline">10^{-4}</span>；双精度是 <span class="math inline">10^{-13}</span>。均值、方差、能量积分一律用双精度累加，哪怕输入是单精度。</p>
+<p><strong>陷阱二：协方差矩阵求逆。</strong> 式 (13-12) 的 <span class="math inline">(\mathbf{X}^{\mathsf{T}}\mathbf{X})^{-1}</span> 在标定点等距、跨度大时条件数很高——多项式阶数越高越糟。3 阶以上的多项式标定，应当用正交多项式或直接解最小二乘的 QR 分解，不要显式求逆。</p>
+<p><strong>陷阱三：阈值随工况漂移而失效。</strong> 固定阈值在设备冷态、热态、不同负载下表现不同。工程做法是把阈值写成“当前工况的函数”：按温度分档、按负载分段，或者直接用相对阈值（超限比例而非绝对值）。</p>
+<p><strong>陷阱四：时间戳回绕。</strong> 32 位微秒计数器约 71.6 分钟回绕一次，不做处理的话，回绕点会出现一个负的巨大时间差，速度计算瞬间爆炸。用 64 位计数器，或在回绕时加偏移。</p>
+<p>这四个陷阱都不涉及算法本身，却是在现场把“算得对”变成“跑得稳”的分界线。<strong>数值实现的正确性，靠的是对这些边界条件的逐条检查，而不是靠公式推导。</strong></p>
+<h3 id="定点标度查表与插值误差">13.4.7 定点标度、查表与插值误差</h3>
+<p>不少运动控制器与 PLC 没有浮点单元，或者浮点运算的确定性不够（同一段代码在不同编译选项下末位可能不同），标定与滤波只能定点实现。定点的第一件事是定标度：把一个 <span class="math inline">b</span> 位有符号整数映射到量程 <span class="math inline">[y_{\min},y_{\max}]</span>，最小可分辨量是</p>
+<p><span class="math display">q=\frac{y_{\max}-y_{\min}}{2^{b}} \tag{13-34}</span></p>
+<p>500 N 量程配 16 位（Q15，满码 32768）时 <span class="math inline">q=0.01526</span> N，远小于传感器本身的 0.0352 N 分辨率，标度不是瓶颈。若为了省乘法改用 12 位，<span class="math inline">q</span> 变成 0.1221 N，比传感器分辨率粗三倍，量化噪声重新成为主导项——<strong>位宽的选择要和传感器指标比，不是和“够不够用”比。</strong></p>
+<p>定点的第二件事是运算顺序。两个 Q15 数相乘得到 Q30，必须右移 15 位回到 Q15；若中间结果用 16 位变量承接，高位直接被截掉，符号都会错。工程规则是“乘法用双倍位宽、累加用 32 位、只在最后一步饱和”。饱和处理也不能省：限幅到 <span class="math inline">[-32768,32767]</span> 只是第一步，还要保证饱和后积分器不再累积，否则退出饱和要等很久。</p>
+<p>舍入方式同样有系统性后果。截断（向零取整）的平均误差是 <span class="math inline">-0.5q</span>，这个偏置不会因为平均而消失——<span class="math inline">10^{6}</span> 次平均之后仍是 <span class="math inline">-0.5q</span>。500 N 量程、<span class="math inline">q=0.01526</span> N 时就是 <span class="math inline">-0.0076</span> N，占满量程的 0.0015%，看起来极小，但它是一个<strong>确定的系统误差</strong>，会原封不动地进入标定结果。加 0.5 再取整（四舍五入）可以把偏置压到零附近，代价是多一次加法。</p>
+<p>标定表通常存成“输入码—输出值”的对照，中间用线性插值。设表步长 <span class="math inline">h</span>，函数二阶导数的上界为 <span class="math inline">M_2</span>，则插值误差有严格上界</p>
+<p><span class="math display">e_{\mathrm{int}}\le\frac{h^{2}}{8}M_2 \tag{13-35}</span></p>
+<p>500 N 量程、256 点表、步长 <span class="math inline">h=1.9608</span> N，若标定曲线的 <span class="math inline">M_2=4\times10^{-4}</span> N<span class="math inline">^{-1}</span>，则 <span class="math inline">e_{\mathrm{int}}\le1.922\times10^{-4}</span> N，实测最大误差正好等于这个界，占满量程 <span class="math inline">3.8\times10^{-5}\%</span>。相比之下标定残差是 0.5 N——<strong>插值误差比标定本身小四个数量级，加密表长纯属浪费。</strong></p>
+<p>合理的表长由“插值误差不超过标定残差的十分之一”定：要求 <span class="math inline">h^{2}M_2/8\le0.05</span> N，得 <span class="math inline">h\le31.6</span> N，即 16 段、17 个点就够。现场常见把表做到 1024 点，多出来的 1000 个点只是在存储区里占地方，对精度没有任何贡献。反过来，若标定曲线在某段曲率很大（分段线性补偿的折点附近），应当在那一段单独加密，而不是全表等分。</p>
+<p>查表的执行效率也有讲究。输入单调递增时，不必每次二分查找：记住上一次的段号，下一次只需比较相邻两个边界，绝大多数拍只做一次比较，复杂度接近 <span class="math inline">O(1)</span>。输入可能回退（往复运动）时，退化成一两步的局部搜索仍然够用。</p>
+<p>反查（由输出求输入）比正查麻烦：标定曲线必须严格单调才能唯一定位。若传感器在量程两端有轻微回折，反查会出现两个解，此时应截断到单调区间，并在文档里写明可用量程比标称量程窄——<strong>这是标定表最容易埋下的一个隐患，现场表现为“接近满量程时读数跳变”。</strong></p>
+<h3 id="数据完整性丢帧重复帧与时间戳抖动">13.4.8 数据完整性：丢帧、重复帧与时间戳抖动</h3>
+<p>统计方法都假设拿到的是一串干净、等间隔、按序到达的样本。现场总线不保证这三件事，而三种破损对统计量的影响方式完全不同。</p>
+<p><strong>丢帧。</strong> 序号不连续就说明丢了样本。处理方式有三选：零阶保持（用上一拍的值填）、线性插值、标记为无效并让下游决定。三者的偏差不同：保持等价于把该点的时间戳往前挪，累计 <span class="math inline">k</span> 次丢帧就引入 <span class="math inline">k T_s</span> 的滞后；线性插值在匀速段无偏，在加速段有系统偏差</p>
+<p><span class="math display">\Delta x=\frac{1}{2}aT_s^{2} \tag{13-36}</span></p>
+<p>加速度 <span class="math inline">1\ \mathrm{m/s^2}</span>、采样周期 10 ms 时偏差 0.05 mm——对微米级定位来说，插值补出来的点比直接标记无效更危险，因为它看起来“正常”。</p>
+<p><strong>重复帧。</strong> 序号相同的两帧只能留一帧。若两帧都进统计，样本方差会被压低：重复值之间的差为零，等于人为增加了“靠得很近”的样本。<span class="math inline">m</span> 个点里有一半是重复时，<span class="math inline">s</span> 会低估约 <span class="math inline">\sqrt{2}</span> 倍，随后的所有置信区间都偏窄。<strong>重复帧是“标准差看起来变小”的常见原因，排查时先看序号，不要先怀疑算法。</strong></p>
+<p><strong>时间戳抖动。</strong> 用报文到达时刻代替采样时刻，等价于给每个样本的时间轴加了噪声。速度由差分算得，时间误差被 <span class="math inline">1/T_s</span> 放大：真实速度 100 mm/s、抖动 0.1 ms、采样周期 1 ms 时，速度误差 10 mm/s，即 10%。对策只有一条：<strong>时间戳在采集端打，且与采样时钟同源</strong>；通信链路上的排队延迟再大，也只影响到达顺序，不影响时间标签。</p>
+<p>此外还有校验。异或校验查不出偶数个比特同时翻转，而 CRC-16 的漏检率约为 <span class="math inline">2^{-16}</span>，在 1 kHz、连续运行一个月的条件下仍可能出现个位数漏检。控制通道通常还叠加序号与合法域检查（量程、变化率上限），三者合起来才够。<strong>这不是统计问题，但它是统计方法能否成立的前提。</strong></p>
+<h3 id="先剔异常还是先滤波">13.4.9 先剔异常还是先滤波</h3>
+<p>两条处理链的顺序不能随意调换。若先低通再判异常，尖峰在滤波时已经被摊平，判据看到的不再是尖峰，而是一个略高的正常值。</p>
+<p>算一下量级就清楚了。一个 <span class="math inline">10\sigma</span> 的孤立尖峰经过 10 点滑动平均后只剩 <span class="math inline">1\sigma</span>，正好落在 <span class="math inline">3\sigma</span> 判据的盲区里；经过 <span class="math inline">\alpha=0.1</span> 的指数加权，十拍之后残留 <span class="math inline">0.1\times0.9^{9}=3.87\%</span>，即 <span class="math inline">0.39\sigma</span>。<strong>先滤波的流水线，等于把所有窄尖峰都主动藏了起来。</strong></p>
+<p>中值滤波是个例外：宽度 5 的中值滤波对孤立尖峰完全保留（只要尖峰不是连续三个），幅值一点不损，异常判据照样能看见它。所以“先去尖峰、再判异常、最后平均或低通”这条顺序是站得住的，前提是去尖峰用中值而不是均值。</p>
+<p>中值滤波的代价是延迟。对阶跃输入，宽度 <span class="math inline">w</span> 的中值滤波输出要等一半窗口填满才翻转，延迟 <span class="math inline">(w-1)/2</span> 拍；<span class="math inline">w=5</span>、1 kHz 时是 2 ms。这个延迟必须计入相位预算，而不是当成“没有相位的非线性环节”忽略掉。对斜坡输入，中值滤波没有稳态偏差——这是它比均值滤波更适合放在反馈通道前端的原因。</p>
+<p>推荐的流水线只有五级，顺序固定：合法性检查（量程、变化率、序号）→ 中值去尖峰 → 异常判据与剔除 → 平均或低通 → 标定换算。每一级都记录被拦截的样本数，作为诊断量。<strong>拦截率突然上升，说明前端出了问题，此时最该做的是查传感器与通信，而不是调判据阈值。</strong></p>
+<h2 id="工程含义与适用边界">13.5 工程含义与适用边界</h2>
+<h3 id="什么时候不能平均">13.5.1 什么时候不能平均</h3>
+<p>平均的三个前提是：被测量在窗内不变、噪声独立、系统没有在此期间切换工况。任一条不成立，平均都会从“降噪”变成“造错”。</p>
+<p><strong>第一种情形：被测量在变化。</strong> 位置指令是斜坡时，<span class="math inline">n</span> 点平均给出的不是当前位置，而是 <span class="math inline">(n-1)T_s/2</span> 之前的平均位置，等效于在环里串了一个纯延迟。100 mm/s、1 ms 采样、10 点平均，滞后 4.5 ms，位置偏差 0.45 mm——比多数定位公差还大。</p>
+<p><strong>第二种情形：噪声有自相关。</strong> 温漂、气流、电网周期干扰都是慢变的，相邻采样高度相关。此时平均只压掉了白噪声那一小部分，慢变成分照旧存在。判断办法很简单：把平均窗从 <span class="math inline">N</span> 加长到 <span class="math inline">2N</span>，若标准差没有按 <span class="math inline">1/\sqrt{2}</span> 下降，说明相关性显著，加长窗口的收益已经到顶。</p>
+<figure>
+<img src="figs/ch013/fig_013_05_autocorr.svg" alt="图 13-5　自相关对平均降噪效果的削弱" /><figcaption aria-hidden="true">图 13-5　自相关对平均降噪效果的削弱</figcaption>
+</figure>
+<p>图 13-5 给出两种看法。左图是有效样本比例 <span class="math inline">(1-\rho)/(1+\rho)</span> 随一阶自相关系数的变化：<span class="math inline">\rho=0.5</span> 时只剩三分之一，<span class="math inline">\rho=0.9</span> 时只剩 5%；右图是 AR(1) 噪声下均值标准差的实际走势，<span class="math inline">\rho=0.9</span> 的曲线在 <span class="math inline">n&gt;20</span> 之后基本走平，继续加长窗口几乎不再降噪。<strong>判断该不该继续平均，看右图这类曲线的局部斜率就够了：明显缓于 <span class="math inline">-1/2</span> 时，再加窗口只是在浪费采样时间。</strong></p>
+<p><strong>第三种情形：工况在窗口内切换。</strong> 加载、卸载、换向的瞬间，平均窗一半在旧工况、一半在新工况，结果既不是前者也不是后者，而是一个不存在的中间值。工程上的做法是检测到工况切换就清空窗口重新积累，宁可丢掉几拍数据，也不要输出一个假值。</p>
+<h3 id="什么时候不能滤波">13.5.2 什么时候不能滤波</h3>
+<p>滤波的代价是相位滞后，而有些信号的全部价值就在时间位置上。</p>
+<p><strong>脉冲与事件检测不能低通。</strong> 编码器丢脉冲、通信错帧、限位触发，这些都是窄脉冲，低通会把它们摊平到几十拍，幅值降到阈值以下，故障检测随之失效。这类信号应当走独立通道、不做平滑，或者只用中值滤波。</p>
+<p><strong>相位敏感的测量不能低通。</strong> 阻抗分析、锁相环、振动相位差、功率因数，这些量依赖通道间的相对相位。两路滤波器参数不一致，引入的相位差会直接变成测量偏差——§13.4.5 算过，截止频率差 10% 在 100 Hz 处就有 <span class="math inline">1.4^\circ</span>。此时要么两路用同一颗器件、同一套参数，要么在数字域做严格的相位补偿。</p>
+<p><strong>闭环内的反馈量要慎滤。</strong> 反馈滤波降低噪声，同时降低相位裕度。第 12 章的相位预算里，三级滤波合计已经吃掉 <span class="math inline">15^\circ</span>；再加一级 200 Hz 低通，在 20 Hz 处再添 <span class="math inline">5.7^\circ</span>。<strong>滤波器不是免费的，它的相位要从裕度里扣。</strong></p>
+<h3 id="标定周期怎么定">13.5.3 标定周期怎么定</h3>
+<p>标定周期不是拍脑袋定的“一年一次”，而是由漂移预算推出来的。设允许的总偏差为 <span class="math inline">E</span>，其中已分配给其他误差源的比例为 <span class="math inline">q</span>，剩余可分配给漂移的份额是 <span class="math inline">(1-q)E</span>；若漂移速率为 <span class="math inline">r</span>（单位时间内的满量程百分比），则</p>
+<p><span class="math display">T_{\mathrm{cal}}\le\frac{(1-q)E}{r} \tag{13-37}</span></p>
+<p>代入一组典型数：允许偏差 1% FS，其他误差源已占 2/3，剩余 0.33% FS；零点漂移率 0.05% FS/月，则 <span class="math inline">T_{\mathrm{cal}}\le6.6</span> 个月，取 6 个月。若现场温度波动更大、漂移率翻倍，周期就要缩到 3 个月。</p>
+<p>这条式子的价值在于把“经验”变成了“可核对的账”：漂移率可以从历史标定记录里拟合出来，允许偏差来自工艺，唯一需要判断的是 <span class="math inline">q</span>。<strong>标定周期的每一次缩短，都应当能指出是哪一项变差了。</strong></p>
+<p>还有一个常被忽略的点：标定不只修正零点，也修正增益与非线性。三者漂移速率不同，零点最快、增益次之、非线性最慢。工程上可以分级标定：每月校零（几分钟）、每年校增益（半小时）、三年校全量程（半天）。</p>
+<h3 id="测量系统分析重复性与再现性">13.5.4 测量系统分析：重复性与再现性</h3>
+<p>重复性（同一人、同一设备、同一装夹，多次测量）与再现性（换人、换装夹、换时间）合起来叫测量系统的 GR&amp;R。合成公式与式 (13-6) 同形：</p>
+<p><span class="math display">\mathrm{GRR}=\sqrt{\mathrm{EV}^2+\mathrm{AV}^2} \tag{13-38}</span></p>
+<p>其中 EV 是重复性（设备变异），AV 是再现性（评价者变异）。判据按 GRR 占公差带 <span class="math inline">T</span> 的比例分三档，见表 13-3。</p>
+<p>表 13-3　GR&amp;R 占比的三档判据</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;"><span class="math inline">\mathrm{GRR}/T</span></th>
+<th style="text-align: left;">判读</th>
+<th style="text-align: left;">处置</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><span class="math inline">&lt;10\%</span></td>
+<td style="text-align: left;">测量系统可接受</td>
+<td style="text-align: left;">维持现状，按周期复评</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><span class="math inline">10\%</span>–<span class="math inline">30\%</span></td>
+<td style="text-align: left;">有条件接受</td>
+<td style="text-align: left;">视被测特征重要度决定，关键特性应改善</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><span class="math inline">&gt;30\%</span></td>
+<td style="text-align: left;">不可接受</td>
+<td style="text-align: left;">必须改善测量系统，不能用于过程控制或能力分析</td>
+</tr>
+</tbody>
+</table>
+<p>举例：重复性 0.04 mm、再现性 0.06 mm，合成 0.072 mm；公差带 0.2 mm，占比 36%，落在第三档。此时用它做过程能力分析，算出来的 <span class="math inline">C_{pk}</span> 里有一半是测量系统的贡献，结论不可信。<strong>先修测量系统，再谈过程能力</strong>，这个顺序不能颠倒。</p>
+<p>同一组数换一个分母，结论可能更糟。若工艺没有明确公差，改用过程变差（<span class="math inline">6\sigma</span>）作分母，设过程标准差 0.025 mm 即 <span class="math inline">6\sigma=0.15</span> mm，则 <span class="math inline">\mathrm{GRR}</span> 占比升到 48%。两个分母都不合格，说明问题不在判据选择，而在测量系统本身。<strong>别用“换个判据就合格”的办法通过评审。</strong></p>
+<p>还有一个常被忽略的指标：可区分类别数 <span class="math inline">\mathrm{ndc}=1.41\times\mathrm{PV}/\mathrm{GRR}</span>，本例为 <span class="math inline">1.41\times0.15/0.072=2.93</span>，取整只有 2。这意味着这套测量系统只能把零件分成“大”和“小”两类，连三档都分不出，用它做过程改进等于用一把只有两格的尺子量公差。判据要求 <span class="math inline">\mathrm{ndc}\ge5</span>。<strong>GR&amp;R 占比告诉你“够不够准”，ndc 告诉你“能分出几档”，后者才是过程控制的直接前提。</strong></p>
+<h3 id="不确定度报告的写法">13.5.5 不确定度报告的写法</h3>
+<p>一份可核查的不确定度报告至少包含五项：被测量的定义、测量值与单位、合成标准不确定度 <span class="math inline">u_c</span>、扩展不确定度 <span class="math inline">U=ku_c</span> 及包含因子、以及各分量的来源与评定方法。缺任何一项，读者都无法判断这个数能不能用。</p>
+<p>常见写法有两种，推荐第二种：</p>
+<ul>
+<li>不推荐：“测得力 100.2 N，误差 <span class="math inline">\pm0.7</span> N。”（误差不可知，<span class="math inline">\pm</span> 的含义不明）</li>
+<li>推荐：“力 <span class="math inline">F=100.2</span> N，合成标准不确定度 <span class="math inline">u_c=0.36</span> N，扩展不确定度 <span class="math inline">U=0.72</span> N（<span class="math inline">k=2</span>，置信水平约 95%）。主要分量：标准器 0.29 N、温漂 0.14 N、安装 0.14 N、重复性 0.05 N。”</li>
+</ul>
+<p>第二种写法把“这个数有多准”和“为什么这么准”一起给出了。<strong>只给结果不给预算的报告，无法复核，也无法在出问题时定位。</strong></p>
+<p>报告里还要写明测量条件：温度、装夹方式、采样率、平均次数。同一台设备在 20 ℃ 与 35 ℃ 下给出的数，不确定度不同；不写条件，等于把条件的影响藏进了结果里。</p>
+<h3 id="本章方法的适用边界">13.5.6 本章方法的适用边界</h3>
+<p><strong>适用的场景</strong>：稳态或准稳态测量、噪声近似独立、系统误差可通过标定分离、被测量在测量窗内缓变。工业现场的力、温度、位置、流量测量大多落在这个范围内。</p>
+<p><strong>不适用的场景</strong>：强非平稳过程（启停瞬态、冲击）、噪声重尾且比例高（电磁干扰严重的变频场合）、系统误差与随机误差不可分离（传感器自身漂移与被测量变化同量级）、以及需要实时闭环且带宽接近采样率一半的场合。</p>
+<p>遇到不适用的场景，出路不是“把本章方法用得更狠”，而是改测量方案：换原理不同的传感器做交叉验证、把测量移到干扰更小的位置、降低带宽需求、或者把标定从离线搬到在线（在线辨识增益与零点）。<strong>方法的边界，往往就是硬件方案的起点。</strong></p>
+<h3 id="在线标定与增益自校正">13.5.7 在线标定与增益自校正</h3>
+<p>标定周期按 §13.5.3 的预算定，但总有漂移快到“等不到下个周期”的场合：高温炉旁的力传感器、连续运行的称重皮带、切削液浸泡中的位移探头。这时要把标定搬进运行过程，用递推最小二乘跟踪参数。</p>
+<p>带遗忘因子的递推最小二乘每来一个新样本更新一次：</p>
+<p><span class="math display">\hat{\boldsymbol{\beta}}_k=\hat{\boldsymbol{\beta}}_{k-1}+\mathbf{K}_k\left(y_k-\mathbf{x}_k^{\mathsf{T}}\hat{\boldsymbol{\beta}}_{k-1}\right),\qquad \mathbf{K}_k=\frac{\mathbf{P}_{k-1}\mathbf{x}_k}{\lambda+\mathbf{x}_k^{\mathsf{T}}\mathbf{P}_{k-1}\mathbf{x}_k} \tag{13-39}</span></p>
+<p><span class="math display">\mathbf{P}_k=\frac{1}{\lambda}\left(\mathbf{I}-\mathbf{K}_k\mathbf{x}_k^{\mathsf{T}}\right)\mathbf{P}_{k-1} \tag{13-40}</span></p>
+<p><span class="math inline">\lambda</span> 是遗忘因子，越接近 1 记忆越长。指数加权下等效窗长为 <span class="math inline">1/(1-\lambda)</span>：<span class="math inline">\lambda=0.99</span> 约 100 拍、<span class="math inline">0.995</span> 约 200 拍、<span class="math inline">0.999</span> 约 1000 拍。<strong>这个窗长要和漂移速率匹配</strong>：窗太短，参数被噪声推着乱跳；窗太长，跟踪不上漂移，等于没做在线标定。</p>
+<p>在线标定的真正难点不在算法，而在<strong>参考信息从哪来</strong>。递推最小二乘要的是成对的 <span class="math inline">(\mathbf{x}_k,y_k)</span>，而“真值”在运行中通常不可得。工程上有三种做法：空载时校零（利用工艺间隙，零点是已知的）；用自动加载的标准砝码或标准件定期校增益；用冗余的第二只传感器做交叉比对。三者都要求参考量独立于控制回路。</p>
+<p>最后一条最容易被违反，后果也最隐蔽。若用被控量自己当参考——比如用编码器读数去校正同一路编码器的增益——误差会被控制回路吸收：控制器为了让反馈跟上指令，自动把增益误差压进输出里，标定残差看起来很小，实际增益仍然错着。<strong>闭环自标定只能辨识“回路看到的那部分”，不能辨识回路自身。</strong> 判断方法很简单：把参考通道断开，看标定结果是否漂移；若断开后参数立刻发散，说明之前的“稳定”是回路维持的假象。</p>
+<p>激励不足是第二个陷阱。回归向量 <span class="math inline">\mathbf{x}_k=[1,\,u_k]</span> 中若 <span class="math inline">u_k</span> 长期停在同一个值，<span class="math inline">\mathbf{X}^{\mathsf{T}}\mathbf{X}</span> 接近奇异，斜率不可辨识，协方差 <span class="math inline">\mathbf{P}</span> 的迹会持续增大。工程做法是把 <span class="math inline">\operatorname{tr}\mathbf{P}</span> 作为可辨识度指标：超过阈值就冻结斜率、只更新零点，等工况覆盖到足够范围再放开。<strong>不加这条门限的在线标定，最终都会给出一个零点漂移、斜率乱跳的结果。</strong></p>
+<p>验收在线标定要看两件事：标定前后同一批样本的残差标准差是否下降；参数序列是否单调缓变而非阶跃跳变。前者说明模型有效，后者说明更新步长合适。两条都满足，才可以把离线标定周期放长。</p>
+<h3 id="从不确定度到控制误差">13.5.8 从不确定度到控制误差</h3>
+<p>前面各节把不确定度算成了“这个数有多准”，控制工程师关心的却是另一个问题：它会让闭环差多少。两者的连接只有一句话——<strong>闭环能把反馈误差压到零，但压不掉“测量值与真值之差”。</strong></p>
+<p>稳态下控制器看到的误差为零，意味着测量值等于指令值；而真实位置与测量值相差 <span class="math inline">u</span>，这个差原封不动地留在输出上。所以定位精度的下限就是测量不确定度：测量链 <span class="math inline">U=4</span> μm（<span class="math inline">k=2</span>）时，无论控制器多快、增益多高，重复定位精度都不可能优于约 4 μm。要求 ±5 μm 的场合，测量链必须先做到 <span class="math inline">U\le5</span> μm，否则后面的整定全是白费。</p>
+<p>动态过程里还有一层放大。速度由位置差分得到，</p>
+<p><span class="math display">\sigma_{\dot{x}}\approx\frac{\sqrt{2}\,u}{T_s} \tag{13-41}</span></p>
+<p>位置噪声 <span class="math inline">u=2</span> μm、采样周期 1 ms 时，速度噪声 2.828 mm/s。这个数往往比真实速度还大，速度环根本无法直接用它。把采样率提高一倍只能把噪声降到 <span class="math inline">1/\sqrt{2}</span>，因为差分同时放大了两个相邻样本的噪声——<strong>想真正解决，要靠观测器、锁相跟踪或低带宽微分，而不是堆采样率。</strong></p>
+<p>噪声还会顺着增益进入执行器。位置环比例增益 <span class="math inline">K_p=100</span> N/mm、测量噪声 2 μm 时，力指令上的噪声是 0.2 N；增益提到 500 N/mm，噪声变成 1.0 N。<strong>这就是“增益不能无限提高”的定量原因之一</strong>：带宽的收益是线性的，噪声的代价也是线性的，而执行器的磨损与发热按方差增长。整定时必须把这两条曲线画在一起看，而不是只看阶跃响应。</p>
+<p>前馈通道更要注意。反馈回路对测量噪声有抑制（噪声在环内被 <span class="math inline">1/(1+L)</span> 衰减），前馈却是直通的：前馈增益为 1 时，测量噪声百分之百进入执行器，没有任何衰减。所以前馈信号必须先滤波，或者用指令而不是反馈做前馈——前者引入相位滞后，后者不引入噪声，二者的取舍是第 41 章裕度折算的输入。</p>
+<p>把本章与后续章节接起来看：§13.5.3 的标定周期决定零点误差的缓慢增长，§13.5.8 的折算决定这个增长到什么程度会突破定位公差；§13.3.9 的 Allan 曲线决定平均窗最长能开多久；§13.5.7 的在线标定决定这些量能否在运行中被跟踪。<strong>四件事合起来，才是一条测量链从“能读数”到“能用于控制”的完整论证。</strong></p>
+<h2 id="仿真与验证">13.6 仿真与验证</h2>
+<p>本章六组实验由 <code>code/ch013_sim.py</code> 生成，随机过程使用固定种子 20261013，全部数字可复现。</p>
+<h3 id="实验一平均只压随机分量">13.6.1 实验一：平均只压随机分量</h3>
+<p>设定真值 10.000 mm、系统偏置 <span class="math inline">+0.050</span> mm、单次标准差 0.030 mm，蒙特卡洛 4000 次，结果见表 13-4。</p>
+<p>表 13-4　重复次数对标准误与真值覆盖率的影响</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: right;"><span class="math inline">n</span></th>
+<th style="text-align: right;">标准误/mm</th>
+<th style="text-align: right;"><span class="math inline">t</span> 因子</th>
+<th style="text-align: right;">95% 半宽/mm</th>
+<th style="text-align: right;">真值覆盖率/%</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">——</td>
+<td style="text-align: right;">——</td>
+<td style="text-align: right;">——</td>
+<td style="text-align: right;">——</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">5</td>
+<td style="text-align: right;">0.0134</td>
+<td style="text-align: right;">2.776</td>
+<td style="text-align: right;">0.0372</td>
+<td style="text-align: right;">17.0</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">10</td>
+<td style="text-align: right;">0.0095</td>
+<td style="text-align: right;">2.262</td>
+<td style="text-align: right;">0.0215</td>
+<td style="text-align: right;">0.2</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">20</td>
+<td style="text-align: right;">0.0067</td>
+<td style="text-align: right;">2.093</td>
+<td style="text-align: right;">0.0140</td>
+<td style="text-align: right;">0.0</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">50</td>
+<td style="text-align: right;">0.0042</td>
+<td style="text-align: right;">2.010</td>
+<td style="text-align: right;">0.0085</td>
+<td style="text-align: right;">0.0</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">100</td>
+<td style="text-align: right;">0.0030</td>
+<td style="text-align: right;">1.984</td>
+<td style="text-align: right;">0.0060</td>
+<td style="text-align: right;">0.0</td>
+</tr>
+</tbody>
+</table>
+<p>标准误从 0.0134 压到 0.0030，正好是 <span class="math inline">1/\sqrt{20}=0.224</span> 倍；而覆盖率从 17.0% 掉到 0.0%。区间越窄，越确定地不含真值——<strong>这个现象本身就是“只算了 A 类分量”的证据</strong>。若把偏置按 B 类分量并以均匀分布折算，<span class="math inline">0.050/\sqrt{3}=0.029</span> mm 加进去，合成不确定度就从 0.003 变成 0.029，区间重新覆盖真值。</p>
+<h3 id="实验二三种判据对同一组数据的处理">13.6.2 实验二：三种判据对同一组数据的处理</h3>
+<p>20 个正态点、噪声标准差 0.100 N，在第 3 与第 11 个位置注入 1.20 N、2.00 N 的异常值，结果见表 13-5。</p>
+<p>表 13-5　三种异常值判据的检出结果</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">判据</th>
+<th style="text-align: left;">检出位置</th>
+<th style="text-align: right;">剔除后均值/N</th>
+<th style="text-align: right;">剔除后标准差/N</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><span class="math inline">3\sigma</span> 单次</td>
+<td style="text-align: left;">11</td>
+<td style="text-align: right;">0.0755</td>
+<td style="text-align: right;">0.3040</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">MAD <span class="math inline">3\sigma</span></td>
+<td style="text-align: left;">3、11</td>
+<td style="text-align: right;">0.0084</td>
+<td style="text-align: right;">0.0864</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Grubbs 迭代</td>
+<td style="text-align: left;">3、11</td>
+<td style="text-align: right;">0.0084</td>
+<td style="text-align: right;">0.0864</td>
+</tr>
+</tbody>
+</table>
+<p>污染后的标准差是 0.5107 N，为干净数据 0.100 N 的 5.11 倍。<span class="math inline">3\sigma</span> 判据只剔掉了大的那个，剩下 1.20 N 的异常值仍把均值推到 0.0755 N——<strong>剔了一半比不剔更危险，因为结果看起来“处理过了”</strong>。MAD 与 Grubbs 迭代都把两个点检出，剔除后均值 0.0084 N、标准差 0.0864 N，与真值 0 和 0.100 N 都吻合。</p>
+<h3 id="实验三掩蔽效应的幅度扫描">13.6.3 实验三：掩蔽效应的幅度扫描</h3>
+<p>同样 20 个点，单个异常值的幅度从 <span class="math inline">3\sigma</span> 扫到 <span class="math inline">20\sigma</span>，结果见表 13-6。</p>
+<p>表 13-6　单点异常幅度与两种判据的检出情况</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: right;">幅度/<span class="math inline">\sigma</span></th>
+<th style="text-align: right;">污染后 <span class="math inline">s/\sigma</span></th>
+<th style="text-align: left;"><span class="math inline">3\sigma</span> 检出</th>
+<th style="text-align: left;">MAD 检出</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">3.0</td>
+<td style="text-align: right;">1.32</td>
+<td style="text-align: left;">否</td>
+<td style="text-align: left;">否</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">4.0</td>
+<td style="text-align: right;">1.43</td>
+<td style="text-align: left;">否</td>
+<td style="text-align: left;">否</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">5.0</td>
+<td style="text-align: right;">1.57</td>
+<td style="text-align: left;">否</td>
+<td style="text-align: left;">是</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">6.0</td>
+<td style="text-align: right;">1.73</td>
+<td style="text-align: left;">是</td>
+<td style="text-align: left;">是</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">8.0</td>
+<td style="text-align: right;">2.08</td>
+<td style="text-align: left;">是</td>
+<td style="text-align: left;">是</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">15.0</td>
+<td style="text-align: right;">3.49</td>
+<td style="text-align: left;">是</td>
+<td style="text-align: left;">是</td>
+</tr>
+</tbody>
+</table>
+<p><span class="math inline">3\sigma</span> 在 5 倍时仍检不出，与式 (13-21) 的解析临界值 4.24 同一量级；MAD 在 5 倍时已能检出，因为它用的 <span class="math inline">\hat{\sigma}</span> 不受异常值影响。注意污染后的 <span class="math inline">s</span> 从 <span class="math inline">1.32\sigma</span> 一路涨到 <span class="math inline">3.49\sigma</span>——<strong>异常值越大，判据的阈值越高，这就是掩蔽效应的直接证据。</strong></p>
+<h3 id="实验四标定点数端点与外推">13.6.4 实验四：标定点数、端点与外推</h3>
+<p>量程 0–500 N、标定残余标准差 0.50 N，结果见表 13-7。</p>
+<p>表 13-7　标定点数与各位置的预测标准误</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: right;"><span class="math inline">n</span></th>
+<th style="text-align: right;">截距标准误/N</th>
+<th style="text-align: right;">斜率标准误</th>
+<th style="text-align: right;">内插点 250 N/N</th>
+<th style="text-align: right;">端点 500 N/N</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">0.4564</td>
+<td style="text-align: right;">0.001414</td>
+<td style="text-align: right;">0.2887</td>
+<td style="text-align: right;">0.4564</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">5</td>
+<td style="text-align: right;">0.3873</td>
+<td style="text-align: right;">0.001265</td>
+<td style="text-align: right;">0.2236</td>
+<td style="text-align: right;">0.3873</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">10</td>
+<td style="text-align: right;">0.2939</td>
+<td style="text-align: right;">0.000991</td>
+<td style="text-align: right;">0.1581</td>
+<td style="text-align: right;">0.2939</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">20</td>
+<td style="text-align: right;">0.2155</td>
+<td style="text-align: right;">0.000737</td>
+<td style="text-align: right;">0.1118</td>
+<td style="text-align: right;">0.2155</td>
+</tr>
+</tbody>
+</table>
+<p>内插点 250 N 处的标准误严格等于 <span class="math inline">0.50/\sqrt{n}</span>；端点约为内插点的 1.58–1.93 倍，随 <span class="math inline">n</span> 增大趋近 2 倍，与式 (13-24) 一致。</p>
+<p>只在小量程 0–100 N 内标定 6 点：区间内 50 N 处 0.2041 N，外推到 500 N 处 2.6970 N，放大 13.2 倍。斜率标准误 0.005976，乘以外推力臂 450 N 得 2.69 N，与外推值吻合——<strong>外推误差几乎全部来自斜率不确定度被力臂放大。</strong></p>
+<p>反向算一遍就知道该改什么：同样 6 点，把跨度从 100 N 扩到 500 N，<span class="math inline">S_{xx}</span> 增大 25 倍，斜率标准误降到 0.001195；500 N 从外推点变成端点，预测标准误回到 0.362 N，比原来的 2.6970 N 小 7.4 倍。<strong>扩跨度花的是行程，加密点花的是时间，前者对端点精度的收益大得多。</strong> 这也解释了为什么标定规程总强调“必须在全量程取点”，而不是“多取几个点”。</p>
+<h3 id="实验五不确定度预算">13.6.5 实验五：不确定度预算</h3>
+<p>500 N 量程力测量链的预算见表 13-8。</p>
+<p>表 13-8　力测量链的不确定度预算</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">分量</th>
+<th style="text-align: right;"><span class="math inline">u</span>/N</th>
+<th style="text-align: right;">占比/%</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">重复性 A 类</td>
+<td style="text-align: right;">0.0506</td>
+<td style="text-align: right;">2.0</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">标准器 B 类</td>
+<td style="text-align: right;">0.2887</td>
+<td style="text-align: right;">64.7</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">温漂 B 类</td>
+<td style="text-align: right;">0.1443</td>
+<td style="text-align: right;">16.2</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">安装 B 类</td>
+<td style="text-align: right;">0.1443</td>
+<td style="text-align: right;">16.2</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">分辨率 B 类</td>
+<td style="text-align: right;">0.0352</td>
+<td style="text-align: right;">1.0</td>
+</tr>
+</tbody>
+</table>
+<p>合成 <span class="math inline">u_c=0.3589</span> N（0.0718% FS），有效自由度 22540.9，扩展不确定度 <span class="math inline">U=0.7178</span> N（<span class="math inline">k=2</span>）。标准器占 64.7%，把它减半后 <span class="math inline">u_c</span> 降到 0.2575 N，只降 28.3%，与式 (13-26) 的 0.7175 倍一致。</p>
+<figure>
+<img src="figs/ch013/fig_013_04_budget.svg" alt="图 13-4　不确定度预算的分量占比" /><figcaption aria-hidden="true">图 13-4　不确定度预算的分量占比</figcaption>
+</figure>
+<p>图 13-4 把表 13-8 的占比画成横条。标准器一根条就占了近三分之二，温漂与安装并列第二、各 16.2%，分辨率与重复性相加不到 3%。<strong>这张图的读法是“哪根条最长，钱就先花在哪”</strong>：更换标准器能把 <span class="math inline">u_c</span> 从 0.3589 N 压到 0.2575 N，而把重复性改善十倍，条形几乎看不出变化。注意横轴是方差占比而不是标准差占比，两者不能混用——不确定度合成在方差域相加，看错坐标就会把 2.0% 误读成 14%。</p>
+<p>这张表最值得注意的一行是重复性只占 2.0%。<strong>把重复测量次数从 10 次加到 100 次，<span class="math inline">u_c</span> 只从 0.3589 降到 0.3557 N，降幅 0.9%</strong>——时间翻十倍换不到一个百分点的改善，完全不划算。预算表在这里起的是“否决”作用。</p>
+<h3 id="实验六ols-与-wls-的斜率精度">13.6.6 实验六：OLS 与 WLS 的斜率精度</h3>
+<p>11 个标定点、真斜率 3.0，中间噪声 0.10、两端噪声 0.30，蒙特卡洛 2000 次，结果见表 13-9。</p>
+<p>表 13-9　等权与加权最小二乘的斜率估计</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">方法</th>
+<th style="text-align: right;">斜率均值</th>
+<th style="text-align: right;">斜率标准差</th>
+<th style="text-align: right;">相对真值/%</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">OLS</td>
+<td style="text-align: right;">2.99946</td>
+<td style="text-align: right;">0.02061</td>
+<td style="text-align: right;"><span class="math inline">-0.018</span></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">WLS</td>
+<td style="text-align: right;">2.99970</td>
+<td style="text-align: right;">0.01216</td>
+<td style="text-align: right;"><span class="math inline">-0.010</span></td>
+</tr>
+</tbody>
+</table>
+<p>两者的偏差都在 0.02% 以内，说明加权不改变无偏性；标准差之比 0.590，WLS 的方差只有 OLS 的 34.8%。端点权重是中间的 1/9，端点的噪声大、杠杆长，OLS 让它们等权参与，等于让最不可信的两个点拥有和中间点一样的话语权。</p>
+<h3 id="六组实验的共同结论">13.6.7 六组实验的共同结论</h3>
+<p>六组实验分别对应 §13.1.4 的六个问题，结论可以归成三句：</p>
+<ol type="1">
+<li><strong>随机与系统必须分开算。</strong> 实验一里区间缩到 0.0060 mm 仍不含真值，实验五里重复性只占总不确定度的 2.0%——两处都说明，只盯着随机分量会在错误的方向上花力气。</li>
+<li><strong>判据的失效方式是“静默”的。</strong> 实验二的 <span class="math inline">3\sigma</span> 少剔一个点、实验三的临界幅度漂到 5 倍，都不会报错，只会给出一个看起来正常的结果。MAD 与迭代 Grubbs 的价值在于把这个失效暴露出来。</li>
+<li><strong>不确定度由杠杆最长的那个位置决定。</strong> 实验四的端点 1.93 倍、外推 13.2 倍，实验六的端点权重，都指向同一件事：<strong>标定与测量的薄弱环节在量程两端，不在中间。</strong></li>
+</ol>
+<p>三句之外还有一条横向观察：六组实验里，“把参数调得更狠”的尝试几乎都收效甚微。平均次数从 5 加到 100，标准误只改善 4.5 倍（<span class="math inline">1/\sqrt{20}</span>）；重复性改善十倍，<span class="math inline">u_c</span> 只降 0.9%；标定点从 3 个加到 20 个，端点标准误只从 0.4564 降到 0.2155。<strong>而改对方向的动作——扩标定跨度、换标准器、改用 WLS——一次就带来几倍的改善。</strong> 差别不在努力程度，在是否作用在主导项上。</p>
+<h3 id="复现与交叉核对">13.6.8 复现与交叉核对</h3>
+<p>一组仿真数字可信，不是因为它跑出来了，而是因为它能与独立算出的值对上。本章做了四组核对，每组都用一条解析式去卡数值结果。</p>
+<p><strong>核对一，实验一的标准误。</strong> <span class="math inline">n=100</span> 时数值给出 0.0030 mm；解析值 <span class="math inline">0.030/\sqrt{100}=0.0030</span> mm，逐位一致。<span class="math inline">n=5</span> 时 <span class="math inline">0.030/\sqrt{5}=0.013416</span>，数值 0.0134，四舍五入后相同。这一项核对的是 <span class="math inline">1/\sqrt{n}</span> 的实现，若脚本里误用了 <span class="math inline">1/n</span>，<span class="math inline">n=100</span> 处会差十倍。</p>
+<p><strong>核对二，实验四的端点放大。</strong> 数值端点 0.2155 N、中点 0.1118 N，比值 1.928；式 (13-24) 在 <span class="math inline">n=20</span> 时给出 <span class="math inline">\sqrt{1+57/21}=1.927</span>。两者差 0.001，来自数值打印的四位舍入。这一项核对的是 <span class="math inline">S_{xx}</span> 的计算与杠杆项，写错 <span class="math inline">n</span> 与 <span class="math inline">n-1</span> 会让比值偏到 2 以外。</p>
+<p><strong>核对三，实验五的合成。</strong> 把五个分量按方差相加再开方：<span class="math inline">\sqrt{0.0506^2+0.2887^2+2\times0.1443^2+0.0352^2}=0.35888</span>，数值 0.3589。这一项核对的是“方差域相加”这条规则有没有被误写成“标准差相加”——后者会得到 0.6631，差近一倍。</p>
+<p><strong>核对四，实验六的方差比。</strong> 斜率标准差之比 <span class="math inline">0.01216/0.02061=0.590</span>，平方得 0.348，即加权把方差降到三成半。这一项核对的是权重是否按 <span class="math inline">1/\sigma_i^2</span> 施加；若误用 <span class="math inline">1/\sigma_i</span>，比值会明显偏离 0.59。</p>
+<p>还有一处数值与解析不完全一致，值得说明：实验三在 <span class="math inline">n=20</span> 处的解析临界幅度是 4.24，数值扫描要到 5–6 倍才稳定检出。原因不是算错，而是解析式用的是 <span class="math inline">s</span> 的期望，单次实验的 <span class="math inline">s</span> 本身有约 <span class="math inline">\pm16\%</span> 的波动（<span class="math inline">\sigma/\sqrt{2(n-1)}</span>），波动小的时候漏检概率仍然不低。<strong>解析给的是“平均意义下”的临界值，数值给的是“这一次”的结果，两者差一档是正常的；若两者完全相等，反而说明随机性被写死了。</strong></p>
+<p>复现的三条纪律也适用于读者自查：固定种子；把关键中间量（标准误、<span class="math inline">S_{xx}</span>、<span class="math inline">u_c</span>）打印出来；换一个随机数发生器或换一套实现重跑，看差异是否落在抽样误差内。<strong>能被两条独立路径算出来的数，才值得写进报告。</strong></p>
+<h2 id="小结与常见错误">13.7 小结与常见错误</h2>
+<h3 id="本章的链条">13.7.1 本章的链条</h3>
+<p>本章从“两次标定给出两套数”出发，把测量数据处理拆成六个环节，再逐环给出定量工具：</p>
+<ol type="1">
+<li><strong>区分误差与不确定度</strong>（§13.1.3）：误差不可知，不确定度可算；系统分量靠标定，随机分量靠平均。</li>
+<li><strong>定义统计量</strong>（§13.2）：均值、标准差、标准误分工明确，<span class="math inline">s</span> 与 <span class="math inline">s/\sqrt{n}</span> 不能混用。</li>
+<li><strong>A 类与 B 类评定</strong>（§13.2.4）：A 类来自重复测量，B 类来自手册、证书、分辨率，折算系数取决于假定分布。</li>
+<li><strong>合成与传播</strong>（§13.2.5–13.2.6）：方差相加而非误差相加；先找主导项，再决定改哪里。</li>
+<li><strong>异常值判据</strong>（§13.2.7、§13.3.3–13.3.4）：<span class="math inline">3\sigma</span> 有掩蔽效应，MAD 免疫但效率低，Grubbs 给显著性。</li>
+<li><strong>标定与拟合</strong>（§13.2.8、§13.3.5）：端点不确定度是大样本下的 2 倍，外推按力臂放大。</li>
+</ol>
+<p>这六环构成了“从原始采样到可用结论”的完整路径，也是 §13.4 实现部分的骨架。</p>
+<h3 id="八条常见错误">13.7.2 八条常见错误</h3>
+<p><strong>错误一：把单次标准差当平均值的不确定度。</strong> 现象是报告里写“重复 10 次，标准差 0.03 mm”，读者以为平均值也只差 0.03 mm。纠正：平均值的不确定度是 <span class="math inline">0.03/\sqrt{10}=0.0095</span> mm，两者差 3.2 倍。</p>
+<p><strong>错误二：用平均去消除偏置。</strong> 现象是反复平均后结果稳定停在偏离真值的值上，工程师继续加次数。纠正：此时该重新标定，平均只会把偏置“确认”得更精确。</p>
+<p><strong>错误三：拿极限误差当标准差。</strong> 现象是手册写 <span class="math inline">\pm0.1\%</span> FS，直接当 <span class="math inline">u=0.1\%</span> 代入合成。纠正：按均匀分布除 <span class="math inline">\sqrt{3}</span> 得 0.058%；若当 <span class="math inline">2\sigma</span> 用则得 0.05%，三种做法差 1.7 倍。</p>
+<p><strong>错误四：先滤波再剔异常值。</strong> 现象是脉冲干扰被低通摊平，<span class="math inline">3\sigma</span> 判据再也认不出。纠正：先去异常值（或中值滤波压制脉冲），再低通。</p>
+<p><strong>错误五：小样本用 <span class="math inline">3\sigma</span>。</strong> 现象是 5 个点里有一个明显离谱的值却检不出。纠正：<span class="math inline">n\le5</span> 时 <span class="math inline">3\sigma</span> 解析上永远检不出（§13.3.3），改用 MAD 或直接人工判断。</p>
+<p><strong>错误六：标定点只取工作区间。</strong> 现象是只标 0–20% 量程，却用它控制 80% 量程的工况。纠正：外推 13.2 倍的代价已在实验四量化；要么全量程标定，要么限制使用范围。</p>
+<p><strong>错误七：不确定度只报 A 类。</strong> 现象是重复性极好，报告的不确定度很小，实际偏差很大。纠正：把标准器、温漂、安装、分辨率全部折进 B 类再合成，实验五里 B 类占 98%。</p>
+<p><strong>错误八：多通道不做时间对齐。</strong> 现象是各通道数据“看起来都对”，算出来的相位、功率、相关函数却不对。纠正：硬件同步触发 + 检查各通道模拟前端延迟是否一致。</p>
+<h3 id="五条判据速查">13.7.3 五条判据速查</h3>
+<p>表 13-10 把本章用到的定量判据集中列出，便于现场直接对照。</p>
+<p>表 13-10　本章定量判据速查</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">目的</th>
+<th style="text-align: left;">判据</th>
+<th style="text-align: left;">阈值</th>
+<th style="text-align: left;">失效条件</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">平均次数够不够</td>
+<td style="text-align: left;"><span class="math inline">n=(s/s_{\mathrm{target}})^2</span></td>
+<td style="text-align: left;">按目标精度反算</td>
+<td style="text-align: left;">被测量在窗内变化、噪声自相关</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">异常值判据选择</td>
+<td style="text-align: left;">异常比例</td>
+<td style="text-align: left;"><span class="math inline">&lt;5\%</span> 用 <span class="math inline">3\sigma</span>；<span class="math inline">&gt;10\%</span> 用 MAD</td>
+<td style="text-align: left;">样本数 <span class="math inline">n\le5</span> 时 <span class="math inline">3\sigma</span> 失效</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">标定点数</td>
+<td style="text-align: left;">端点标准误 <span class="math inline">\approx2\sigma/\sqrt{n}</span></td>
+<td style="text-align: left;">按允许误差反算</td>
+<td style="text-align: left;">只覆盖部分量程、存在非线性</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">外推是否可接受</td>
+<td style="text-align: left;">外推距离 / 标定跨度</td>
+<td style="text-align: left;">超过 0.5 即进入不可接受区</td>
+<td style="text-align: left;">模型形式错误时整体失效</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">测量系统是否够用</td>
+<td style="text-align: left;"><span class="math inline">\mathrm{GRR}/T</span></td>
+<td style="text-align: left;"><span class="math inline">&lt;10\%</span> 可接受，<span class="math inline">&gt;30\%</span> 不可接受</td>
+<td style="text-align: left;">公差带本身定得不合理</td>
+</tr>
+</tbody>
+</table>
+<h3 id="与后续章节的接口">13.7.4 与后续章节的接口</h3>
+<p>本章的输出直接喂给后面三处：</p>
+<p><strong>给辨识（第 16、17 章）</strong>：辨识实验的激励设计需要知道噪声水平与不确定度，才能定信噪比与实验时长；参数估计的置信区间直接由式 (13-12) 给出。<strong>辨识报告的“参数 ± 标准差”就是本章的产物。</strong></p>
+<p><strong>给滤波（第 14 章）</strong>：本章只讲“该不该滤、滤多少拍”，滤波器的频域设计、阶数选择、相位补偿在第 14 章。两章的分界是：本章看时域统计量，第 14 章看频域传递函数。</p>
+<p><strong>给控制器设计（第 41、44、58 章）</strong>：测量噪声折算到被控量的等效值，是控制器带宽与增益的上限约束之一；不确定度大的测量点，闭环增益必须留更大裕度。第 41 章会把这条约束写成灵敏度函数的形式。</p>
+<h3 id="三句话总结">13.7.5 三句话总结</h3>
+<p><strong>第一句：任何测量结果都是“数 + 不确定度”的组合，缺一半就无法判断可用性。</strong> 只报数不报不确定度，等于把系统误差伪装成真值。</p>
+<p><strong>第二句：随机分量与系统分量必须分开处理，手段不可互换。</strong> 平均与滤波只压随机，标定与溯源只压系统；用错工具，投入再多也没有效果。</p>
+<p><strong>第三句：不确定度的短板永远在杠杆最长的位置。</strong> 标定曲线的端点、外推的远端、异常值比例高的样本，这些位置的误差被放大 2 倍到 13 倍。<strong>改善测量精度，先找杠杆最长的那一处。</strong></p>
+<h3 id="交付前的九项核对">13.7.6 交付前的九项核对</h3>
+<p>把本章的方法落到一份可交付的测量方案上，最后按这九条逐项自检，任一条答不上来就不要交付。</p>
+<ol type="1">
+<li><strong>量程与单位。</strong> 标称量程是否覆盖工艺极限？压力、力、温度的单位与换算常数是否写死在程序里？<code>%FS</code> 与 <code>%reading</code> 是否逐字确认？</li>
+<li><strong>采样与时基。</strong> 采样率是多少、抗混叠滤波器截止在哪、时间戳在采集端还是通信端打的？三问缺一，后面所有统计量都不可信。</li>
+<li><strong>异常值机制。</strong> 异常来自丢帧、饱和、干扰还是真实工况？比例多少？用的判据在 <span class="math inline">n</span> 与异常比例下是否还有效（§13.3.3）？</li>
+<li><strong>平均与带宽。</strong> 平均窗多长、对应多大相位滞后、被测量在窗内的最大变化量是多少？Allan 曲线给出的 <span class="math inline">\tau_{\mathrm{opt}}</span> 是否覆盖这个窗长？</li>
+<li><strong>标定设计。</strong> 点数、跨度、每点重复次数、端点是否加密？预测标准误在工作点是 0.1118 N 还是 2.6970 N，差别就在跨度与外推上。</li>
+<li><strong>是否外推。</strong> 若必须外推，给出外推倍数与对应不确定度，并在图纸上标出可用量程；不要把“标定过”与“全量程可信”混为一谈。</li>
+<li><strong>预算闭合。</strong> 各分量是否按方差相加？主导项是谁？改善计划是否指向主导项而不是最容易改的那一项（§13.3.6）？</li>
+<li><strong>报告要素。</strong> 是否给出 <span class="math inline">u_c</span>、<span class="math inline">U</span>、<span class="math inline">k</span>、包含概率、测量条件与各分量来源？缺一项，读者就无法复核。</li>
+<li><strong>可复现。</strong> 随机过程是否固定种子？关键中间量是否打印？换一套实现能否复算出同样的数（§13.6.8）？</li>
+</ol>
+<p>九条里第 2 条与第 6 条最常被跳过，而它们恰恰决定了后面所有数字的有效范围。<strong>一份测量方案的成熟度，不看它算出多少位小数，看它能不能回答“这个数在什么条件下不成立”。</strong></p>
+<p>自检表不必一次做全，但每一条都要落到具体记录上：采样率写进配置文件，标定跨度写进工艺卡，异常拦截率写进日志，不确定度预算写进验收报告。<strong>没有被记录下来的核对，等于没有做过</strong>——三个月后换人维护，唯一能依靠的就是这些文字，而不是某个人的记忆。</p>
+
+<nav class="footnav"><a href="ch012.html">← 上一章</a><a href="index.html">返回目录</a><a href="ch014.html">下一章 →</a></nav>
+</body>
+</html>

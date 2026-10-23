@@ -1,0 +1,1340 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="zh-CN" xml:lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>第 29 章　无约束优化算法 · 控制大综合</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    span.underline{text-decoration: underline;}
+    div.column{display: inline-block; vertical-align: top; width: 50%;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    ul.task-list{list-style: none;}
+  </style>
+  <link rel="stylesheet" href="assets/book.css" />
+  <script src="assets/katex/katex.min.js"></script>
+  <script>document.addEventListener("DOMContentLoaded", function () {
+   var mathElements = document.getElementsByClassName("math");
+   var macros = [];
+   for (var i = 0; i < mathElements.length; i++) {
+    var texText = mathElements[i].firstChild;
+    if (mathElements[i].tagName == "SPAN") {
+     katex.render(texText.data, mathElements[i], {
+      displayMode: mathElements[i].classList.contains('display'),
+      throwOnError: false,
+      macros: macros,
+      fleqn: false
+     });
+  }}});
+  </script>
+  <link rel="stylesheet" href="assets/katex/katex.min.css" />
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+  <link rel="stylesheet" href="assets/site.css" />
+</head>
+<body>
+<nav class="topnav"><a class="home" href="index.html">目录</a><span class="pos">029 / 115</span><span class="pager"><a href="ch028.html">上一章</a><a href="ch030.html">下一章</a></span></nav>
+
+<nav id="TOC" role="doc-toc">
+<ul>
+<li><a href="#第29章-无约束优化算法">第29章 无约束优化算法</a>
+<ul>
+<li><a href="#动机与要解决的问题">29.1 动机与要解决的问题</a></li>
+<li><a href="#定义与数学基础">29.2 定义与数学基础</a></li>
+<li><a href="#推导与性质">29.3 推导与性质</a></li>
+<li><a href="#离散对应与数值实现">29.4 离散对应与数值实现</a></li>
+<li><a href="#工程边界与失效条件">29.5 工程边界与失效条件</a></li>
+<li><a href="#八组实验">29.6 八组实验</a></li>
+<li><a href="#小结与常见错误">29.7 小结与常见错误</a></li>
+</ul></li>
+</ul>
+</nav>
+<h1 id="第29章-无约束优化算法">第29章 无约束优化算法</h1>
+<h2 id="动机与要解决的问题">29.1 动机与要解决的问题</h2>
+<h3 id="一行没有兑现的注解">29.1.1 一行没有兑现的注解</h3>
+<p>第27章实验 E 扫过学习率：取 <span class="math inline">3\times10^{-1}</span> 时训练误差 <span class="math inline">2.620</span> K，是 <span class="math inline">10^{-2}</span> 时的两倍半——步子太大，连训练集都没拟合住。第28章实验 F 更极端，同样是 <span class="math inline">0.30</span>，最大梯度冲到 <span class="math inline">23217</span>，训练误差 <span class="math inline">5.539</span> K，比直接预测均值还差，而那一节只留了一条“先把学习率除以十”的工程判据。两章都在开头许过一句“凡是涉及’为什么这个算法收敛’的问题，一律指回第29章”，但没有一处说清 <span class="math inline">0.30</span> 究竟撞上了什么。第28章的其余实验里还有同类现象：逆模型训练用 <span class="math inline">8\times10^{-3}</span>，图网络用 <span class="math inline">5\times10^{-3}</span>，也没有说明为什么不能取 <span class="math inline">0.3</span>。这些欠账，本章来还。</p>
+<p>还账的入口是一个很小的实验。取一个条件数 100、维度 20 的正定二次型，从原点出发，步长分别取最大特征值倒数的 1.90、1.99、2.01、2.20 倍，各走 200 步。前两行都到了 -254.4 附近，与最优值 -254.7 只差零点几；2.01 倍那一行走到 +689.5，方向已经反了；2.20 倍那一行是 5.88×10³²，在双精度里等于溢出。<strong>同一个方向、同一条更新公式，步长只差百分之一，结果从收敛变成爆炸。</strong></p>
+<p>这三个数把问题拆成三问：为什么存在一个上界，上界是多少，越界以后坏得多快。第一问的答案藏在二次型的谱里，第二问是最大特征值倒数的两倍，第三问是指数。三问本身都不难，难的是把它们用到不是二次型的对象上——真实的损失面既不知道最大特征值，也不知道条件数，甚至不知道是不是凸的。</p>
+<p>本章要做的，就是把这三问从“能算的模型”搬到“只能量的对象”上。搬法有三条：一是用线搜索把步长交给函数值自己决定，不再依赖未知的谱；二是用曲率信息（海森矩阵或其近似）把方向从“最陡”改成“最准”；三是用参数变换把病态的尺度问题在进入优化器之前就消掉。三条各有代价，本章会把代价算清楚。</p>
+<h3 id="优化在控制工程里的三个位置">29.1.2 优化在控制工程里的三个位置</h3>
+<p>控制工程里的人对优化并不陌生，只是常常不把它叫优化。它至少出现在三个位置。</p>
+<p><strong>第一个位置是辨识。</strong> 第15到22章的所有参数估计，最后都归结为一个最小二乘问题：给定输入输出数据，找一组参数使残差平方和最小。一阶惯性加纯延迟的拟合、ARX 的系数、换热器的换热系数，都是这个形式。<strong>这类问题的特点是残差对参数线性，一次求解就完</strong>；但只要对象里有一个指数、一个对数平均温差、一个饱和环节，线性就没了，必须迭代。</p>
+<p><strong>第二个位置是训练。</strong> 第27、28章的网络训练是最小化一个非凸的损失函数，参数量从几百到几千。反传给出了梯度，但梯度只是原料，怎么用它走路是另一回事。学习率、动量、批大小这些超参数，说到底都在回答同一个问题：<strong>这一步该迈多远</strong>。</p>
+<p><strong>第三个位置是稳态优化。</strong> 给定一组经济指标与约束，找使成本最低的工况点。这一层在第58、80章的模型预测控制里出现，本章不碰约束，只讲无约束的那一半。</p>
+<p>三个位置共用一套数学，但侧重不同。辨识关心的是“解对不对”，训练关心的是“多久能到”，稳态优化关心的是“到了以后稳不稳”。本章的五个算例分别落在这三种关切上，<strong>没有一个算例是“为了展示算法好看”而设计的</strong>。</p>
+<h3 id="五个算例">29.1.3 五个算例</h3>
+<p>算例一是一个 <span class="math inline">50</span> 维、条件数 <span class="math inline">100</span> 的正定二次型，起点取原点，最优值 <span class="math inline">-549.8</span>。选它是因为二次型上所有算法的行为都能手算核对：牛顿两步到位，共轭梯度理论上不超过 <span class="math inline">50</span> 步，梯度下降的收敛因子由条件数唯一决定。<strong>这是本章唯一一个“标准答案已知”的算例</strong>，用来校准读者的直觉。</p>
+<p>算例二是同一个二次型族，维度降到 <span class="math inline">30</span>，条件数从 <span class="math inline">1</span> 扫到 <span class="math inline">10^4</span>，看五种算法的迭代次数怎么变。条件数 <span class="math inline">1</span> 时所有算法都是两步——那是一个各向同性的球，怎么走都对；条件数 <span class="math inline">10^4</span> 时差距拉开到三个数量级。<strong>这条扫描线是本章所有“该选哪个算法”结论的底座。</strong></p>
+<p>算例三是二维香蕉函数，起点 <span class="math inline">(-1.2,\,1.0)</span>，最优点 <span class="math inline">(1,\,1)</span>，最优值 <span class="math inline">0</span>。它不凸、有一条弯曲的窄谷，梯度在谷里几乎与谷壁平行，是最经典的“梯度下降走不动”的例子。选它不是为了难为梯度下降，而是因为二维可以把轨迹画在等高线上，<strong>读者能一眼看出“方向错在哪”</strong>。</p>
+<p>算例四是换热器的非线性最小二乘：<span class="math inline">400</span> 段稳态样本，真值 <span class="math inline">a=2.4</span>、<span class="math inline">T_{\text{hot}}=95</span> ℃，出口温度叠 <span class="math inline">0.5</span> K 噪声，两个待估参数，起点 <span class="math inline">a=1.2</span>、<span class="math inline">T_{\text{hot}}=80</span> ℃。这是本章唯一一个“从控制工程里长出来”的算例，也是唯一一个雅可比两列量级差三十倍的算例。<strong>它的残差下界由噪声决定，约 <span class="math inline">0.5</span> K</strong>，任何算法都不该显著好于这个数。</p>
+<p>算例五是一组工程量的测量：维度从 <span class="math inline">100</span> 加到 <span class="math inline">2000</span> 时 BFGS 与 L-BFGS 的耗时与内存；有限差分步长从 <span class="math inline">10^{-1}</span> 扫到 <span class="math inline">10^{-14}</span> 时梯度相对误差的形状；三种停止准则各自停在第几步、离最优点多远。<strong>这三项不影响“算法对不对”，只影响“工程上能不能用”</strong>，所以单独成组。</p>
+<h3 id="三条口径与两处约定">29.1.4 三条口径与两处约定</h3>
+<p>第一条口径：<strong>所有数字来自单次实跑</strong>，种子 20261029，单线程。理由与第27、28章相同，多线程归约的次序不固定，同一条曲线两次跑出来会在末位抖。本章的迭代次数是整数，抖动表现为“某一步刚好跨过阈值”，可能让 410 变成 409，但不会让 410 变成 300。</p>
+<p>第二条口径：<strong>耗时只比量级，不比小数点</strong>。本章实验 F 里 BFGS 在 <span class="math inline">n=2000</span> 上跑了 22.0 秒，L-BFGS 跑了 0.355 秒，差 62 倍；这个倍数换一台机器可能变成 40 或 90，但“几十倍”这个量级不变。<strong>凡是依赖 62 这个精确值的结论，本章都不做。</strong></p>
+<p>第三条口径：<strong>残差差异小于 0.05 K 不当作结论</strong>。这条门限的来历在第26章实验 D：交叉验证的划分波动使决定系数有 0.0008 的标准差，折算到误差约 0.03 K，取 0.05 K 作保守门限，第28章沿用。本章的残差多落在 <span class="math inline">0.52</span> 到 <span class="math inline">0.58</span> K 之间，彼此差不到 <span class="math inline">0.05</span> K，因此本章比较的是<strong>迭代次数与每步代价</strong>，而不是“谁的残差更小”——后者在这个算例上没有区分度，写出来只是噪声。</p>
+<p>两处约定。<strong>约定一，公式里的向量一律加粗</strong>，标量不加；梯度记 <span class="math inline">\nabla f</span>，海森矩阵记 <span class="math inline">\nabla^2 f</span>，两者都不写下标时默认在当前点上取值。<strong>约定二，温度用摄氏度，误差用开尔文</strong>，与第28章一致，避免 <span class="math inline">273.15</span> 在推导里来回出现。</p>
+<h3 id="与相邻各章的分界">29.1.5 与相邻各章的分界</h3>
+<p>第27章讲“梯度怎么来的”：反向传播是链式法则的矩阵形式，梯度检查用中心差分，梯度消失有定量界。本章不重复这些，<strong>凡是涉及“这一层的偏导怎么算”的问题，一律指回第27章 §27.2</strong>。本章只接手梯度到手之后的事。</p>
+<p>第28章讲“结构怎么选、怎么接进回路”。那里出现的每一个训练配置背后都有一个优化器，但那一章把优化器当成给定的更新规则。<strong>本章把那层黑箱打开</strong>：为什么 8×10⁻³ 能用、0.3 不能用，为什么 Adam 在病态问题上比朴素梯度下降稳，答案都在步长与曲率的比值里。</p>
+<p>第44章讲 PID 与整定，第45章讲串级，第46章讲前馈加反馈，第58章讲模型预测控制，第47章讲 Smith 预估。<strong>本章不讨论控制器结构、不讨论抗饱和、不讨论无扰切换</strong>，这些属于第44到47章；本章只提供一件工具——当你在辨识、训练或稳态优化里遇到“要最小化一个函数”时，知道该用哪种下降方式、步长怎么定、什么时候该停。</p>
+<p>第15到22章的系统辨识里，最小二乘是以“估计器”的身份出现的，重点是统计性质：无偏、有效、置信区间。<strong>本章把它当“优化问题”看</strong>，重点是数值行为：条件数、迭代次数、收敛速度。同一个算法，两种视角，本章不重复统计侧的推导。</p>
+<p>还有两条边界。第一，本章不涉及约束优化，KKT 条件、有效集、内点法都属于后续章节；本章的所有问题都没有可行域。第二，本章不涉及随机梯度与自适应步长（Adam、RMSProp），那部分已经在第27章作为训练技巧讲过；<strong>本章只讨论全批量、确定性的一阶与二阶方法</strong>，因为只有在这一层，“收敛速度”才有严格定义。</p>
+<h3 id="六个先导结果">29.1.6 六个先导结果</h3>
+<p>先把量级摆出来，让读者知道这一章要证明什么。</p>
+<p><strong>结果一，二次型上的排序是干净的。</strong> 条件数 <span class="math inline">100</span>、维度 <span class="math inline">50</span>，达到梯度范数降到初值 <span class="math inline">10^{-6}</span> 的同一标准，牛顿 <span class="math inline">2</span> 次、共轭梯度 <span class="math inline">41</span> 次、BFGS <span class="math inline">52</span> 次、动量 <span class="math inline">251</span> 次、梯度下降 <span class="math inline">410</span> 次。<strong>牛顿的两次不是调参调出来的，是二次函数加精确海森矩阵的必然</strong>；共轭梯度的 <span class="math inline">41</span> 次略少于维度 <span class="math inline">50</span>，也是理论保证的。</p>
+<p><strong>结果二，条件数是分化器。</strong> 条件数从 <span class="math inline">1</span> 加到 <span class="math inline">10^4</span>，梯度下降从 <span class="math inline">2</span> 次涨到 <span class="math inline">18236</span> 次，共轭梯度从 <span class="math inline">2</span> 次涨到 <span class="math inline">53</span> 次，牛顿始终是 <span class="math inline">2</span> 次，BFGS 从 <span class="math inline">2</span> 次涨到 <span class="math inline">38</span> 次。<strong>四个数量级的条件数，对梯度下降是四个数量级的代价，对牛顿是零。</strong> 这条对比是“为什么值得算曲率”的最直接回答。</p>
+<p><strong>结果三，内存可以换迭代。</strong> 香蕉函数上 BFGS 用 <span class="math inline">34</span> 步，限制内存为 <span class="math inline">10</span> 的 L-BFGS 用 <span class="math inline">629</span> 步。<strong>记忆换来的不是精度，是步数</strong>；而步数在低维是廉价的，在高维不是——这正是下一条的伏笔。</p>
+<p><strong>结果四，维度决定谁付得起。</strong> 维度 <span class="math inline">2000</span> 时，BFGS 走 <span class="math inline">30</span> 步要 <span class="math inline">22.0</span> 秒、占 <span class="math inline">30.52</span> MB，L-BFGS 同样 <span class="math inline">30</span> 步要 <span class="math inline">0.355</span> 秒、占 <span class="math inline">0.305</span> MB。<strong>时间差 <span class="math inline">62</span> 倍，内存差 <span class="math inline">100</span> 倍</strong>，而两者的迭代次数在这一段完全相同，因为都被人为截断在 <span class="math inline">30</span> 步。</p>
+<p><strong>结果五，换热器上二阶方法全胜。</strong> 同一个两参数最小二乘，高斯—牛顿 <span class="math inline">7</span> 次、加回溯 <span class="math inline">5</span> 次、列文伯格—马夸特 <span class="math inline">6</span> 次、BFGS <span class="math inline">27</span> 次、换对数参数后的 BFGS <span class="math inline">8</span> 次；定步长梯度下降走满 <span class="math inline">20000</span> 步仍未到，残差 <span class="math inline">0.5727</span> K 对 <span class="math inline">0.5235</span> K。<strong>两万步换不来最后那 <span class="math inline">0.05</span> K</strong>，这是条件数 <span class="math inline">3.4\times10^4</span> 的直接后果。</p>
+<p><strong>结果六，差分步长有一个最优值。</strong> 前向差分在 <span class="math inline">h=10^{-8}</span> 时误差最小，为 <span class="math inline">1.60\times10^{-8}</span>；再小就反弹，<span class="math inline">h=10^{-14}</span> 时退化到 <span class="math inline">1.02\times10^{-2}</span>。中心差分在 <span class="math inline">h=10^{-1}</span> 就达到机器精度 <span class="math inline">5.18\times10^{-16}</span>，此后一路变坏。<strong>“步长越小越准”是错的，误差是截断误差与舍入误差的和，两端都坏。</strong></p>
+<p>六个结果对应六张图、十几张表。路线是：29.2 定义问题、条件数与收敛速度，29.3 把五种算法的更新式推出来并给出各自的收敛阶，29.4 落到实现细节（两循环递归、线搜索守卫、参数化、差分步长、停止准则），29.5 讲工程边界，29.6 用八组实验把每条论断钉在数字上，29.7 收束。</p>
+<p><strong>读这一章有三条路径，按目的选。</strong> 只想把手里的一段代码跑起来，直接看 29.4.1 的五个骨架、29.5.6 的适用性判别表和 29.7.4 的检查清单，其余可以跳过。要在方案评审上解释“为什么这里该用拟牛顿而不是梯度下降”，读 29.2.3 到 29.3.6，条件数与步数的关系是全部论据的来源。要判断一份报告里的收敛曲线是否可信，读 29.3.7 与 29.6，那里讲清了收敛率是对什么说的，以及曲线斜率在什么情况下会骗人。</p>
+<p><strong>第二件事，比较的公平性。</strong> 本章所有算法之间的对比都满足三个条件：同一初始点、同一停止判据、同一份函数与梯度实现，<strong>唯一变化的只有更新方向与步长策略</strong>。这听起来是常识，写代码时却最容易被破坏——给梯度下降配一个固定的两万步上限，却给 BFGS 配自适应回溯线搜索，那么“BFGS 步数少”就不再是算法性质，而是停止规则的差异。本章把迭代次数与每步代价分列成两栏，就是为了让读者能自己判断：哪一部分差异属于算法，哪一部分属于实现。</p>
+<p><strong>第三件事，读图的一个习惯。</strong> 本章的收敛图全部用半对数坐标，横轴是迭代次数，纵轴是目标间隙相对初值的比。<strong>在这种坐标下，一段直线意味着每步乘同一个因子</strong>，斜率直接给出收敛因子：斜率 <span class="math inline">-1</span> 是每步缩到十分之一，<span class="math inline">-0.01</span> 是每步缩到约 <span class="math inline">0.977</span>。曲线向下弯，说明后期换进了更快的机制，通常是进入二次收敛区；向上弯，说明舍入噪声开始主导，再迭代下去没有意义。养成这个习惯，看一眼斜率就能判断算法处在哪一档。</p>
+<p>最后统一一下称呼。本章说“五种算法”，固定指梯度下降、动量、共轭梯度、BFGS 与牛顿，它们在 29.3 各有一节推导。<strong>高斯—牛顿与列文伯格—马夸特不在其中</strong>：它们只对“残差平方和”这一类目标成立，是通用方法在最小二乘上的特化，所以放在 29.6.4 与换热器算例一起讲。读后面各表时留意这一点，五列的对照表与最小二乘的对照表不是一个集合，数字不能横向串着比。</p>
+<h2 id="定义与数学基础">29.2 定义与数学基础</h2>
+<h3 id="标准形与两个条件">29.2.1 标准形与两个条件</h3>
+<p>本章只讨论一个式子：</p>
+<p><span class="math display">
+\min_{\mathbf{x}\in\mathbb{R}^{n}}\ f(\mathbf{x})
+\tag{29-1}
+</span></p>
+<p>它没有约束、没有可行域、没有整数变量。<span class="math inline">f</span> 假定二阶连续可微，梯度 <span class="math inline">\mathbf{g}(\mathbf{x})=\nabla f(\mathbf{x})</span> 与海森矩阵 <span class="math inline">\mathbf{H}(\mathbf{x})=\nabla^{2}f(\mathbf{x})</span> 都存在。<strong>这个假定在控制工程里几乎总是成立</strong>：残差平方和、交叉熵、对数似然都是光滑的；真正不光滑的是饱和、死区、最大值这类环节，它们要靠第44章的约束处理，不在本章范围内。</p>
+<p>局部最优的两个条件是标准的。一阶必要条件：<span class="math inline">\mathbf{g}(\mathbf{x}^{*})=\mathbf{0}</span>。二阶充分条件：<span class="math inline">\mathbf{g}(\mathbf{x}^{*})=\mathbf{0}</span> 且 <span class="math inline">\mathbf{H}(\mathbf{x}^{*})</span> 正定。<strong>这两条只回答“到没到站”，不回答“怎么走”</strong>。本章的五种算法，本质上都是解方程 <span class="math inline">\mathbf{g}(\mathbf{x})=\mathbf{0}</span> 的不同迭代格式：梯度下降把它当成一个不动点问题，牛顿法对它做线性化，拟牛顿法用割线近似替代雅可比。</p>
+<p>所有一阶与二阶方法都建立在同一个二次模型上。在当前点 <span class="math inline">\mathbf{x}</span> 处沿方向 <span class="math inline">\mathbf{d}</span> 走一步，目标函数的二阶展开是</p>
+<p><span class="math display">
+f(\mathbf{x}+\mathbf{d})\approx f(\mathbf{x})+\mathbf{g}^{\top}\mathbf{d}+\tfrac{1}{2}\mathbf{d}^{\top}\mathbf{H}\mathbf{d}
+\tag{29-2}
+</span></p>
+<p>式 (29-2) 是本章全部推导的起点，<strong>不同的算法只是对 <span class="math inline">\mathbf{H}</span> 做了不同的假设</strong>。梯度下降假设 <span class="math inline">\mathbf{H}=(1/\eta)\mathbf{I}</span>，也就是认为各个方向曲率相同，于是最优方向就是 <span class="math inline">-\mathbf{g}</span>；牛顿法用真实的 <span class="math inline">\mathbf{H}</span>，于是方向是 <span class="math inline">-\mathbf{H}^{-1}\mathbf{g}</span>；拟牛顿法用一个递推更新的 <span class="math inline">\mathbf{B}_k</span> 逼近 <span class="math inline">\mathbf{H}</span>，既不求二阶导也不解线性方程组；共轭梯度法不显式构造 <span class="math inline">\mathbf{B}_k</span>，而是在 Krylov 子空间里逐步构造一组共轭方向。<strong>四句话概括了本章后半部分的所有内容</strong>，剩下的工作是把这四句话的代价与适用范围量化。</p>
+<h3 id="二次型唯一能算清的模型">29.2.2 二次型：唯一能算清的模型</h3>
+<p>把式 (29-2) 的高阶项全部丢掉，就得到二次型。本章的算例一取</p>
+<p><span class="math display">
+f(\mathbf{x})=\tfrac{1}{2}\mathbf{x}^{\top}\mathbf{A}\mathbf{x}-\mathbf{b}^{\top}\mathbf{x},
+\qquad
+\mathbf{g}(\mathbf{x})=\mathbf{A}\mathbf{x}-\mathbf{b},
+\qquad
+\mathbf{H}=\mathbf{A}
+\tag{29-3}
+</span></p>
+<p>其中 <span class="math inline">\mathbf{A}</span> 对称正定。它的最优点有解析解 <span class="math inline">\mathbf{x}^{*}=\mathbf{A}^{-1}\mathbf{b}</span>，最优值 <span class="math inline">f^{*}=-\tfrac{1}{2}\mathbf{b}^{\top}\mathbf{A}^{-1}\mathbf{b}</span>。<strong>本章的算例一里 <span class="math inline">\mathbf{A}</span> 的特征值取对数等距，从 <span class="math inline">1</span> 到 <span class="math inline">100</span>，维度 <span class="math inline">50</span>，最优值 <span class="math inline">-549.8</span></strong>，这个数在实验 A 的五种算法里都会出现，是核对实现是否写错的第一道关卡。</p>
+<p>二次型上梯度下降的最优步长可以手算。把 <span class="math inline">\mathbf{x}_{k+1}=\mathbf{x}_k-\eta\mathbf{g}_k</span> 代入式 (29-3)，沿 <span class="math inline">\mathbf{g}_k</span> 方向对 <span class="math inline">\eta</span> 求极小，得</p>
+<p><span class="math display">
+\eta_{k}=\frac{\mathbf{g}_k^{\top}\mathbf{g}_k}{\mathbf{g}_k^{\top}\mathbf{A}\mathbf{g}_k},
+\qquad
+\eta_{\max}=\frac{2}{\lambda_{\max}}
+\tag{29-4}
+</span></p>
+<p>式 (29-4) 的右边那个上界，就是 §29.1.1 里“步长差百分之一”的来源。<strong>它不是经验值，是二次型的谱决定的硬边界</strong>：只要 <span class="math inline">\eta&gt;2/\lambda_{\max}</span>，沿最大特征值方向的误差分量每步放大 <span class="math inline">|\eta\lambda_{\max}-1|&gt;1</span> 倍，无论其他方向收敛得多好，这一个分量都会把整体拖向发散。实验 E 里 <span class="math inline">\eta</span> 从 <span class="math inline">1.99/\lambda_{\max}</span> 加到 <span class="math inline">2.01/\lambda_{\max}</span>，200 步后从 <span class="math inline">-254.4</span> 变成 <span class="math inline">+689.5</span>，就是这一个分量在起作用。</p>
+<p>最优步长式 (29-4) 还有一个性质值得记住：它使新误差在 <span class="math inline">\mathbf{A}</span> 范数下最小。<span class="math inline">\mathbf{A}</span> 范数定义为 <span class="math inline">\|\mathbf{e}\|_{\mathbf{A}}^{2}=\mathbf{e}^{\top}\mathbf{A}\mathbf{e}</span>，在二次型上它等于 <span class="math inline">2(f(\mathbf{x})-f^{*})</span>，<strong>所以“误差的能量”与“离最优值多远”是同一个量</strong>。这个等价只对二次型成立，对一般函数不成立，但它给了我们一个统一的说法：收敛曲线画的是能量，不是参数。</p>
+<h3 id="条件数与等高线的形状">29.2.3 条件数与等高线的形状</h3>
+<p>条件数定义为最大与最小特征值之比：</p>
+<p><span class="math display">
+\kappa=\frac{\lambda_{\max}}{\lambda_{\min}}
+\tag{29-5}
+</span></p>
+<p>它的几何意义是等高线椭球的轴长比：<span class="math inline">\kappa=100</span> 时最长轴是最短轴的 <span class="math inline">10</span> 倍（轴长比是 <span class="math inline">\sqrt{\kappa}</span>），<span class="math inline">\kappa=10^{4}</span> 时是 <span class="math inline">100</span> 倍。<strong>梯度垂直于等高线，所以在狭长椭球上，梯度方向几乎垂直于通向最优点的方向</strong>，这就是梯度下降在病态问题上走“之”字的原因。图 29-2 会把这条几何事实变成迭代次数的曲线。</p>
+<p>条件数不只出现在优化里，它是数值线性代数的通用病理指标。本章有三处用到它。第一处是二次型的 <span class="math inline">\kappa</span>，直接决定梯度下降的迭代数；第二处是雅可比转置乘雅可比 <span class="math inline">\mathbf{J}^{\top}\mathbf{J}</span> 的条件数，它决定最小二乘问题的病态程度，换热器算例在起点是 <span class="math inline">3.44\times10^{4}</span>，在解处是 <span class="math inline">5.20\times10^{3}</span>；第三处是参数化之后的条件数：把 <span class="math inline">a</span> 换成 <span class="math inline">\ln a</span>、把 <span class="math inline">T_{\text{hot}}</span> 平移后取对数，同一个问题的条件数会变，BFGS 的迭代数从 <span class="math inline">27</span> 降到 <span class="math inline">8</span>。<strong>这三处不是三个问题，而是同一个量在三个层面上的表现</strong>，所以本章反复回到它。</p>
+<p>换热器的病态有一个具体的物理来源。雅可比的两列分别是 <span class="math inline">\partial r/\partial a</span> 与 <span class="math inline">\partial r/\partial T_{\text{hot}}</span>，在起点处它们的范数是 <span class="math inline">194.4</span> 与 <span class="math inline">6.71</span>，差 <span class="math inline">29</span> 倍。<strong>第一列大是因为 <span class="math inline">a</span> 乘在指数上，一点点变化就能推动出口温度；第二列小是因为 <span class="math inline">T_{\text{hot}}</span> 只通过 <span class="math inline">1-e^{-au/q}</span> 这个小于 <span class="math inline">1</span> 的因子起作用</strong>。两列量级差三十倍，<span class="math inline">\mathbf{J}^{\top}\mathbf{J}</span> 的条件数就上到 <span class="math inline">10^{4}</span> 量级，这不是数据噪声造成的，是模型结构决定的。</p>
+<p>这里有一个最常见的误读需要澄清。<strong>等高线的形状由 <span class="math inline">\sqrt{\kappa}</span> 决定，而梯度下降的步数由 <span class="math inline">\kappa</span> 决定，两者差一个平方。</strong> <span class="math inline">\kappa=10^{4}</span> 的椭球看上去只是 <span class="math inline">100:1</span> 的细长，让人觉得“不太好但也没多坏”；可梯度下降要走的是 <span class="math inline">10^{4}</span> 量级的步数。把这两个数混起来，就会低估病态的严重程度。</p>
+<p>这个区别在判断“要不要换算法”时很有用。看到 <span class="math inline">\mathbf{J}^{\top}\mathbf{J}</span> 的条件数是 <span class="math inline">10^{4}</span>，第一反应应该是“图上会看到一个 <span class="math inline">100:1</span> 的椭圆”，第二反应才是“只用一阶信息的算法要付 <span class="math inline">10^{4}</span> 量级的步数”。换热器算例上这两件事都能看到：梯度下降走满两万步仍未收敛，高斯—牛顿七步就到。<strong>差别不在谁更努力，而在后者一次把长轴量了出来，前者只能沿长轴一格一格爬。</strong></p>
+<h3 id="收敛速度的三档">29.2.4 收敛速度的三档</h3>
+<p>迭代法的好坏要用“误差怎么变小”来度量。设 <span class="math inline">\mathbf{e}_k=\mathbf{x}_k-\mathbf{x}^{*}</span>，线性、超线性、二次收敛的定义依次是</p>
+<p><span class="math display">
+\|\mathbf{e}_{k+1}\|\le \rho\,\|\mathbf{e}_k\|,
+\qquad
+\lim_{k\to\infty}\frac{\|\mathbf{e}_{k+1}\|}{\|\mathbf{e}_k\|}=0,
+\qquad
+\|\mathbf{e}_{k+1}\|\le C\,\|\mathbf{e}_k\|^{2}
+\tag{29-6}
+</span></p>
+<p>式 (29-6) 的三条从左到右依次对应线性、超线性、二次收敛，要求一条比一条强。</p>
+<p>线性收敛的 <span class="math inline">\rho</span> 是每步的误差折扣。<span class="math inline">\rho=0.98</span> 意味着每步只掉百分之二，要把误差降六个数量级需要 <span class="math inline">\ln 10^{-6}/\ln 0.98\approx 687</span> 步；<span class="math inline">\rho=0.5</span> 只需要 <span class="math inline">20</span> 步。<strong>这就是为什么“每步只差一点点”的算法在工程上不可用</strong>：单步便宜不能抵消步数爆炸。</p>
+<p>二次收敛的含意更极端：误差从 <span class="math inline">10^{-1}</span> 到 <span class="math inline">10^{-2}</span> 要一步，从 <span class="math inline">10^{-2}</span> 到 <span class="math inline">10^{-4}</span> 要一步，从 <span class="math inline">10^{-4}</span> 到 <span class="math inline">10^{-8}</span> 还只要一步。<strong>有效数字每步翻倍</strong>。牛顿法在最优解邻域内有这个性质，但只在邻域内；离得远时它可能根本不下降，所以必须有线搜索或信赖域把全局行为拉回来。</p>
+<p>本章的三个数字正好对应三档。牛顿 <span class="math inline">2</span> 步（二次收敛，二次型上一步到位后第二步确认）、BFGS <span class="math inline">52</span> 步（超线性）、梯度下降 <span class="math inline">410</span> 步（线性，<span class="math inline">\rho</span> 接近 <span class="math inline">0.96</span>）。<strong>注意这三个数字不能直接比较“谁更聪明”</strong>：牛顿每步要解一个 <span class="math inline">50\times50</span> 的线性方程组，梯度下降每步只做一次矩阵向量乘，单步代价差两个数量级。公平的比较要乘上每步代价，这件事在 §29.5 展开。</p>
+<h3 id="评价一个迭代法的四个指标">29.2.5 评价一个迭代法的四个指标</h3>
+<p>只看迭代次数会得出错误结论。本章用四个指标一起评价，缺一不可。</p>
+<p><strong>指标一，每步代价。</strong> 梯度下降每步一次梯度计算，复杂度 <span class="math inline">O(n)</span>；BFGS 每步除了梯度还要更新一个 <span class="math inline">n\times n</span> 矩阵，复杂度 <span class="math inline">O(n^{2})</span>；牛顿每步要解线性方程组，复杂度 <span class="math inline">O(n^{3})</span>。<strong>这个差别在 <span class="math inline">n=2000</span> 时是 <span class="math inline">30</span> 步 <span class="math inline">22</span> 秒对 <span class="math inline">30</span> 步 <span class="math inline">0.36</span> 秒</strong>，实验 F 会给出完整数据。</p>
+<p><strong>指标二，迭代次数。</strong> 它由条件数与算法阶数共同决定，与维度弱相关。实验 B 里条件数从 <span class="math inline">1</span> 到 <span class="math inline">10^{4}</span>，牛顿恒为 <span class="math inline">2</span> 次，梯度下降从 <span class="math inline">2</span> 次涨到 <span class="math inline">18236</span> 次。</p>
+<p><strong>指标三，内存。</strong> 牛顿与 BFGS 都要存 <span class="math inline">n\times n</span> 矩阵，<span class="math inline">n=2000</span> 时是 <span class="math inline">30.52</span> MB；L-BFGS 只存最近 <span class="math inline">m</span> 对位移与梯度差，<span class="math inline">m=10</span> 时是 <span class="math inline">0.305</span> MB。<strong>差 <span class="math inline">100</span> 倍，这是“能不能在嵌入式控制器上跑”的分水岭。</strong></p>
+<p><strong>指标四，鲁棒性。</strong> 对初值、对参数尺度、对噪声、对梯度近似误差的敏感程度。这一项最难量化，本章用三个代理指标：不同起点下的迭代数（实验 D 的四个起点）、不同参数化下的迭代数（原参数 <span class="math inline">27</span> 次对对数参数 <span class="math inline">8</span> 次）、以及线搜索的回溯次数（BFGS 平均 <span class="math inline">1.1</span> 次每步）。</p>
+<p>把四个指标压成一张表，就是表 29-1。</p>
+<p>表 29-1 五种算法在二次型上的四项指标（<span class="math inline">n=50</span>，<span class="math inline">\kappa=100</span>）</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">算法</th>
+<th style="text-align: left;">每步代价</th>
+<th style="text-align: right;">迭代次数</th>
+<th style="text-align: left;">内存</th>
+<th style="text-align: left;">主要弱点</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">梯度下降</td>
+<td style="text-align: left;">一次梯度，<span class="math inline">O(n)</span></td>
+<td style="text-align: right;">410</td>
+<td style="text-align: left;"><span class="math inline">O(n)</span></td>
+<td style="text-align: left;">条件数一差就走不动</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">动量</td>
+<td style="text-align: left;">一次梯度，<span class="math inline">O(n)</span></td>
+<td style="text-align: right;">251</td>
+<td style="text-align: left;"><span class="math inline">O(n)</span></td>
+<td style="text-align: left;">动量系数要试，过大振荡</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">共轭梯度</td>
+<td style="text-align: left;">一次梯度加一次矩阵乘</td>
+<td style="text-align: right;">41</td>
+<td style="text-align: left;"><span class="math inline">O(n)</span></td>
+<td style="text-align: left;">非二次问题上需重启</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">BFGS</td>
+<td style="text-align: left;">一次梯度加 <span class="math inline">O(n^{2})</span> 更新</td>
+<td style="text-align: right;">52</td>
+<td style="text-align: left;"><span class="math inline">O(n^{2})</span></td>
+<td style="text-align: left;">内存随维度平方增长</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">牛顿</td>
+<td style="text-align: left;">一次梯度加一次求解 <span class="math inline">O(n^{3})</span></td>
+<td style="text-align: right;">2</td>
+<td style="text-align: left;"><span class="math inline">O(n^{2})</span></td>
+<td style="text-align: left;">海森矩阵不一定可得</td>
+</tr>
+</tbody>
+</table>
+<p>表 29-1 的读法是纵向比代价、横向比收益。<strong>梯度下降与牛顿的迭代数差 <span class="math inline">205</span> 倍，单步代价在 <span class="math inline">n=50</span> 时差约 <span class="math inline">50</span> 倍，两头相抵，牛顿仍快四倍</strong>；但当 <span class="math inline">n</span> 涨到 <span class="math inline">2000</span>，单步代价差到 <span class="math inline">10^{3}</span> 倍以上，这个账就翻过来了。表里“主要弱点”一列是选型的真正依据：<strong>没有一种算法在所有维度、所有条件数、所有内存预算下都占优</strong>，这就是本章要讲清楚的事。</p>
+<h3 id="本章算例的统一写法">29.2.6 本章算例的统一写法</h3>
+<p>五个算例里只有换热器不是二次型，但它的写法与其他最小二乘完全一样。设残差向量 <span class="math inline">\mathbf{r}(\mathbf{p})\in\mathbb{R}^{m}</span>，目标函数与导数为</p>
+<p><span class="math display">
+F(\mathbf{p})=\tfrac{1}{2}\|\mathbf{r}(\mathbf{p})\|^{2},
+\qquad
+\nabla F=\mathbf{J}^{\top}\mathbf{r},
+\qquad
+\nabla^{2}F=\mathbf{J}^{\top}\mathbf{J}+\sum_{i=1}^{m}r_{i}\nabla^{2}r_{i}
+\tag{29-7}
+</span></p>
+<p>其中 <span class="math inline">\mathbf{J}=\partial\mathbf{r}/\partial\mathbf{p}</span> 是雅可比。式 (29-7) 的第三项是本章一个关键的分水岭：<strong>高斯—牛顿直接丢掉 <span class="math inline">\sum r_i\nabla^{2}r_i</span>，只用 <span class="math inline">\mathbf{J}^{\top}\mathbf{J}</span></strong>；列文伯格—马夸特在这个近似上加阻尼；BFGS 则完全不碰二阶项，靠梯度差构造近似。三种做法在换热器算例上的迭代数是 <span class="math inline">7</span>、<span class="math inline">6</span>、<span class="math inline">27</span>，差别就来自这里。</p>
+<p>丢掉第二项在什么条件下合理？当残差很小时——最小二乘在最优解附近残差趋于噪声，<span class="math inline">r_i</span> 是 <span class="math inline">0.5</span> K 量级，而 <span class="math inline">\mathbf{J}^{\top}\mathbf{J}</span> 的元素是 <span class="math inline">10^{3}</span> 量级，第二项可以忽略。<strong>当残差很大时不能丢</strong>：本章实验 D 的起点残差是 <span class="math inline">17.4</span> K，此时 <span class="math inline">\sum r_i\nabla^{2}r_i</span> 与 <span class="math inline">\mathbf{J}^{\top}\mathbf{J}</span> 同量级，高斯—牛顿的二次模型严重失真，这也解释了为什么它从起点出发要 <span class="math inline">7</span> 步而不是 <span class="math inline">2</span> 步。</p>
+<p>最后把记号一次列清。表 29-2 是本章符号表，后文不再重复定义。</p>
+<p>表 29-2 本章记号</p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">记号</th>
+<th style="text-align: left;">含义</th>
+<th style="text-align: left;">本章取值</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><span class="math inline">\mathbf{x}</span></td>
+<td style="text-align: left;">优化变量</td>
+<td style="text-align: left;">二次型 <span class="math inline">n=20</span> 到 <span class="math inline">2000</span></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><span class="math inline">f</span></td>
+<td style="text-align: left;">目标函数</td>
+<td style="text-align: left;">二次型、香蕉函数、残差平方和</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><span class="math inline">\mathbf{g}</span></td>
+<td style="text-align: left;">梯度 <span class="math inline">\nabla f</span></td>
+<td style="text-align: left;">与 <span class="math inline">\mathbf{x}</span> 同维</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><span class="math inline">\mathbf{H}</span></td>
+<td style="text-align: left;">海森矩阵 <span class="math inline">\nabla^{2}f</span></td>
+<td style="text-align: left;"><span class="math inline">n\times n</span> 对称</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><span class="math inline">\kappa</span></td>
+<td style="text-align: left;">条件数 <span class="math inline">\lambda_{\max}/\lambda_{\min}</span></td>
+<td style="text-align: left;"><span class="math inline">1</span> 到 <span class="math inline">10^{4}</span></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><span class="math inline">\eta</span></td>
+<td style="text-align: left;">步长</td>
+<td style="text-align: left;">以 <span class="math inline">1/\lambda_{\max}</span> 为单位</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><span class="math inline">\mathbf{d}_k</span></td>
+<td style="text-align: left;">第 <span class="math inline">k</span> 步的搜索方向</td>
+<td style="text-align: left;">下降方向，<span class="math inline">\mathbf{g}^{\top}\mathbf{d}&lt;0</span></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><span class="math inline">\alpha</span></td>
+<td style="text-align: left;">线搜索得到的步长系数</td>
+<td style="text-align: left;">回溯折半，初值 <span class="math inline">1</span></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><span class="math inline">\mathbf{s}_k,\ \mathbf{y}_k</span></td>
+<td style="text-align: left;">位移与梯度差</td>
+<td style="text-align: left;"><span class="math inline">\mathbf{s}=\mathbf{x}_{k+1}-\mathbf{x}_k</span>，<span class="math inline">\mathbf{y}=\mathbf{g}_{k+1}-\mathbf{g}_k</span></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><span class="math inline">\mathbf{B}_k</span></td>
+<td style="text-align: left;">海森的近似</td>
+<td style="text-align: left;">BFGS 递推，初值单位阵</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><span class="math inline">\mathbf{J}</span></td>
+<td style="text-align: left;">残差雅可比</td>
+<td style="text-align: left;"><span class="math inline">400\times 2</span>（换热器）</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><span class="math inline">\mu</span></td>
+<td style="text-align: left;">列文伯格—马夸特阻尼</td>
+<td style="text-align: left;"><span class="math inline">10^{-3}</span> 起，按四倍增减</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><span class="math inline">h</span></td>
+<td style="text-align: left;">差分步长</td>
+<td style="text-align: left;"><span class="math inline">10^{-14}</span> 到 <span class="math inline">10^{-1}</span></td>
+</tr>
+</tbody>
+</table>
+<p>表 29-2 里有两个容易混的符号：<span class="math inline">\eta</span> 与 <span class="math inline">\alpha</span>。<strong><span class="math inline">\eta</span> 是固定步长算法的步长，<span class="math inline">\alpha</span> 是线搜索在给定方向上折半得到的系数</strong>，前者是算法参数，后者是每步算出来的。后文凡写“步长”而未加限定，一律指 <span class="math inline">\eta</span>；凡写“回溯”“接受步长”，一律指 <span class="math inline">\alpha</span>。这个区分在 §29.4 讲线搜索时尤其重要，因为两者的失效机制完全不同：<span class="math inline">\eta</span> 过大是整体发散，<span class="math inline">\alpha</span> 过小是原地踏步。</p>
+<h3 id="梯度为零的三个含义">29.2.7 梯度为零的三个含义</h3>
+<p>本章所有算法停下来的标志都是 <span class="math inline">\mathbf{g}=0</span>，但这个条件本身什么也没保证。一阶必要条件说“极小点必然满足它”，反过来不成立：<span class="math inline">\mathbf{g}=0</span> 可能对应局部极小、局部极大、或鞍点，三者在梯度这一层完全无法分辨，要靠 <span class="math inline">\mathbf{H}</span> 的特征值。</p>
+<p><span class="math inline">\mathbf{H}</span> 正定是极小，负定是极大，有正有负是鞍点，半正定则要看高阶项。本章的五个算例里，二次型的 <span class="math inline">\mathbf{H}=\mathbf{A}</span> 正定、处处只有一个极小；香蕉函数的 <span class="math inline">\mathbf{H}</span> 在最优点正定，但整张曲面上存在 <span class="math inline">\mathbf{H}</span> 不定甚至负定的区域，牛顿法在那些点的方向可能是上升方向（这就是 §29.4.1 里“方向不下降就退回最速下降”那行代码存在的原因）；换热器的 <span class="math inline">\mathbf{H}\approx\mathbf{J}^{\top}\mathbf{J}</span> 在残差不为零处只是半正定，它的零空间对应“数据上不可分辨的参数组合”。</p>
+<p><strong>工程上的后果是：停下来了不等于找对了。</strong> 高维非凸问题里鞍点的数量随维度指数增长，梯度为零的点中极小点反而是少数。判别办法不是在原空间里猜——那需要 <span class="math inline">n</span> 个特征值——而是<strong>从那个点出发加一个小扰动再跑几十步</strong>：还在原地说明是极小，走掉了说明是鞍点。这个办法不严格，但它只需要几十次迭代，比算特征值便宜得多。<strong>本章的算例都不涉及这件事</strong>，因为二次型只有一个极小、香蕉函数从给定起点能走到唯一极小、换热器只有一个吸引域；写在这里是为了提醒读者，本章所有“收敛”的结论都以“算例足够良态”为前提。</p>
+<h2 id="推导与性质">29.3 推导与性质</h2>
+<h3 id="梯度下降收敛因子由条件数唯一决定">29.3.1 梯度下降：收敛因子由条件数唯一决定</h3>
+<p>梯度下降的更新只有一行：</p>
+<p><span class="math display">
+\mathbf{x}_{k+1}=\mathbf{x}_{k}-\eta\,\mathbf{g}_{k}
+\tag{29-8}
+</span></p>
+<p>把它代进二次型，误差的递推是 <span class="math inline">\mathbf{e}_{k+1}=(\mathbf{I}-\eta\mathbf{A})\mathbf{e}_{k}</span>。在 <span class="math inline">\mathbf{A}</span> 的特征基下展开，第 <span class="math inline">i</span> 个分量每步乘以 <span class="math inline">1-\eta\lambda_{i}</span>。<strong>于是整个算法的行为被 <span class="math inline">n</span> 个标量完全决定</strong>：每个方向独立地按自己的速率衰减，步长必须对所有方向同时合适。</p>
+<p>要让所有分量都不放大，必须 <span class="math inline">\eta&lt;2/\lambda_{\max}</span>，这就是式 (29-4) 的上界。在这个范围内，让最慢的分量最快，步长取</p>
+<p><span class="math display">
+\eta_{\star}=\frac{2}{\lambda_{\max}+\lambda_{\min}},
+\qquad
+\rho=\frac{\kappa-1}{\kappa+1}
+\tag{29-9}
+</span></p>
+<p>式 (29-9) 的 <span class="math inline">\rho</span> 是每一步在 <span class="math inline">\mathbf{A}</span> 范数下的最坏收缩因子。<span class="math inline">\kappa=100</span> 时 <span class="math inline">\rho=0.9802</span>，<span class="math inline">\kappa=10^{4}</span> 时 <span class="math inline">\rho=0.9998</span>。要把梯度范数降到初值的 <span class="math inline">10^{-6}</span>，所需步数约为</p>
+<p><span class="math display">
+N\approx\frac{\kappa}{2}\ln\frac{1}{\varepsilon}
+\tag{29-10}
+</span></p>
+<p>式 (29-10) 把“条件数”翻译成了“步数”：<span class="math inline">\kappa=100</span>、<span class="math inline">\varepsilon=10^{-6}</span> 时是 <span class="math inline">691</span> 步，<span class="math inline">\kappa=10^{4}</span> 时是 <span class="math inline">69100</span> 步。<strong>步数与条件数成正比，这就是梯度下降在病态问题上不可用的全部原因</strong>，与实现好坏、调参技巧都无关。</p>
+<p>式 (29-10) 是一个上界，实测会小一些。表 29-3 把理论值与实验 B 的实测值并排放。</p>
+<p>表 29-3 条件数、梯度下降迭代数的理论上界与实测（<span class="math inline">\varepsilon=10^{-6}</span>，<span class="math inline">n=30</span>）</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: right;">条件数</th>
+<th style="text-align: right;">式 (29-10) 的上界</th>
+<th style="text-align: right;">实测（最优步长）</th>
+<th style="text-align: right;">实测与上界之比</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">7</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">0.29</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">10</td>
+<td style="text-align: right;">69</td>
+<td style="text-align: right;">54</td>
+<td style="text-align: right;">0.78</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">100</td>
+<td style="text-align: right;">691</td>
+<td style="text-align: right;">397</td>
+<td style="text-align: right;">0.57</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">1000</td>
+<td style="text-align: right;">6908</td>
+<td style="text-align: right;">2840</td>
+<td style="text-align: right;">0.41</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">10000</td>
+<td style="text-align: right;">69080</td>
+<td style="text-align: right;">18236</td>
+<td style="text-align: right;">0.26</td>
+</tr>
+</tbody>
+</table>
+<p>表 29-3 的比值一列从 <span class="math inline">0.29</span> 降到 <span class="math inline">0.26</span>，始终小于 <span class="math inline">1</span>。原因是式 (29-9) 与式 (29-10) 假设最坏谱——只有两个特征值，一个取 <span class="math inline">\lambda_{\min}</span>、一个取 <span class="math inline">\lambda_{\max}</span>。<strong>本章的二次型特征值是对数等距铺开的，绝大多数落在中间，最慢的那个分量只占一维</strong>，所以实测比上界快。这提醒一件事：理论界是给最坏情况的，套到具体问题上要么偏保守，要么根本不该用——判断依据是谱的形状，不是条件数一个数。</p>
+<h3 id="牛顿法一步到位的代价">29.3.2 牛顿法：一步到位的代价</h3>
+<p>牛顿法用真实的曲率定方向：</p>
+<p><span class="math display">
+\mathbf{d}_{k}=-\left[\mathbf{H}(\mathbf{x}_{k})\right]^{-1}\mathbf{g}_{k}
+\tag{29-11}
+</span></p>
+<p>把它代进二次型的展开，可以直接算出下一步落在哪。设 <span class="math inline">\mathbf{x}_0</span> 任意，则</p>
+<p><span class="math display">
+\mathbf{x}_{1}=\mathbf{x}_{0}-\mathbf{A}^{-1}\left(\mathbf{A}\mathbf{x}_{0}-\mathbf{b}\right)=\mathbf{A}^{-1}\mathbf{b}=\mathbf{x}^{*}
+\tag{29-12}
+</span></p>
+<p><strong>一次更新就到最优点，这就是二次终止性</strong>，前提是目标函数为二次型且海森矩阵取真值 <span class="math inline">\mathbf{A}</span>。</p>
+<p>实验 A 报告牛顿“<span class="math inline">2</span> 次”，其中真正的更新只有 <span class="math inline">1</span> 次，第二次是循环在顶端检查梯度已达标后退出。<strong>这个记账方式在读表时要留意</strong>，否则会误以为牛顿需要两步。</p>
+<p>二次终止性只对二次型成立。对一般函数，牛顿法在最优解邻域内是二次收敛的，有</p>
+<p><span class="math display">
+\|\mathbf{e}_{k+1}\|\le L\,\|\mathbf{H}^{-1}\|\,\|\mathbf{e}_{k}\|^{2}
+\tag{29-13}
+</span></p>
+<p>其中 <span class="math inline">L</span> 是三阶导数的界。式 (29-13) 说明两件事：收敛速度是平方的，<strong>但前提是 <span class="math inline">\mathbf{H}</span> 可逆且 <span class="math inline">\|\mathbf{e}_k\|</span> 已经足够小</strong>。远离最优解时，<span class="math inline">\mathbf{H}</span> 可能不定，此时 <span class="math inline">-\mathbf{H}^{-1}\mathbf{g}</span> 甚至不是下降方向，必须加保护——本章的做法是：若 <span class="math inline">\mathbf{g}^{\top}\mathbf{d}\ge 0</span>，退回最速下降方向，再叠加 Armijo 回溯。</p>
+<p>牛顿法还有一个常被忽略的优点：<strong>仿射不变性</strong>。把变量换成 <span class="math inline">\mathbf{x}=\mathbf{T}\mathbf{z}</span>，二次型变成 <span class="math inline">\mathbf{T}^{\top}\mathbf{A}\mathbf{T}</span>，牛顿方向随之变换，迭代点序列在变换前后一一对应，<strong>步数完全不变</strong>；梯度下降做不到这一点，因为它的行为依赖 <span class="math inline">\mathbf{A}</span> 的谱，而换变量会改变谱。工程上的含意很直接：<strong>用牛顿法时不必费心给参数选单位，用梯度下降时必须</strong>。这条性质在 §29.4.4 会以对数参数化的形式再出现一次。</p>
+<p>代价也是三条，一条比一条硬。<strong>第一，组装 <span class="math inline">\mathbf{H}</span> 要 <span class="math inline">n(n+1)/2</span> 个二阶偏导</strong>，解析式未必写得出来，差分近似则要 <span class="math inline">n^{2}</span> 次函数求值。<strong>第二，解线性方程组是 <span class="math inline">O(n^{3})</span></strong>，<span class="math inline">n=2000</span> 时一次分解约 <span class="math inline">2.7\times10^{9}</span> 次浮点运算，而梯度下降的整步只有 <span class="math inline">2000</span> 次。<strong>第三，<span class="math inline">\mathbf{H}</span> 不一定正定</strong>，不定的海森矩阵给出的方向可能上升，必须加保护。三条合起来，就是拟牛顿法存在的位置：<strong>用 <span class="math inline">O(n^{2})</span> 的更新去近似那个 <span class="math inline">O(n^{3})</span> 才拿得到的 <span class="math inline">\mathbf{H}</span></strong>，牺牲一点收敛阶，换回可承受的每步代价。</p>
+<h3 id="拟牛顿用割线代替曲率">29.3.3 拟牛顿：用割线代替曲率</h3>
+<p>拟牛顿法放弃精确曲率，改用梯度差构造近似：不去求那 <span class="math inline">n^{2}</span> 个二阶导，也不解 <span class="math inline">n^{3}</span> 的方程组，只要求近似矩阵满足割线条件：</p>
+<p><span class="math display">
+\mathbf{B}_{k+1}\,\mathbf{s}_{k}=\mathbf{y}_{k},
+\qquad
+\mathbf{s}_{k}=\mathbf{x}_{k+1}-\mathbf{x}_{k},
+\qquad
+\mathbf{y}_{k}=\mathbf{g}_{k+1}-\mathbf{g}_{k}
+\tag{29-14}
+</span></p>
+<p>式 (29-14) 只给了一个方程，却要定一个 <span class="math inline">n\times n</span> 矩阵，因此解不唯一。不同的补充条件给出不同的算法，BFGS 选的是“在满足割线的矩阵里，离上一步最近”。它的逆矩阵更新是</p>
+<p><span class="math display">
+\mathbf{H}_{k+1}=\left(\mathbf{I}-\rho_{k}\mathbf{s}_{k}\mathbf{y}_{k}^{\top}\right)\mathbf{H}_{k}\left(\mathbf{I}-\rho_{k}\mathbf{y}_{k}\mathbf{s}_{k}^{\top}\right)+\rho_{k}\mathbf{s}_{k}\mathbf{s}_{k}^{\top},
+\qquad
+\rho_{k}=\frac{1}{\mathbf{y}_{k}^{\top}\mathbf{s}_{k}}
+\tag{29-15}
+</span></p>
+<p>式 (29-15) 直接更新逆矩阵，于是每步只需要一次矩阵向量乘，不必解方程组。<strong>这是 BFGS 比牛顿便宜的关键</strong>：代价从 <span class="math inline">O(n^{3})</span> 降到 <span class="math inline">O(n^{2})</span>，代价是近似曲率不如真曲率准，收敛从二次退到超线性。</p>
+<p>BFGS 的正定性有一个干净的条件：只要 <span class="math inline">\mathbf{y}_{k}^{\top}\mathbf{s}_{k}&gt;0</span>，更新后的 <span class="math inline">\mathbf{H}_{k+1}</span> 保持正定，方向必为下降方向。<strong>这个条件不是自动满足的</strong>，它要靠线搜索保证——Wolfe 条件的第二条就是为此设的。本章的实现里还加了一道保险：若 <span class="math inline">\mathbf{s}^{\top}\mathbf{y}\le 10^{-12}</span>，跳过本次更新，矩阵保持原样；若方向不下降，直接把矩阵重置为单位阵。<strong>这两行保险在没有它们的时候会导致什么，见 §29.7 的错误表。</strong></p>
+<p>L-BFGS 把记忆截断到最近 <span class="math inline">m</span> 对 <span class="math inline">(\mathbf{s},\mathbf{y})</span>，用两循环递归算 <span class="math inline">\mathbf{H}\mathbf{g}</span>，不显式存矩阵。<span class="math inline">m=10</span> 时内存是 <span class="math inline">2mn</span> 个数，<span class="math inline">n=2000</span> 时 <span class="math inline">0.305</span> MB，而完整 BFGS 要 <span class="math inline">30.52</span> MB。<strong>两个数量级的内存差，换来的是香蕉函数上 <span class="math inline">629</span> 步对 <span class="math inline">34</span> 步</strong>——第十八倍的步数。这笔交易值不值，取决于维度，§29.5 会给判据。</p>
+<h3 id="共轭梯度不存矩阵的二阶方法">29.3.4 共轭梯度：不存矩阵的二阶方法</h3>
+<p>共轭梯度法走另一条路：不近似 <span class="math inline">\mathbf{H}</span>，而是在 Krylov 子空间 <span class="math inline">\{\mathbf{r}_0,\mathbf{A}\mathbf{r}_0,\mathbf{A}^{2}\mathbf{r}_0,\dots\}</span> 里逐步构造一组 <span class="math inline">\mathbf{A}</span> 共轭的方向，即 <span class="math inline">\mathbf{p}_i^{\top}\mathbf{A}\mathbf{p}_j=0\ (i\ne j)</span>。更新式是</p>
+<p><span class="math display">
+\alpha_{k}=\frac{\mathbf{r}_{k}^{\top}\mathbf{r}_{k}}{\mathbf{p}_{k}^{\top}\mathbf{A}\mathbf{p}_{k}},
+\qquad
+\mathbf{x}_{k+1}=\mathbf{x}_{k}+\alpha_{k}\mathbf{p}_{k},
+\qquad
+\beta_{k}=\frac{\mathbf{r}_{k+1}^{\top}\mathbf{r}_{k+1}}{\mathbf{r}_{k}^{\top}\mathbf{r}_{k}},
+\qquad
+\mathbf{p}_{k+1}=\mathbf{r}_{k+1}+\beta_{k}\mathbf{p}_{k}
+\tag{29-16}
+</span></p>
+<p>式 (29-16) 每步只需要一次矩阵向量乘，内存 <span class="math inline">O(n)</span>，<strong>却具有“<span class="math inline">n</span> 步终止”的性质</strong>：精确算术下，<span class="math inline">n</span> 维二次型最多 <span class="math inline">n</span> 步到达最优点。实验 A 里 <span class="math inline">n=50</span>、<span class="math inline">\kappa=100</span>，共轭梯度用了 <span class="math inline">41</span> 步，比维度还少，因为起点到最优点的误差在 Krylov 子空间里只占 <span class="math inline">41</span> 维。</p>
+<p>“<span class="math inline">n</span> 步终止”在浮点运算里会失效。实验 B 里 <span class="math inline">\kappa=10^{4}</span>、<span class="math inline">n=30</span>，共轭梯度用了 <span class="math inline">53</span> 步，<strong>超过了维度</strong>。原因不是理论错了，而是舍入误差破坏了共轭性，旧的搜索方向重新混进来，算法在原地打转。工程上的对策是重启：每 <span class="math inline">n</span> 步把方向重置为当前残差，或者当 <span class="math inline">\mathbf{p}^{\top}\mathbf{r}</span> 明显变负时强制重启。本章的实现没有加重启，因此 <span class="math inline">53</span> 这个数应当读成“病态时共轭性丢失的代价”，而不是“共轭梯度比维度还慢”。</p>
+<p>共轭梯度的收敛速度介于梯度下降与拟牛顿之间，步数大致按 <span class="math inline">\sqrt{\kappa}</span> 增长而不是 <span class="math inline">\kappa</span>。<strong>这个平方根是它最有价值的地方</strong>：同样是条件数从 <span class="math inline">100</span> 涨到 <span class="math inline">10^{4}</span>，梯度下降实测涨了 <span class="math inline">46</span> 倍（<span class="math inline">397</span> 步到 <span class="math inline">18236</span> 步），共轭梯度只涨 <span class="math inline">1.7</span> 倍（<span class="math inline">31</span> 步到 <span class="math inline">53</span> 步）。实测比 <span class="math inline">\sqrt{\kappa}</span> 的预期还好，原因有两个——谱是对数等距而非最坏两点分布，且 <span class="math inline">n=30</span> 的上限先到了。</p>
+<h3 id="线搜索把步长交给函数值">29.3.5 线搜索：把步长交给函数值</h3>
+<p>前面四节的步长都是事先定好的。真实问题里 <span class="math inline">\lambda_{\max}</span> 不知道，定步长要么太小（走不动）要么太大（发散），所以工业实现几乎都用线搜索：给定下降方向 <span class="math inline">\mathbf{d}_k</span>，找一个 <span class="math inline">\alpha</span> 使函数值确实下降。最常用的判据是 Armijo 条件：</p>
+<p><span class="math display">
+f(\mathbf{x}_{k}+\alpha\mathbf{d}_{k})\le f(\mathbf{x}_{k})+c_{1}\alpha\,\mathbf{g}_{k}^{\top}\mathbf{d}_{k},
+\qquad c_{1}=10^{-4}
+\tag{29-17}
+</span></p>
+<p>式 (29-17) 的右边是一条过当前点、斜率被 <span class="math inline">c_{1}</span> 压小的直线。要求函数值落在这条线下方，等于要求“实际下降不少于预期下降的一小部分”。<strong><span class="math inline">c_{1}</span> 取 <span class="math inline">10^{-4}</span> 而不是 <span class="math inline">1</span>，是给曲率留余地</strong>：目标函数在 <span class="math inline">\alpha</span> 小时近似线性，<span class="math inline">c_{1}=1</span> 会把所有 <span class="math inline">O(\alpha^{2})</span> 的弯曲都判为不合格，导致步长被压得过小。</p>
+<p>Armijo 单独用有一个漏洞：它只保证下降，不保证走得够远，可能接受一个极小的 <span class="math inline">\alpha</span>，算法退化成爬行。补上曲率条件就是 Wolfe 条件：</p>
+<p><span class="math display">
+\mathbf{g}(\mathbf{x}_{k}+\alpha\mathbf{d}_{k})^{\top}\mathbf{d}_{k}\ge c_{2}\,\mathbf{g}_{k}^{\top}\mathbf{d}_{k},
+\qquad c_{2}=0.9
+\tag{29-18}
+</span></p>
+<p>式 (29-18) 要求新点的方向导数不要比原点“负得太多”，即不要一步跨过谷底太远。<strong>Armijo 管“别上升”，Wolfe 管“别太短”</strong>，两条合起来才能保证 BFGS 的曲率条件 <span class="math inline">\mathbf{y}^{\top}\mathbf{s}&gt;0</span> 成立。</p>
+<p>本章的实现只用 Armijo 加回溯（<span class="math inline">\rho=0.5</span>，最多 <span class="math inline">60</span> 次），配 BFGS 使用时靠“<span class="math inline">\mathbf{s}^{\top}\mathbf{y}\le 10^{-12}</span> 就跳过更新”兜底。代价可以量：香蕉函数上 BFGS 共 <span class="math inline">33</span> 次线搜索调用、<span class="math inline">19</span> 次回溯，平均每步 <span class="math inline">0.58</span> 次；牛顿 <span class="math inline">20</span> 次调用、<span class="math inline">7</span> 次回溯，平均 <span class="math inline">0.35</span> 次；L-BFGS 因为方向更保守，<span class="math inline">628</span> 次调用只有 <span class="math inline">53</span> 次回溯，平均 <span class="math inline">0.08</span> 次。<strong>回溯次数是方向质量的间接指标</strong>：方向越接近牛顿方向，第一步就越容易被接受。</p>
+<p>线搜索还有一个实现细节必须写进代码：判据要显式检查有限性。若目标函数在该步上溢出成无穷大，比较式恒为真，回溯会继续；但若溢出成非数（nan），任何比较都返回假，判据会被误判为“已满足”，于是算法接受一个把参数送进 nan 的步长。<strong>本章第一版实现就栽在这里：换热器算例的雅可比符号写反，高斯—牛顿把 <span class="math inline">a</span> 推成负数，指数溢出，Armijo 判据却报告“已满足”，残差直接变成 nan。</strong> 修法只有一行：<code>if np.isfinite(fv) and fv &lt;= ...</code>。</p>
+<h3 id="五种算法的收敛性质对照">29.3.6 五种算法的收敛性质对照</h3>
+<p>把前五节的结论压成一张表。表 29-4 只写理论性质，实测数字在 §29.6。</p>
+<p>表 29-4 五种算法的收敛性质（理论）</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">算法</th>
+<th style="text-align: left;">局部收敛阶</th>
+<th style="text-align: left;">每步主要运算</th>
+<th style="text-align: left;">是否需海森</th>
+<th style="text-align: left;">步数对条件数的依赖</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">梯度下降</td>
+<td style="text-align: left;">线性，<span class="math inline">\rho=(\kappa-1)/(\kappa+1)</span></td>
+<td style="text-align: left;">一次梯度</td>
+<td style="text-align: left;">否</td>
+<td style="text-align: left;">正比于 <span class="math inline">\kappa</span></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">动量</td>
+<td style="text-align: left;">线性，<span class="math inline">\rho</span> 由动量系数与 <span class="math inline">\kappa</span> 共同决定</td>
+<td style="text-align: left;">一次梯度</td>
+<td style="text-align: left;">否</td>
+<td style="text-align: left;">介于 <span class="math inline">\kappa</span> 与 <span class="math inline">\sqrt{\kappa}</span> 之间</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">共轭梯度</td>
+<td style="text-align: left;">二次型 <span class="math inline">n</span> 步终止；一般超线性</td>
+<td style="text-align: left;">一次矩阵向量乘</td>
+<td style="text-align: left;">否</td>
+<td style="text-align: left;">约正比于 <span class="math inline">\sqrt{\kappa}</span></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">BFGS</td>
+<td style="text-align: left;">超线性</td>
+<td style="text-align: left;">一次梯度加 <span class="math inline">O(n^{2})</span> 更新</td>
+<td style="text-align: left;">否</td>
+<td style="text-align: left;">弱</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">牛顿</td>
+<td style="text-align: left;">二次</td>
+<td style="text-align: left;">一次梯度加 <span class="math inline">O(n^{3})</span> 求解</td>
+<td style="text-align: left;">是</td>
+<td style="text-align: left;">无</td>
+</tr>
+</tbody>
+</table>
+<p>表 29-4 的第二列有一个陷阱。“局部”两个字意味着这些阶只在最优解邻域内成立，<strong>离得远时五种算法都可能不收敛</strong>；本章所有实现都配了线搜索或步长上界，正是为了把远处那一截兜住。第三列与第五列是要一起读的：<strong>牛顿用 <span class="math inline">O(n^{3})</span> 的每步代价买来了对条件数的完全免疫，共轭梯度用 <span class="math inline">O(n)</span> 的内存买来了 <span class="math inline">\sqrt{\kappa}</span>，梯度下降什么都不用买，于是只能付 <span class="math inline">\kappa</span></strong>。三句话就是本章的选型依据，剩下的工作是把“<span class="math inline">\kappa</span> 有多大、<span class="math inline">n</span> 有多大、内存有多少”这三个数测出来。</p>
+<p>动量这一行要单独说一句，因为它的性质最容易被误解。理论上，取最优动量系数 <span class="math inline">\beta^{\star}=\left[(\sqrt{\kappa}-1)/(\sqrt{\kappa}+1)\right]^{2}</span> 时，动量法可以把步数依赖从 <span class="math inline">\kappa</span> 降到 <span class="math inline">\sqrt{\kappa}</span>；但 <span class="math inline">\beta^{\star}</span> 依赖 <span class="math inline">\kappa</span>，而 <span class="math inline">\kappa</span> 事先不知道。<strong>本章固定取 <span class="math inline">\beta=0.9</span>，于是只在病态时受益</strong>：<span class="math inline">\kappa=10^{4}</span> 时 <span class="math inline">3430</span> 步对梯度下降的 <span class="math inline">18236</span> 步，快 <span class="math inline">5.3</span> 倍；<span class="math inline">\kappa=10</span> 时 <span class="math inline">255</span> 步对 <span class="math inline">54</span> 步，反而慢 <span class="math inline">4.7</span> 倍。原因是 <span class="math inline">\kappa=10</span> 对应的最优系数只有 <span class="math inline">0.27</span>，<span class="math inline">0.9</span> 比它大两倍多。这个反例在 §29.6.2 会展开——<strong>“动量总是加速”是一个流传很广的错误结论</strong>。</p>
+<h3 id="收敛率是对什么说的">29.3.7 收敛率是对什么说的</h3>
+<p>前面反复用“线性”“二次”描述收敛速度，但这三个字必须绑在一个度量上才有意义。同一个算法，对误差 <span class="math inline">\|\mathbf{x}_{k}-\mathbf{x}^{\star}\|</span> 是线性收敛，对目标间隙 <span class="math inline">f_{k}-f^{\star}</span> 就是线性但因子变成平方，对梯度范数 <span class="math inline">\|\mathbf{g}_{k}\|</span> 又是另一个因子。<strong>换度量就换数，不换性质</strong>。</p>
+<p>二次型上这三者的关系是干净的。误差与梯度由 <span class="math inline">\mathbf{g}=\mathbf{H}\mathbf{e}</span> 联系，范数之间差一个 <span class="math inline">\lambda</span> 的因子；目标间隙是 <span class="math inline">\frac{1}{2}\mathbf{e}^{\top}\mathbf{H}\mathbf{e}</span>，是误差的二次型，所以 <span class="math inline">\sqrt{f_{k}-f^{\star}}</span> 与 <span class="math inline">\|\mathbf{e}_{k}\|</span> 同阶。<strong>于是在二次型上，“误差缩到 <span class="math inline">10^{-6}</span>”与“梯度缩到 <span class="math inline">10^{-6}</span>”与“间隙缩到 <span class="math inline">10^{-12}</span>”是同一件事的三种说法</strong>，§29.6 里几个实验的停止条件都写成梯度范数，原因就在这里。</p>
+<p>一般问题上这个等价关系会断掉。目标函数在平坦区里误差很小但梯度不小，在陡峭方向梯度很大但间隙很小，两者不再同步——<strong>这正是表 29-16 里三种判据给出三个答案的根本原因</strong>，也是 §29.5.5 要求同时看梯度与参数的原因。判断收敛时先问一句“我这个判据度量的是什么”，比问“阈值取多少”重要得多。</p>
+<p>二次收敛的实用含义也值得摆出来。误差每步从 <span class="math inline">10^{-2}</span> 到 <span class="math inline">10^{-4}</span> 到 <span class="math inline">10^{-8}</span>，<strong>有效数字位数每步翻倍</strong>，三步就吃完了双精度；线性收敛因子 <span class="math inline">0.98</span> 则是每步只缩百分之二，要走到 <span class="math inline">10^{-6}</span> 需要将近七百步（§29.6.1 的 <span class="math inline">410</span> 步与这个估计同量级）。<strong>“二次收敛”与“线性收敛”的差别不是快几倍，是差几个数量级的步数</strong>，这也是为什么值得为曲率信息付出 <span class="math inline">O(n^{3})</span> 的代价——只要 <span class="math inline">n</span> 不大。</p>
+<h2 id="离散对应与数值实现">29.4 离散对应与数值实现</h2>
+<h3 id="五个算法的实现骨架">29.4.1 五个算法的实现骨架</h3>
+<p>本章的五个算法都在同一个脚本里实现，共用同一组停止判据与同一条线搜索。骨架按更新式写成，读者可以逐行对照式 (29-8) 到式 (29-16)。</p>
+<p><strong>梯度下降。</strong> 每步算梯度，按式 (29-8) 更新；步长有三种取法：最优步长 <span class="math inline">\mathbf{g}^{\top}\mathbf{g}/\mathbf{g}^{\top}\mathbf{A}\mathbf{g}</span>、固定 <span class="math inline">1/\lambda_{\max}</span>、任意常数。<strong>最优步长只对二次型成立</strong>，它的作用是给其他算法提供一个“不受步长选择干扰”的对照组。动量版多存一个速度向量 <span class="math inline">\mathbf{v}</span>，更新改为 <span class="math inline">\mathbf{v}\leftarrow\beta\mathbf{v}+\eta\mathbf{g}</span>、<span class="math inline">\mathbf{x}\leftarrow\mathbf{x}-\mathbf{v}</span>。</p>
+<p><strong>共轭梯度。</strong> 从残差起步，每步一次矩阵向量乘，按式 (29-16) 更新。实现里没有加重启，这一点在 §29.3.4 已经说明后果：<span class="math inline">\kappa=10^{4}</span> 时用 <span class="math inline">53</span> 步，超过维度 <span class="math inline">30</span>。</p>
+<p><strong>BFGS。</strong> 从单位阵起步，每步先算方向 <span class="math inline">-\mathbf{H}\mathbf{g}</span>，做线搜索，再用式 (29-15) 更新逆矩阵。两处保险：<span class="math inline">\mathbf{s}^{\top}\mathbf{y}\le10^{-12}</span> 时跳过更新；方向不下降时把矩阵重置为单位阵。<strong>这两行不是可选的</strong>，去掉以后在香蕉函数的某些起点上方向会变成上升方向，线搜索回溯到 <span class="math inline">2^{-60}</span> 仍在“下降”，实际是原地不动。</p>
+<p><strong>牛顿。</strong> 每步组装海森矩阵、解线性方程组。求解失败（矩阵奇异）或方向不下降时退回最速下降。<strong>这个退回分支在二次型上一次都不会触发</strong>，但在香蕉函数的第一个起点上就可能触发：那里 <span class="math inline">x_1=-1.2</span>，海森矩阵的行列式接近零。</p>
+<p><strong>列文伯格—马夸特。</strong> 它是唯一带内循环的算法：外层一次迭代里可能试多次阻尼，直到步长使目标函数下降。内循环最多试到 <span class="math inline">\mu&gt;10^{10}</span>，此时阻尼项压过曲率项，步长趋于零，外层自然停住。</p>
+<p>五个算法共用一个停止判据：<span class="math inline">\|\mathbf{g}\|\le10^{-6}\|\mathbf{g}_{0}\|</span>，最大迭代数各不相同（梯度下降 <span class="math inline">2\times10^{5}</span>、共轭梯度 <span class="math inline">5000</span>、BFGS <span class="math inline">5000</span>、牛顿 <span class="math inline">200</span>）。<strong>最大迭代数不是收敛判据，是防死循环的保险</strong>：实验 D 里梯度下降走满 <span class="math inline">20000</span> 步仍未达标，报告的是“达迭代上限”，不是“收敛”。</p>
+<p>这三个上限的差别不是随手定的，它们按“单步代价的倒数”给。梯度下降每步 <span class="math inline">O(n)</span>，最便宜，所以给两万步；共轭梯度每步多一次矩阵乘，给五千；牛顿每步解一个方程组，给两百步——<strong>两百步牛顿在任何问题上都远远够用，给多了只是留个保险</strong>。按这个逻辑推下去，L-BFGS 的上限应该介于共轭梯度与牛顿之间，本章沿用 BFGS 的五千。<strong>“预算”与“判据”必须分开报</strong>，是因为下游要区分两种结束：一种是“到最优了”，一种是“钱花完了”。把后者当成前者，是优化代码里最常见的错误报告方式。</p>
+<h3 id="两循环递归l-bfgs-怎么不存矩阵">29.4.2 两循环递归：L-BFGS 怎么不存矩阵</h3>
+<p>L-BFGS 的关键是：不构造 <span class="math inline">\mathbf{H}</span>，直接算 <span class="math inline">\mathbf{H}\mathbf{g}</span>，用最近 <span class="math inline">m</span> 对位移与梯度差做两次递推。</p>
+<p><span class="math display">
+\mathbf{q}\leftarrow\mathbf{g},\quad
+\alpha_{i}=\rho_{i}\mathbf{s}_{i}^{\top}\mathbf{q},\quad
+\mathbf{q}\leftarrow\mathbf{q}-\alpha_{i}\mathbf{y}_{i}\ (i=k-1,\dots,k-m);
+\quad
+\mathbf{r}=\gamma\mathbf{q},\quad
+\beta=\rho_{i}\mathbf{y}_{i}^{\top}\mathbf{r},\quad
+\mathbf{r}\leftarrow\mathbf{r}+\mathbf{s}_{i}(\alpha_{i}-\beta);
+\quad
+\mathbf{d}=-\mathbf{r}
+\tag{29-19}
+</span></p>
+<p>式 (29-19) 里 <span class="math inline">\gamma=\mathbf{s}_{k-1}^{\top}\mathbf{s}_{k-1}/(\mathbf{y}_{k-1}^{\top}\mathbf{s}_{k-1})</span> 是一个标量缩放，<span class="math inline">\rho_i=1/(\mathbf{y}_i^{\top}\mathbf{s}_i)</span>。<strong>整个递推只用点积与向量加法，没有矩阵</strong>，所以每步代价是 <span class="math inline">O(mn)</span>，内存是 <span class="math inline">2mn</span> 个数。</p>
+<p><span class="math inline">m</span> 的取法有一个经验区间。取太小，曲率信息不够，方向接近最速下降，步数暴涨；取太大，每步代价线性上升，且旧信息对当前点的参考价值下降。本章取 <span class="math inline">m=10</span>，在香蕉函数上得到 <span class="math inline">629</span> 步，完整 BFGS 是 <span class="math inline">34</span> 步。<strong>十八倍的步数换两个数量级的内存</strong>，这笔账在 <span class="math inline">n=2000</span> 时是划算的：完整 BFGS 的内存是 <span class="math inline">30.52</span> MB，L-BFGS 是 <span class="math inline">0.305</span> MB，而 <span class="math inline">30</span> 步的耗时是 <span class="math inline">22.0</span> 秒对 <span class="math inline">0.355</span> 秒。<strong>注意这里的对比被人为截断在 <span class="math inline">30</span> 步</strong>，两者的迭代数相同，差别纯粹来自每步代价。</p>
+<h3 id="线搜索的守卫">29.4.3 线搜索的守卫</h3>
+<p>线搜索的实现只有十来行，但有三处细节决定它能不能用在真实问题上。</p>
+<p><strong>第一处，初值取 <span class="math inline">1</span>。</strong> 对牛顿方向与拟牛顿方向，<span class="math inline">\alpha=1</span> 是“完整走一步”的意思，绝大多数情况下第一步就能被接受；梯度下降方向则常常需要回溯。本章的实测印证了这一点：牛顿平均回溯 <span class="math inline">0.35</span> 次，BFGS <span class="math inline">0.58</span> 次，L-BFGS <span class="math inline">0.08</span> 次。</p>
+<p><strong>第二处，回溯有上限。</strong> <span class="math inline">\alpha</span> 每轮折半，<span class="math inline">60</span> 轮后是 <span class="math inline">2^{-60}\approx8.7\times10^{-19}</span>，在这个尺度上任何有限精度的函数值比较都失去意义。<strong>上限的作用是让算法在“找不到可接受步长”时停下来并报告失败</strong>，而不是无限折半。本章的实现里，若回溯到上限仍未满足判据，就直接接受最后一个值——这会带来一步无效迭代，但不会死循环。</p>
+<p><strong>第三处，判据检查有限性。</strong> 这一条在 §29.3.5 已经说过，这里补一句工程上的观察：<strong>溢出成 inf 与溢出成 nan 的表现完全不同</strong>。inf 会让回溯继续，算法“知道”这一步不行；nan 会让所有比较返回假，算法“以为”这一步很好。前者是可恢复的，后者是静默的灾难。任何在指数、对数、除法上做优化的代码，都必须显式处理 nan，<strong>不能指望线搜索替你发现它</strong>。</p>
+<h3 id="参数化把病态消在进入优化器之前">29.4.4 参数化：把病态消在进入优化器之前</h3>
+<p>换热器算例的两个参数是 <span class="math inline">a</span> 与 <span class="math inline">T_{\text{hot}}</span>。它们的量级是 <span class="math inline">2.4</span> 与 <span class="math inline">95</span>，雅可比两列范数差 <span class="math inline">29</span> 倍，<span class="math inline">\mathbf{J}^{\top}\mathbf{J}</span> 的条件数 <span class="math inline">3.44\times10^{4}</span>。<strong>这个病态有一半来自参数量级不匹配，而不是问题本身难</strong>，换一组参数就能消掉。</p>
+<p>本章用的变换是</p>
+<p><span class="math display">
+a=e^{z_{1}},\qquad T_{\text{hot}}=50+e^{z_{2}},
+\qquad
+\frac{\partial r}{\partial z_{1}}=\frac{\partial r}{\partial a}\,a,
+\qquad
+\frac{\partial r}{\partial z_{2}}=\frac{\partial r}{\partial T_{\text{hot}}}\left(T_{\text{hot}}-50\right)
+\tag{29-20}
+</span></p>
+<p>式 (29-20) 的两条链式法则各乘了一个尺度因子：<span class="math inline">a</span> 乘 <span class="math inline">\partial r/\partial a</span> 把“每单位的 <span class="math inline">a</span>”换成“每倍的 <span class="math inline">a</span>”，<span class="math inline">T_{\text{hot}}-50</span> 把“每摄氏度”换成“每倍的余量”。<strong>变换后两个方向的敏感度量级接近，BFGS 的迭代数从 <span class="math inline">27</span> 降到 <span class="math inline">8</span></strong>，残差完全不变（都是 <span class="math inline">0.5235</span> K）。</p>
+<p>这个变换还顺便解决了物理约束：<span class="math inline">a</span> 必须为正，否则指数反向、温度随阀位下降；<span class="math inline">T_{\text{hot}}</span> 必须高于入口温度，取 <span class="math inline">50+</span> 指数就保证它不低于 <span class="math inline">50</span> ℃，而入口温度上限是 <span class="math inline">45</span> ℃。<strong>两个约束都在参数化里满足了，优化器不必知道它们的存在</strong>。代价是残差函数不再是“参数的线性组合”，雅可比多两项乘法，可忽略。</p>
+<p>有一条限制必须写清楚：<strong>对数参数化改变的是优化的几何，不是问题的最优解</strong>。<span class="math inline">z</span> 空间里的最优点与 <span class="math inline">p</span> 空间里的最优点一一对应，残差也一样；变的只是路径。所以它不能修复数据本身的信息不足——如果两个参数在数据上确实不可分辨，换什么参数化都不可分辨，只会让优化器更快地到达那条不可分辨的“谷”。</p>
+<h3 id="阻尼列文伯格马夸特的内循环">29.4.5 阻尼：列文伯格—马夸特的内循环</h3>
+<p>高斯—牛顿解的是 <span class="math inline">\mathbf{J}\boldsymbol{\delta}=-\mathbf{r}</span> 的最小二乘，等价于解正规方程 <span class="math inline">\mathbf{J}^{\top}\mathbf{J}\boldsymbol{\delta}=-\mathbf{J}^{\top}\mathbf{r}</span>。当 <span class="math inline">\mathbf{J}^{\top}\mathbf{J}</span> 接近奇异时，这个解会非常大，一步跨出可行区。列文伯格—马夸特在正规方程上加阻尼：</p>
+<p><span class="math display">
+\left(\mathbf{J}^{\top}\mathbf{J}+\mu\,\mathrm{diag}\left(\mathbf{J}^{\top}\mathbf{J}\right)\right)\boldsymbol{\delta}=-\mathbf{J}^{\top}\mathbf{r}
+\tag{29-21}
+</span></p>
+<p>式 (29-21) 的阻尼项按对角元素缩放，这一点是马夸特的原版做法，比加 <span class="math inline">\mu\mathbf{I}</span> 更好：<strong>它使阻尼与每个参数自身的尺度匹配</strong>，不会因为某个参数单位小而把它压死。<span class="math inline">\mu\to0</span> 时退回高斯—牛顿，<span class="math inline">\mu\to\infty</span> 时退化为沿负梯度方向的小步。</p>
+<p>内循环的规则是：算出的步长使目标函数下降就接受，<span class="math inline">\mu</span> 除以 <span class="math inline">4</span>；不下降就拒绝，<span class="math inline">\mu</span> 乘以 <span class="math inline">4</span> 重算。<strong>这个“四倍”没有理论最优值</strong>，取 <span class="math inline">2</span> 或 <span class="math inline">10</span> 都能工作，只影响每次调整的粗细。本章取 <span class="math inline">4</span>，换热器算例用 <span class="math inline">6</span> 次外层迭代收敛，与高斯—牛顿的 <span class="math inline">7</span> 次、加回溯的 <span class="math inline">5</span> 次在同一量级。</p>
+<p>LM 与线搜索解决的是同一个问题的两面：<strong>线搜索沿固定方向缩短步长，LM 改变方向本身</strong>。前者便宜（只需重算函数值），后者贵（每次重算要解一次线性方程组），但后者在病态时更稳。工程上的选择往往是先试线搜索，失败再上 LM，本章不展开这种组合策略。</p>
+<h3 id="差分梯度步长的钟形曲线">29.4.6 差分梯度：步长的钟形曲线</h3>
+<p>第27章的反向传播给了精确梯度，但很多场合拿不到：遗留代码只有目标函数、外部求解器不提供导数、或者要验证解析梯度写得对不对。这时用有限差分：</p>
+<p><span class="math display">
+\mathbf{g}^{\text{fwd}}_{i}=\frac{f(\mathbf{x}+h\mathbf{e}_{i})-f(\mathbf{x})}{h},
+\qquad
+\left|\mathbf{g}^{\text{fwd}}_{i}-g_{i}\right|\le\frac{h}{2}\left|f&#39;&#39;\right|+\frac{\epsilon\left|f\right|}{h}
+\tag{29-22}
+</span></p>
+<p><span class="math display">
+\mathbf{g}^{\text{ctr}}_{i}=\frac{f(\mathbf{x}+h\mathbf{e}_{i})-f(\mathbf{x}-h\mathbf{e}_{i})}{2h},
+\qquad
+\left|\mathbf{g}^{\text{ctr}}_{i}-g_{i}\right|\le\frac{h^{2}}{6}\left|f&#39;&#39;&#39;\right|+\frac{\epsilon\left|f\right|}{2h}
+\tag{29-23}
+</span></p>
+<p>式 (29-22) 与式 (29-23) 都是两项之和：第一项随 <span class="math inline">h</span> 增大，是截断误差；第二项随 <span class="math inline">h</span> 减小，是舍入误差。<strong>两项的交点就是最优步长</strong>，前向是 <span class="math inline">h\sim\sqrt{\epsilon}\approx1.5\times10^{-8}</span>，中心是 <span class="math inline">h\sim\epsilon^{1/3}\approx6\times10^{-6}</span>。</p>
+<p>实测的前向曲线与理论完全一致：<span class="math inline">h=10^{-1}</span> 时误差 <span class="math inline">3.48\times10^{-2}</span>，随 <span class="math inline">h</span> 每降一个数量级误差降一个数量级，到 <span class="math inline">h=10^{-8}</span> 达到最小值 <span class="math inline">1.60\times10^{-8}</span>，之后反弹，<span class="math inline">h=10^{-14}</span> 时回到 <span class="math inline">1.02\times10^{-2}</span>。<strong>这条曲线是一个“V”形，两边都是直线，斜率分别是 <span class="math inline">+1</span> 与 <span class="math inline">-1</span></strong>，图 29-6 会画出来。</p>
+<p>中心差分的实测与理论不符，原因值得说清楚：本章的目标函数是二次型，三阶导数为零，<strong>截断误差项根本不存在</strong>，于是误差随 <span class="math inline">h</span> 单调下降，直到舍入误差接管。实测最优落在 <span class="math inline">h=10^{-1}</span>，误差 <span class="math inline">5.18\times10^{-16}</span>，就是机器精度。<strong>这不是“中心差分比理论更好”，而是“这个测试函数太光滑”</strong>；换一个有三阶导的函数，最优点会回到 <span class="math inline">10^{-6}</span> 附近。</p>
+<p>代价方面，前向差分每步要 <span class="math inline">n</span> 次函数求值，中心要 <span class="math inline">2n</span> 次。梯度检查通常只在调试时做一次，代价可以接受；训练时每步都做，<span class="math inline">n=2000</span> 就是每步四千次前向传播，<strong>这才是自动微分在第27章被反复强调的原因</strong>。</p>
+<h3 id="停止准则三种判据三个答案">29.4.7 停止准则：三种判据，三个答案</h3>
+<p>迭代到什么时候停，比想象中重要。本章比较三种判据：</p>
+<p><span class="math display">
+\|\mathbf{g}_{k}\|\le\tau_{g}\|\mathbf{g}_{0}\|,
+\qquad
+\left|f_{k}-f_{k-1}\right|\le\tau_{f},
+\qquad
+\|\mathbf{x}_{k}-\mathbf{x}_{k-1}\|\le\tau_{x}\left(1+\|\mathbf{x}_{k}\|\right)
+\tag{29-24}
+</span></p>
+<p>式 (29-24) 的三条分别看梯度、看函数值、看参数。取 <span class="math inline">\tau_g=10^{-6}</span>、<span class="math inline">\tau_f=10^{-10}</span>、<span class="math inline">\tau_x=10^{-8}</span>，同一个二次型（<span class="math inline">\kappa=100</span>，<span class="math inline">n=20</span>，最优步长）上的实测是：梯度判据停在第 <span class="math inline">425</span> 步，此时离最优点 <span class="math inline">1.06\times10^{-4}</span>；函数下降判据停在第 <span class="math inline">447</span> 步，离最优点 <span class="math inline">6.56\times10^{-5}</span>；参数变化判据停在第 <span class="math inline">686</span> 步，离最优点 <span class="math inline">3.72\times10^{-7}</span>。</p>
+<p>三个答案差 <span class="math inline">1.6</span> 倍，<strong>最近的那个反而最晚停</strong>。原因不难理解：在狭长谷底，梯度仍不小，参数却几乎不动，所以参数判据会一直等到真正停住；而函数值在谷底的变化是二阶小量，<span class="math inline">\tau_f=10^{-10}</span> 在目标值 <span class="math inline">-254</span> 的尺度上等于要求相对变化 <span class="math inline">4\times10^{-13}</span>，已经接近双精度极限，它停得早是运气。</p>
+<p>工程上的建议是<strong>两条一起用</strong>：梯度判据管“方向对了没有”，参数判据管“还在不在动”，任一满足就停。<strong>只用函数下降量最危险</strong>：目标函数在平坦区几乎不变，判据会立刻满足，而参数可能离最优很远。这一点在换热器算例上表现为另一种形态——目标函数值主要由 <span class="math inline">400</span> 个残差的和决定，单个参数的变化被平均掉了，函数判据对参数误差不敏感。</p>
+<h3 id="预条件改方向而不改坐标">29.4.8 预条件：改方向而不改坐标</h3>
+<p>§29.4.4 的参数化换的是变量本身。还有一个相邻的手段，它不换变量，只把梯度乘上一个正定矩阵再当方向用：<span class="math inline">\mathbf{d}=-\mathbf{M}^{-1}\mathbf{g}</span>，<span class="math inline">\mathbf{M}</span> 叫预条件子。<strong>理想情况下 <span class="math inline">\mathbf{M}^{-1}\mathbf{H}</span> 的条件数接近 <span class="math inline">1</span></strong>，梯度下降就退化成在各向同性的球面上走，一步到位。</p>
+<p>预条件与参数化的关系值得说清，因为两者常被混为一谈。参数化换的是变量，<span class="math inline">\mathbf{x}=\phi(\mathbf{z})</span>，雅可比跟着变，残差函数的形状也变；预条件不换变量，只换“哪一步算作一步”。<strong>对二次型，两者在数学上等价</strong>：取对数参数化相当于取 <span class="math inline">\mathbf{M}=\mathrm{diag}(\mathbf{x})</span> 的对角预条件。区别落在工程上——参数化顺便解决了物理约束与定义域，预条件解决不了；预条件可以在不改模型代码的前提下加上，参数化必须改模型。</p>
+<p>工程上最常用的是对角预条件，<span class="math inline">\mathbf{M}=\mathrm{diag}(\mathbf{H})</span>，代价只是一次除法。它的效果在换热器算例上可以估：雅可比两列范数 <span class="math inline">194.4</span> 与 <span class="math inline">6.71</span>，平方之后对角元相差约 <span class="math inline">840</span> 倍，除掉之后两个方向的曲率量级就拉平了。<strong>这与式 (29-20) 的对数变换做的是同一件事</strong>，只是后者还额外保证了 <span class="math inline">a&gt;0</span> 与 <span class="math inline">T_{\text{hot}}&gt;T_{\text{in}}</span>。本章所有实验都用参数化，没有单独跑预条件下的对照，所以这里只讲机制、不给数字——<strong>讲过但没测过的东西，本章不写成结论</strong>。</p>
+<h2 id="工程边界与失效条件">29.5 工程边界与失效条件</h2>
+<p>前四节回答的是“这些算法在什么条件下收敛”。这一节回答反面：在什么条件下它们跑不动、收敛到错的地方、或者收敛了但结论没有意义。五条边界全部来自本章的实测，不是从文献上抄的告诫。</p>
+<h3 id="维度的分水岭在内存不在精度">29.5.1 维度的分水岭在内存，不在精度</h3>
+<p>拟牛顿法在数学上是“用梯度差重建曲率”，在实现上则是“维护一个 <span class="math inline">n\times n</span> 的矩阵”。这一句差别决定了它在高维上能不能用。设记忆深度为 <span class="math inline">m</span>，两种方法的存储量是</p>
+<p><span class="math display">
+M_{\text{BFGS}}\approx 8n^{2}\ \text{byte},
+\qquad
+M_{\text{L-BFGS}}\approx 16mn\ \text{byte}
+\tag{29-25}
+</span></p>
+<p>式 (29-25) 的两个系数都来自实测反推，不是理论估计。<span class="math inline">n=100</span> 时 BFGS 实测 <span class="math inline">0.08</span> MB，代入 <span class="math inline">8n^{2}</span> 得 <span class="math inline">8\times10^{4}</span> 字节即 <span class="math inline">0.08</span> MB；<span class="math inline">n=500</span> 时实测 <span class="math inline">1.91</span> MB，代入得 <span class="math inline">2.0</span> MB；<span class="math inline">n=2000</span> 时实测 <span class="math inline">30.52</span> MB，代入得 <span class="math inline">32</span> MB。三者都对得上，说明这个实现在内存上没有隐藏开销。L-BFGS 一侧，<span class="math inline">m=10</span>、<span class="math inline">n=2000</span> 代入 <span class="math inline">16mn</span> 得 <span class="math inline">320</span> KB，实测 <span class="math inline">0.305</span> MB，同样吻合。</p>
+<p>表 29-5 维度对两种拟牛顿法的代价（条件数 <span class="math inline">1000</span>，各走 <span class="math inline">30</span> 次迭代，单线程）</p>
+<table>
+<thead>
+<tr class="header">
+<th>维度 <span class="math inline">n</span></th>
+<th>BFGS 耗时/ms</th>
+<th>BFGS 内存/MB</th>
+<th>L-BFGS 耗时/ms</th>
+<th>L-BFGS 内存/MB</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>100</td>
+<td>5.48</td>
+<td>0.08</td>
+<td>1.86</td>
+<td>0.015</td>
+</tr>
+<tr class="even">
+<td>500</td>
+<td>591.68</td>
+<td>1.91</td>
+<td>6.51</td>
+<td>0.076</td>
+</tr>
+<tr class="odd">
+<td>2000</td>
+<td>22013.93</td>
+<td>30.52</td>
+<td>355.40</td>
+<td>0.305</td>
+</tr>
+</tbody>
+</table>
+<p>表 29-5 的四个数据列要分两组看。内存一组是干净的平方律与线性律之比：<span class="math inline">n=2000</span> 时差 <span class="math inline">100</span> 倍，与式 (29-25) 的预测完全一致。耗时一组没有那么干净，BFGS 从 <span class="math inline">n=100</span> 到 <span class="math inline">n=500</span> 维度涨 <span class="math inline">5</span> 倍、耗时涨 <span class="math inline">108</span> 倍，从 <span class="math inline">500</span> 到 <span class="math inline">2000</span> 维度涨 <span class="math inline">4</span> 倍、耗时涨 <span class="math inline">37</span> 倍，折算出的指数落在 <span class="math inline">2.6</span> 到 <span class="math inline">2.9</span> 之间，高于内存的 <span class="math inline">2.0</span>。<strong>多出来的那半个到一个指数来自缓存失效与 Python 层的解释开销</strong>，不是算法本身的性质，所以与耗时有关的结论本章只按量级读——单个倍数换一台机器就会变，不做精确解读。</p>
+<p>真正需要记住的是分水岭的位置。<span class="math inline">n=2000</span> 时 BFGS 占 <span class="math inline">30</span> MB，一台普通机器还吃得下；<span class="math inline">n=20000</span> 时按平方律是 <span class="math inline">3.2</span> GB，单机就废了——而这个维度在图像与过程数据的辨识里并不罕见。<strong>限制来自存储，不来自精度</strong>：在双精度下 <span class="math inline">n=2000</span> 的 BFGS 依然收敛得好好的，问题只是它装不进内存。</p>
+<p>为什么把内存而不是时间当分水岭，理由有两条。<strong>第一，时间可以等，内存不能等</strong>：一次迭代慢十倍，多喝一杯咖啡就过去了；一次分配失败，程序直接退出。<strong>第二，时间随机器变，内存随算法变</strong>：同一个 BFGS 在编译型实现里可能快五十倍，但它需要的 <span class="math inline">8n^{2}</span> 字节一个也不会少。所以用耗时做的比较换了环境就失效，用内存做的比较是算法本身的性质——表 29-5 的耗时列只能当参考，内存列可以当结论。</p>
+<p>L-BFGS 用内存换来的东西有代价，代价是方向质量。实验 C 的香蕉函数上，BFGS 走 <span class="math inline">34</span> 步，L-BFGS 取 <span class="math inline">m=10</span> 走 <span class="math inline">629</span> 步，差了 <span class="math inline">18</span> 倍；同样在表 29-5 的二次型上，两者收敛的迭代数却几乎相同。<strong>差别出现在曲率变化剧烈的地方</strong>：低秩近似只保留最近十步的梯度差，谷底转弯时这些信息很快就过时了，重建出的方向不如完整的 <span class="math inline">\mathbf{H}</span> 准。所以“高维就上 L-BFGS”这句话只对了一半，准确的说法是：高维且损失面接近二次型时上 L-BFGS，高维且强非凸时要么加深记忆（<span class="math inline">m</span> 取 <span class="math inline">20</span> 至 <span class="math inline">50</span>），要么接受步数变多。</p>
+<h3 id="步长上界是硬边界不是调参余量">29.5.2 步长上界是硬边界，不是调参余量</h3>
+<p>实验 E 把式 (29-4) 的结论摆在台面上：条件数 <span class="math inline">100</span>、最大特征值 <span class="math inline">100</span> 的二次型，步长以 <span class="math inline">1/\lambda_{\max}</span> 为单位从 <span class="math inline">0.50</span> 扫到 <span class="math inline">2.20</span>，各走 <span class="math inline">200</span> 次。<span class="math inline">0.50</span>、<span class="math inline">1.00</span>、<span class="math inline">1.50</span>、<span class="math inline">1.90</span>、<span class="math inline">1.99</span> 五档的末值全部落在 <span class="math inline">-254.5</span> 到 <span class="math inline">-254.7</span> 之间，彼此差不到 <span class="math inline">0.03</span>；<span class="math inline">2.01</span> 一档的末值是 <span class="math inline">+689.5</span>，符号都反了；<span class="math inline">2.20</span> 一档是 <span class="math inline">5.88\times10^{32}</span>。</p>
+<p><strong>边界就在 <span class="math inline">2.00</span> 上，没有过渡带。</strong> 这不是“接近上界会变慢”的软边界，而是“越过去就指数发散”的硬边界。原因在式 (29-3)：误差沿每个特征方向的更新因子是 <span class="math inline">1-\eta\lambda_{i}</span>，当 <span class="math inline">\eta\lambda_{\max}&gt;2</span> 时这个因子的绝对值大于 <span class="math inline">1</span>，对应的分量每步放大一倍以上，<span class="math inline">200</span> 步就是 <span class="math inline">2^{200}</span> 量级。实测的 <span class="math inline">2.20</span> 档正好落在这个量级上。</p>
+<p>在第28章的语境里，这条边界解释了一个当时只写了现象的事：学习率 <span class="math inline">0.30</span> 让训练损失冲顶。<strong>上界等于 <span class="math inline">2/\lambda_{\max}</span>，而 <span class="math inline">\lambda_{\max}</span> 不是一个常数</strong>——它由数据、网络深度、激活函数的饱和程度共同决定。同一个 <span class="math inline">0.30</span>，在全批量、浅网络、输入已标准化时可以稳定；换到小批量，梯度的随机性等效于把曲率放大，上界随之下降，同一个数就越界了。所以“学习率调到多少合适”这个问题没有通用答案，<strong>能通用的是“先估 <span class="math inline">\lambda_{\max}</span>，再取它倒数的一半”这条规则</strong>。</p>
+<p>工程上有三条做法，按可靠性排序。<strong>第一条是用回溯线搜索，把“猜上界”换成“测下降”</strong>：不管 <span class="math inline">\lambda_{\max}</span> 是多少，只要当前步让函数值变大就折半，永远走不到发散区。代价是每步多几次函数求值，本章实测牛顿平均 <span class="math inline">0.35</span> 次回溯、BFGS <span class="math inline">0.58</span> 次，并不贵。<strong>第二条是幂迭代估 <span class="math inline">\lambda_{\max}</span></strong>：只需若干次矩阵—向量乘，对二次型十几次就收敛到三位有效数字，比试错便宜得多。<strong>第三条才是凭经验给一个数</strong>，而这条只有在同类问题做过很多次之后才成立。</p>
+<p>还要提醒一句：<span class="math inline">1.99</span> 档虽然收敛，却是五档里最慢的一个。收敛速率由 <span class="math inline">\max_i|1-\eta\lambda_i|</span> 决定，<span class="math inline">\eta=1.99/\lambda_{\max}</span> 时这个最大值是 <span class="math inline">0.99</span>，<span class="math inline">200</span> 步只缩到 <span class="math inline">13\%</span>；<span class="math inline">\eta</span> 取最优的 <span class="math inline">2/(\lambda_{\max}+\lambda_{\min})=1.98/\lambda_{\max}</span> 时最大值是 <span class="math inline">0.98</span>，两头一样慢，这才是二次型上能做到的最好。<strong>“在上界以内”只保证不发散，不保证好用</strong>；越靠近上界，越有一个分量在原地反号振荡。</p>
+<h3 id="动量可能快五倍也可能慢四点七倍">29.5.3 动量可能快五倍，也可能慢四点七倍</h3>
+<p>动量法的更新是 <span class="math inline">\mathbf{x}_{k+1}=\mathbf{x}_{k}-\eta\mathbf{g}_{k}+\beta(\mathbf{x}_{k}-\mathbf{x}_{k-1})</span>，多出来的 <span class="math inline">\beta</span> 把上一步的方向掺进这一步。深度学习里 <span class="math inline">\beta=0.9</span> 几乎是个默认值，本章的实验 B 说明这个默认值有前提。</p>
+<p>表 29-6 条件数对五种算法迭代次数的影响（<span class="math inline">n=30</span>，停止条件 <span class="math inline">\|\mathbf{g}\|\le10^{-6}\|\mathbf{g}_{0}\|</span>）</p>
+<table>
+<thead>
+<tr class="header">
+<th>条件数 <span class="math inline">\kappa</span></th>
+<th>梯度下降</th>
+<th>动量 <span class="math inline">0.9</span></th>
+<th>共轭梯度</th>
+<th>BFGS</th>
+<th>牛顿</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>1</td>
+<td>2</td>
+<td>2</td>
+<td>2</td>
+<td>2</td>
+<td>2</td>
+</tr>
+<tr class="even">
+<td>10</td>
+<td>54</td>
+<td>255</td>
+<td>19</td>
+<td>31</td>
+<td>2</td>
+</tr>
+<tr class="odd">
+<td>100</td>
+<td>397</td>
+<td>241</td>
+<td>31</td>
+<td>36</td>
+<td>2</td>
+</tr>
+<tr class="even">
+<td>1000</td>
+<td>2840</td>
+<td>477</td>
+<td>39</td>
+<td>39</td>
+<td>2</td>
+</tr>
+<tr class="odd">
+<td>10000</td>
+<td>18236</td>
+<td>3430</td>
+<td>53</td>
+<td>38</td>
+<td>2</td>
+</tr>
+</tbody>
+</table>
+<p>表 29-6 的第一列是整齐的：条件数每涨十倍，梯度下降的步数涨约七倍，与式 (29-10) 的 <span class="math inline">\kappa</span> 线性依赖一致。动量一列则不是单调的——<span class="math inline">\kappa=10</span> 时它比不用动量慢 <span class="math inline">4.7</span> 倍，<span class="math inline">\kappa=10^{4}</span> 时它比不用动量快 <span class="math inline">5.3</span> 倍。<strong>同一个 <span class="math inline">\beta=0.9</span>，在小条件数上是负担，在大条件数上是解药。</strong></p>
+<p>这个转折可以用一条公式说清。二次型上动量法的最优系数是</p>
+<p><span class="math display">
+\beta^{\star}=\left(\frac{\sqrt{\kappa}-1}{\sqrt{\kappa}+1}\right)^{2}
+\tag{29-26}
+</span></p>
+<p>式 (29-26) 代入四个条件数：<span class="math inline">\kappa=10</span> 得 <span class="math inline">0.27</span>，<span class="math inline">\kappa=100</span> 得 <span class="math inline">0.67</span>，<span class="math inline">\kappa=1000</span> 得 <span class="math inline">0.88</span>，<span class="math inline">\kappa=10^{4}</span> 得 <span class="math inline">0.96</span>。<strong><span class="math inline">\beta=0.9</span> 只在 <span class="math inline">\kappa</span> 接近 <span class="math inline">10^{3}</span> 时是最优的</strong>——这正好是深度网络训练所处的区间，所以它在那个圈子里成了默认值。辨识问题的条件数常在几十，最优系数只有 <span class="math inline">0.3</span> 到 <span class="math inline">0.5</span>，硬套 <span class="math inline">0.9</span> 相当于给一个本来不需要缓冲的系统加了过量惯性，每一步都冲过头再被拉回来，于是变慢。</p>
+<p>表 29-6 还有一列值得注意：共轭梯度与 BFGS 的步数在 <span class="math inline">\kappa=10</span> 到 <span class="math inline">10^{4}</span> 的整个区间里只有 <span class="math inline">19</span> 到 <span class="math inline">53</span> 步，<strong>不依赖任何需要调的系数</strong>。这是它们相对动量法的真正优势——不是因为更快，而是因为<strong>没有超参数需要猜</strong>。工程上如果不想在 <span class="math inline">\beta</span> 上做实验，直接上共轭梯度或 L-BFGS 更省事。</p>
+<p>那么 <span class="math inline">\kappa</span> 怎么估？三条路子，按代价从高到低。<strong>第一条是幂迭代</strong>，估 <span class="math inline">\lambda_{\max}</span> 只要十几次矩阵—向量乘；估 <span class="math inline">\lambda_{\min}</span> 要反向迭代，代价高一些，实际很少做。<strong>第二条是从算法的中间产物里读</strong>：BFGS 跑几十步之后，<span class="math inline">\mathbf{B}</span> 的前几个特征值已经近似真实曲率，取它的条件数即可，这一步不需要额外计算。<strong>第三条最省事，用步数反推</strong>：以最优步长跑 <span class="math inline">K</span> 步，按 <span class="math inline">K\approx\frac{\kappa}{2}\ln\frac{1}{\epsilon}</span> 反解 <span class="math inline">\kappa</span>，精度不高但对“该不该上动量”这个判断已经够用。<strong>三条路的共同点是都不需要先知道答案</strong>，而“<span class="math inline">\beta</span> 取 <span class="math inline">0.9</span>”这个默认值恰恰假设了答案。</p>
+<h3 id="参数化能治几何治不了信息">29.5.4 参数化能治几何，治不了信息</h3>
+<p>式 (29-20) 的对数参数化把 BFGS 的迭代数从 <span class="math inline">27</span> 降到 <span class="math inline">8</span>，残差从 <span class="math inline">0.5235</span> K 到 <span class="math inline">0.5235</span> K，一位没变。这个对比划出了参数化的能力边界。</p>
+<p><strong>它能治的是几何。</strong> 第一种是量级不匹配：换热器算例的雅可比两列范数分别是 <span class="math inline">194.4</span> 与 <span class="math inline">6.71</span>，差 <span class="math inline">29</span> 倍，取对数后两个方向的敏感度接近，BFGS 的曲率估计不再被大一列主导。第二种是物理约束：<span class="math inline">a&gt;0</span>、<span class="math inline">T_{\text{hot}}&gt;T_{\text{in}}</span>，取指数形式后这两个条件自动满足，优化器不需要知道边界在哪，也就不需要罚函数或投影。第三种是定义域形状：对数变换把 <span class="math inline">(0,\infty)</span> 拉成整条实轴，最优点不再贴着边界。</p>
+<p><strong>它治不了的是信息。</strong> 如果两个参数在数据上确实不可分辨，<span class="math inline">\mathbf{J}^{\top}\mathbf{J}</span> 会有一个接近零的特征值，对应的方向无论怎么换坐标都是平的。本章换热器算例的条件数在起点是 <span class="math inline">3.44\times10^{4}</span>，到解处降到 <span class="math inline">5.20\times10^{3}</span>——仍然不小，说明“<span class="math inline">a</span> 与 <span class="math inline">T_{\text{hot}}</span> 的某种组合”始终估得不够准。参数化让优化器更快地滑到这条谷底，但谷底本身的宽度由数据决定，换坐标改不了。</p>
+<p>区分“几何问题”与“信息问题”有一个便宜的判据：<strong>看残差有没有系统形状</strong>。如果残差是白噪声，模型结构与数据信息都够，剩下的只是收敛速度，参数化有用；如果残差呈现 U 形、S 形或随工况单调漂移，说明模型漏了一项，此时参数化只会让优化器更快地收敛到一个错的解，残差也不会小。本章算例的残差 <span class="math inline">0.5235</span> K 与噪声 <span class="math inline">0.5</span> K 同量级，且直方图对称（图 29-5 右栏），这是“结构对了”的证据，不是“算法好了”的证据。</p>
+<h3 id="残差到底了就不要再迭代">29.5.5 残差到底了就不要再迭代</h3>
+<p>实验 D 的最终残差是 <span class="math inline">0.5235</span> K，噪声标准差是 <span class="math inline">0.5</span> K，两者只差 <span class="math inline">5\%</span>。参数估计是 <span class="math inline">a=2.4259</span>（真值 <span class="math inline">2.40</span>）、<span class="math inline">T_{\text{hot}}=94.56</span> ℃（真值 <span class="math inline">95.0</span> ℃），<span class="math inline">T_{\text{hot}}</span> 差了 <span class="math inline">0.44</span> K。</p>
+<p>这个 <span class="math inline">0.44</span> K 不是算法没收敛留下的，继续迭代也消不掉。<strong>残差已经降到噪声水平，说明数据里关于参数的信息已经被用完了</strong>；再往下压，压的是噪声的某一次具体实现，参数会离真值更远。这在统计上叫过拟合，在数值上表现为“目标函数还在降，参数却在乱走”。</p>
+<p>于是停止准则需要第四条，而 §29.4.7 的三条都不管这件事——它们判的都是“参数不动了”，不是“数据用完了”。第四条的写法是：<strong>当残差均方根与噪声标准差的比值落到 <span class="math inline">1.05</span> 以内时停止</strong>，并且不要再拿更小的残差当成绩。本章的五个算法都停在 <span class="math inline">0.5235</span> K，彼此差不到 <span class="math inline">0.05</span> K，按 §29.1.4 的口径这不算差异，所以正文比较的是迭代次数与每步代价，而不是谁的残差更小——后者在这个算例上没有区分度。</p>
+<p>“停了”有三种，含义完全不同，必须分开。<strong>第一种是梯度为零但停在鞍点</strong>，非凸问题里常见，判据是海森矩阵有负特征值，处置是加扰动重新出发。<strong>第二种是梯度为零且海森正定</strong>，这是真极小，优化到此结束。<strong>第三种是残差到了噪声底</strong>，这也是真极小，但参数仍有误差，误差大小由数据与实验设计决定，算法无能为力。把第三种误当成第一种，就会不停调算法；把第一种误当成第二种，就会把一个显然不对的解写进报告。</p>
+<h3 id="本章算法不适用的三类问题">29.5.6 本章算法不适用的三类问题</h3>
+<p>把上面五节的边界收成一张表，用法是<strong>从症状反查原因</strong>，而不是从算法反查适用条件。</p>
+<p>表 29-7 常见症状、判据与处置</p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>症状</th>
+<th>判据</th>
+<th>处置</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>迭代数随维度暴涨，内存吃满</td>
+<td>内存按 <span class="math inline">8n^{2}</span> 增长</td>
+<td>换 L-BFGS；或只优化参数子集</td>
+</tr>
+<tr class="even">
+<td>目标值反号增大，几步内溢出</td>
+<td>步长超过 <span class="math inline">2/\lambda_{\max}</span></td>
+<td>回溯线搜索；幂迭代估 <span class="math inline">\lambda_{\max}</span></td>
+</tr>
+<tr class="odd">
+<td>动量比不用动量还慢</td>
+<td><span class="math inline">\kappa&lt;10^{2}</span></td>
+<td>降 <span class="math inline">\beta</span>；或换共轭梯度、BFGS</td>
+</tr>
+<tr class="even">
+<td>收敛了但参数没有物理意义</td>
+<td>残差有 U 形、S 形系统形状</td>
+<td>改模型结构，不是改优化器</td>
+</tr>
+<tr class="odd">
+<td>某个参数置信区间极宽</td>
+<td><span class="math inline">\mathrm{cond}(\mathbf{J}^{\top}\mathbf{J})&gt;10^{4}</span></td>
+<td>增加激励、改实验设计；参数化只提速</td>
+</tr>
+<tr class="even">
+<td>目标函数不可微</td>
+<td>含分段、查表、逻辑判断</td>
+<td>差分梯度；或改用直接搜索</td>
+</tr>
+<tr class="odd">
+<td>参数撞到物理边界</td>
+<td>最优解落在可行域边界上</td>
+<td>参数化；或转约束优化（第58、80章）</td>
+</tr>
+</tbody>
+</table>
+<p>表 29-7 的七行里，只有前三行是优化器本身的问题，后四行的根源在模型、数据与问题设定。<strong>现场遇到的“优化不收敛”，多数落在后四行</strong>：残差有系统形状说明模型漏项，置信区间宽说明实验激励不足，撞边界说明约束没写进去。这些情况下换算法、调步长、加动量都不会有用，只会把症状挪个位置。</p>
+<p>还有三类问题本章完全不覆盖，需要说明边界在哪。<strong>第一类是带约束的优化</strong>，包括参数上下界、状态约束、执行器饱和，它们属于第58、80章的模型预测控制，那里的核心是可行性与在线求解，不是下降方向。<strong>第二类是不可微目标</strong>，例如含最大值、绝对值、查表插值的目标函数，梯度不存在，本章的所有推导失效，只能用差分梯度近似或直接搜索。<strong>第三类是随机优化</strong>，即每步只用一小批样本估计梯度，它的收敛性由第28章的方差分析管，本章的所有结论都建立在“梯度是精确的”这个前提上。</p>
+<h3 id="一次三层缺陷的排查记录">29.5.7 一次三层缺陷的排查记录</h3>
+<p>§29.4.3 那句“不能指望线搜索替你发现 nan”不是空话，它是本章实验 D 真实走过的路。把这段过程记下来，因为<strong>它示范了一种不同于“调参”的排查方式</strong>。</p>
+<p><strong>第一层，现象。</strong> 换热器算例第一次跑起来时，高斯—牛顿的残差是 <span class="math inline">8.36\times10^{42}</span> K、参数跑到 <span class="math inline">a=-132.2</span>；LM 与 BFGS 则稳稳地停在初值上，残差 <span class="math inline">17.4339</span> K；梯度下降中途变成 nan。三个算法三种坏法，看起来像三个 bug，其实是一条链。</p>
+<p><strong>第二层，探针。</strong> 不猜，直接打印。写一个十行的探针脚本，在起点上打印四件事：残差均值、雅可比两列的范数、<span class="math inline">\mathbf{J}^{\top}\mathbf{J}</span> 的条件数、以及高斯—牛顿算出的那一步。结果一目了然：两列范数 <span class="math inline">194.4</span> 与 <span class="math inline">6.71</span>，条件数 <span class="math inline">3.44\times10^{4}</span>，步长是 <span class="math inline">(-1.4356,\,10.36)</span>，<strong>而走这一步之后目标函数从 <span class="math inline">60788</span> 涨到 <span class="math inline">276879</span></strong>。</p>
+<p><strong>第三层，定位。</strong> 一个“下降算法”的第一步让目标涨四倍半，说明梯度符号反了，与条件数无关。回头查 <span class="math inline">\partial r/\partial a</span>，写成了 <span class="math inline">-(T_{\text{hot}}-T_{\text{in}})e^{-au/q}u/q</span>，而它应该是正的——因为 <span class="math inline">\partial(1-e^{-au/q})/\partial a=+e^{-au/q}u/q</span>。<strong>符号一改，同一步从 <span class="math inline">+1.4356</span> 出发，目标函数降到 <span class="math inline">202.9</span>。</strong> 这一层是唯一能被“残差很大”这个现象直接发现的。</p>
+<p><strong>第四层，剩下的两层。</strong> 改完符号，溢出消失了，但 LM 与 BFGS 仍停在初值。查 LM 的内循环，发现它拿旧的 cost 与新步比较，且不下降时直接放弃这一步而不加阻尼——<strong>这不是数学错，是控制流写错</strong>。改成“不下降就 <span class="math inline">\mu</span> 乘四重来，直到真下降”之后，LM 六步收敛。BFGS 同样，它的回溯判据在函数值为 nan 时恒判“已满足”，于是接受了一个把参数送进 nan 的步长；加 <code>isfinite</code> 守卫之后才正常。</p>
+<p><strong>这一段的教训有三条。</strong> 第一，<strong>三层缺陷里只有一层会以“残差大”的形式暴露</strong>，后两层是静默的：LM 与 BFGS 停在初值、残差 <span class="math inline">17.4339</span> K 看起来像个合理的数，如果只看残差，永远不会发现参数根本没动。第二，<strong>探针脚本比读代码有效</strong>：打印一次步长与目标值的变化，比通读两百行更快定位符号错误。第三，<strong>修好一层不等于修好全部</strong>，符号改对之后的那次运行仍然“看起来在收敛”，因为 LM 的残差数字一直是正常的——<strong>直到把参数与真值并排打印，才发现它一步没走</strong>。</p>
+<p>把边界划清之后，本章剩下的内容是可靠的：只要梯度能给、目标可微、参数在几百到几千的量级，表 29-6 里的五种算法都能在几十到几百步内把问题解出来，差别只在步数与每步代价。<strong>这个“只要”正是工程判断的所在</strong>，而不是算法选择本身。</p>
+<h2 id="八组实验">29.6 八组实验</h2>
+<p>八组实验跑在同一台机器上，单线程、双精度，随机种子 <span class="math inline">20261029</span>，全部脚本合计 <span class="math inline">26.3</span> 秒。分工是：实验 A 校准直觉，实验 B 扫条件数，实验 C 看非凸，实验 D 做工程最小二乘，实验 E 摸步长边界，实验 F 量规模代价，实验 G 处理拿不到梯度的情况，实验 H 比停止准则。其中 B、E、F 三组的数字在 §29.5 已经用过，这里补图与剩下的细节，不重复推导。</p>
+<p>所有表格里的“迭代次数”都是算法自己数出来的更新次数，不含最后一次只做校验的调用；<strong>耗时才比量级，残差一律是测试集均方根，单位 K</strong>。三组口径与 §29.1.4 完全一致。</p>
+<h3 id="实验-a同一张曲面上五种走法">29.6.1 实验 A：同一张曲面上，五种走法</h3>
+<p>实验 A 用的是算例一：<span class="math inline">n=50</span>、<span class="math inline">\kappa=100</span> 的正定二次型，特征值在 <span class="math inline">[1,100]</span> 上对数等距，起点取原点，停止条件 <span class="math inline">\|\mathbf{g}\|\le10^{-6}\|\mathbf{g}_{0}\|</span>。这是本章唯一一个最优值与最优解都已知的算例，所以每个算法都能被追问“你为什么花了这么多步”。</p>
+<p>表 29-8 五种算法在二次型上的实测（<span class="math inline">n=50</span>，<span class="math inline">\kappa=100</span>）</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">算法</th>
+<th style="text-align: right;">迭代次数</th>
+<th style="text-align: right;">相对梯度下降的步数</th>
+<th style="text-align: left;">单步代价</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">梯度下降（最优步长）</td>
+<td style="text-align: right;">410</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: left;">一次梯度，<span class="math inline">O(n)</span></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">动量 <span class="math inline">0.9</span></td>
+<td style="text-align: right;">251</td>
+<td style="text-align: right;">0.61</td>
+<td style="text-align: left;">一次梯度，<span class="math inline">O(n)</span></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">共轭梯度</td>
+<td style="text-align: right;">41</td>
+<td style="text-align: right;">0.10</td>
+<td style="text-align: left;">一次梯度加一次矩阵乘</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">BFGS</td>
+<td style="text-align: right;">52</td>
+<td style="text-align: right;">0.13</td>
+<td style="text-align: left;">一次梯度加 <span class="math inline">O(n^{2})</span> 更新</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">牛顿</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">0.005</td>
+<td style="text-align: left;">一次梯度加一次 <span class="math inline">O(n^{3})</span> 求解</td>
+</tr>
+</tbody>
+</table>
+<p>表 29-8 的“相对步数”一列最能说明问题：牛顿的步数是梯度下降的千分之五，共轭梯度是十分之一，BFGS 是八分之一。但<strong>步数少不等于快</strong>——<span class="math inline">n=50</span> 时一次 <span class="math inline">O(n^{3})</span> 求解约合 <span class="math inline">1.25\times10^{5}</span> 次浮点运算，一次 <span class="math inline">O(n)</span> 更新只有 <span class="math inline">50</span> 次，两者差 <span class="math inline">2500</span> 倍。按运算量粗算，牛顿在这个维度上并不比梯度下降占优。本章没有测单步墙钟时间，所以这个账只算到这里，<strong>不下“谁更快”的结论，只指出“迭代次数”这个指标单独看会骗人</strong>。</p>
+<p>四个数字还能与理论对上。梯度下降的 <span class="math inline">410</span> 步，按 <span class="math inline">\rho=(\kappa-1)/(\kappa+1)=0.9802</span> 算，要把误差压到 <span class="math inline">10^{-6}</span> 需要 <span class="math inline">\ln(10^{-6})/\ln(0.9802)=690</span> 步，实测比上界少四成，原因是本章的特征值对数等距、最慢分量只占一维，而不是理论界假设的“最坏两点谱”。共轭梯度 <span class="math inline">41</span> 步，没有超过维度 <span class="math inline">50</span>，符合 <span class="math inline">n</span> 步终止。牛顿 <span class="math inline">2</span> 步，其中第一步就精确到达最优点，第二步只用来确认梯度为零——<strong>所谓“二次终止”在这个数字上是 <span class="math inline">1</span> 次更新</strong>，而不是 <span class="math inline">2</span> 次。</p>
+<p>动量那一栏的 <span class="math inline">251</span> 步需要解释一下，因为它没有达到理论上的最优。<span class="math inline">\kappa=100</span> 代入式 (29-26) 得 <span class="math inline">\beta^{\star}=0.67</span>，而实验用的是 <span class="math inline">0.9</span>，偏大；偏大的后果是惯性过量，前半程冲得快、后半程来回摆。<strong>结果就是 <span class="math inline">0.61</span> 倍而不是理论上的 <span class="math inline">0.5</span> 倍</strong>——仍比梯度下降快四成，但没到最优。这个细节在工程上有用：<strong><span class="math inline">0.9</span> 不是一个“够好就行”的数</strong>，它在一个条件数恰好 <span class="math inline">100</span> 的问题上就损失了百分之二十的收益。</p>
+<p>顺便把“等效折扣”这个说法定下来。<span class="math inline">410</span> 步把误差压到 <span class="math inline">10^{-6}</span>，反推的等效折扣是 <span class="math inline">10^{-6/410}=0.967</span>，比理论值 <span class="math inline">0.9802</span> 更小——也就是实际衰减得更快。<strong>两者并不矛盾</strong>：<span class="math inline">0.9802</span> 是渐近速率，只在最慢分量占主导的后期成立；前几百步里几个大特征分量还在快速衰减，平均下来就显得快。<strong>读收敛曲线时看到的斜率是平均折扣，不是渐近折扣</strong>，两者相差百分之几是正常的。</p>
+<figure>
+<img src="figs/ch029/fig_029_01_convergence.svg" alt="图 29-1　二次型上五种算法的收敛曲线" /><figcaption aria-hidden="true">图 29-1　二次型上五种算法的收敛曲线</figcaption>
+</figure>
+<p>图 29-1 把五条历史画在半对数坐标上，纵轴是目标间隙与初始间隙之比。<strong>梯度下降是一条笔直的斜线</strong>，四百一十步跨六个数量级，对应每步的自然对数斜率约 <span class="math inline">-0.034</span>，也就是上文的等效折扣 <span class="math inline">0.967</span>；这是线性收敛最直观的样子，每步缩同样的百分比，没有加速也没有停滞。动量那条线在开头有一段“台阶”，那是动量还没建立起来的十几步，之后斜率变陡，追到梯度下降前面。</p>
+<p>共轭梯度与 BFGS 两条线在前三十步里陡得几乎垂直，之后突然变缓并互相贴合，最后一千米靠一点点磨。<strong>这个“先陡后缓”是共轭方向的典型形状</strong>：前若干个方向把最大的几个特征分量清掉，剩下的方向要么受舍入污染，要么对应很小的特征值，只能慢慢来。牛顿那条线只有三个点——起点、第一步、第二步——第一步就直接落到底部并被纵轴下限裁掉，看图的人容易以为是画错了，其实是它真的一步到位。</p>
+<h3 id="实验-b条件数从-1-扫到-104">29.6.2 实验 B：条件数从 <span class="math inline">1</span> 扫到 <span class="math inline">10^{4}</span></h3>
+<p>实验 B 把维度降到 <span class="math inline">30</span>、条件数从 <span class="math inline">1</span> 扫到 <span class="math inline">10^{4}</span>，五种算法各跑一遍，结果已在表 29-6 列出。这里补的是<strong>同一批数据的另一种读法</strong>：把迭代次数对条件数做双对数拟合，看斜率。</p>
+<p>表 29-9 迭代次数对条件数的双对数斜率（拟合区间 <span class="math inline">\kappa=10^{2}</span> 到 <span class="math inline">10^{4}</span>）</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">算法</th>
+<th style="text-align: right;">实测斜率</th>
+<th style="text-align: left;">理论依赖</th>
+<th style="text-align: left;">偏差的来源</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">梯度下降</td>
+<td style="text-align: right;">0.83</td>
+<td style="text-align: left;"><span class="math inline">\kappa</span>（斜率 <span class="math inline">1</span>）</td>
+<td style="text-align: left;">常数项与谱形状</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">动量 <span class="math inline">0.9</span></td>
+<td style="text-align: right;">0.58</td>
+<td style="text-align: left;"><span class="math inline">\sqrt{\kappa}</span>（斜率 <span class="math inline">0.5</span>）</td>
+<td style="text-align: left;">同上</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">共轭梯度</td>
+<td style="text-align: right;">0.12</td>
+<td style="text-align: left;"><span class="math inline">\sqrt{\kappa}</span></td>
+<td style="text-align: left;">被维度 <span class="math inline">n=30</span> 截断</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">BFGS</td>
+<td style="text-align: right;">0.01</td>
+<td style="text-align: left;">近似与 <span class="math inline">\kappa</span> 无关</td>
+<td style="text-align: left;">曲率信息抵消了病态</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">牛顿</td>
+<td style="text-align: right;">0.00</td>
+<td style="text-align: left;">与 <span class="math inline">\kappa</span> 无关</td>
+<td style="text-align: left;">恒为 <span class="math inline">2</span> 步</td>
+</tr>
+</tbody>
+</table>
+<p>表 29-9 的前两行与理论吻合得好：梯度下降的 <span class="math inline">0.83</span> 接近 <span class="math inline">1</span>，动量的 <span class="math inline">0.58</span> 接近 <span class="math inline">0.5</span>，偏差来自常数项——理论上界是渐近的，实测里总有一个与 <span class="math inline">\kappa</span> 无关的起步开销摊薄了斜率。<strong>这两行合起来就是“动量为什么有用”的定量答案</strong>：条件数每涨十倍，梯度下降多花 <span class="math inline">6.8</span> 倍步数，动量只多花 <span class="math inline">3.8</span> 倍。</p>
+<p>第三行的 <span class="math inline">0.12</span> 看起来最反常，其实最好解释。共轭梯度在精确算术下 <span class="math inline">n</span> 步终止，<span class="math inline">n=30</span> 就是它的天花板；<span class="math inline">\kappa=10^{4}</span> 时它已经跑到 <span class="math inline">53</span> 步，超出维度靠的是舍入把共轭性破坏之后“重启”，所以它随 <span class="math inline">\kappa</span> 的增长被压得很平。<strong>换句话说，共轭梯度的斜率小不是因为它对病态不敏感，而是因为它先撞上了维度上限</strong>——如果把这个实验的维度提到 <span class="math inline">200</span>，斜率会回到 <span class="math inline">0.5</span> 附近。</p>
+<p>后两行的 <span class="math inline">0.01</span> 与 <span class="math inline">0.00</span> 才是真正的“与条件数无关”。BFGS 用梯度差重建曲率，重建出来的 <span class="math inline">\mathbf{B}</span> 已经把谱的尺度差异吸收进去，所以条件数从 <span class="math inline">100</span> 涨到 <span class="math inline">10^{4}</span>，步数只从 <span class="math inline">36</span> 涨到 <span class="math inline">38</span>。牛顿用精确的 <span class="math inline">\mathbf{H}</span>，二次型上一律两步。<strong>这两行是“用曲率换步数”这句话的实测依据</strong>。</p>
+<p>表 29-6 里还有两处细节容易被跳过。<strong>第一处是 <span class="math inline">\kappa=1</span> 那一行全为 <span class="math inline">2</span></strong>：各向同性的球面上，负梯度方向直指球心，任何步长只要不越界就是最优方向，所以五种算法都退化成同一个东西，两次迭代（一次更新加一次校验）就到。这一行是“条件数才是一切”的反面证据——<strong>条件数为 <span class="math inline">1</span> 时算法之间的差别全部消失</strong>。</p>
+<p><strong>第二处是 <span class="math inline">\kappa=10</span> 时 BFGS 用了 <span class="math inline">31</span> 步、共轭梯度只用 <span class="math inline">19</span> 步</strong>，拟牛顿在良态问题上反而更慢。原因是 BFGS 从单位阵起步，前几步的曲率估计还没有建立起来，方向接近最陡下降；而共轭性在良态问题上几乎立刻生效，前几个方向就把主要分量清掉了。<strong>要等到 <span class="math inline">\kappa</span> 大到“曲率差异显著”，BFGS 的重建才有东西可建</strong>：<span class="math inline">\kappa=1000</span> 时两者打平（都是 <span class="math inline">39</span> 步），<span class="math inline">\kappa=10^{4}</span> 时 BFGS 用 <span class="math inline">38</span> 步反超共轭梯度的 <span class="math inline">53</span> 步。<strong>“拟牛顿比共轭梯度好”这句话，在条件数小于一百时不成立。</strong></p>
+<figure>
+<img src="figs/ch029/fig_029_02_kappa.svg" alt="图 29-2　迭代次数随条件数的变化" /><figcaption aria-hidden="true">图 29-2　迭代次数随条件数的变化</figcaption>
+</figure>
+<p>图 29-2 是表 29-6 的双对数版本。最上面那条几乎以 <span class="math inline">45</span> 度上升的是梯度下降，从 <span class="math inline">\kappa=1</span> 的 <span class="math inline">2</span> 步涨到 <span class="math inline">\kappa=10^{4}</span> 的 <span class="math inline">18236</span> 步，跨了四个数量级。紧挨着它、在中段反而更低的是动量，两条线在 <span class="math inline">\kappa</span> 介于 <span class="math inline">10</span> 与 <span class="math inline">100</span> 之间的某处交叉——<strong>交叉点左边动量更慢，右边更快</strong>，这正是 §29.5.3 那个转折的图形版本。</p>
+<p>共轭梯度与 BFGS 两条线贴得很近，都在 <span class="math inline">20</span> 到 <span class="math inline">55</span> 步之间，且随横轴几乎水平。牛顿是底部一条孤零零的水平线，五个点全部落在纵坐标 <span class="math inline">2</span> 上。看这张图要有一个心理准备：<strong>纵轴是对数的，两条线之间“看起来只差一格”，实际差十倍</strong>。</p>
+<h3 id="实验-c香蕉函数方向错在哪里">29.6.3 实验 C：香蕉函数，方向错在哪里</h3>
+<p>实验 C 换到二维香蕉函数，起点 <span class="math inline">(-1.2,\,1.0)</span>，最优点 <span class="math inline">(1,\,1)</span>，最优值 <span class="math inline">0</span>。这个函数的谷是一条抛物线 <span class="math inline">y=x^{2}</span>，谷底很窄、谷壁很陡，梯度在谷里几乎与谷轴垂直。停止条件同样是 <span class="math inline">\|\mathbf{g}\|\le10^{-6}\|\mathbf{g}_{0}\|</span>，起点的梯度范数是 <span class="math inline">232.9</span>，于是阈值是 <span class="math inline">2.33\times10^{-4}</span>。</p>
+<p>表 29-10 香蕉函数上的四种走法（起点 <span class="math inline">(-1.2,\,1.0)</span>）</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">算法</th>
+<th style="text-align: right;">迭代次数</th>
+<th style="text-align: right;">最终目标值</th>
+<th style="text-align: right;">最终梯度范数</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">梯度下降（<span class="math inline">\eta=10^{-3}</span>）</td>
+<td style="text-align: right;">18434</td>
+<td style="text-align: right;"><span class="math inline">6.781\times10^{-8}</span></td>
+<td style="text-align: right;"><span class="math inline">2.328\times10^{-4}</span></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">BFGS</td>
+<td style="text-align: right;">34</td>
+<td style="text-align: right;"><span class="math inline">1.866\times10^{-13}</span></td>
+<td style="text-align: right;"><span class="math inline">1.102\times10^{-5}</span></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">L-BFGS（<span class="math inline">m=10</span>）</td>
+<td style="text-align: right;">629</td>
+<td style="text-align: right;"><span class="math inline">9.849\times10^{-12}</span></td>
+<td style="text-align: right;"><span class="math inline">9.482\times10^{-5}</span></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">牛顿</td>
+<td style="text-align: right;">21</td>
+<td style="text-align: right;"><span class="math inline">8.517\times10^{-12}</span></td>
+<td style="text-align: right;"><span class="math inline">1.187\times10^{-4}</span></td>
+</tr>
+</tbody>
+</table>
+<p>表 29-10 的第四列需要打个折扣。四个梯度范数彼此差一倍以上，看起来像是 BFGS 更准，其实<strong>它们都停在同一个阈值附近</strong>——<span class="math inline">2.33\times10^{-4}</span>——差的是“最后一步恰好跨过阈值多深”。BFGS 跨得深，牛顿跨得浅，与算法精度无关。真正有区分度的是第三列的目标值：BFGS 到了 <span class="math inline">10^{-13}</span>，牛顿 <span class="math inline">10^{-12}</span>，梯度下降只到 <span class="math inline">10^{-8}</span>，差了五个数量级。</p>
+<p>第一列的 <span class="math inline">18434</span> 步要单独说。这不是“梯度下降很慢”的一句话能打发的数字，它背后有一个具体机制：<strong>负梯度方向在这个函数上几乎垂直于谷轴</strong>，走一步就撞上陡壁，下一步再被弹回来。表 29-11 的线搜索数据能验证这一点。</p>
+<p>表 29-11 三种算法的线搜索代价（香蕉函数，与表 29-10 同一批运行）</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">算法</th>
+<th style="text-align: right;">迭代次数</th>
+<th style="text-align: right;">线搜索调用</th>
+<th style="text-align: right;">回溯总数</th>
+<th style="text-align: right;">平均回溯（次/步）</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">BFGS</td>
+<td style="text-align: right;">34</td>
+<td style="text-align: right;">33</td>
+<td style="text-align: right;">19</td>
+<td style="text-align: right;">0.58</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">L-BFGS（<span class="math inline">m=10</span>）</td>
+<td style="text-align: right;">629</td>
+<td style="text-align: right;">628</td>
+<td style="text-align: right;">53</td>
+<td style="text-align: right;">0.08</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">牛顿</td>
+<td style="text-align: right;">21</td>
+<td style="text-align: right;">20</td>
+<td style="text-align: right;">7</td>
+<td style="text-align: right;">0.35</td>
+</tr>
+</tbody>
+</table>
+<p>表 29-11 里有一处反直觉：<strong>L-BFGS 的平均回溯最低（<span class="math inline">0.08</span> 次），步数却最多（<span class="math inline">629</span>）</strong>。原因是它的方向虽然质量不高，但每一步都足够“温和”，<span class="math inline">\alpha=1</span> 几乎总能被接受；BFGS 与牛顿的方向更激进，偶尔需要折半。这说明“线搜索很顺”不等于“算法很好”，<strong>方向对了才谈得上步长</strong>。</p>
+<p>还有一个数需要解释：<strong>牛顿为什么走了 <span class="math inline">21</span> 步，而不是像实验 A 那样 <span class="math inline">2</span> 步</strong>。二次终止性的前提是目标函数真是二次的，香蕉函数不是——它的海森矩阵随位置变化，某一步算出的牛顿方向甚至可能不是下降方向，所以需要线搜索兜底（表 29-11 里 <span class="math inline">20</span> 次调用中有 <span class="math inline">7</span> 次回溯）。<strong>这说明“牛顿法两步到位”是一条只对二次型成立的结论</strong>，搬到非线性问题上就成了“超线性收敛”，不是“二次终止”。</p>
+<p>L-BFGS 的 <span class="math inline">629</span> 步则是另一个机制。它只保留最近十步的梯度差 <span class="math inline">(s_{k},y_{k})</span>，在香蕉函数的窄谷里，十步之前的曲率信息恰恰是最有用的——谷的形状在转弯处变化很快，等它“记住”新的曲率，位置已经又变了。<strong>记忆深度 <span class="math inline">m</span> 本质上是一个时间尺度</strong>：<span class="math inline">m</span> 太小跟不上曲面的变化，<span class="math inline">m</span> 太大又丢掉“最近的变化”。本章没有扫 <span class="math inline">m</span>，只说明这个参数不只是一个内存预算。</p>
+<figure>
+<img src="figs/ch029/fig_029_03_rosenbrock.svg" alt="图 29-3　香蕉函数等高线与三条迭代轨迹" /><figcaption aria-hidden="true">图 29-3　香蕉函数等高线与三条迭代轨迹</figcaption>
+</figure>
+<p>图 29-3 左栏是全场，右栏放大到起点附近的前几百步。左栏里梯度下降的轨迹是一条贴着谷壁来回横跳的折线，从 <span class="math inline">(-1.2,\,1.0)</span> 一点点挪向 <span class="math inline">(1,\,1)</span>，整条轨迹在图上糊成一片灰；BFGS 的轨迹几乎是从起点到终点的一条弧线，34 步走完全程；牛顿只有二十来个点，点与点之间跨得很大。<strong>三者的差别不在“走得快慢”，而在“走的方向对不对”</strong>。</p>
+<p>右栏的对比更清楚。梯度下降前 <span class="math inline">600</span> 步的轨迹只在谷底横着来回，沿谷轴几乎没前进——它每一步都在“下坡”，但下的是谷壁的坡，不是谷轴的坡。BFGS 前 <span class="math inline">8</span> 步就已经从陡壁爬到谷底并开始沿谷轴推进。<strong>这就是“最陡方向”与“最好方向”的区别</strong>：前者只保证当前这一步降得最多，后者考虑了整个曲面的形状。</p>
+<p>线搜索本身也值得看一眼。图 29-4 画的是起点处沿负梯度方向的 <span class="math inline">\varphi(\alpha)</span>，双对数坐标，同时画了一阶预测线 <span class="math inline">f_{0}+c_{1}\alpha\mathbf{g}^{\top}\mathbf{d}</span> 与回溯试探点。</p>
+<figure>
+<img src="figs/ch029/fig_029_04_line_search.svg" alt="图 29-4　线搜索：目标函数沿方向的取值与回溯试探点" /><figcaption aria-hidden="true">图 29-4　线搜索：目标函数沿方向的取值与回溯试探点</figcaption>
+</figure>
+<p>图 29-4 的横轴是步长、纵轴是目标函数值，实线在 <span class="math inline">\alpha</span> 增大到某个位置之后急剧上翘，虚线是一阶预测——它是一条斜率为负的直线，代表“如果函数真是线性的，步长越大降得越多”。<strong>两条线在 <span class="math inline">\alpha</span> 很小的位置就分开了</strong>，说明线性模型只在一个极窄的区间内成立。</p>
+<p>这一次实际接受的步长是 <span class="math inline">0.001</span>，回溯了 <span class="math inline">10</span> 次，从初值 <span class="math inline">1</span> 一路折半下来。<strong>十次折半是个不小的数目</strong>，它把“这一步该走多远”这个问题回答得很保守；而正是这种保守，让梯度下降在香蕉函数上走得动但走得极慢——每步只前进千分之一的方向长度，<span class="math inline">18434</span> 步就是这么攒出来的。牛顿与 BFGS 之所以回溯少，是因为它们的方向本来就把曲率算进去了，<span class="math inline">\alpha=1</span> 通常就是对的。</p>
+<h3 id="实验-d换热器的非线性最小二乘">29.6.4 实验 D：换热器的非线性最小二乘</h3>
+<p>实验 D 是本章唯一从控制工程里长出来的算例：<span class="math inline">400</span> 段稳态样本，模型是</p>
+<p><span class="math display">
+T_{\text{out}}=T_{\text{in}}+\left(T_{\text{hot}}-T_{\text{in}}\right)\left(1-e^{-a u/q}\right)
+\tag{29-27}
+</span></p>
+<p>式 (29-27) 里 <span class="math inline">u</span> 是阀位、<span class="math inline">q</span> 是流量、<span class="math inline">T_{\text{in}}</span> 是入口温度，两个待估参数是换热系数 <span class="math inline">a</span> 与热源温度 <span class="math inline">T_{\text{hot}}</span>。真值 <span class="math inline">a=2.40</span>、<span class="math inline">T_{\text{hot}}=95.0</span> ℃，出口温度叠 <span class="math inline">0.5</span> K 噪声，起点 <span class="math inline">a=1.20</span>、<span class="math inline">T_{\text{hot}}=80.00</span> ℃，起点残差 <span class="math inline">17.4339</span> K。</p>
+<p>表 29-12 换热器拟合的六种接法（<span class="math inline">400</span> 段，噪声 <span class="math inline">0.5</span> K）</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">接法</th>
+<th style="text-align: right;">迭代次数</th>
+<th style="text-align: right;">残差/K</th>
+<th style="text-align: right;"><span class="math inline">a</span></th>
+<th style="text-align: right;"><span class="math inline">T_{\text{hot}}</span>/℃</th>
+<th style="text-align: left;">备注</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">高斯—牛顿（无保护）</td>
+<td style="text-align: right;">7</td>
+<td style="text-align: right;">0.5235</td>
+<td style="text-align: right;">2.4259</td>
+<td style="text-align: right;">94.56</td>
+<td style="text-align: left;">收敛</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">高斯—牛顿 + Armijo</td>
+<td style="text-align: right;">5</td>
+<td style="text-align: right;">0.5235</td>
+<td style="text-align: right;">2.4259</td>
+<td style="text-align: right;">94.56</td>
+<td style="text-align: left;">—</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">列文伯格—马夸特</td>
+<td style="text-align: right;">6</td>
+<td style="text-align: right;">0.5235</td>
+<td style="text-align: right;">2.4259</td>
+<td style="text-align: right;">94.56</td>
+<td style="text-align: left;">—</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">BFGS（原参数）</td>
+<td style="text-align: right;">27</td>
+<td style="text-align: right;">0.5235</td>
+<td style="text-align: right;">2.4259</td>
+<td style="text-align: right;">94.56</td>
+<td style="text-align: left;">平均回溯 <span class="math inline">1.1</span></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">BFGS（对数参数）</td>
+<td style="text-align: right;">8</td>
+<td style="text-align: right;">0.5235</td>
+<td style="text-align: right;">2.4259</td>
+<td style="text-align: right;">94.56</td>
+<td style="text-align: left;">式 (29-20)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">梯度下降（<span class="math inline">0.5/\lambda_{\max}</span>）</td>
+<td style="text-align: right;">20000</td>
+<td style="text-align: right;">0.5727</td>
+<td style="text-align: right;">2.5607</td>
+<td style="text-align: right;">92.60</td>
+<td style="text-align: left;">达迭代上限</td>
+</tr>
+</tbody>
+</table>
+<p>表 29-12 的前五行残差完全一样，四位小数一个不差，这不是巧合：<strong>它们都收敛到了同一个极小点</strong>，参数也就一致。真正的差别只在迭代次数：<span class="math inline">5</span> 到 <span class="math inline">7</span> 次的是用了二阶信息的三种接法，<span class="math inline">27</span> 次的是只用梯度的拟牛顿，<span class="math inline">8</span> 次的是换了参数化的拟牛顿。<strong>参数化把 BFGS 从 <span class="math inline">27</span> 次压到 <span class="math inline">8</span> 次，效果比换算法还大</strong>。</p>
+<p>三种二阶接法的次数为什么是 <span class="math inline">5</span>、<span class="math inline">6</span>、<span class="math inline">7</span> 而不是 <span class="math inline">2</span>，答案在起点残差。起点残差 <span class="math inline">17.4339</span> K，而收敛值 <span class="math inline">0.5235</span> K，相差三十三倍——<strong>在这么远的地方，式 (29-7) 里被高斯—牛顿丢掉的 <span class="math inline">\sum r_{i}\nabla^{2}r_{i}</span> 项与 <span class="math inline">\mathbf{J}^{\top}\mathbf{J}</span> 同量级</strong>，二次模型严重失真，所以每步只能走一部分路，要七步才到。如果起点选在真值附近（残差 <span class="math inline">1</span> K 量级），这个算例会两三步收敛。<strong>“高斯—牛顿几步收敛”这个问题没有统一答案，它取决于起点离解多远。</strong></p>
+<p>列文伯格—马夸特用 <span class="math inline">6</span> 步，只比无保护的高斯—牛顿少一步。它的价值不在步数，而在“步长越大越先加阻尼”这条自保机制——本章没有在它上面复测四个起点，所以只能说它在标准起点上的表现与高斯—牛顿相当。<strong>两种接法的区别不在平均表现，而在最坏情况</strong>，而最坏情况只有换更难的算例才能显出来。</p>
+<p>阻尼的初值与倍数也顺势交代一下。本章取 <span class="math inline">\mu_{0}=10^{-3}</span>、按四倍增减，这两个数都没有理论最优值：<span class="math inline">\mu_{0}</span> 太小则第一次尝试接近无保护的高斯—牛顿，太大则第一步退化成沿负梯度的小步；四倍增减只影响“找到合适阻尼要走几趟”。<strong>真正需要固定的不是这两个数，而是“<span class="math inline">\mu</span> 永远按对角元缩放”这一条</strong>——按 <span class="math inline">\mathrm{diag}(\mathbf{J}^{\top}\mathbf{J})</span> 缩放使阻尼与每个参数自身的单位匹配，换成 <span class="math inline">\mu\mathbf{I}</span> 就会把量级小的参数压死。换热器算例的两列范数差 <span class="math inline">29</span> 倍，这个区别不是理论上的。</p>
+<p>BFGS 的 <span class="math inline">27</span> 次要配着“平均回溯 <span class="math inline">1.1</span> 次/步”一起读。这个数比牛顿的 <span class="math inline">0.35</span> 高两倍，意味着<strong>平均每步要折半一次以上才能被接受</strong>——曲率估计在参数量级差三十倍的情况下不准，方向经常指得偏。参数化之后这个数没有单独统计，但迭代数从 <span class="math inline">27</span> 掉到 <span class="math inline">8</span>，可以推断回溯也随之减少：<strong>方向准了，线搜索就不必替它兜底</strong>。</p>
+<p>最后一行要小心读。梯度下降走了两万步仍未停到极小点，残差 <span class="math inline">0.5727</span> K 与收敛值 <span class="math inline">0.5235</span> K 相差 <span class="math inline">0.0492</span> K——<strong>按 §29.1.4 的口径，这个差刚好落在 <span class="math inline">0.05</span> K 以内，不能当作“拟合更差”的结论</strong>。但参数层面的差别是实打实的：<span class="math inline">a</span> 估成 <span class="math inline">2.5607</span> 而不是 <span class="math inline">2.4259</span>，相对误差 <span class="math inline">5.6\%</span>；<span class="math inline">T_{\text{hot}}</span> 估成 <span class="math inline">92.60</span> 而不是 <span class="math inline">94.56</span>，差 <span class="math inline">1.96</span> ℃。<strong>残差对参数不敏感，参数对工艺设计敏感</strong>，这是最小二乘的常见形态，也是“只看残差判断收敛”最危险的地方。</p>
+<p>无保护的高斯—牛顿能收敛，值得追问一句是不是运气。表 29-13 换了四个起点重测。</p>
+<p>表 29-13 无保护高斯—牛顿在四个起点上的表现</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: right;">起点 <span class="math inline">a</span></th>
+<th style="text-align: right;">起点 <span class="math inline">T_{\text{hot}}</span>/℃</th>
+<th style="text-align: right;">迭代次数</th>
+<th style="text-align: right;">残差/K</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">6.00</td>
+<td style="text-align: right;">60.00</td>
+<td style="text-align: right;">12</td>
+<td style="text-align: right;">0.5235</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">0.20</td>
+<td style="text-align: right;">120.00</td>
+<td style="text-align: right;">8</td>
+<td style="text-align: right;">0.5235</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">4.00</td>
+<td style="text-align: right;">40.00</td>
+<td style="text-align: right;">8</td>
+<td style="text-align: right;">0.5235</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">0.50</td>
+<td style="text-align: right;">150.00</td>
+<td style="text-align: right;">7</td>
+<td style="text-align: right;">0.5235</td>
+</tr>
+</tbody>
+</table>
+<p>表 29-13 的四个起点离真值都很远——<span class="math inline">a</span> 差了三十倍、<span class="math inline">T_{\text{hot}}</span> 差了 <span class="math inline">55</span> ℃——却全部收敛到同一个残差。<strong>这说明这个算例只有一个吸引域，不能据此说“无保护的高斯—牛顿是安全的”</strong>。换一个残差非线性的对象，同样的算法很可能在第一步就跳过谷底。本章保留这个“看起来很稳”的结果，是为了与 §29.4.3 的警告对照：<strong>收敛的样本再多，也不能替代守卫</strong>。</p>
+<figure>
+<img src="figs/ch029/fig_029_05_heat_fit.svg" alt="图 29-5　换热器拟合：预测对实测与残差分布" /><figcaption aria-hidden="true">图 29-5　换热器拟合：预测对实测与残差分布</figcaption>
+</figure>
+<p>图 29-5 左栏是 <span class="math inline">400</span> 个样本的预测对实测散点，横纵轴同为出口温度。点云紧贴一一对应线，在 <span class="math inline">180</span> 至 <span class="math inline">220</span> ℃ 区间最密，两端的点少一些但也没有系统性偏离。<strong>如果模型漏了一项，这一栏会出现弯曲的“香蕉形”</strong>，而不是贴线；贴线说明式 (29-27) 的结构够用。</p>
+<p>右栏是残差直方图，以零为中心对称，没有明显的偏斜或双峰，均方根 <span class="math inline">0.523</span> K 标在左上角。噪声标准差是 <span class="math inline">0.5</span> K，实测残差比它大 <span class="math inline">0.023</span> K，折成等效标准差是 <span class="math inline">\sqrt{0.523^{2}-0.5^{2}}\approx0.16</span> K——<strong>这 <span class="math inline">0.16</span> K 就是两个参数估计误差的贡献</strong>。它不会因为多迭代几步而消失，只会随着样本数增加按 <span class="math inline">1/\sqrt{m}</span> 缩小。</p>
+<p>顺带记一个数：<span class="math inline">\mathbf{J}^{\top}\mathbf{J}</span> 的条件数在起点是 <span class="math inline">3.44\times10^{4}</span>，到解处是 <span class="math inline">5.20\times10^{3}</span>。<strong>降到五分之一，但仍在万级</strong>，这与 <span class="math inline">T_{\text{hot}}</span> 的估计误差 <span class="math inline">0.44</span> ℃ 是同一件事的两面。</p>
+<h3 id="实验-e步长扫描的两侧">29.6.5 实验 E：步长扫描的两侧</h3>
+<p>实验 E 是一个纯边界实验：<span class="math inline">\kappa=100</span>、<span class="math inline">n=20</span>、<span class="math inline">\lambda_{\max}=100</span> 的二次型，步长以 <span class="math inline">1/\lambda_{\max}</span> 为单位取六档，各走 <span class="math inline">200</span> 次。</p>
+<p>表 29-14 步长扫描（<span class="math inline">\kappa=100</span>，<span class="math inline">\lambda_{\max}=100</span>，<span class="math inline">200</span> 次迭代）</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">步长（以 <span class="math inline">1/\lambda_{\max}</span> 计）</th>
+<th style="text-align: right;">末值</th>
+<th style="text-align: left;">判定</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><span class="math inline">0.50</span>、<span class="math inline">1.00</span>、<span class="math inline">1.50</span>、<span class="math inline">1.90</span>、<span class="math inline">1.99</span></td>
+<td style="text-align: right;"><span class="math inline">-2.545\times10^{2}</span> 至 <span class="math inline">-2.547\times10^{2}</span></td>
+<td style="text-align: left;">五档全部收敛</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><span class="math inline">2.01</span></td>
+<td style="text-align: right;"><span class="math inline">+6.895\times10^{2}</span></td>
+<td style="text-align: left;">符号反转，误差不衰减</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><span class="math inline">2.20</span></td>
+<td style="text-align: right;"><span class="math inline">5.879\times10^{32}</span></td>
+<td style="text-align: left;">参数范数已到 <span class="math inline">10^{16}</span></td>
+</tr>
+</tbody>
+</table>
+<p>表 29-14 的两行之间没有过渡带。<span class="math inline">1.99</span> 与 <span class="math inline">2.01</span> 只差百分之一，一边还稳稳地待在最优值附近，另一边已经跑到正值区。<strong>这个“悬崖”就是 §29.5.2 说的硬边界</strong>，它的位置由 <span class="math inline">2/\lambda_{\max}</span> 精确给出，不是经验区间。</p>
+<p>从倍数上还能读出更多。<span class="math inline">2.01</span> 档每步把最快分量放大 <span class="math inline">1.01</span> 倍，<span class="math inline">200</span> 步是 <span class="math inline">7.3</span> 倍，于是目标值从 <span class="math inline">-254</span> 变成 <span class="math inline">+689</span>，量级对得上。<span class="math inline">2.20</span> 档每步放大 <span class="math inline">1.20</span> 倍，<span class="math inline">200</span> 步是 <span class="math inline">7\times10^{15}</span>，参数范数到 <span class="math inline">10^{16}</span>，目标值是 <span class="math inline">5.88\times10^{32}</span>，也对得上。<strong>“越界以后坏得多快”这个问题，答案是按 <span class="math inline">(1+\delta)^{k}</span> 增长，<span class="math inline">\delta</span> 就是越界的那一点点</strong>。</p>
+<p>还有一个常被忽略的细节：五档收敛的步长里，末值并不相同，最大差 <span class="math inline">0.2</span>。<span class="math inline">0.50</span> 与 <span class="math inline">1.99</span> 都收敛，但 <span class="math inline">0.50</span> 每步只走最优步长的四分之一，<span class="math inline">200</span> 步走不完该走的路；<span class="math inline">1.99</span> 贴着边界，最快分量每步反号但只缩 <span class="math inline">1\%</span>，也走不完。<strong>“收敛”是个定性判断，说“收敛得好”还需要看残差到了什么量级</strong>，这就是表 29-14 不能只写“收敛”两个字的原因。</p>
+<p>读者会注意到实验 E 的最优值是 <span class="math inline">-254.7</span>，而实验 A 是 <span class="math inline">-549.8</span>，两者差一倍多。这不是矛盾，是<strong>两个算例的维度与谱不同</strong>：A 是 <span class="math inline">n=50</span>、<span class="math inline">\kappa=100</span>，E 是 <span class="math inline">n=20</span>、<span class="math inline">\kappa=100</span>。最优值等于 <span class="math inline">-\frac{1}{2}\mathbf{b}^{\top}\mathbf{A}^{-1}\mathbf{b}</span>，随维度与特征值的分布变。<strong>跨实验比“最优值”没有意义，只能比同一实验内的相对量</strong>——本章所有关于“快慢”的结论都在同一个实验内部得出，这是 §29.1.4 那条口径的具体执行。</p>
+<h3 id="实验-f规模代价">29.6.6 实验 F：规模代价</h3>
+<p>实验 F 的数字已在表 29-5 与式 (29-25) 里用过，这里补两个没有展开的角度。</p>
+<p><strong>第一个是单步代价，而不是总耗时。</strong> 表 29-5 的总耗时除以 <span class="math inline">30</span> 次迭代，<span class="math inline">n=2000</span> 时 BFGS 是 <span class="math inline">733.8</span> ms/步，L-BFGS 是 <span class="math inline">11.85</span> ms/步，差 <span class="math inline">62</span> 倍。<strong>这个倍数才是“维度惩罚”的真身</strong>：它不随迭代数变，只随 <span class="math inline">n</span> 变，因此算法选错一次，之后每一步都在付这笔钱。</p>
+<p><strong>第二个是小维度上的反常。</strong> <span class="math inline">n=100</span> 时 L-BFGS 就已经比 BFGS 快（<span class="math inline">1.86</span> ms 对 <span class="math inline">5.48</span> ms），而内存优势只有五倍。原因是 BFGS 的秩二更新要做两次 <span class="math inline">n\times n</span> 外积，<span class="math inline">n=100</span> 时矩阵只有一万个元素，Python 层的调用开销与大矩阵的缓存未命中同时出现，向量化的收益被吃掉。<strong>这一条不该被推广</strong>：换一个编译型实现，<span class="math inline">n=100</span> 上两者可能打平；本章只用它说明“小维度不必迷信完整 BFGS”。</p>
+<p>真正稳定的结论只有一条：<span class="math inline">n</span> 过千以后，BFGS 的内存按平方涨、L-BFGS 按线性涨，<span class="math inline">n=20000</span> 时前者要 <span class="math inline">3.2</span> GB、后者只要 <span class="math inline">3.2</span> MB。<strong>差三个数量级的存储，换来的步数代价是十几倍</strong>，这笔交易在绝大多数工程问题里都划算。</p>
+<p>这笔交易可以粗算一次，把两张表合起来用。香蕉函数上 L-BFGS 的步数是 BFGS 的 <span class="math inline">18.5</span> 倍（<span class="math inline">629</span> 对 <span class="math inline">34</span>），表 29-5 里 <span class="math inline">n=2000</span> 时单步代价是 <span class="math inline">11.85</span> ms 对 <span class="math inline">733.8</span> ms，差 <span class="math inline">62</span> 倍。<strong>两者相乘，L-BFGS 的总代价仍只有 BFGS 的三分之一</strong>：<span class="math inline">629\times11.85\approx7.5</span> 秒，<span class="math inline">34\times733.8\approx24.9</span> 秒。这不是本章实测的数字——两个实验的算例不同，这里只是量级估算——但它给出的结论是稳的：<strong>当单步代价差六十倍时，步数差十几倍翻不了盘</strong>。</p>
+<h3 id="实验-g拿不到梯度怎么办">29.6.7 实验 G：拿不到梯度怎么办</h3>
+<p>实验 G 用 <span class="math inline">n=20</span> 的二次型比较前向差分与中心差分，真梯度用解析式算出，误差取相对范数。</p>
+<p>表 29-15 前向差分的相对误差随步长的变化（<span class="math inline">n=20</span>）</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: right;">步长 <span class="math inline">h</span></th>
+<th style="text-align: right;">相对误差</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;"><span class="math inline">10^{-1}</span></td>
+<td style="text-align: right;"><span class="math inline">3.478\times10^{-2}</span></td>
+</tr>
+<tr class="even">
+<td style="text-align: right;"><span class="math inline">10^{-6}</span></td>
+<td style="text-align: right;"><span class="math inline">3.479\times10^{-7}</span></td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;"><span class="math inline">10^{-7}</span></td>
+<td style="text-align: right;"><span class="math inline">3.553\times10^{-8}</span></td>
+</tr>
+<tr class="even">
+<td style="text-align: right;"><span class="math inline">10^{-8}</span></td>
+<td style="text-align: right;"><span class="math inline">1.603\times10^{-8}</span></td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;"><span class="math inline">10^{-9}</span></td>
+<td style="text-align: right;"><span class="math inline">1.114\times10^{-7}</span></td>
+</tr>
+<tr class="even">
+<td style="text-align: right;"><span class="math inline">10^{-14}</span></td>
+<td style="text-align: right;"><span class="math inline">1.024\times10^{-2}</span></td>
+</tr>
+</tbody>
+</table>
+<p>表 29-15 的形状是一个干净的 V：从 <span class="math inline">10^{-1}</span> 到 <span class="math inline">10^{-6}</span>，步长每降十倍误差降十倍，斜率正好 <span class="math inline">+1</span>，对应式 (29-22) 的第一项 <span class="math inline">\frac{h}{2}|f&#39;&#39;|</span>；从 <span class="math inline">10^{-8}</span> 到 <span class="math inline">10^{-14}</span>，步长每降十倍误差涨十倍，斜率正好 <span class="math inline">-1</span>，对应第二项 <span class="math inline">\epsilon|f|/h</span>。<strong>两侧都是直线，交点就是最优步长</strong>，实测落在 <span class="math inline">h=10^{-8}</span>、误差 <span class="math inline">1.60\times10^{-8}</span>，与理论估计 <span class="math inline">\sqrt{\epsilon}\approx1.5\times10^{-8}</span> 只差半个数量级。</p>
+<p>中心差分的实测与理论不符，而且不符得很有意思。它在 <span class="math inline">h=10^{-1}</span> 就达到了 <span class="math inline">5.18\times10^{-16}</span>，也就是双精度机器精度；再减小步长，误差反而单调上升到 <span class="math inline">h=10^{-14}</span> 时的 <span class="math inline">5.52\times10^{-3}</span>。<strong>理论说最优步长应该是 <span class="math inline">\epsilon^{1/3}\approx6\times10^{-6}</span>，实测却说 <span class="math inline">10^{-1}</span> 最好</strong>，原因是本章的测试函数是二次型、三阶导数为零，式 (29-23) 的截断项 <span class="math inline">\frac{h^{2}}{6}|f&#39;&#39;&#39;|</span> 根本不存在。<strong>这不是中心差分比理论更好，而是这个测试函数太光滑</strong>；换一个三次项不可忽略的函数，最优点会回到 <span class="math inline">10^{-6}</span> 附近。</p>
+<p>误差的绝对量还随目标函数值变化，这一点在使用时容易忽略。本文的误差取的是相对范数，分母是真梯度的范数；若换成绝对误差，<span class="math inline">h</span> 的最优点不变，但整体水平会随 <span class="math inline">|f|</span> 平移——<strong>式 (29-22) 的第二项里 <span class="math inline">\epsilon|f|</span> 明确带着 <span class="math inline">|f|</span></strong>，所以目标函数在 <span class="math inline">10^{6}</span> 量级时，同样的 <span class="math inline">h</span> 得到的分量误差是 <span class="math inline">|f|\sim1</span> 时的 <span class="math inline">10^{6}</span> 倍。工程上的对策是先把目标函数归一化，让它在最优点附近落在 <span class="math inline">1</span> 附近，差分步长才有可移植性。</p>
+<p>代价这一面也要算清。<span class="math inline">n=20</span> 时前向差分每步要 <span class="math inline">20</span> 次函数求值，中心差分 <span class="math inline">40</span> 次；如果函数本身要解一次微分方程，<span class="math inline">40</span> 次求值可能比一次梯度下降的整步还贵。<strong>更要紧的是误差会传染</strong>：式 (29-17) 的 Armijo 判据里用到 <span class="math inline">\mathbf{g}^{\top}\mathbf{d}</span>，梯度有 <span class="math inline">10^{-8}</span> 的相对误差，斜率就有 <span class="math inline">10^{-8}</span> 的相对误差，判据会在“函数变化已经很小”的时候失去分辨力。<strong>这就是差分梯度只适合校验、不适合驱动迭代的原因</strong>——不是精度不够，是精度与代价两头都不划算。</p>
+<figure>
+<img src="figs/ch029/fig_029_06_finite_diff.svg" alt="图 29-6　有限差分的步长与相对误差" /><figcaption aria-hidden="true">图 29-6　有限差分的步长与相对误差</figcaption>
+</figure>
+<p>图 29-6 把两条曲线画在同一张双对数图上。前向差分是一条标准的 V 形，左右两支斜率对称，顶点标着一个实心点；中心差分是一条单调上升的斜线，从左端的机器精度一路爬到右端的 <span class="math inline">10^{-3}</span>，整体比前向低七八个数量级，但<strong>没有 V 形的右支</strong>——右支被截断误差的缺席吃掉了。</p>
+<p>这张图给出的工程结论有两条。<strong>第一条，前向差分能到 <span class="math inline">10^{-8}</span> 的相对精度，足够用来检查解析梯度有没有写错</strong>，检查的门限通常设在 <span class="math inline">10^{-5}</span> 左右。<strong>第二条，中心差分的精度上限是机器精度，但只在函数足够光滑时成立</strong>，所以拿它做“金标准”之前，先确认目标函数没有分段、没有查表、没有绝对值。这两条合起来说明：差分梯度适合做校验，不适合代替反向传播做训练——后者的理由是代价，<span class="math inline">n=2000</span> 时每步四千次函数求值，不是精度。</p>
+<h3 id="实验-h三种停止准则">29.6.8 实验 H：三种停止准则</h3>
+<p>实验 H 在 <span class="math inline">\kappa=100</span>、<span class="math inline">n=20</span> 的二次型上，用同一个梯度下降分别套三种停止准则，看它们各停在哪一步、离最优点多远。</p>
+<p>表 29-16 三种停止准则的停止位置（<span class="math inline">\kappa=100</span>，<span class="math inline">n=20</span>，最优步长）</p>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">判据</th>
+<th style="text-align: left;">阈值</th>
+<th style="text-align: right;">停止步</th>
+<th style="text-align: right;">停止时距最优点的距离</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">梯度范数</td>
+<td style="text-align: left;"><span class="math inline">\|\mathbf{g}\|\le10^{-6}\|\mathbf{g}_{0}\|</span></td>
+<td style="text-align: right;">425</td>
+<td style="text-align: right;"><span class="math inline">1.057\times10^{-4}</span></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">函数下降量</td>
+<td style="text-align: left;"><span class="math inline">\|f_{k}-f_{k-1}\|\le10^{-10}</span></td>
+<td style="text-align: right;">447</td>
+<td style="text-align: right;"><span class="math inline">6.564\times10^{-5}</span></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">参数变化量</td>
+<td style="text-align: left;"><span class="math inline">\|\Delta\mathbf{x}\|\le10^{-8}(1+\|\mathbf{x}\|)</span></td>
+<td style="text-align: right;">686</td>
+<td style="text-align: right;"><span class="math inline">3.720\times10^{-7}</span></td>
+</tr>
+</tbody>
+</table>
+<p>表 29-16 里，三个步数差 <span class="math inline">1.6</span> 倍，但停止时离最优点的距离差了 <span class="math inline">283</span> 倍。<strong>参数判据最晚停，却是唯一停在“参数真的不动了”的判据</strong>；梯度判据最早停，代价是留下 <span class="math inline">10^{-4}</span> 的参数误差；函数判据夹在中间，位置靠运气。</p>
+<p>函数判据的“运气”值得说清。目标值在谷底附近的量级是 <span class="math inline">-254</span>，<span class="math inline">\tau_{f}=10^{-10}</span> 换算成相对变化是 <span class="math inline">4\times10^{-13}</span>，这已经贴着双精度能分辨的极限——再小的下降在浮点里根本表示不出来。<strong>它之所以停在第 <span class="math inline">447</span> 步而不是第 <span class="math inline">4000</span> 步，是因为它先被舍入噪声骗了</strong>，不是因为函数真的不降了。</p>
+<p>三个数字合起来给出一条实用规则：<strong>梯度判据当“方向对不对”的监控，参数判据当“停不停”的开关</strong>，两者都用，谁先满足谁停；函数判据只用来做日志，不用来做判断。这条规则在换热器算例上有额外的分量——那里的目标值是 <span class="math inline">400</span> 个残差的和，单个参数动一点被平均掉，函数判据尤其迟钝。</p>
+<p>阈值本身怎么定，也值得给一条可操作的路径。本章取 <span class="math inline">\tau_{g}=10^{-6}</span>、<span class="math inline">\tau_{f}=10^{-10}</span>、<span class="math inline">\tau_{x}=10^{-8}</span>，三个数都是常见默认值，<strong>没有针对算例调过</strong>——刻意不调，是为了让实验 H 的对比反映判据本身的差别，而不是调参的差别。工程上的定法应该反过来：先从工艺要求反推出“参数误差容许多大”，那是 <span class="math inline">\tau_{x}</span>；再由 <span class="math inline">\tau_{x}</span> 乘上曲率的量级得到 <span class="math inline">\tau_{g}</span>；最后按二次型上“间隙与误差平方同阶”的关系，取 <span class="math inline">\tau_{f}</span> 为 <span class="math inline">\tau_{g}</span> 的平方量级。<strong>三个阈值不是三个独立的数，它们之间有一个由曲面形状决定的换算关系</strong>，分别拍定必然互相矛盾。</p>
+<p>这也解释了为什么很多实现里“三个阈值并存”最后变成三个都不管用：不是阈值取得不对，而是它们彼此不自洽——梯度判据先满足、参数判据永远不满足，停下来的那个点离最优还有一段距离，而日志里“收敛”两个字看上去毫无异常。</p>
+<h2 id="小结与常见错误">29.7 小结与常见错误</h2>
+<p>这一章从一行没有兑现的注解出发，走了七个节：动机、定义、推导、实现、边界、实验、收束。收束要做的只有两件事——把散在各节的结论收成可以带走的几条，以及把最容易踩的坑列清楚。</p>
+<h3 id="七条要点">29.7.1 七条要点</h3>
+<p><strong>第一，所有算法都是同一个二次模型的变体。</strong> 式 (29-2) 的 <span class="math inline">f(\mathbf{x}+\mathbf{d})\approx f+\mathbf{g}^{\top}\mathbf{d}+\frac{1}{2}\mathbf{d}^{\top}\mathbf{H}\mathbf{d}</span> 是全部内容的起点。梯度下降假设 <span class="math inline">\mathbf{H}=\frac{1}{\eta}\mathbf{I}</span>，牛顿用真实的 <span class="math inline">\mathbf{H}</span>，拟牛顿用一个递推出来的 <span class="math inline">\mathbf{B}</span>，共轭梯度用前一步的方向拼出一个共轭方向。<strong>换算法就是换假设，没有别的东西。</strong></p>
+<p><strong>第二，收敛速度分三档，档位由用了多少曲率信息决定。</strong> 只用梯度是线性收敛，因子是 <span class="math inline">(\kappa-1)/(\kappa+1)</span>；共轭梯度爬到 <span class="math inline">\sqrt{\kappa}</span> 量级；用上曲率就是超线性甚至二次。表 29-9 的五个斜率 <span class="math inline">0.83</span>、<span class="math inline">0.58</span>、<span class="math inline">0.12</span>、<span class="math inline">0.01</span>、<span class="math inline">0.00</span> 就是这三档在实测里的样子。</p>
+<p><strong>第三，条件数决定一切，而且在进入优化器之前就该处理。</strong> 表 29-6 里梯度下降从 <span class="math inline">2</span> 步涨到 <span class="math inline">18236</span> 步，只因为条件数从 <span class="math inline">1</span> 变到 <span class="math inline">10^{4}</span>。<strong>对付条件数最便宜的手段不是换算法，是换参数化</strong>：式 (29-20) 的对数变换把 BFGS 从 <span class="math inline">27</span> 次降到 <span class="math inline">8</span> 次，比换到高斯—牛顿还省事。</p>
+<p><strong>第四，步长上界是硬边界，位置是 <span class="math inline">2/\lambda_{\max}</span>。</strong> 表 29-14 里 <span class="math inline">1.99</span> 与 <span class="math inline">2.01</span> 只差百分之一，一边收敛一边爆炸。<strong>这个数不能靠调参逼近，只能靠线搜索绕开</strong>；回溯的代价很低，本章实测平均 <span class="math inline">0.08</span> 到 <span class="math inline">0.58</span> 次，比猜错一次的代价小几个数量级。</p>
+<p><strong>第五，动量的好坏取决于条件数，不是一个万能常数。</strong> 式 (29-26) 给出最优系数，<span class="math inline">\kappa=10</span> 时是 <span class="math inline">0.27</span>、<span class="math inline">\kappa=10^{4}</span> 时是 <span class="math inline">0.96</span>。<strong><span class="math inline">\beta=0.9</span> 是 <span class="math inline">\kappa\approx10^{3}</span> 的专用值</strong>，照搬到条件数几十的辨识问题上，会比不用动量还慢 <span class="math inline">4.7</span> 倍。</p>
+<p><strong>第六，规模的分水岭在内存。</strong> 式 (29-25) 的 <span class="math inline">8n^{2}</span> 与 <span class="math inline">16mn</span> 决定了 <span class="math inline">n=20000</span> 时是 <span class="math inline">3.2</span> GB 与 <span class="math inline">3.2</span> MB 的差别。<strong>但这笔交易要付方向质量的代价</strong>：香蕉函数上 L-BFGS 比 BFGS 多走 <span class="math inline">18</span> 倍步数。选型的依据是“装不装得下”与“曲面弯不弯”，不是“哪个更新”。</p>
+<p><strong>第七，残差到了噪声底就该停，继续迭代是过拟合。</strong> 换热器算例的 <span class="math inline">0.5235</span> K 与噪声 <span class="math inline">0.5</span> K 只差 <span class="math inline">5\%</span>，剩下的 <span class="math inline">0.16</span> K 是参数估计误差，多走一万步也消不掉。<strong>“收敛”与“估得准”是两件事</strong>，前者由算法决定，后者由数据决定。</p>
+<h3 id="常见错误">29.7.2 常见错误</h3>
+<p>上面七条是从正面说的，反过来就是七种典型错误。表 29-17 把它们与本章的实测证据对齐。</p>
+<p>表 29-17 七种典型错误及其后果</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">错误做法</th>
+<th style="text-align: left;">后果</th>
+<th style="text-align: left;">正确做法</th>
+<th style="text-align: left;">本章证据</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">用迭代次数判断算法快慢</td>
+<td style="text-align: left;">选了单步贵的算法</td>
+<td style="text-align: left;">乘上单步代价再比</td>
+<td style="text-align: left;">表 29-8 牛顿 <span class="math inline">2</span> 步却不一定快</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">学习率凭经验给一个数</td>
+<td style="text-align: left;">换数据就发散</td>
+<td style="text-align: left;">线搜索，或幂迭代估 <span class="math inline">\lambda_{\max}</span></td>
+<td style="text-align: left;">表 29-14 的悬崖</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">动量一律取 <span class="math inline">0.9</span></td>
+<td style="text-align: left;">小条件数上更慢</td>
+<td style="text-align: left;">先估 <span class="math inline">\kappa</span>，再按式 (29-26) 取</td>
+<td style="text-align: left;">表 29-6 的 <span class="math inline">\kappa=10</span> 一行</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">高斯—牛顿不加守卫</td>
+<td style="text-align: left;">一步跳进溢出区</td>
+<td style="text-align: left;">Armijo 回溯或 LM 阻尼</td>
+<td style="text-align: left;">§29.4.3 的三处细节</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">线搜索判据不查有限性</td>
+<td style="text-align: left;">接受 <span class="math inline">f=\text{nan}</span> 的步长</td>
+<td style="text-align: left;">显式判 <code>isfinite</code></td>
+<td style="text-align: left;">换热器算例的排查过程</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">只看残差判断收敛</td>
+<td style="text-align: left;">参数错了 <span class="math inline">5.6\%</span> 还认为成功</td>
+<td style="text-align: left;">同时看参数变化与条件数</td>
+<td style="text-align: left;">表 29-12 最后一行</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">用差分梯度做训练</td>
+<td style="text-align: left;">每步 <span class="math inline">2n</span> 次函数求值</td>
+<td style="text-align: left;">反传；差分只做校验</td>
+<td style="text-align: left;">表 29-15 的代价</td>
+</tr>
+</tbody>
+</table>
+<p>表 29-17 里第五行值得单独说两句，因为它是本章唯一一个“代码写对了、数学推导也对、但结果错了”的例子。Armijo 判据的标准写法是“函数值不超过切线”，当函数值是 nan 时，任何与 nan 的比较都返回假，于是“不超过”这个条件被判成“满足”，算法愉快地接受了一个把参数送进 nan 的步长。<strong>这个错误的隐蔽之处在于它不报错、不崩溃、不产生警告</strong>，只是让 LM 与 BFGS 停在初值上不动，残差 <span class="math inline">17.4339</span> K 看起来还是个“合理”的数。发现它的唯一办法是<strong>检查参数有没有被推动</strong>，而不是检查残差大不大。</p>
+<p>第四行（高斯—牛顿不加守卫）有一个更麻烦的变体：<strong>它有时真的不出事</strong>。表 29-13 换了四个起点，无保护的高斯—牛顿全部收敛，<span class="math inline">a</span> 从 <span class="math inline">0.20</span> 到 <span class="math inline">6.00</span>、<span class="math inline">T_{\text{hot}}</span> 从 <span class="math inline">40</span> 到 <span class="math inline">150</span> ℃，跨度足够大。看到这张表，最容易做的事是把守卫删掉——既然四个起点都行，何必多写那几行。<strong>但四个起点收敛说明的是这个算例良态，不是算法安全</strong>：它只有一个吸引域，任何起点都在同一个盆里。守卫的作用不是改善平均表现，是在“盆的边界上”救一次命，而边界只有在更难的算例上才会遇到。<strong>这一类“证据看起来很充分”的判断，是工程代码里最常见的退化路径</strong>。</p>
+<h3 id="与相邻各章的接口">29.7.3 与相邻各章的接口</h3>
+<p>本章在全书里的位置，可以按“梯度从哪来、用到哪去”串起来。</p>
+<p><strong>向上游，第27章给了梯度。</strong> 反向传播算的是 <span class="math inline">\partial L/\partial\mathbf{w}</span>，本章的算法把这个向量变成位移。两章的分工很清楚：第27章管“算得准不准”，本章管“走得对不对”。<strong>如果梯度本身错了，本章所有算法都会忠实地走到错的地方</strong>，而且残差可能还很小——这一点在 §29.5.7 的排查里已经演过一次。</p>
+<p><strong>向左，第28章的训练是本章的一个应用。</strong> 学习率 <span class="math inline">0.30</span> 为什么发散，答案在式 (29-4)；批大小为什么影响稳定性，答案在“随机梯度等效于放大曲率”；动量为什么有用，答案在式 (29-26)。<strong>第28章讲的是网络结构，本章讲的是同一个损失面上的行走方式</strong>，两章合起来才是完整的训练。</p>
+<p><strong>向左更远，第15到22章的辨识是本章的另一个应用。</strong> 那里的一次性最小二乘对应本章的 <span class="math inline">\mathbf{H}</span> 已知、<span class="math inline">\mathbf{g}</span> 线性情形；一旦模型里有指数、有饱和，就落到本章的非线性最小二乘。<strong>区别只在“要不要迭代”，数学是同一套</strong>：式 (29-7) 的 <span class="math inline">\mathbf{J}^{\top}\mathbf{J}</span> 就是第16章正规方程里的那个矩阵，在本章它叫高斯—牛顿的海森近似。</p>
+<p><strong>向下游，第44到47章的 PID 与前馈不直接调用本章的算法，但整定问题常常化为优化问题。</strong> 把“超调小于 <span class="math inline">10\%</span>、调节时间最短”写成目标函数，整定就变成一个二维无约束优化，本章的方法直接可用。<strong>第58与80章的模型预测控制则明确划在界外</strong>：那里有约束，本章的所有推导都建立在“可以往任何方向走”这个前提上，一旦有边界，KKT 条件取代了 <span class="math inline">\mathbf{g}=0</span>。</p>
+<h3 id="上线前的检查清单">29.7.4 上线前的检查清单</h3>
+<p>把本章的内容压成一份可以照着做的清单，一共八条，按顺序执行。</p>
+<p><strong>第一条，先确认梯度对不对。</strong> 用中心差分在随机几个点上核对解析梯度，相对误差应在 <span class="math inline">10^{-5}</span> 以内（表 29-15）。<strong>这一步花十分钟，能省掉后面几天的排查。</strong></p>
+<p><strong>第二条，把参数换成“好走”的坐标。</strong> 量级差十倍以上的参数取对数，有正性要求的取指数，有上下界的用 logistic。<strong>换完之后重算一次雅可比的条件数</strong>，如果还在一万以上，说明问题本身信息不足，不是坐标的问题。</p>
+<p><strong>第三条，能算海森就用高斯—牛顿或 LM，不能算就用 L-BFGS。</strong> 残差平方和问题一律优先高斯—牛顿，它的 <span class="math inline">\mathbf{J}^{\top}\mathbf{J}</span> 是免费的近似海森；通用目标函数按维度分：几百以内用 BFGS，过千用 L-BFGS（表 29-5）。</p>
+<p><strong>第四条，永远带线搜索。</strong> 不管方向来自哪里，步长都让 Armijo 判据决定，初值取 <span class="math inline">1</span>，回溯上限取 <span class="math inline">60</span> 次。<strong>判据里必须显式检查有限性</strong>，这一条已经用一整节的篇幅说明过。</p>
+<p><strong>第五条，同时监控三个量。</strong> 梯度范数、参数变化量、残差。前两个用来决定停不停（表 29-16），第三个用来判断“是不是到了噪声底”（§29.5.5）。<strong>只看一个都会出问题</strong>：只看梯度会在平坦区早停，只看残差会把过拟合当成收敛。</p>
+<p><strong>第六条，把残差画出来。</strong> 散点图看有没有系统性弯曲，直方图看有没有偏斜（图 29-5）。<strong>残差有形状说明模型错了，此时调优化器是白费力气</strong>，这是表 29-7 后四行的共同结论。</p>
+<p><strong>第七条，记下每次运行的迭代数、残差、耗时。</strong> 三个数放在一起才能判断“这次改动是好是坏”：迭代数降了但耗时涨了，可能是换了更贵的算法；残差降了但参数跑了，可能是过拟合。</p>
+<p><strong>第八条，对结论设一个门槛。</strong> 本章的门槛是 <span class="math inline">0.05</span> K：小于它的残差差异不当作结论。<strong>这个门槛必须事先定，不能事后按结果调整</strong>——否则任何两个算法都能被说成“有区别”。</p>
+<p>八条里没有一条是“选一个更好的算法”。<strong>本章反复出现的结论是：算法之间的差距，往往小于参数化、守卫、停止准则这三件事带来的差距</strong>。换热器算例上，换算法只把 <span class="math inline">7</span> 次变成 <span class="math inline">5</span> 次，换参数化把 <span class="math inline">27</span> 次变成 <span class="math inline">8</span> 次，加守卫把一个发散的实现变成一个能用的实现——<strong>三个数量级的不同后果，来自三行不起眼的代码</strong>。</p>
+<p>如果时间只够做三条，挑第一条、第四条、第五条。<strong>第一条（核对梯度）能排除整类“算法无辜”的故障</strong>，第四条（带线搜索）能保证任何一步都不把参数送进溢出区，第五条（三个量一起看）能防止“日志说收敛、参数还没动”这种最难查的假象。第二、三条与具体问题有关，换热器这种参数量级不匹配的问题必须做，纯二次型的教学算例可以省。第六到八条是纪律，不是技术：<strong>残差要画、日志要留、门槛要事先定</strong>，三条都做不到的项目，前五条做对了也说不清结论是否可信。</p>
+<p>最后回到开头那行注解。第27、28 两章的 <span class="math inline">0.30</span> 为什么不能用，现在的答案是：它超过了 <span class="math inline">2/\lambda_{\max}</span>，而 <span class="math inline">\lambda_{\max}</span> 由数据与网络共同决定，不是一个可以先验写下的常数。第28章为什么用 <span class="math inline">8\times10^{-3}</span> 而不用 <span class="math inline">0.3</span>，答案也一样：<strong>学习率不是“调出来的”，是“估出来或者搜出来的”</strong>。这一章没有给出任何可以直接抄的学习率，给出的是一条能自己算出学习率的路。</p>
+
+<nav class="footnav"><a href="ch028.html">← 上一章</a><a href="index.html">返回目录</a><a href="ch030.html">下一章 →</a></nav>
+</body>
+</html>

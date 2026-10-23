@@ -1,0 +1,1746 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="zh-CN" xml:lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>第 71 章　智能控制中的稳定性与可解释性 · 控制大综合</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    span.underline{text-decoration: underline;}
+    div.column{display: inline-block; vertical-align: top; width: 50%;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    ul.task-list{list-style: none;}
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+  <link rel="stylesheet" href="assets/book.css" />
+  <script src="assets/katex/katex.min.js"></script>
+  <script>document.addEventListener("DOMContentLoaded", function () {
+   var mathElements = document.getElementsByClassName("math");
+   var macros = [];
+   for (var i = 0; i < mathElements.length; i++) {
+    var texText = mathElements[i].firstChild;
+    if (mathElements[i].tagName == "SPAN") {
+     katex.render(texText.data, mathElements[i], {
+      displayMode: mathElements[i].classList.contains('display'),
+      throwOnError: false,
+      macros: macros,
+      fleqn: false
+     });
+  }}});
+  </script>
+  <link rel="stylesheet" href="assets/katex/katex.min.css" />
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+  <link rel="stylesheet" href="assets/site.css" />
+</head>
+<body>
+<nav class="topnav"><a class="home" href="index.html">目录</a><span class="pos">071 / 115</span><span class="pager"><a href="ch070.html">上一章</a><a href="ch072.html">下一章</a></span></nav>
+
+<nav id="TOC" role="doc-toc">
+<ul>
+<li><a href="#第71章-智能控制中的稳定性与可解释性">第71章 智能控制中的稳定性与可解释性</a>
+<ul>
+<li><a href="#动机与直观理解">71.1 动机与直观理解</a></li>
+<li><a href="#数学原理">71.2 数学原理</a></li>
+<li><a href="#设计步骤">71.3 设计步骤</a></li>
+<li><a href="#连续情形">71.4 连续情形</a></li>
+<li><a href="#离散情形">71.5 离散情形</a></li>
+<li><a href="#稳定性与性能">71.6 稳定性与性能</a></li>
+<li><a href="#参数意义与作用">71.7 参数意义与作用</a></li>
+<li><a href="#调参方法与经验">71.8 调参方法与经验</a></li>
+<li><a href="#优化与改进">71.9 优化与改进</a></li>
+<li><a href="#工程落地">71.10 工程落地</a></li>
+<li><a href="#优缺点与适用边界">71.11 优缺点与适用边界</a></li>
+<li><a href="#python-仿真代码">71.12 Python 仿真代码</a></li>
+</ul></li>
+</ul>
+</nav>
+<h1 id="第71章-智能控制中的稳定性与可解释性">第71章 智能控制中的稳定性与可解释性</h1>
+<p>第 66 到 70 章把五类“会学”的控制器依次摆开：查表、模糊、神经网络、迭代学习、强化学习。它们的共同点是<strong>控制律不再由人写成一条公式</strong>，而是由样本、由优化、由经验攒出来。这带来两个立刻要还的欠账。第一，攒出来的东西凭什么稳定？第 44 章的 PID 可以用劳斯判据、用相位裕度说话，一个三千参数的网络没有对应的判据。第二，攒出来的东西说不清道理。现场出了偏差，工程师问“它为什么这么给”，答“网络算出来的”，这句话在事故分析会上等于没说。</p>
+<p>这两个欠账看起来是两件事，工程上却总在同一处爆发。一条控制律之所以“不可信”，往往不是因为算错了，而是因为<strong>没人能同时给出它的稳定证据和行为解释</strong>。稳定证据让你敢放手，行为解释让你敢改参数；缺一个，系统就只能停在演示阶段。</p>
+<p>本章的写法是把两件事绑在同一个对象上讲。先造一个“教师”：一个四规则的 Takagi-Sugeno 模糊模型加并行分布补偿（TS-PDC），它结构透明、可以逐条写出局部模型，也可以整体做李雅普诺夫分析。再把这个教师<strong>换成三种不同的表示</strong>——教师本身、一个 ELM 网络、一张查表——它们拟合的是同一个函数，误差都在 0.13 以内，可稳定性判据的“可下手处”完全不同：教师有前件、有局部矩阵，能直接写 LMI；网络只有权重，只能退回小增益；查表连解析式都没有，只能谈量化误差与极限环。同一根性能曲线，三种证明成本，这是本章的第一条主线。</p>
+<p>第二条主线是可解释性。用精确 Shapley 把“这一拍的控制量”分摊到三个输入上，再用遮挡实验检查这份分摊是否忠实，最后加噪声重算，看它是否稳定。三条检查对应三个工程问题：说得清吗、说得对吗、每次说得一样吗。三者都过，解释才能进验收报告；只过第一条，那只是“看起来有道理”。</p>
+<p>先把结论摊开。同一教师的三种表示，跟踪性能分别是 IAE 0.2883、0.3529、0.3014，最好的与最差的差 22%；而公共李雅普诺夫的衰减率从单规则的 2.9091 掉到四规则全配对的 2.5716，一收紧配对条件就掉 11.6%。小增益判据给出的临界增益是 0.16，实测的抖振边界是 3.5，<strong>判据保守了约 22 倍</strong>（窄网 18 到 23 倍，宽网升到 65 倍）——它不是没用，而是只能用来排除，不能用来验收。安全层能把峰值速度从 3.643 压到 1.000，代价是 IAE 涨 90.7%。解释侧，三个输入的贡献占比是 45.6%、51.6%、2.7%，遮挡实验给出同样的排序，两者首位比 12.16；而输入噪声标准差到 0.2 时，解释的秩相关掉到 0.775，首位保持率 0.75——<strong>解释本身也是有稳定域的</strong>。</p>
+<h2 id="动机与直观理解">71.1 动机与直观理解</h2>
+<h3 id="三个不信任其实是三句话">三个不信任，其实是三句话</h3>
+<p>现场对智能控制的不信任，可以拆成三句具体的话。</p>
+<p>第一句是“<strong>它会不会突然发散</strong>”。这句话问的是全局性质：不是这一条轨迹好不好，而是所有可能的初值、所有可能的工况下，闭环会不会跑到无穷远。回答它需要李雅普诺夫函数，而李雅普诺夫函数的存在性对一般非线性系统是 NP 难的，所以工程上只能退一步：在给定的结构假设下（比如 TS 模糊模型的前件有界、局部模型已知），把它化成一组线性矩阵不等式。</p>
+<p>第二句是“<strong>它为什么这么给</strong>”。这句话问的是单点归因：此刻 <span class="math inline">e=0.12</span>、<span class="math inline">\dot e=-0.30</span>、工作点偏了 0.05，控制量 <span class="math inline">-0.41</span> 里，三份各占多少？回答它需要一份“分摊规则”，而且这份规则必须满足一条硬约束：三份加起来要等于总输出与基线之差，不能多也不能少。这就是 Shapley 值的效率性公理，也是它比“看权重”“看梯度”更适合做验收材料的原因。</p>
+<p>第三句是“<strong>换个批次它还一样吗</strong>”。这句话问的是可重复性：同一工况跑两遍，解释是否一致；输入有 1% 的噪声，排序会不会翻。回答它需要把解释当成一个统计量来做稳定性分析，而不是当成一次计算结果。</p>
+<p>三句话对应三类工具：李雅普诺夫与小增益回答第一句，Shapley 与遮挡回答第二句，秩相关与首位保持率回答第三句。本章 71.2 节把这四类工具写成公式，71.6 节用同一组实验数据把它们摆在一起对照。</p>
+<h3 id="同一个教师三种表示">同一个教师，三种表示</h3>
+<p>图 71-1 是本章的流水线。左边是教师，一个四规则的 TS-PDC：按输出 <span class="math inline">y</span> 把工作区间切成四段，每段一个局部线性模型，每个局部模型单独做极点配置，运行时按隶属度加权。中间是可部署表示：可以直接用教师（规则库很小，嵌入式能跑），可以把它蒸馏成一个 ELM 网络（权重少、算得快），也可以量化成一张二维查表（最省算力，但没有解析式）。</p>
+<figure>
+<img src="figs/ch071/fig_071_01_pipeline.svg" alt="图 71-1 从教师到可交付系统的五段流水线" /><figcaption aria-hidden="true">图 71-1 从教师到可交付系统的五段流水线</figcaption>
+</figure>
+<p>后三段是本章与前面几章最大的不同：<strong>表示选定之后，还有验证、安全、解释三道关</strong>。验证关回答“会不会发散”，安全关回答“越界时谁来兜底”，解释关回答“为什么这么给”。三道关都不是可选项：验证关缺了，系统只能做演示；安全关缺了，一次越界就可能撞坏设备；解释关缺了，出了事故无法定责，改进也无从下手。</p>
+<p>把这三关串起来看，会发现一条隐含的次序：<strong>先有结构，才有判据；先有判据，才敢加安全层；先有安全层，解释才有意义</strong>。原因是安全层会改写控制量，如果解释的是“加安全层之前的网络输出”，那解释的对象根本不是现场真正执行的那个量。本章的顺序因此固定为：教师 → 表示 → 验证 → 安全 → 解释，任何一步都不能提到前面去做。</p>
+<h3 id="稳定性有三个层次别把它们混为一谈">稳定性有三个层次，别把它们混为一谈</h3>
+<p>工程讨论里“稳定”这个词至少被用在三个不同的层次上，混用会直接导致误判。</p>
+<p><strong>定理级</strong>：存在一个正定函数 <span class="math inline">V</span>，沿闭环轨线严格递减。这是最强的结论，给了就不需要再讨论初值。TS-PDC 的公共李雅普诺夫条件属于这一层，代价是保守：要求所有局部闭环共用一个 <span class="math inline">P</span>，可行域比“每个局部各用各的”小得多。</p>
+<p><strong>判据级</strong>：某个充分条件成立，比如小增益 <span class="math inline">L\lVert P\rVert_\infty&lt;1</span>。它不给 <span class="math inline">V</span>，只给“如果满足就不会发散”。这一层的价值在于<strong>能排除</strong>：条件不满足时不能下结论，条件满足时一定安全。本章实测这个条件在所有网络宽度下都不满足（乘积在 5.9 到 7.9 之间），而系统实际跑到增益 3.5 才抖振——判据的保守度是窄网 22 倍、宽网 65 倍。</p>
+<p><strong>实测级</strong>：跑一遍，看末段残差与抖振。这是最弱的一层，却常常是唯一能落地的一层。它的风险是“没测到的工况”，所以必须配合 71.10 节的故障注入与在线监控一起用。</p>
+<p>三层的关系不是替代，而是<strong>从强到弱逐层兜底</strong>：定理级能给出就不必测，给不出就用判据级筛，判据级也给不出就靠实测级加监控。本章后面每一张表都会标明它属于哪一层，这是读表时最该先看的一列。</p>
+<h3 id="可解释性也有三个层次">可解释性也有三个层次</h3>
+<p>可解释性同样不是一件事，它至少有三层。</p>
+<p><strong>结构级</strong>：模型本身长得就像人话。规则库“当 <span class="math inline">y</span> 在 1.9 附近时，用 <span class="math inline">K=15.4</span> 那套增益”，这句话现场工程师一听就懂。结构级的优点是免费——不需要任何算法，模型写完解释就写完了；缺点是只能解释“大致在干什么”，解释不了“这一拍为什么是 <span class="math inline">-0.41</span>”。</p>
+<p><strong>归因级</strong>：给定一个具体输入，把输出分摊到各输入上。线性模型的系数就是归因，但系数是全局的，遇到强非线性就不准；Shapley 值按“去掉这个输入会少多少”来分摊，对任何黑箱都成立，代价是要算 <span class="math inline">2^n</span> 次前向。本章三个输入、八个联盟，一次归因 8 次前向，可以实时跑；若输入是 20 维，<span class="math inline">2^{20}</span> 就做不到了，只能改用采样近似。</p>
+<p><strong>稳定性级</strong>：同一份归因，在输入有小扰动时是否还成立。这一层最容易被跳过，却最影响验收。本章的实测是：噪声 <span class="math inline">\sigma=0.01</span>（相当于传感器噪声的 1%）时秩相关还有 0.992，看起来稳如磐石；到 <span class="math inline">\sigma=0.2</span> 时掉到 0.775，首位保持率只剩 0.75——也就是说四次里有一次，最主要的影响因素会被指错。</p>
+<p>三层的用法也是叠加的：结构级写进操作手册，归因级写进调试工具，稳定性级写进验收报告。反过来，只做结构级、不做归因级，工程师遇到异常只能“重启试试”；做了归因级、不做稳定性级，则会把噪声当因果，越解释越乱。</p>
+<h3 id="为什么必须放在同一章">为什么必须放在同一章</h3>
+<p>把稳定性与可解释性分开写，是更省事的做法，但会漏掉三条只有放在一起才看得见的联系。</p>
+<p>第一条是<strong>判据依赖表示</strong>。同一个函数，写成 TS 模型就能做 LMI，写成网络就只能做小增益，写成查表就只能谈量化。这不是数学技巧的差别，而是“你选择哪种表示，就等于选择了哪种证明方式”。所以 71.3 节的设计流程里，“选表示”这一步必须同时考虑性能与可证明性，不能等表示定了再想怎么证明。</p>
+<p>第二条是<strong>安全层改写被解释的对象</strong>。加了速度屏障之后，现场执行的控制量不再是网络输出，而是投影后的值。如果解释工具仍在解释网络输出，它解释的就是一个不存在的量。本章的处理是把安全层放在解释之前（图 71-1 的次序），解释的对象是投影后的量，代价是归因里混进了“安全层介入”这一项，需要在报告里单独标出。</p>
+<p>第三条是<strong>监控的残差选择决定你能看见什么</strong>。本章 71.10 节的实测最能说明问题：用 <span class="math inline">(e,\dot y)</span> 两维残差，执行器增益掉 30% 完全看不见——反馈把这个偏差抹平了，稳态下 <span class="math inline">u</span> 本来就是零。加进 <span class="math inline">u</span> 变成三维，卡滞的报警从 910 ms 提前到 620 ms，可增益损失仍然看不见，因为稳态下它确实不能观。<strong>能看见什么，由残差的选法决定，而不由故障的严重程度决定</strong>——这句话是可解释性在工程上最实在的用处。</p>
+<h3 id="用一个现场问题把两条主线串起来">用一个现场问题把两条主线串起来</h3>
+<p>设想一次真实的偏差：某批产品上来之后，回路连续几拍给出接近限幅的控制量，输出冲过目标 6%，然后慢慢爬回来。现场会问三个问题，本章的三部分分别回答它们。</p>
+<p>“是不是要发散了？”要靠 71.6 节的判据与实测。<span class="math inline">\alpha=2.5716</span> 给出的是指数收敛的下界，30 拍附近的延迟拐点给出的是“离边界还有多少余量”。两者都答“不会发散”，但理由不同：一个靠证书，一个靠边界，报告里必须分开写。</p>
+<p>“它为什么给这么大？”要靠 Shapley。把那一拍的 <span class="math inline">-1.1</span> 分摊成 <span class="math inline">e</span>、<span class="math inline">\dot e</span>、<span class="math inline">y-2</span> 三份，看是哪一项在推。若 <span class="math inline">e</span> 占九成，说明是误差驱动，属于正常；若 <span class="math inline">\dot e</span> 占九成且符号与 <span class="math inline">e</span> 相反，说明阻尼项已经在刹车，控制量虽大却是合理的。</p>
+<p>“下次还会这样吗？”要靠解释稳定性与监控。<span class="math inline">\sigma=0.05</span> 时首位保持率 0.90，意味着十次里有一次会指错主因；监控阈值 64.15、卡滞 620 ms 检出，意味着同类偏差下次会被记录到。</p>
+<p>三个问题对应三份材料。缺第一份，不敢用；缺第二份，出了偏差只能猜；缺第三份，同样的问题会反复发生。本章按这三个问题组织，而不是按数学工具组织——这也是为什么开头先摆三句话，而不是先讲李雅普诺夫。</p>
+<h3 id="本章算例与数字预告">本章算例与数字预告</h3>
+<p>算例沿用第 66 至 69 章的对象，四章指标可以直接对照：</p>
+<p><span class="math display">
+y&#39;&#39;=-2y&#39;+K(y)u,\qquad K(y)=4+6y
+\tag{71-1}
+</span></p>
+<p>采样 10 ms、纯延迟 5 拍、限幅 <span class="math inline">\pm1.2</span>，工作点从 1.5 阶跃到 2.0，仿真 6 s。教师的四条规则取在 <span class="math inline">y=1.5,\,1.9,\,2.3,\,2.7</span>，对应局部增益 <span class="math inline">K_i=13.0,\,15.4,\,17.8,\,20.2</span>；每个局部模型用极点 <span class="math inline">(-3,-4)</span> 配置，得到四组反馈增益：</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">规则</th>
+<th style="text-align: right;">局部增益 <span class="math inline">K_i</span></th>
+<th style="text-align: right;"><span class="math inline">k_1</span></th>
+<th style="text-align: right;"><span class="math inline">k_2</span></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">1</td>
+<td style="text-align: right;">13.0</td>
+<td style="text-align: right;">0.9231</td>
+<td style="text-align: right;">0.3846</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">2</td>
+<td style="text-align: right;">15.4</td>
+<td style="text-align: right;">0.7792</td>
+<td style="text-align: right;">0.3247</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">3</td>
+<td style="text-align: right;">17.8</td>
+<td style="text-align: right;">0.6742</td>
+<td style="text-align: right;">0.2809</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">4</td>
+<td style="text-align: right;">20.2</td>
+<td style="text-align: right;">0.5941</td>
+<td style="text-align: right;">0.2475</td>
+</tr>
+</tbody>
+</table>
+<p><strong>表 71-1 四规则 TS-PDC 的局部增益与反馈增益</strong></p>
+<p>这张表里藏着一个容易被忽略的事实：四组增益并不是四条独立的控制律，它们恰好是 <span class="math inline">k_1=12/K</span>、<span class="math inline">k_2=5/K</span> 的采样，也就是说 PDC 在这个单变量对象上<strong>等价于增益调度</strong>——用当前的 <span class="math inline">K(y)</span> 去除掉增益变化。这解释了为什么 71.6 节的规则数扫描里，规则从 2 条加到 7 条，IAE 只从 0.2884 动到 0.2883：插值已经把非线性抵消掉了，再加规则只是把同一条曲线切得更细。</p>
+<p>按 71.3 节的流程走完，最终的一组数字是：单规则名义模型的公共衰减率 2.9091，四规则只查对角 3.0000，四规则查全部 16 对 2.5716；三种表示的 IAE 分别是 0.2883、0.3529、0.3014；速度屏障把峰值速度从 3.643 压到 1.000，IAE 从 0.3949 涨到 0.7532；Shapley 的三份贡献是 45.6%、51.6%、2.7%，效率性残差 <span class="math inline">1.11\times10^{-16}</span>（也就是机器精度）；监控阈值 64.15，标称段误报率 0.22%，卡滞的报警延迟 620 ms。</p>
+<h3 id="本章的路线">本章的路线</h3>
+<p>71.2 节把教师的定义、公共李雅普诺夫、小增益、屏障函数、Shapley 与监控统计量写成公式，并说清每个判据“能证明什么、不能证明什么”。71.3 节给六步设计流程，重点是“选表示”与“选判据”必须同时做。71.4、71.5 节分连续与离散两种视角：连续侧讲相对阶与屏障函数的推导，离散侧讲延迟、量化与一步投影，两节合起来解释 71.6 节那批数字的来处。71.6 节是全章的实验台，七组数据摆在一起看。71.7、71.8 节讨论九个参数各自的作用与调参顺序。71.9 节给五条改进方向，其中“用抖振而不是误差判失稳”这条来自本章实测。71.10 节讲安全认证、失效模式与监控残差的选择。71.11 节给边界，71.12 节是代码。</p>
+<h2 id="数学原理">71.2 数学原理</h2>
+<h3 id="教师前件后件与加权">教师：前件、后件与加权</h3>
+<p>TS 模型把一条非线性系统写成若干条“如果—则”规则的加权和。本章的规则只有一条前件变量 <span class="math inline">y</span>，因为对象 (71-1) 的非线性全部集中在输入增益上：</p>
+<p><span class="math display">
+R_i:\quad \text{if } y \text{ is } M_i,\ \text{then } \dot x=A x+B_i u
+\tag{71-2}
+</span></p>
+<p>其中 <span class="math inline">x=[y,\ \dot y]^{\mathsf T}</span>，<span class="math inline">A=\begin{bmatrix}0&amp;1\\0&amp;-2\end{bmatrix}</span>，<span class="math inline">B_i=[0,\ K_i]^{\mathsf T}</span>，<span class="math inline">K_i=4+6y_i</span>。<span class="math inline">M_i</span> 是取在第 <span class="math inline">i</span> 个规则中心 <span class="math inline">y_i</span> 上的三角隶属函数：</p>
+<p><span class="math display">
+\mu_i(y)=\max\left(0,\ 1-\frac{|y-y_i|}{\Delta_i}\right),\qquad
+w_i=\frac{\mu_i}{\sum_{l=1}^{m}\mu_l}
+\tag{71-3}
+</span></p>
+<p><span class="math inline">\Delta_i</span> 是半宽，取相邻中心间距即可保证“任意 <span class="math inline">y</span> 至少被一条规则覆盖、且权重和为 1”。这条归一化不是装饰：它保证了加权和 <span class="math inline">w_i</span> 构成一个凸组合，而凸组合正是后面所有 LMI 能写成线性形式的前提。</p>
+<p>必须承认一个前提：这个 TS 模型是<strong>精确</strong>的，不是近似。因为 (71-1) 里唯一的非线性项 <span class="math inline">K(y)u</span> 对 <span class="math inline">u</span> 是线性的，把 <span class="math inline">K(y)</span> 按 <span class="math inline">y</span> 分段插值，插值误差就是模型误差。换个对象，比如 <span class="math inline">y&#39;&#39;=-2y&#39;+K(y)u^3</span>，那么无论多少条规则都写不出精确的 TS 形式，后面的判据就退化成“对近似模型成立”。<strong>判据的效力，永远以模型误差为零为前提</strong>——这句话是 71.11 节给边界时的第一句。</p>
+<h3 id="pdc把局部极点拼成一条控制律">PDC：把局部极点拼成一条控制律</h3>
+<p>并行分布补偿的做法是“每个局部模型配一套反馈，再按同一组权重拼起来”：</p>
+<p><span class="math display">
+u=-\sum_{i=1}^{m}w_i(y)\,K_i x,\qquad x=[e,\ \dot e]^{\mathsf T}
+\tag{71-4}
+</span></p>
+<p><span class="math inline">K_i</span> 由第 <span class="math inline">i</span> 个局部模型单独做极点配置得到。这里有一个常被忽略的细节：<span class="math inline">x</span> 用的是误差坐标，不是绝对坐标。因为参考是常值，<span class="math inline">e</span> 与 <span class="math inline">y</span> 的导数相同，误差坐标下的 <span class="math inline">A</span> 与绝对坐标相同，所以极点配置的结果直接可用。</p>
+<p>把 (71-4) 代入 (71-2)，得到闭环：</p>
+<p><span class="math display">
+\dot x=\sum_{i=1}^{m}\sum_{j=1}^{m}w_i w_j\left(A-B_iK_j\right)x
+\tag{71-5}
+</span></p>
+<p>双重求和是 PDC 分析里所有麻烦的来源。它意味着闭环矩阵不是 <span class="math inline">m</span> 个，而是 <span class="math inline">m^2</span> 个——第 <span class="math inline">i</span> 条规则的被控对象碰上第 <span class="math inline">j</span> 条规则的控制增益，就产生一个交叉闭环 <span class="math inline">A-B_iK_j</span>。本章 <span class="math inline">m=4</span>，共 16 个。</p>
+<h3 id="公共李雅普诺夫一个-p-管住-16-个矩阵">公共李雅普诺夫：一个 <span class="math inline">P</span> 管住 16 个矩阵</h3>
+<p>若能找到一个正定矩阵 <span class="math inline">P</span>，使全部 16 个交叉闭环都满足</p>
+<p><span class="math display">
+\left(A-B_iK_j\right)^{\mathsf T}P+P\left(A-B_iK_j\right)+2\alpha P\prec0,
+\qquad i,j=1,\dots,m
+\tag{71-6}
+</span></p>
+<p>则闭环 (71-5) 在原点渐近稳定，且 <span class="math inline">\lVert x(t)\rVert\le\kappa\lVert x(0)\rVert e^{-\alpha t}</span>。证明只用两步：取 <span class="math inline">V=x^{\mathsf T}Px</span>，沿 (71-5) 求导得 <span class="math inline">\dot V=\sum_i\sum_j w_iw_j\,x^{\mathsf T}\left[A_{cl,ij}^{\mathsf T}P+PA_{cl,ij}\right]x</span>；因为 <span class="math inline">w_iw_j\ge0</span> 且和为 1，(71-6) 逐项成立就推出 <span class="math inline">\dot V\le-2\alpha V</span>。</p>
+<p>这个证明里最关键的一步不是矩阵不等式，而是<strong>权重非负</strong>。<span class="math inline">w_iw_j\ge0</span> 让“逐项成立”可以推到“加权和成立”。所有 TS 稳定性结论都踩在这块石头上，一旦前件被改成可能取负的基函数（比如某些径向基网络带负权），整套推导立刻失效。</p>
+<p>式 (71-6) 里的 <span class="math inline">\alpha</span> 是衰减率，单位是 <span class="math inline">1/\mathrm{s}</span>。它有一个直观解释：<span class="math inline">V</span> 按 <span class="math inline">e^{-2\alpha t}</span> 衰减，<span class="math inline">\lVert x\rVert</span> 按 <span class="math inline">e^{-\alpha t}</span> 衰减，所以 <span class="math inline">1/\alpha</span> 是“误差缩小到 <span class="math inline">1/e</span> 需要的时间”的量级。<span class="math inline">\alpha</span> 越大，收敛越快，但可行域越小，因为要求 16 个矩阵在同一个 <span class="math inline">P</span> 下都“足够负”，本身就是互相牵制。</p>
+<p>求最大 <span class="math inline">\alpha</span> 的做法是二分：对给定的 <span class="math inline">\alpha</span>，解一次可行性问题（有没有 <span class="math inline">P</span> 满足全部约束），可行就抬下界、不可行就压上界，24 次迭代足够收到四位有效数字。这里有一个数值细节必须处理：<strong>判据对 <span class="math inline">P</span> 的尺度不变</strong>——把 <span class="math inline">P</span> 乘以任意正数，(71-6) 左右两侧同乘该数，不等号方向不变。所以不能用 <span class="math inline">\operatorname{tr}(P)=1</span> 去归一化（那是个等式约束，会让内点法在边界附近失去精度），而要用 <span class="math inline">P\succeq I</span>。本章的实测中，用 <span class="math inline">\operatorname{tr}(P)=1</span> 时求解器反复报“解可能不准确”，换成 <span class="math inline">P\succeq I</span> 之后 24 次二分的裁决全部干净。</p>
+<h3 id="小增益换一种不需要结构的判据">小增益：换一种不需要结构的判据</h3>
+<p>LMI 要求知道 <span class="math inline">A</span>、<span class="math inline">B_i</span>、<span class="math inline">K_j</span>。网络只有一个权重矩阵，没有“局部模型”这个概念，于是只能退回更粗的判据：把网络看成回路里的一个静态非线性环节，用它的 Lipschitz 常数与对象的增益相乘。</p>
+<p>回路的小增益条件是</p>
+<p><span class="math display">
+L\,\lVert P(s)\rVert_\infty&lt;1
+\tag{71-7}
+</span></p>
+<p>其中 <span class="math inline">L</span> 是网络作为映射 <span class="math inline">(e,\dot e)\mapsto u</span> 的 Lipschitz 常数，<span class="math inline">\lVert P(s)\rVert_\infty</span> 是对象从 <span class="math inline">u</span> 到 <span class="math inline">y</span> 的传递函数在虚轴上的最大模。对 (71-1) 在 <span class="math inline">y=2</span> 处线性化，<span class="math inline">P(s)=K/(s^2+2s)</span>，其频响模为</p>
+<p><span class="math display">
+|P(j\omega)|=\frac{K}{\omega\sqrt{\omega^2+4}}
+\tag{71-8}
+</span></p>
+<p>对 <span class="math inline">\omega</span> 求极值，<span class="math inline">\omega=\sqrt2</span> 处取到最大值 <span class="math inline">\lVert P\rVert_\infty=K/(\sqrt2\cdot\sqrt6)=4.6188</span>（<span class="math inline">K=16</span>）。</p>
+<p><span class="math inline">L</span> 的严格上界可以直接由权重算出。本章的网络是“随机特征 + 线性读出”：<span class="math inline">u=W_2\tanh(W_1z+b_1)</span>，<span class="math inline">\tanh</span> 的导数不超过 1，于是</p>
+<p><span class="math display">
+L\le\lVert W_2\rVert_2\left\lVert W_1S\right\rVert_2
+\tag{71-9}
+</span></p>
+<p><span class="math inline">S=\operatorname{diag}(0.30,\,1.0)</span> 是输入归一化矩阵。这个上界的问题在 <span class="math inline">\lVert W_1\rVert_2</span> 上：<span class="math inline">W_1</span> 是随机矩阵，宽度越大、谱范数整体越大，上界随宽度上移（71.6 节实测从 1.82 涨到 306.6，中间还因随机初值出现回落）；而实测的 <span class="math inline">L</span> 几乎不随宽度变（1.29 到 1.71），因为 <span class="math inline">\tanh</span> 在随机特征下大量饱和，实际斜率远小于 1。本章实测的上界与实测 <span class="math inline">L</span> 差了两个数量级——<strong>判据自然永远不满足</strong>。</p>
+<p>这就是小增益的定位：它是一个“能排除”的判据。条件不满足时说明不了任何问题（本章 5 种宽度全部不满足），条件满足时则一定稳定。工程上它的正确用法是做筛除——如果某个网络的 <span class="math inline">L\lVert P\rVert_\infty</span> 已经小于 1，那就不必再跑仿真；如果大于 1，也不能据此判它不稳定，得换更细的判据或者做实测。</p>
+<h3 id="量化两种误差两种失效">量化：两种误差，两种失效</h3>
+<p>数字实现里有两处量化，性质完全不同。</p>
+<p>第一处是<strong>空间量化</strong>：查表把连续的 <span class="math inline">(e,\dot e)</span> 平面切成 <span class="math inline">n\times n</span> 个格子，格子内用最近格点的值。这相当于在控制量上叠加了一个幅度为“相邻格点差”的台阶，台阶宽度随格子变粗而变大。第二处是<strong>幅度量化</strong>：控制量用 <span class="math inline">b</span> 位定点表示，步长为</p>
+<p><span class="math display">
+q=\frac{2U_{\max}}{2^{b}}
+\tag{71-10}
+</span></p>
+<p>两种量化的失效表现也不同：空间量化产生<strong>抖振</strong>（控制量在格子边界上来回跳），幅度量化产生<strong>极限环</strong>（误差收敛到零附近后，被 <span class="math inline">q/2</span> 的死区卡住，形成小幅持续振荡）。71.6 节的实测把两者分开列：网格从 161 降到 11，<span class="math inline">\Delta u</span> 的 RMS 从 0.01772 涨到 0.02083（涨 17.5%）；位数从 16 降到 6，末段误差 RMS 从 0 涨到 0.0117。</p>
+<p>一个容易算错的细节：<span class="math inline">q</span> 的公式里是 <span class="math inline">2^{b}</span> 而不是 <span class="math inline">2^{b}-1</span>。这是“满量程对应 <span class="math inline">2^b</span> 个间隔”的约定；若按 <span class="math inline">2^b-1</span> 算，6 位时步长会从 0.0375 变成 0.0381，差 1.6%，在 8 位以下无伤大雅，在 12 位以上就足以让“末段残差是否为零”的结论翻转。</p>
+<h3 id="屏障函数给不许越界一个可算的形式">屏障函数：给“不许越界”一个可算的形式</h3>
+<p>安全层的任务是：给定一条标称控制律 <span class="math inline">u_{\rm nom}</span>，在“尽量少改”的前提下，保证某个状态约束不被破坏。控制屏障函数（control barrier function，CBF）把它写成一张“不许下穿零”的证书。</p>
+<p>对一阶约束（约束只含速度），取 <span class="math inline">h(x)=v_{\max}^2-\dot y^2</span>。<span class="math inline">h\ge0</span> 就是约束满足，<span class="math inline">h&lt;0</span> 就是越界。要求存在 <span class="math inline">\kappa&gt;0</span> 使</p>
+<p><span class="math display">
+\dot h+\kappa h\ge0
+\tag{71-11}
+</span></p>
+<p>只要这个条件成立，<span class="math inline">h</span> 就永远不会从正穿到负——因为 <span class="math inline">h=0</span> 时不等式退化为 <span class="math inline">\dot h\ge0</span>，即“到了边界只能往外走，不能往里走”。这就是“前向不变性”。</p>
+<p>对本章的对象，<span class="math inline">\dot h</span> 对 <span class="math inline">u</span> 是仿射的：</p>
+<p><span class="math display">
+\dot h=-2\dot y\,\ddot y=-2\dot y\left(-2\dot y+K(y)u\right)=4\dot y^2-2\dot yK(y)u
+\tag{71-12}
+</span></p>
+<p>把它代进 (71-11)，得到一个关于 <span class="math inline">u</span> 的一元一次不等式：</p>
+<p><span class="math display">
+\underbrace{-2\dot yK(y)}_{\mathrm{coef}}\cdot u\ \ge\ -\underbrace{\left(4\dot y^2+\kappa h\right)}_{\mathrm{rhs}}
+\tag{71-13}
+</span></p>
+<p>系数为正时解是 <span class="math inline">u\ge u_b</span>，系数为负时解是 <span class="math inline">u\le u_b</span>，<span class="math inline">u_b</span> 是使等号成立的那个值。所以最小干预解就是<strong>单边投影</strong>：</p>
+<p><span class="math display">
+u_{\rm safe}=
+\begin{cases}
+\max\left(u_{\rm nom},\,u_b\right), &amp; \text{coef}&gt;0\\[2pt]
+\min\left(u_{\rm nom},\,u_b\right), &amp; \text{coef}&lt;0
+\end{cases}
+\tag{71-14}
+</span></p>
+<p>这个式子的计算量是“一次乘法、一次比较”，在任何嵌入式上都能实时跑。它的代价是只保证“下一拍不越界”这个一阶条件，对纯延迟无能为力——本章的延迟是 5 拍，也就是说这一拍算出的 <span class="math inline">u</span> 要 5 拍后才生效，那时 <span class="math inline">h</span> 可能已经变负。工程上有两种补救：把安全层放在延迟缓冲之后（本章的做法，保证的是“实际执行量”），或者按延迟滚动预测 5 拍后的状态（71.9 节）。</p>
+<p>若约束只含位置（<span class="math inline">|e|\le h_0</span>），<span class="math inline">h=h_0^2-e^2</span> 对 <span class="math inline">u</span> 的相对阶是 2，要写成 <span class="math inline">\ddot h+a_1\dot h+a_0h\ge0</span> 才封闭。它的推导只是把 (71-12) 再求一次导，形式仍然是仿射的，投影公式一模一样。本章的实验选了速度约束（相对阶 1），原因是相对阶越低，需要的信息越少、对延迟越不敏感；位置约束的实测见 71.4 节。</p>
+<h3 id="shapley把一拍控制量拆成三份">Shapley：把一拍控制量拆成三份</h3>
+<p>三个输入 <span class="math inline">e</span>、<span class="math inline">\dot e</span>、<span class="math inline">y-2</span>，基线 <span class="math inline">z_0=(0,0,0)</span>，价值函数 <span class="math inline">v(S)=f(z_S)</span>，<span class="math inline">z_S</span> 表示“把 <span class="math inline">S</span> 里的输入取真值、其余取基线”。Shapley 值是</p>
+<p><span class="math display">
+\phi_i=\sum_{S\subseteq N\setminus\{i\}}
+\frac{|S|!\,(n-|S|-1)!}{n!}\left[v(S\cup\{i\})-v(S)\right]
+\tag{71-15}
+</span></p>
+<p><span class="math inline">n=3</span> 时每个 <span class="math inline">\phi_i</span> 是 4 项之和，全部三个共 12 项，正好是 8 个联盟各算一次前向的两倍（每对联盟被两个 <span class="math inline">i</span> 各用一次）。这个定义有三条性质值得记住：<strong>效率性</strong>要求 <span class="math inline">\sum_i\phi_i=v(N)-v(\varnothing)</span>；<strong>对称性</strong>要求等价输入拿同样的份额；<strong>零贡献性</strong>要求“加不加它都一样”的输入拿零。</p>
+<p>效率性是最硬的验收指标，因为它可以被精确检查。本章实测的效率性残差是 <span class="math inline">1.11\times10^{-16}</span>，也就是双精度浮点的舍入误差——只要公式没写错，这个数必然在 <span class="math inline">10^{-15}</span> 量级；如果它到了 <span class="math inline">10^{-3}</span>，说明权重算错了或者联盟枚举漏了。</p>
+<p>Shapley 的代价是指数复杂度。<span class="math inline">n=3</span> 时 8 次前向，可以每拍都算；<span class="math inline">n=10</span> 时 1024 次，只能离线；<span class="math inline">n=20</span> 时一百万次，必须采样近似。本章之所以能“精确”，纯粹因为输入只有三个——这是一个必须诚实说明的边界。</p>
+<h3 id="遮挡一个更便宜但更粗的检验">遮挡：一个更便宜、但更粗的检验</h3>
+<p>遮挡（occlusion）的做法是：把第 <span class="math inline">i</span> 个输入换回基线，看输出改变多少：</p>
+<p><span class="math display">
+d_i=\frac{1}{N}\sum_{k=1}^{N}\left|f(z^{(k)})-f(z^{(k)}_{\setminus i})\right|
+\tag{71-16}
+</span></p>
+<p>它只需要 <span class="math inline">n</span> 次前向（而不是 <span class="math inline">2^n</span> 次），所以大模型上也跑得动。它的缺点是没有效率性：<span class="math inline">d_i</span> 们加起来不等于任何东西，量纲是“输出改变量”而不是“份额”。两者一起用的价值在于<strong>交叉验证</strong>：若 Shapley 的排序与遮挡的排序一致，说明归因不是权重分解的假象；若不一致，多半是输入之间强相关，Shapley 把交互项摊薄了，而遮挡保留了大头。</p>
+<h3 id="解释的稳定性把归因当统计量">解释的稳定性：把归因当统计量</h3>
+<p>单次归因只是“这一拍的答案”。要判断它能不能进验收报告，得看它在输入有小扰动时是否稳定。做法是给输入加噪声 <span class="math inline">\sigma</span>、重算归因、比较两次归因的排序：</p>
+<p><span class="math display">
+\rho=\operatorname{Spearman}\left(\phi(z),\ \phi(z+\delta z)\right),\qquad
+\text{top1}=\mathbb{1}\left[\arg\max_i|\phi_i(z)|=\arg\max_i|\phi_i(z+\delta z)|\right]
+\tag{71-17}
+</span></p>
+<p>秩相关衡量整体排序，首位保持率衡量“最要紧的那个有没有指错”。两个指标一起看，是因为它们会分道扬镳：本章 <span class="math inline">\sigma=0.05</span> 时秩相关还有 0.950，首位保持率却已经掉到 0.90——整体顺序没乱，最要紧的那一个开始错了。</p>
+<h3 id="监控一个能标定的距离">监控：一个能标定的距离</h3>
+<p>运行时监控要回答“当前这一拍是否偏离了标称”。最便宜的做法是把几个残差拼成向量 <span class="math inline">z</span>，用标称段的均值与协方差算马氏距离：</p>
+<p><span class="math display">
+D^2(z)=(z-\mu)^{\mathsf T}\Sigma^{-1}(z-\mu)
+\tag{71-18}
+</span></p>
+<p>若 <span class="math inline">z</span> 服从多元正态，<span class="math inline">D^2</span> 服从自由度等于维数的 <span class="math inline">\chi^2</span> 分布，阈值可以直接取分位数（二维 99.9% 是 13.82，三维是 16.27）。本章实测这个假设不成立：标称段残差是量化纹波，尾部比 <span class="math inline">\chi^2</span> 厚得多，用 13.82 时误报率 2.44%，实测的 99.9% 分位是 57.88。所以工程上必须用“现场标定”的阈值，<span class="math inline">\chi^2</span> 分位只能作为下限。</p>
+<p>单拍超阈不足以下结论（噪声也会超），还要加一个连续计数：连续 <span class="math inline">N</span> 拍超阈才报警，本章取 <span class="math inline">N=5</span>。这个参数的作用是把“偶发”与“持续”分开，代价是最少要晚 <span class="math inline">N</span> 拍才能报警。</p>
+<h3 id="五个判据各自能证明什么">五个判据各自能证明什么</h3>
+<p>把本章用到的判据排成一张表，重点看最后两列——“证不了什么”比“能证什么”更容易被忘掉。</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">判据</th>
+<th style="text-align: left;">需要的输入</th>
+<th style="text-align: left;">能证明</th>
+<th style="text-align: left;">证不了</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">公共 Lyapunov（LMI）</td>
+<td style="text-align: left;">全部 <span class="math inline">A_i</span>、<span class="math inline">B_i</span>、<span class="math inline">K_j</span></td>
+<td style="text-align: left;">指数收敛，速率 <span class="math inline">\alpha</span></td>
+<td style="text-align: left;">延迟、量化、饱和</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">小增益 <span class="math inline">L\lVert P\rVert_\infty&lt;1</span></td>
+<td style="text-align: left;">状态矩阵、<span class="math inline">P</span>、<span class="math inline">L</span> 的界</td>
+<td style="text-align: left;">在斜率界内的鲁棒稳定</td>
+<td style="text-align: left;">具体的收敛速率，且保守</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">屏障函数</td>
+<td style="text-align: left;">相对阶、<span class="math inline">h</span> 的表达式</td>
+<td style="text-align: left;">集合前向不变（在集合内）</td>
+<td style="text-align: left;">从集合外进入，以及延迟后的 <span class="math inline">u</span></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Shapley 效率性</td>
+<td style="text-align: left;">模型可查询</td>
+<td style="text-align: left;">分摊之和等于总增量</td>
+<td style="text-align: left;">分摊是否“合理”</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">马氏距离</td>
+<td style="text-align: left;">标称段的均值与协方差</td>
+<td style="text-align: left;">偏离标称的统计显著性</td>
+<td style="text-align: left;">故障类型，以及稳态不能观的增益损失</td>
+</tr>
+</tbody>
+</table>
+<p>这张表解释了本章为什么每个结论都要配一句限定语：五条判据没有一条能单独覆盖“稳定 + 安全 + 可解释”，它们各自只照亮一块。工程上的做法不是找一条更强的判据，而是<strong>把五条的适用域叠起来</strong>，看叠出来的区域是否覆盖实际工况；覆盖不到的地方，就写明“此处只有实测，没有证书”。</p>
+<h2 id="设计步骤">71.3 设计步骤</h2>
+<h3 id="六步的次序与理由">六步的次序与理由</h3>
+<p>把前面那些公式串成流程，一共六步。次序不能随意调换，因为后一步的前提是前一步的产物：</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">步</th>
+<th style="text-align: left;">做什么</th>
+<th style="text-align: left;">产物</th>
+<th style="text-align: left;">走不下去时的出口</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">1</td>
+<td style="text-align: left;">划工作域、定规则中心</td>
+<td style="text-align: left;">前件划分与局部模型</td>
+<td style="text-align: left;">缩小域或加密规则</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">2</td>
+<td style="text-align: left;">逐条极点配置</td>
+<td style="text-align: left;">四组反馈增益</td>
+<td style="text-align: left;">放宽极点或降阶</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">3</td>
+<td style="text-align: left;">选表示并蒸馏</td>
+<td style="text-align: left;">可部署的控制律</td>
+<td style="text-align: left;">换表示或加宽</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">4</td>
+<td style="text-align: left;">三层判据验证</td>
+<td style="text-align: left;"><span class="math inline">\alpha</span>、<span class="math inline">L\lVert P\rVert_\infty</span>、量化解</td>
+<td style="text-align: left;">退到分段 <span class="math inline">P</span> 或实测</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">5</td>
+<td style="text-align: left;">加安全层</td>
+<td style="text-align: left;">投影后的执行量</td>
+<td style="text-align: left;">降 <span class="math inline">\kappa</span> 或换约束</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">6</td>
+<td style="text-align: left;">归因、遮挡、监控</td>
+<td style="text-align: left;">解释报告与阈值</td>
+<td style="text-align: left;">换基线或加激励</td>
+</tr>
+</tbody>
+</table>
+<p><strong>表 71-2 六步设计流程与失败出口</strong></p>
+<p>第一步与第二步合起来就是“造教师”。它看起来最像传统设计，却决定了后面四步的天花板：工作域划得太大，局部模型就不准，第四步的 LMI 再宽松也没意义；极点取得太激进，第四步的 <span class="math inline">\alpha</span> 可能连 1.0 都拿不到。</p>
+<h3 id="第一步划工作域别把全域都塞进来">第一步：划工作域，别把全域都塞进来</h3>
+<p>工作域的上下界来自工艺，不来自数学。本章取 <span class="math inline">y\in[1.2,\,3.0]</span>，因为 <span class="math inline">K(y)</span> 在这个区间内从 11.2 变到 22.0，一直是正的；<span class="math inline">y&lt;-2/3</span> 时 <span class="math inline">K</span> 变号，对象反向，那是另一个系统，不该用同一套规则去覆盖。</p>
+<p>划完域之后定规则数。规则数不是越多越好，本章实测规则从 2 条加到 7 条，IAE 只从 0.2884 动到 0.2883（差 0.03%），因为 PDC 在单变量情形下等价于增益调度，插值精度早就够了。规则真正买到的是<strong>可解释性</strong>：4 条规则对应 4 句话，现场工程师愿意读；40 条规则就没人读了，那时“结构级可解释”已经名存实亡。</p>
+<p>一个实操建议：规则中心取成等间距，半宽取相邻间距。不等间距只在“某段增益变化特别剧烈”时才需要，而本章的 <span class="math inline">K(y)=4+6y</span> 是线性的，等间距就是最优。</p>
+<h3 id="第二步极点配置要留裕度">第二步：极点配置要留裕度</h3>
+<p>每个局部模型用同一组极点 <span class="math inline">(-3,-4)</span> 配置，得到表 71-1 的四组增益。这里有三点经验。</p>
+<p><strong>极点不能取在对象自然极点附近。</strong> 对象 (71-1) 的自然极点是 <span class="math inline">0</span> 与 <span class="math inline">-2</span>，把闭环极点配到 <span class="math inline">-2.1</span> 附近，等于几乎不动它，闭环对扰动毫无抵抗力；配到 <span class="math inline">-30</span> 又会让控制量在第一拍就撞限幅。本章取 <span class="math inline">-3</span>、<span class="math inline">-4</span>，闭环时间常数约 0.3 s，比 5 拍延迟（50 ms）慢一个数量级，这个比例是安全的：<strong>闭环带宽应当低于 <span class="math inline">1/(5\tau_d)</span>，<span class="math inline">\tau_d</span> 是纯延迟</strong>，否则延迟的相位滞后会把相位裕度吃光。</p>
+<p><strong>四组极点应当相同，不要“按段调”。</strong> 若第 1 段取 <span class="math inline">(-3,-4)</span>、第 4 段取 <span class="math inline">(-8,-10)</span>，闭环矩阵的差异会体现在公共 <span class="math inline">P</span> 的可行性上——第四步很可能算不出 <span class="math inline">\alpha</span>。让局部模型只在 <span class="math inline">B_i</span> 上不同、<span class="math inline">K_i</span> 按 <span class="math inline">1/K_i</span> 缩放，是让 16 个交叉闭环“长得像”的最省事办法。</p>
+<p><strong>极点配置之后要立刻检查限幅。</strong> 本章阶跃 0.5 时峰值控制量 1.03，未撞限幅；阶跃 1.1 时就撞上了。若工艺要求大幅阶跃，要么降极点，要么加参考整形（把阶跃改成斜坡），不能靠“反正有限幅”糊过去——限幅一介入，第二步的极点配置就失效了，闭环变成了一个非线性系统，第四步的 LMI 也就不再成立于实际轨迹上。</p>
+<h3 id="第三步选表示同时选证明方式">第三步：选表示，同时选证明方式</h3>
+<p>这一步是本章与前面各章最大的不同：选表示时不能只看性能，还要看“这个表示还能不能被证明”。</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">表示</th>
+<th style="text-align: right;">参数规模</th>
+<th style="text-align: right;">单拍计算</th>
+<th style="text-align: left;">能用的判据</th>
+<th style="text-align: right;">本章 IAE</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">教师（规则库）</td>
+<td style="text-align: right;">4 组增益</td>
+<td style="text-align: right;">4 次加权</td>
+<td style="text-align: left;">LMI、小增益</td>
+<td style="text-align: right;">0.2883</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">ELM 网络（宽 8）</td>
+<td style="text-align: right;">8×3 + 8</td>
+<td style="text-align: right;">8 次 tanh</td>
+<td style="text-align: left;">小增益</td>
+<td style="text-align: right;">0.3529</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">查表（41×41）</td>
+<td style="text-align: right;">1681 个数</td>
+<td style="text-align: right;">1 次查表</td>
+<td style="text-align: left;">量化误差</td>
+<td style="text-align: right;">0.3014</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">查表（插值）</td>
+<td style="text-align: right;">1681 个数</td>
+<td style="text-align: right;">2 次插值</td>
+<td style="text-align: left;">量化误差</td>
+<td style="text-align: right;">0.2968</td>
+</tr>
+</tbody>
+</table>
+<p><strong>表 71-3 四种表示的性能与可证明性</strong></p>
+<p>表里最值得注意的是“能用的判据”这一列。规则库能直接写 LMI，是因为它有局部矩阵；网络只有权重，只能算 Lipschitz；查表连解析式都没有，只能谈格子密度。<strong>性能差 22%，证明成本差一个量级</strong>——这就是选表示时的真实权衡。</p>
+<p>本章的结论是：如果工作域固定、规则数不超过 10，直接部署规则库是最优解。它性能最好、可证明性最好、内存最小（4 组增益共 8 个数）。网络与查表的价值在“规则数必须很大”或“前件变量很多”的场合，那时 LMI 的 16 个交叉项会变成 <span class="math inline">m^2</span> 个，规则库反而不可行。</p>
+<p>训练（或生成）表示时有两个坑。第一，训练样本要覆盖<strong>闭环会走到的区域</strong>，不能只取一条轨迹上的点。本章的 ELM 一开始只用一条轨迹训练，IAE 0.4762、5.49 s 才稳住；加上 900 个覆盖 <span class="math inline">e\in[-0.5,0.5]</span>、<span class="math inline">\dot e\in[-1.5,1.5]</span> 的均匀样本后，IAE 降到 0.3529。第二，随机特征的尺度要归一化。<span class="math inline">W_1</span> 的行向量单位化后乘 1.5，<span class="math inline">\tanh</span> 才工作在有效区间；不归一化时大量隐元饱和，网络输出退化成常数。</p>
+<h3 id="第四步三层判据从强到弱">第四步：三层判据，从强到弱</h3>
+<p>验证不是“跑一遍看看”，而是按三层依次做，前一层不通过才退到下一层。</p>
+<p><strong>第一层 LMI。</strong> 对四规则全配对求最大 <span class="math inline">\alpha</span>，本章得 2.5716。若 <span class="math inline">\alpha\le0</span>，说明连可行 <span class="math inline">P</span> 都没有，先回去改第二步的极点，不要急着改规则数。</p>
+<p><strong>第二层小增益。</strong> 算出 <span class="math inline">L</span> 与 <span class="math inline">\lVert P\rVert_\infty</span>，看乘积。本章五种宽度全部不满足（5.94 到 7.91），这一层给不出结论，只能记录在案。</p>
+<p><strong>第三层实测。</strong> 跑阶跃、看末段残差与 <span class="math inline">\Delta u</span>。本章的实测边界是 <span class="math inline">\beta_{\rm crit}=3.5</span>（把网络输出乘以 3.5 倍后抖振超标），与小增益预测的 0.16 差 22 倍。</p>
+<p>三层都过不了时不要硬上，应该退回去改结构：要么换成规则库（第一层就能过），要么把网络改成谱归一化（把上界压下来，见 71.9 节）。</p>
+<h3 id="第五步安全层位置比参数重要">第五步：安全层，位置比参数重要</h3>
+<p>安全层的参数只有两个（<span class="math inline">v_{\max}</span> 与 <span class="math inline">\kappa</span>），但“放在哪”比“取多少”更重要。</p>
+<p>本章把安全层放在延迟缓冲<strong>之后</strong>，也就是对实际将要执行的量做投影。这样保证的是“执行量满足约束”，代价是它看不见“已经排队等着执行的那 5 拍”。若放在缓冲之前，被投影的是指令，5 拍后执行的可能是投影前的旧值，保证就漏了。</p>
+<p>位置定好之后才谈参数。<span class="math inline">v_{\max}</span> 由工艺定（本章取 1.0，对象阶跃时自然峰值是 3.643），<span class="math inline">\kappa</span> 由“介入的果断程度”定：<span class="math inline">\kappa</span> 大，介入早、代价大；<span class="math inline">\kappa</span> 小，介入晚、可能来不及。本章 <span class="math inline">\kappa</span> 从 4 加到 16，IAE 代价从 106.3% 降到 83.1%，但介入拍数只从 107 降到 95——<strong><span class="math inline">\kappa</span> 主要影响的是“改多少”，不是“改几次”</strong>。</p>
+<h3 id="第六步解释与监控先定基线">第六步：解释与监控，先定基线</h3>
+<p>解释侧的第一步不是算 Shapley，而是<strong>定基线</strong>。基线是“没有这个输入时系统会怎样”的替身，本章取 <span class="math inline">z_0=(0,0,0)</span>，含义是“误差为零、误差变化率为零、工作点在标称点”。这个基线对应“理想稳态”，现场工程师容易接受。</p>
+<p>基线定错，归因全错。若把基线取成“上一拍的实际输入”，得到的份额是“这一拍相对上一拍变了多少”，那是增量归因，与“这一拍为什么是 <span class="math inline">-0.41</span>”不是同一个问题。两者的排序可能一致也可能不一致，但报告的读法完全不同，验收时必须写清基线。</p>
+<p>监控侧的第一步是<strong>选残差</strong>。本章的核心发现是：残差选 <span class="math inline">(e,\dot y)</span> 时，执行器增益掉 30% 完全看不见；加上 <span class="math inline">u</span> 之后，卡滞的报警从 910 ms 提前到 620 ms，可增益损失仍然看不见。所以残差的选择要按“你最怕哪种故障”来定，而不是按“哪个量好测”来定。增益类故障需要模型残差（预测的 <span class="math inline">\ddot y</span> 与实测的差），本章没有做，71.10 节会说明为什么。</p>
+<h3 id="把次序调反会怎样一个具体反例">把次序调反会怎样：一个具体反例</h3>
+<p>假设先加安全层、再配极点。<span class="math inline">v_{\max}=1.0</span>、<span class="math inline">\kappa=8</span> 的屏障会先把速度按住，此时看闭环响应，上升沿被削平、调节时间拉长到 1.11 s 量级。工程师看到“响应太慢”，自然会去加快极点，比如从 <span class="math inline">(-3,-4)</span> 改到 <span class="math inline">(-8,-10)</span>。改完再跑，峰值速度更高，屏障介入更深，响应还是慢——于是继续加快极点。这个循环会一直走到限幅饱和，最后得到一个“极点极快、但大部分时间被屏障按住”的系统。</p>
+<p>按正序做就不会进这个循环：先配极点、看无屏障时的峰值速度 3.643，立刻就能判断 <span class="math inline">v_{\max}=1.0</span> 这个约束与当前极点不匹配。该做的是回头谈工艺（能否放宽 <span class="math inline">v_{\max}</span>）或改参考（阶跃改斜坡），而不是在极点与 <span class="math inline">\kappa</span> 之间来回找平衡。次序的价值就在这里：它让不匹配在第一屏就暴露，而不是在第五轮调参之后才暴露。</p>
+<h3 id="每一步都要留下的三个数">每一步都要留下的三个数</h3>
+<p>六步走完，交付物不只是一套参数，还有每一步的三个数。缺了它们，三个月后没人能解释“当时为什么取 4 条规则”。</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">步</th>
+<th style="text-align: left;">必须留下的数</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">1</td>
+<td style="text-align: left;">工作域上下界、<span class="math inline">K</span> 在该域的取值范围、规则数</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">2</td>
+<td style="text-align: left;">极点、四组增益、阶跃时的控制峰值</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">3</td>
+<td style="text-align: left;">表示的 IAE、末段 RMS、调节时间</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">4</td>
+<td style="text-align: left;"><span class="math inline">\alpha_{\rm all}</span>、<span class="math inline">L\lVert P\rVert_\infty</span>、<span class="math inline">\beta_{\rm crit}</span></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">5</td>
+<td style="text-align: left;"><span class="math inline">v_{\max}</span>、<span class="math inline">\kappa</span>、IAE 涨幅与介入拍数</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">6</td>
+<td style="text-align: left;">效率性残差、遮挡排序、目标 <span class="math inline">\sigma</span> 下的首位保持率</td>
+</tr>
+</tbody>
+</table>
+<p>这张表的价值在于把“调参”变成“记录”。同一套系统换人接手，先看这六个格子：六格齐全，接手成本是几小时；缺一半，等于重做一遍。它也是评审时最省事的材料——每个数都能指回一次实验，而不是指回某个人的记忆。</p>
+<h2 id="连续情形">71.4 连续情形</h2>
+<h3 id="为什么教科书先讲连续">为什么教科书先讲连续</h3>
+<p>模糊控制的经典文献几乎都用连续时间写：<span class="math inline">\dot x=\sum_i w_i(A_ix+B_iu)</span>，控制律 <span class="math inline">u=-\sum_j w_jK_jx</span>，然后给一个二次型 <span class="math inline">V=x^{\mathsf T}Px</span>。这样做有两个好处：结论的形式干净（没有采样矩阵），几何解释直接（椭球与向量场）。本章的对象是连续系统加零阶保持器，两种写法都能用，所以先用连续形式把几何讲清，再在 71.5 节把采样与延迟补上。</p>
+<p>连续形式的闭环是</p>
+<p><span class="math display">
+\dot x=\sum_{i=1}^{m}w_i(y)\left(A_ix+B_iu\right),\qquad
+u=-\sum_{j=1}^{m}w_j(y)K_jx
+\tag{71-19}
+</span></p>
+<p>代进去仍然得到 (71-5) 那样的双重求和，只是 <span class="math inline">A_i</span> 一般也随规则变（本章 <span class="math inline">A_i\equiv A</span>，因为非线性只在输入通道）。稳定条件与 (71-6) 完全一样，只是 <span class="math inline">A_{cl,ij}=A_i-B_iK_j</span>。</p>
+<h3 id="公共-p-的几何一个椭球要装下-16-个向量场">公共 <span class="math inline">P</span> 的几何：一个椭球要装下 16 个向量场</h3>
+<p>把 (71-6) 写成几何语言：<span class="math inline">V=x^{\mathsf T}Px</span> 的等值面是一族同心椭球；条件 <span class="math inline">\dot V&lt;-2\alpha V</span> 说的是“每条闭环轨线都以不低于 <span class="math inline">e^{-\alpha t}</span> 的速率往内层椭球走”。</p>
+<p>现在有 16 个闭环矩阵，每个矩阵对应一个向量场。要求是：<strong>同一个椭球族，对 16 个向量场都成立</strong>。这就是保守性的来源——如果允许每个矩阵用自己的椭球，可行性大得多；一旦要求共用，椭球的形状就被“最别扭的那个矩阵”牵着走。</p>
+<p>本章的数字说明了这一点：单规则时 <span class="math inline">\alpha=2.9091</span>；四规则只查对角时 <span class="math inline">\alpha=3.0000</span>，居然更高；四规则查全部 16 对时降到 2.5716。对角情形反而比单规则高，原因是“只查对角”实际上放松了约束（只要求 <span class="math inline">A-B_iK_i</span> 稳定，不管交叉项），可行集变大，<span class="math inline">\alpha</span> 自然能抬高。<strong>这个数不能当成性能指标读</strong>：<span class="math inline">\alpha</span> 高不等于闭环好，只等于“约束少”。读表时必须先看它查了几对。</p>
+<p><span class="math inline">\alpha</span> 与极点有一个近似对应。二阶系统的极点 <span class="math inline">-\zeta\omega_n\pm j\omega_n\sqrt{1-\zeta^2}</span> 对应的衰减率是 <span class="math inline">\zeta\omega_n</span>，即实部的绝对值。本章极点 <span class="math inline">(-3,-4)</span> 的实部是 <span class="math inline">-3</span> 与 <span class="math inline">-4</span>，所以 <span class="math inline">\alpha</span> 的理论上限在 3 附近；实测单规则 2.9091、对角 3.0000，正好贴着这个上限。这说明<strong>极点配置已经把衰减率定死了，LMI 只是在验证“共用椭球能不能达到这个速率”</strong>，它不会凭空造出更快的收敛。</p>
+<p>这条对应关系还有一个实用价值：若 LMI 给出的 <span class="math inline">\alpha</span> 远低于极点实部，说明交叉项在拖后腿，此时应该做的是“让局部模型更接近”（比如在中间插规则、或把极点取得更一致），而不是继续放宽 LMI 的求解器设置。</p>
+<h3 id="连续屏障一阶与二阶的差别">连续屏障：一阶与二阶的差别</h3>
+<p>连续时间里，屏障函数的经典形式是</p>
+<p><span class="math display">
+\dot h(x,u)\ge-\kappa h(x)
+\tag{71-20}
+</span></p>
+<p>与 (71-11) 等价。区别在 <span class="math inline">h</span> 的选择，而 <span class="math inline">h</span> 的选择决定了“<span class="math inline">\dot h</span> 里出现 <span class="math inline">u</span> 的几次方”。</p>
+<p><strong>一阶（速度约束）</strong>：<span class="math inline">h=v_{\max}^2-\dot y^2</span>，<span class="math inline">\dot h</span> 里 <span class="math inline">u</span> 只出现一次，见 (71-12)。这类约束的好处是“永不奇异”：只要 <span class="math inline">\dot y\neq0</span>，<span class="math inline">u</span> 的系数就不为零，总有解。坏处是它只管速度，不管位置——速度为零而位置在界外时，它给不出任何约束力。</p>
+<p><strong>二阶（位置约束）</strong>：<span class="math inline">h=h_0^2-e^2</span>，一次求导得 <span class="math inline">\dot h=-2e\dot e</span>，里面没有 <span class="math inline">u</span>；再求一次导才出现：</p>
+<p><span class="math display">
+\ddot h=-2\dot e^2+4e\dot y-2eK(y)u
+\tag{71-21}
+</span></p>
+<p>于是条件要写成二阶形式：</p>
+<p><span class="math display">
+\ddot h+a_1\dot h+a_0h\ge0
+\tag{71-22}
+</span></p>
+<p><span class="math inline">a_0</span>、<span class="math inline">a_1</span> 相当于给 <span class="math inline">h</span> 配了一对极点，取 <span class="math inline">a_0=4</span>、<span class="math inline">a_1=4</span> 就是临界阻尼。这个式子的解仍然是 (71-14) 那样的单边投影，只是系数变成 <span class="math inline">-2eK(y)</span>、右端多两项。</p>
+<p>二阶形式的麻烦在于<strong>初值必须落在集合内</strong>。本章的算例是阶跃 1.1，<span class="math inline">t=0.5</span> s 那一拍 <span class="math inline">e</span> 从 0 跳到 1.1，<span class="math inline">h=h_0^2-e^2</span> 当场为负——集合已经被破坏，屏障只能在“已经越界”的前提下尽量往回拉，前向不变性无从谈起。这不是参数没调好，而是“参考信号不连续”与“约束含位置”这两件事本身不相容：<strong>位置约束要成立，参考必须先整形</strong>。</p>
+<p>整形也不是万灵药。本章试过 0.4 s 与 0.8 s 的斜坡：0.4 s 斜坡加 <span class="math inline">h_0=0.25</span> 时，最大偏差仍是 0.561，全部越界；原因不是斜坡没用，而是<strong>斜坡速率比闭环能跟踪的速率快</strong>，<span class="math inline">e</span> 在斜坡段就积累到超过 <span class="math inline">h_0</span>。要让位置约束真正成立，斜坡时间必须长到 <span class="math inline">e</span> 的峰值不超过 <span class="math inline">h_0</span>，那意味着响应时间被拉长数倍——这通常是工艺不肯接受的。所以“位置约束 + 阶跃参考”这个组合，要么改参考、要么改约束，没有第三条便宜路。</p>
+<p>一阶约束没有这个问题：<span class="math inline">h=v_{\max}^2-\dot y^2</span> 在 <span class="math inline">t=0</span> 时 <span class="math inline">h=v_{\max}^2&gt;0</span>，初始是满足的。这也是本章选速度约束做实验的实际原因，不只是“相对阶低所以简单”。</p>
+<h3 id="连续域里三个容易算错的量">连续域里三个容易算错的量</h3>
+<p><strong>第一，归一化权重的和。</strong>三角隶属归一化后 <span class="math inline">\sum_iw_i=1</span>，于是 <span class="math inline">\sum_i\sum_jw_iw_j=1</span>。这个恒等式让双重求和保持“凸组合”的性质，是 (71-5) 能写成 16 个矩阵加权和的前提。若忘了归一化（比如用未归一化的高斯隶属），双重求和不再等于 1，闭环矩阵的范数会随 <span class="math inline">y</span> 变化，LMI 的结论直接失效。</p>
+<p><strong>第二，相对阶决定 <span class="math inline">u</span> 出现在第几阶导数里。</strong>速度约束的相对阶是 1，<span class="math inline">\dot h</span> 里 <span class="math inline">u</span> 的系数是 <span class="math inline">-2\dot yK(y)</span>；位置约束的相对阶是 2，要 <span class="math inline">\ddot h</span> 里才出现 <span class="math inline">u</span>。相对阶越高，需要的状态信息越多、对延迟越敏感、初值要求越严。选约束时先看相对阶，再看别的。</p>
+<p><strong>第三，限幅破坏凸组合。</strong>这是最隐蔽的一条。LMI 证明的是“16 个 <span class="math inline">A_{cl,ij}</span> 的凸组合稳定”，但一旦控制量被限幅，实际闭环矩阵就不再是这 16 个的凸组合——限幅相当于把 <span class="math inline">K_j</span> 换成了一个更小的等效增益，而那个矩阵不在集合里。所以<strong>证书不覆盖饱和区</strong>。本章的适用域里必须写这一条，否则“<span class="math inline">\alpha=2.5716</span> 所以稳定”会被误用到限幅深度饱和的工况。工程上的补救是在饱和区切换到一个“已知稳定”的保守控制器，或者把限幅值取得足够大，使正常工作不进入饱和。</p>
+<h3 id="为什么本章的-a_i-全都一样">为什么本章的 <span class="math inline">A_i</span> 全都一样</h3>
+<p>(71-19) 里 <span class="math inline">A_i</span> 一般随规则变，本章却取 <span class="math inline">A_i\equiv A</span>。这不是偷懒：对象的非线性只出现在输入通道（<span class="math inline">K(y)</span> 乘在 <span class="math inline">u</span> 上），<span class="math inline">\ddot y=-2\dot y+K(y)u</span> 里 <span class="math inline">y</span> 与 <span class="math inline">\dot y</span> 的系数都是常数。所以“每条规则一个局部模型”这件事，在本章只体现为 <span class="math inline">B_i</span> 不同。</p>
+<p>这个结构带来两个后果。一是 LMI 的难度全部集中在 <span class="math inline">B_iK_j</span> 上：16 个闭环矩阵共享同一个 <span class="math inline">A</span>，彼此差异只来自增益乘积。二是极点配置这一步实际上在给每个 <span class="math inline">B_i</span> 配一个“抵消 <span class="math inline">B_i</span> 差异”的 <span class="math inline">K_i</span>——<span class="math inline">K_i</span> 与 <span class="math inline">K(y_i)</span> 近似成反比（表 71-1 里第一分量从 0.9231 降到 0.5941，正好跟着 <span class="math inline">K</span> 从 13 涨到 20.2 反向走），于是 <span class="math inline">B_iK_i</span> 几乎不随 <span class="math inline">i</span> 变，闭环矩阵彼此接近，公共 <span class="math inline">P</span> 才存在。</p>
+<p>反过来，若状态矩阵也随工作点变（摩擦系数随温度变、刚度随负载变），<span class="math inline">A_i</span> 之间就有差异，公共 <span class="math inline">P</span> 的可行性会明显变差，本章的 2.5716 不能照搬。能不能照搬，只看一条：<strong><span class="math inline">B_iK_i</span> 是否近似为常数</strong>。</p>
+<h3 id="小增益判据在频域里是什么">小增益判据在频域里是什么</h3>
+<p>(71-9) 的 <span class="math inline">L\lVert P\rVert_\infty&lt;1</span> 看着像纯代数，其实是一个扇形条件。把非线性写成“标称线性部分 + 有界扰动”，<span class="math inline">\Delta(y)=K(y)-K(y_0)</span>，则 <span class="math inline">|\Delta|\le L|y-y_0|</span>，闭环画成“线性系统 + 斜率受限的静态非线性”的反馈互联。小增益定理说的是：线性部分的增益与非线性斜率之积小于 1，互联稳定。</p>
+<p>这解释了两件事。第一，为什么 <span class="math inline">\lVert P\rVert_\infty</span> 会出现在判据里——它衡量“从扰动到状态”这条通路的峰值增益，而 <span class="math inline">P</span> 是 Lyapunov 矩阵，两者在此处恰好重合。第二，为什么这个判据比 LMI 保守得多：扇形条件对<strong>所有</strong>满足斜率界的非线性都成立，而本章的非线性是已知的 <span class="math inline">K(y)=4+6y</span>，LMI 通过 <span class="math inline">B_i</span> 用到了这个具体形式，小增益只用到了“斜率不超过 <span class="math inline">L</span>”。信息用得少，结论自然弱。</p>
+<p>工程含义是：非线性形式不确定、只知道界时，用小增益；非线性已知时，用 LMI。本章把两者都算出来，正是为了把“保守多少”量化成 22 倍这个数，而不是含糊地说一句“小增益比较保守”。</p>
+<h3 id="连续-shapley从有限联盟到路径积分">连续 Shapley：从有限联盟到路径积分</h3>
+<p>连续输入空间里，Shapley 值有一个自然推广：把基线到真值的直线路径参数化，<span class="math inline">\gamma(s)=z_0+s(z-z_0)</span>，<span class="math inline">s\in[0,1]</span>，则</p>
+<p><span class="math display">
+\phi_i=\int_0^1\frac{\partial f(\gamma(s))}{\partial z_i}\,\mathrm{d}s
+\tag{71-23}
+</span></p>
+<p>这条式子叫 Aumann-Shapley 值，它满足效率性（沿路径积分等于端点差），但<strong>不满足对称性</strong>——两个功能等价的输入若梯度不同，拿到的份额不同。所以连续版本与离散版本不是同一个东西：离散 Shapley 的“对称性”来自对所有联盟取平均，连续版本的路径积分没有这层平均。</p>
+<p>工程上用哪个，取决于能不能接受“同一拍算两次得不同结果”。离散版本要 8 次前向，结果确定；连续版本要用数值积分（比如 20 个梯形点），结果与路径有关。本章用离散版本，因为它可复现、可验收。</p>
+<h2 id="离散情形">71.5 离散情形</h2>
+<h3 id="零阶保持离散化的两个后果">零阶保持：离散化的两个后果</h3>
+<p>控制器每 10 ms 算一次，两次之间执行器保持上一个值，这就是零阶保持。对象的离散化是</p>
+<p><span class="math display">
+A_d=e^{AT_s},\qquad B_d=\int_0^{T_s}e^{A\sigma}\,\mathrm{d}\sigma\,B
+\tag{71-24}
+</span></p>
+<p>代入本章的 <span class="math inline">A</span>、<span class="math inline">B</span> 与 <span class="math inline">T_s=0.01</span>，得 <span class="math inline">A_d=\begin{bmatrix}1&amp;0.0099\\0&amp;0.9802\end{bmatrix}</span>，<span class="math inline">B_d=[8.0\times10^{-4}K,\ 0.0099K]^{\mathsf T}</span>。这两个数与连续情形有两个实质差别。</p>
+<p>第一，<strong><span class="math inline">B_d</span> 的第一个分量不再是零</strong>。连续时间里 <span class="math inline">u</span> 只通过 <span class="math inline">\ddot y</span> 影响系统，位置的相对阶是 2；离散化之后，一拍之内 <span class="math inline">u</span> 已经能改变位置（<span class="math inline">8.0\times10^{-4}K\approx0.013</span>，量很小但非零），位置对 <span class="math inline">u</span> 的相对阶变成 1。这意味着“位置约束”在离散实现里其实可以用一阶形式写，不必走二阶——但代价是那个系数极小，数值上很敏感。</p>
+<p>第二，<strong><span class="math inline">A_d</span> 的特征值是 1 与 0.9802</strong>，一个在单位圆上、一个在圆内。这就是“二阶无静差”在离散里的样子：<span class="math inline">z=1</span> 这个特征值对应“常数输入下输出线性增长”，它不会自己衰减，必须靠反馈把它推到圆内。这也是为什么 71.3 节强调“极点不能配在自然极点附近”——配到 0.99 附近时，闭环虽然稳，但对扰动的恢复要几百拍。</p>
+<h3 id="离散李雅普诺夫把指数换成幂">离散李雅普诺夫：把指数换成幂</h3>
+<p>连续条件是 <span class="math inline">A_{cl}^{\mathsf T}P+PA_{cl}+2\alpha P\prec0</span>，离散对应的是</p>
+<p><span class="math display">
+A_{cl}^{\mathsf T}PA_{cl}-e^{-2\alpha T_s}P\prec0
+\qquad\text{对全部 }(i,j)
+\tag{71-25}
+</span></p>
+<p>右端从“加 <span class="math inline">2\alpha P</span>”变成“减 <span class="math inline">e^{-2\alpha T_s}P</span>”，因为连续时间的 <span class="math inline">e^{-\alpha t}</span> 在采样点上就是 <span class="math inline">(e^{-\alpha T_s})^k</span>。<span class="math inline">T_s\to0</span> 时 <span class="math inline">e^{-2\alpha T_s}\approx1-2\alpha T_s</span>，两式只差一个 <span class="math inline">T_s</span> 因子，符号判断一致，所以本章直接用连续公式求 <span class="math inline">\alpha</span>，不再重解一遍离散问题。<span class="math inline">T_s</span> 大到 10 ms 时这个替换仍然安全，因为判据只关心“左边是否负定”，而 <span class="math inline">T_s</span> 只改变右端的量级，不改变正负。</p>
+<p>(71-25) 不是线性矩阵不等式，因为 <span class="math inline">P</span> 出现在二次型里。化成 LMI 要用 Schur 补，或者直接用变量替换 <span class="math inline">Q=P^{-1}</span> 左乘右乘。本章的实现走 CVXPY，写的是 <span class="math inline">A_{cl}^{\mathsf T}PA_{cl}\prec\lambda P</span> 这种形式，求解器内部自动处理。这一点在代码上省事，在数值上要小心：<span class="math inline">\lambda</span> 接近 1 时，问题接近可行边界，内点法容易报“解可能不准确”，需要把 <span class="math inline">P</span> 归一化（见 71.2 节的 <span class="math inline">P\succeq I</span>）。</p>
+<h3 id="连续公式能借用到多粗的采样">连续公式能借用到多粗的采样</h3>
+<p>下面的问题很实际：既然离散判据只是把 <span class="math inline">2\alpha P</span> 换成了 <span class="math inline">e^{-2\alpha T_s}P</span>，什么时候可以不算离散、直接借连续的结果？</p>
+<p>把两边在同一 <span class="math inline">P</span> 下比较：连续条件等价于 <span class="math inline">A^{\mathsf T}PA\prec(1-2\alpha T_s)P</span> 再丢掉 <span class="math inline">O(T_s^2)</span> 项，也就是拿 <span class="math inline">1-2\alpha T_s</span> 代替 <span class="math inline">e^{-2\alpha T_s}</span>。<span class="math inline">T_s=10</span> ms、<span class="math inline">\alpha=2.5716</span> 时，<span class="math inline">2\alpha T_s=0.0514</span>，丢掉的项约 <span class="math inline">0.5\times0.0514^2=1.3\times10^{-3}</span>，相对右端的 0.949 是 0.14%，不影响可行与不可行的判断。同样是这个 <span class="math inline">\alpha</span>，<span class="math inline">T_s</span> 放到 50 ms，<span class="math inline">2\alpha T_s=0.257</span>，丢掉的项涨到 3.2%，<span class="math inline">e^{-2\alpha T_s}=0.773</span> 与 <span class="math inline">1-2\alpha T_s=0.743</span> 已经差出 4%；此时借连续公式会把 <span class="math inline">\alpha</span> 算大，结论偏乐观。</p>
+<p>所以本章“直接借连续 <span class="math inline">\alpha</span>”只在 10 ms 这个量级上成立，它不是一条普遍规律。采样一旦放到 20 ms 以上，正确做法是重解 (71-25)，而不是把连续结果乘个系数；重解的成本也就是把 LMI 里的 <span class="math inline">P</span> 换成 <span class="math inline">A_d^{\mathsf T}PA_d-\lambda P\prec0</span>，代码只有一行之差。</p>
+<h3 id="一拍的时序账">一拍的时序账</h3>
+<p>控制器的每一个周期里，时间是这样花掉的：传感器在 <span class="math inline">t_k</span> 采样，控制量在 <span class="math inline">t_k+\delta</span> 算完（<span class="math inline">\delta</span> 是计算耗时），执行器在下一次更新时才真正改变输出。若 <span class="math inline">\delta</span> 小于一个采样周期，这一拍仍算在 <span class="math inline">t_{k+1}</span> 生效，等效延迟是 1 拍；若 <span class="math inline">\delta</span> 超过一个周期，就再丢一拍。本章的 <code>DELAY=5</code> 已经把这一拍算在内，所以“5 拍”对应的是 50 ms 的总滞后，而不是“缓冲里放 5 个数、再额外加 1 拍”。</p>
+<p>这条账要算对，否则前面所有延迟数字都会偏一拍。更要紧的是抖动：实际系统的 <span class="math inline">\delta</span> 不会恒定，<span class="math inline">\delta</span> 的分布若跨过采样周期的整数倍，等效延迟就会在 <span class="math inline">d</span> 与 <span class="math inline">d+1</span> 之间跳。工程上按最坏情形取 <span class="math inline">d</span>，而不是按均值四舍五入，因为判据对延迟是盲的（见下一小节），偏一拍的代价只能靠实测暴露。</p>
+<h3 id="延迟lmi-看不见的那一半">延迟：LMI 看不见的那一半</h3>
+<p>纯延迟在连续域是 <span class="math inline">e^{-s\tau}</span>，闭环特征方程是</p>
+<p><span class="math display">
+1+C(s)P(s)e^{-s\tau}=0
+\tag{71-26}
+</span></p>
+<p>这是个超越方程，有无穷多个根，LMI 处理不了。工程上有三条路：Padé 近似（把 <span class="math inline">e^{-s\tau}</span> 换成有理函数，再用 LMI）、Lyapunov-Krasovskii 泛函（把延迟当成一个状态，需要额外假设 <span class="math inline">\dot\tau\le1</span>）、或者干脆不算、用实测扫延迟。</p>
+<p>本章走第三条路，因为它最能暴露问题。用同一组增益，只把延迟从 1 拍加到 50 拍：</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: right;">延迟/拍</th>
+<th style="text-align: right;">延迟/ms</th>
+<th style="text-align: right;">IAE</th>
+<th style="text-align: right;">末段 RMS</th>
+<th style="text-align: right;">最大偏差</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">10</td>
+<td style="text-align: right;">0.2887</td>
+<td style="text-align: right;">0.0000</td>
+<td style="text-align: right;">0.5000</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">5</td>
+<td style="text-align: right;">50</td>
+<td style="text-align: right;">0.2883</td>
+<td style="text-align: right;">0.0000</td>
+<td style="text-align: right;">0.5000</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">10</td>
+<td style="text-align: right;">100</td>
+<td style="text-align: right;">0.2879</td>
+<td style="text-align: right;">0.0000</td>
+<td style="text-align: right;">0.5000</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">15</td>
+<td style="text-align: right;">150</td>
+<td style="text-align: right;">0.2882</td>
+<td style="text-align: right;">0.0000</td>
+<td style="text-align: right;">0.5000</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">20</td>
+<td style="text-align: right;">200</td>
+<td style="text-align: right;">0.3105</td>
+<td style="text-align: right;">0.0010</td>
+<td style="text-align: right;">0.5000</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">30</td>
+<td style="text-align: right;">300</td>
+<td style="text-align: right;">1.4663</td>
+<td style="text-align: right;">0.3326</td>
+<td style="text-align: right;">0.5389</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">40</td>
+<td style="text-align: right;">400</td>
+<td style="text-align: right;">4.8783</td>
+<td style="text-align: right;">1.6501</td>
+<td style="text-align: right;">2.2346</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">50</td>
+<td style="text-align: right;">500</td>
+<td style="text-align: right;">8.0227</td>
+<td style="text-align: right;">3.2111</td>
+<td style="text-align: right;">6.3804</td>
+</tr>
+</tbody>
+</table>
+<p><strong>表 71-4 纯延迟对闭环性能的影响（同一组增益，LMI 的 <span class="math inline">\alpha</span> 恒为 2.5716）</strong></p>
+<p>表里最关键的一列是“末段 RMS”。1 到 15 拍全是 0，20 拍才冒出 0.0010，30 拍跳到 0.3326，40 拍 1.6501（约 5 倍），50 拍 3.2111。而 LMI 给出的 <span class="math inline">\alpha</span> 在这整张表里一个数都不变——<strong>判据对延迟完全盲</strong>。</p>
+<p>盲的原因是结构性的：LMI 只看 <span class="math inline">A_{cl}</span> 的特征值，而 <span class="math inline">e^{-s\tau}</span> 不改变任何特征值，它改变的是相位。相位滞后到 180° 时，原本“负反馈”的那条通路变成了“正反馈”，闭环才振起来。这条边界与增益有关、与延迟有关，与 <span class="math inline">A_{cl}</span> 的特征值无关，所以任何只看 <span class="math inline">A_{cl}</span> 的判据都抓不到它。</p>
+<p>工程上的处理办法是把延迟折算成“相位预算”：在穿越频率 <span class="math inline">\omega_c</span> 处，延迟贡献 <span class="math inline">\omega_c\tau</span> 弧度的相位滞后。本章的穿越频率约 1.4 rad/s，延迟 300 ms 时贡献 0.42 rad（24°），仍在裕度内；延迟 500 ms 时 0.70 rad（40°），裕度已经不足。这个估算与表 71-4 的拐点（30 到 40 拍）对得上，比“跑一遍看”快得多。</p>
+<h3 id="两种量化两张表">两种量化，两张表</h3>
+<p><strong>空间量化</strong>的格距由域宽与格数决定：</p>
+<p><span class="math display">
+\Delta e=\frac{2e_{\text{lim}}}{n-1},\qquad \Delta\dot e=\frac{2\dot e_{\text{lim}}}{n-1}
+\tag{71-27}
+</span></p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: right;">每维格数</th>
+<th style="text-align: right;">IAE</th>
+<th style="text-align: right;">末段 RMS</th>
+<th style="text-align: right;"><span class="math inline">\Delta u</span> 的 RMS</th>
+<th style="text-align: right;">超调/%</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">11</td>
+<td style="text-align: right;">0.3054</td>
+<td style="text-align: right;">0.0026</td>
+<td style="text-align: right;">0.02083</td>
+<td style="text-align: right;">0.54</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">21</td>
+<td style="text-align: right;">0.3064</td>
+<td style="text-align: right;">0.0036</td>
+<td style="text-align: right;">0.01902</td>
+<td style="text-align: right;">0.75</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">41</td>
+<td style="text-align: right;">0.3014</td>
+<td style="text-align: right;">0.0019</td>
+<td style="text-align: right;">0.01816</td>
+<td style="text-align: right;">0.40</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">81</td>
+<td style="text-align: right;">0.2992</td>
+<td style="text-align: right;">0.0013</td>
+<td style="text-align: right;">0.01785</td>
+<td style="text-align: right;">0.27</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">161</td>
+<td style="text-align: right;">0.2983</td>
+<td style="text-align: right;">0.0007</td>
+<td style="text-align: right;">0.01772</td>
+<td style="text-align: right;">0.15</td>
+</tr>
+</tbody>
+</table>
+<p><strong>表 71-5 查表格数对性能与抖振的影响（最近格点，双线性见 71.6 节）</strong></p>
+<p>表里有一处反常：21 格比 11 格还差（IAE 0.3064 对 0.3054，超调 0.75% 对 0.54%）。原因不是“格子多了反而坏”，而是 21 格的格距（<span class="math inline">e</span> 方向 0.045、<span class="math inline">\dot e</span> 方向 0.12）与闭环的动态周期相配，轨迹在格子边界上以接近自身的频率来回穿越，抖振被放大；11 格的格距更粗，穿越次数少，反而稳。<strong>格数与性能不是单调关系，格距与闭环动态的相对关系才是</strong>——这一点只能靠扫描发现，推不出来。</p>
+<p><span class="math inline">\Delta u</span> 的 RMS 从 11 格的 0.02083 单调降到 161 格的 0.01772，降幅 14.9%。它与 IAE 不同：IAE 有非单调，<span class="math inline">\Delta u</span> 没有。这是因为抖振是格距的统计平均，对轨迹的具体相位不敏感；而 IAE 会把某一次倒霉的穿越累加进去。工程上如果要看“量化做得够不够细”，看 <span class="math inline">\Delta u</span> 比看 IAE 可靠。</p>
+<p><strong>幅度量化</strong>的表在 71.6 节（表 71-7），结论提前说：16 位到 12 位几乎无差别，10 位末段残差 0.0007 仍达标，8 位按 <span class="math inline">q/2</span> 抬到 0.005 量级，6 位就进 0.01 量级了。</p>
+<h3 id="一步投影在离散里意味着什么">一步投影在离散里意味着什么</h3>
+<p>连续时间的屏障条件 (71-20) 在离散实现里变成“每拍检查一次”：</p>
+<p><span class="math display">
+h(x_{k+1})\ge\left(1-\kappa T_s\right)h(x_k)
+\tag{71-28}
+</span></p>
+<p>只要 <span class="math inline">\kappa T_s&lt;1</span>，右端是正的衰减系数，<span class="math inline">h</span> 就不会跨零。展开 <span class="math inline">h(x_{k+1})</span> 用 <span class="math inline">x_{k+1}=A_dx_k+B_du</span>，得到的是 <span class="math inline">u</span> 的一个线性不等式，解仍然是单边投影。</p>
+<p>这里有一个离散特有的漏洞：条件只保证<strong>下一拍</strong>的 <span class="math inline">h</span> 不跨零，不保证下下拍。若 <span class="math inline">\kappa T_s</span> 取得接近 1（衰减极慢），<span class="math inline">h</span> 会在零附近磨很久，任何一拍的计算误差都可能把它推过去。所以工程上要求 <span class="math inline">\kappa T_s\le0.2</span>，对应本章 <span class="math inline">\kappa\le20</span>——这也是 71.7 节给 <span class="math inline">\kappa</span> 上限的依据。</p>
+<p>延迟补偿的形式是把“下一拍”换成“<span class="math inline">d</span> 拍后”：</p>
+<p><span class="math display">
+h\left(A_d^dx_k+\sum_{i=0}^{d-1}A_d^{d-1-i}B_du_{k+i}\right)\ge\left(1-\kappa T_s\right)^dh(x_k)
+\tag{71-29}
+</span></p>
+<p>求和里后面几拍的 <span class="math inline">u</span> 还没算出来，只能用标称律预测。这一步就把“安全层的保证”降级成了“在预测准确的前提下的保证”——本章没有做这一步，只在 71.9 节作为改进方向列出。</p>
+<h3 id="量化会把屏障刚修好的量再推坏">量化会把屏障刚修好的量再推坏</h3>
+<p>一步投影算出的是连续值 <span class="math inline">u^\star</span>，它刚好让 (71-28) 取等号。可实际执行的是量化后的值，与 <span class="math inline">u^\star</span> 最多相差 <span class="math inline">q/2</span>。这个偏差直接进到 <span class="math inline">\dot h</span> 里：<span class="math inline">\dot h</span> 对 <span class="math inline">u</span> 的系数是 <span class="math inline">-2\dot yK(y)</span>，当 <span class="math inline">|\dot y|</span> 接近 <span class="math inline">v_{\max}</span>、<span class="math inline">K=16</span> 时，<span class="math inline">q/2</span> 的偏差被放大成约 <span class="math inline">16v_{\max}q</span> 的 <span class="math inline">h</span> 变化率偏差。</p>
+<p>代入本章数字：<span class="math inline">q=2U_{\max}/2^{10}=0.00234</span>，<span class="math inline">q/2=0.0012</span>，<span class="math inline">v_{\max}=1.0</span> 时 <span class="math inline">\dot h</span> 的偏差约 0.038，而 <span class="math inline">\kappa h</span> 在 <span class="math inline">h</span> 接近零时也接近零。也就是说，<strong>在边界附近，量化的扰动比屏障的收敛项还大</strong>，条件会逐拍被破坏又逐拍被修复，表现为速度在 <span class="math inline">v_{\max}</span> 附近的小幅锯齿——这类锯齿在曲线上看着像噪声，实际是“投影与量化在打架”。</p>
+<p>处理办法有两种：投影时预留 <span class="math inline">q/2</span> 的余量，把 (71-28) 的右端再补上这一项；或者把位宽提到 12 位以上，让 <span class="math inline">q/2</span> 小到不影响条件成立。本章走后者，12 位时 <span class="math inline">q/2=0.00029</span>，<span class="math inline">\dot h</span> 的偏差降到 0.009，锯齿消失。这条也解释了表 71-7 里 10 位与 12 位之间那一档为什么变化明显：不是误差指标变了，是<strong>约束的成立性</strong>变了。</p>
+<h3 id="离散-shapley8-个联盟12-项之和">离散 Shapley：8 个联盟，12 项之和</h3>
+<p>离散版本的复杂度是 <span class="math inline">2^n</span>。<span class="math inline">n=3</span> 时 8 个联盟、12 项加权和，一次归因 8 次前向；<span class="math inline">n=10</span> 时 1024 个联盟，一次归因要 1 ms 量级，只能离线；<span class="math inline">n=20</span> 时一百万个联盟，必须采样。</p>
+<p>本章的 8 次前向在 10 ms 的采样周期里绰绰有余（单次前向是 12 个隐元的 <span class="math inline">\tanh</span>，约 100 次浮点运算），所以可以<strong>每拍都算</strong>。这一点很重要：只有每拍都算，“解释”才能作为在线监控的一部分；若只能离线算，它就只能进事后报告。</p>
+<p>采样近似的代价可以用“效率性残差”直接量出来：精确版本的残差在 <span class="math inline">10^{-16}</span>，采样 100 次时残差升到 <span class="math inline">10^{-2}</span> 量级。验收时把这条残差写进报告，比说“用了 KernelSHAP”有用得多——<strong>残差是解释的误差棒</strong>。</p>
+<h2 id="稳定性与性能">71.6 稳定性与性能</h2>
+<p>前五节把工具摆齐了，这一节把它们放到同一张实验台上。所有数字来自同一个对象、同一组参考信号、同一套 10 ms 采样，唯一变动的是“表示”与“判据”。先看性能，再看判据的保守度，最后看安全层的代价——这个次序很重要，因为判据的保守度必须用实测边界来标定，而实测边界必须先有可信的性能读数。</p>
+<h3 id="四种走法同一根曲线">四种走法，同一根曲线</h3>
+<p>图 71-2 是四条阶跃响应压在一起。视觉上它们几乎重合，这正是本章最想让人警惕的地方：<strong>曲线像，证明成本却完全不同</strong>。</p>
+<figure>
+<img src="figs/ch071/fig_071_02_representations.svg" alt="图 71-2 三种表示的阶跃响应与控制量" /><figcaption aria-hidden="true">图 71-2 三种表示的阶跃响应与控制量</figcaption>
+</figure>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">表示</th>
+<th style="text-align: right;">IAE</th>
+<th style="text-align: right;">相对教师</th>
+<th style="text-align: right;">超调/%</th>
+<th style="text-align: right;">调节时间/s</th>
+<th style="text-align: right;"><span class="math inline">\Delta u</span> 的 RMS</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">教师（4 规则 TS-PDC）</td>
+<td style="text-align: right;">0.2883</td>
+<td style="text-align: right;">—</td>
+<td style="text-align: right;">0.00</td>
+<td style="text-align: right;">1.64</td>
+<td style="text-align: right;">0.02005</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">ELM 网络（8 隐元）</td>
+<td style="text-align: right;">0.3529</td>
+<td style="text-align: right;">+22.4%</td>
+<td style="text-align: right;">2.69</td>
+<td style="text-align: right;">5.49</td>
+<td style="text-align: right;">0.01326</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">查表（41 格，最近格点）</td>
+<td style="text-align: right;">0.3014</td>
+<td style="text-align: right;">+4.5%</td>
+<td style="text-align: right;">0.40</td>
+<td style="text-align: right;">1.66</td>
+<td style="text-align: right;">0.01816</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">查表（41 格，双线性）</td>
+<td style="text-align: right;">0.2968</td>
+<td style="text-align: right;">+2.9%</td>
+<td style="text-align: right;">0.00</td>
+<td style="text-align: right;">1.66</td>
+<td style="text-align: right;">0.01765</td>
+</tr>
+</tbody>
+</table>
+<p><strong>表 71-6 同一教师的四种部署方式（同一参考、同一延迟、同一限幅）</strong></p>
+<p>四行里最值得琢磨的是网络的调节时间 5.49 s。IAE 只差 22%，调节时间却差 3.35 倍，两个数看起来矛盾，其实说的是两件事：IAE 是全程面积，主要由上升段贡献；调节时间是“进入 2% 带并不再出来”的时刻，完全由末段决定。网络在末段的输出误差形成了一个等效死区，误差进到 0.02 量级后就爬不动了。<strong>只看 IAE 会漏掉这一类失效</strong>，这是本章表 71-6 特意把两列并排的原因。</p>
+<p>网络与教师的函数差是 <span class="math inline">\max|u_{\rm ELM}-u_{\rm TS}|=0.1250</span>，相当于限幅值 1.2 的 10.4%。前向差 10.4%，闭环 IAE 只差 22.4%、末段误差差一个数量级——反馈既压缩了前向误差，也把误差的形状搬到了时间轴上。用“函数拟合得多准”来预测“闭环表现多好”，在末段这一步会失效。</p>
+<p>查表这一行说明了另一件事：41 格加双线性插值，IAE 只比教师差 2.9%，超调归零，<span class="math inline">\Delta u</span> 还更小（0.01765 对 0.02005）。原因是查表天然是分段线性的，它在格点之间做的是插值，恰好把教师前件里的非线性抹平了一点，控制量更平滑。<strong>精度不是单向的</strong>：一个更粗的表示，可能在抖振这个指标上比教师更好。这也是现场愿意用查表替代规则库的实际理由之一。</p>
+<h3 id="公共-p-的代价从单规则到-16-对">公共 <span class="math inline">P</span> 的代价：从单规则到 16 对</h3>
+<p>图 71-3 把四个 <span class="math inline">\alpha</span> 读数画成柱状，附一条“分段情形的 3.0000”参考线。</p>
+<figure>
+<img src="figs/ch071/fig_071_03_lmi.svg" alt="图 71-3 四组配对的公共李雅普诺夫衰减率" /><figcaption aria-hidden="true">图 71-3 四组配对的公共李雅普诺夫衰减率</figcaption>
+</figure>
+<ul>
+<li><strong>名义单规则 2.9091</strong>：用 <span class="math inline">y=1.9</span> 那条规则配出的增益，作用在 <span class="math inline">y=2.0</span> 的对象上。这个 2.9091 不是数值误差（二分 24 次，分辨率优于 <span class="math inline">10^{-7}</span>），而是<strong>增益与对象失配</strong>的代价——理论上的上界是标称极点里最慢那个的实部，即 3.0。</li>
+<li><strong>四规则只查对角 3.0000</strong>：每对 <span class="math inline">(i,i)</span> 用自己那套 <span class="math inline">B_i</span>、<span class="math inline">K_i</span>，失配消失，<span class="math inline">\alpha</span> 顶到 3.0 的天花板。</li>
+<li><strong>四规则全查 16 对 2.5716</strong>：交叉项 <span class="math inline">A-B_iK_j</span>（<span class="math inline">i\ne j</span>）进来之后，<span class="math inline">\alpha</span> 掉到 2.5716，比 3.0 低 14.3%，比名义情形低 11.6%。</li>
+<li><strong>分段（每个局部模型各一个 <span class="math inline">P</span>）3.0000</strong>：四条规则各自拿满分段的 3.0，最小值仍是 3.0。</li>
+</ul>
+<p>第三行才是真正的 PDC 结论。模糊系统在运行时，隶属度权重是连续变化的，任何时刻的闭环矩阵都是 16 个 <span class="math inline">A_{cl,ij}</span> 的凸组合，所以“每个局部稳定”推不出“整体稳定”——中间那段过渡区，恰恰是交叉项在起作用。<span class="math inline">\alpha</span> 从 3.0 掉到 2.5716，掉的这 14.3% 就是<strong>过渡区的价格</strong>。</p>
+<p>第四行看起来最优，但它买不到东西：分段 <span class="math inline">P</span> 只对“系统始终停在某一格”成立，而实际轨迹会连续穿过四个格子。要用它，得额外证明“切换不破坏衰减”，那需要驻留时间条件，本章没做。所以设计上宁可用 2.5716 这个统一证书——它不要求轨迹配合。</p>
+<p><span class="math inline">\alpha</span> 的物理意义是包络：<span class="math inline">\lVert x(t)\rVert\le\kappa\sqrt{\lambda_{\max}(P)/\lambda_{\min}(P)}\,e^{-\alpha t}\lVert x(0)\rVert</span>。<span class="math inline">\alpha=2.5716</span> 意味着误差每 0.39 s 衰减到 <span class="math inline">1/e</span>，与表 71-6 里教师 1.64 s 的调节时间对得上（四个时间常数进 2% 带）。判据与实测在这个量级上一致，是本章少数“两边说得上话”的地方。</p>
+<p>需要说明的是，LMI 里的 <span class="math inline">\alpha</span> 与实测的调节时间只是<strong>同向</strong>，不能互相换算。<span class="math inline">\alpha</span> 是“最坏初值下的最慢衰减”，实测是“这一条阶跃的衰减”。前者严、后者松，两者差 1.5 倍属于正常，差 10 倍就说明假设不成立。</p>
+<h3 id="小增益判据保守-18-到-65-倍保守在哪">小增益判据保守 18 到 65 倍，保守在哪</h3>
+<p>图 71-4 是半对数坐标下的两条线：红线是 <span class="math inline">L</span> 的理论上界，蓝线是实测的 <span class="math inline">L</span>，横轴是隐层宽度，水平虚线的位置是判据门槛 <span class="math inline">1/\lVert P\rVert_\infty=0.2165</span>。两条线都在门槛之上，且上界离门槛的距离是实测的几十倍。</p>
+<figure>
+<img src="figs/ch071/fig_071_04_lipschitz.svg" alt="图 71-4 小增益上界与实测值随网络宽度的变化" /><figcaption aria-hidden="true">图 71-4 小增益上界与实测值随网络宽度的变化</figcaption>
+</figure>
+<p>先把两个基本量摆出来：工作点 <span class="math inline">y=2.0</span> 处 <span class="math inline">K(2.0)=16.00</span>，线性化对象 <span class="math inline">P(s)=16/\left(s(s+2)\right)</span>，其 <span class="math inline">\mathcal{H}_\infty</span> 范数在 <span class="math inline">\omega=\sqrt{2}</span> 处取到</p>
+<p><span class="math display">
+\lVert P\rVert_\infty=\frac{16}{\sqrt{2}\cdot\sqrt{2+4}}=4.6188
+\tag{71-30}
+</span></p>
+<p>于是“稳定”的充分条件是 <span class="math inline">L&lt;1/4.6188=0.2165</span>。五种宽度下实测的 <span class="math inline">L</span> 是 1.3926、1.4167、1.2871、1.7115、1.6443，产品分别是 6.4321、6.5435、5.9448、7.9051、7.5947——<strong>没有一种宽度满足判据</strong>，最好的一种也超了 5.9 倍。</p>
+<p>再看实测边界。把网络输出乘一个系数 <span class="math inline">\beta</span>，逐渐加大，记“控制量增量的 RMS 涨到基线 10 倍”时的 <span class="math inline">\beta</span> 为 <span class="math inline">\beta_{\rm crit}</span>。五种宽度的实测值是 3.50、3.50、3.00、7.00、8.50，判据预测的临界值是 0.16、0.15、0.17、0.13、0.13。逐行相除得 22.5、22.9、17.8、55.3、64.5 倍：<strong>窄网（2 到 8）保守 18 到 23 倍，宽网（16、32）升到 55 与 65 倍</strong>。这里要留意预测值的算法——它用的是实测 <span class="math inline">L</span> 而不是理论上的上界，也就是说 0.16 已经是“对判据最有利”的算法；换成上界，预测值还会小几十倍。</p>
+<p>保守来自两处，可以分开算账。</p>
+<p><strong>第一处是 <span class="math inline">\mathcal{H}_\infty</span> 范数本身。</strong> <span class="math inline">L\lVert P\rVert_\infty&lt;1</span> 是“任意有界扰动”下的结论，它必须对最坏频率成立。而实际闭环里的信号集中在低频段（阶跃的频谱按 <span class="math inline">1/\omega</span> 衰减），<span class="math inline">\lVert P\rVert_\infty</span> 取到的 <span class="math inline">\omega=\sqrt2</span> 处，信号能量已经很小。这一处贡献大约一个数量级的保守。</p>
+<p><strong>第二处是判据丢掉了相位信息。</strong> 小增益只看“各段增益乘起来小于 1”，完全不看这些增益发生在什么相位上。本章的回路 <span class="math inline">1/\left(s(s+2)\right)</span> 相位从 <span class="math inline">-90°</span> 单调趋向 <span class="math inline">-180°</span>，在任何有限频率都没穿过 <span class="math inline">-180°</span>，也就是<strong>线性意义下的增益裕度是无穷大</strong>；实测的 3.0 到 8.5 不是线性失稳，而是限幅与抖振先到。用一个只含幅值的判据去卡一个靠相位留余量的回路，保守一个数量级是必然的。</p>
+<p><span class="math inline">L</span> 的上界另记一笔，它不属于上面那 22 倍，但决定判据能不能落地。式 (71-9) 给出的上界随宽度整体上移（宽度 2 时 1.8219，宽度 32 时 306.5588，宽度涨 16 倍、上界涨 168 倍，中间还因随机初值出现 38.4 到 25.9 的回落），而实测 <span class="math inline">L</span> 一直在 1.3 到 1.7 之间——<span class="math inline">\tanh</span> 在随机特征下大量饱和，实际斜率远小于 1。若用上界代替实测值，预测的临界增益会掉到 <span class="math inline">10^{-3}</span> 量级。也就是说：<strong>判据即使只想给出那个已经很保守的 0.16，也必须先把上界换成实测 <span class="math inline">L</span></strong>，这一步本身就等于承认上界不可直接用。</p>
+<p>两处叠起来，窄网约 20 倍，宽网 50 倍以上。这个数字不是“判据写错了”，而是“判据回答的问题与实际关心的问题不是同一个”：判据回答“任何扰动都不失稳”，实测回答“这一族阶跃不失稳”。工程上的正确姿势因此是：<strong>用判据排除，用实测验收，两者都不许冒充对方</strong>。本章在 71.11 节把这条写成适用边界。</p>
+<h3 id="延迟判据看不见的那一半">延迟：判据看不见的那一半</h3>
+<p>表 71-4 已经给出延迟扫描的数据，图 71-5 把它画成双纵轴：左轴是末段 RMS（对数），右轴是 IAE（线性）。</p>
+<figure>
+<img src="figs/ch071/fig_071_05_delay.svg" alt="图 71-5 纯延迟对末段残差与 IAE 的影响" /><figcaption aria-hidden="true">图 71-5 纯延迟对末段残差与 IAE 的影响</figcaption>
+</figure>
+<p>三条曲线的拐点不一样，这是选监控量的直接依据。</p>
+<ul>
+<li><strong>末段 RMS</strong>：1 到 15 拍严格为零（低于双精度噪声），20 拍 0.0010，30 拍 0.3326。它在 20 拍就“抬头”，是最灵敏的早期指标。</li>
+<li><strong>IAE</strong>：1 到 15 拍在 0.2880 附近抖动（抖动幅度 0.0008，是采样相位造成的），20 拍 0.3105（+7.7%），30 拍 1.4663（+409%）。它到 30 拍才“说话”。</li>
+<li><strong>最大偏差</strong>：20 拍之前一直是 0.5000，也就是阶跃本身的高度，说明根本没有超调；30 拍才 0.5389，刚过 8%。</li>
+</ul>
+<p>所以延迟劣化是“先振、后偏、最后才慢”。工程上判断“延迟还有多少余量”，看末段 RMS 比看 IAE 早 10 拍，也就是早 100 ms——在一个 10 ms 采样的系统里，这是十次采样，足够做一次保护动作。</p>
+<p>拐点位置可以用相位预算解释：穿越频率约 1.4 rad/s，延迟 200 ms 时贡献 <span class="math inline">1.4\times0.2=0.28</span> rad（16°），300 ms 时 0.42 rad（24°），400 ms 时 0.56 rad（32°）。典型的相位裕度在 30° 到 45°，所以 300 ms 是“开始吃裕度”、400 ms 是“吃掉大半”。表 71-4 的拐点（30 到 40 拍）与这个估算完全对得上，比跑八次仿真快得多。</p>
+<p>而 LMI 在这整张表里一个数都不变（<span class="math inline">\alpha</span> 恒 2.5716）。这不是精度问题，是结构问题：<span class="math inline">e^{-s\tau}</span> 不改变任何特征值，只改变相位；任何只看 <span class="math inline">A_{cl}</span> 特征值的判据，对延迟都是盲的。<strong>判据的适用范围必须写在判据旁边</strong>，这一条比判据本身更重要。</p>
+<h3 id="两种量化一个改抖振一个改死区">两种量化：一个改抖振，一个改死区</h3>
+<p>表 71-5 是空间量化（网格），表 71-7 是幅度量化（定点位数），两者放在一起看，失效机制完全不同。</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: right;">位数 <span class="math inline">b</span></th>
+<th style="text-align: right;">步长 <span class="math inline">q</span></th>
+<th style="text-align: right;">末段 RMS</th>
+<th style="text-align: right;">IAE</th>
+<th style="text-align: right;">相对教师</th>
+<th style="text-align: right;"><span class="math inline">\Delta u</span> 的 RMS</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">6</td>
+<td style="text-align: right;">0.037500</td>
+<td style="text-align: right;">0.0117</td>
+<td style="text-align: right;">0.3205</td>
+<td style="text-align: right;">+11.2%</td>
+<td style="text-align: right;">0.02024</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">8</td>
+<td style="text-align: right;">0.009375</td>
+<td style="text-align: right;">0.0048</td>
+<td style="text-align: right;">0.3001</td>
+<td style="text-align: right;">+4.1%</td>
+<td style="text-align: right;">0.02001</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">10</td>
+<td style="text-align: right;">0.002344</td>
+<td style="text-align: right;">0.0007</td>
+<td style="text-align: right;">0.2896</td>
+<td style="text-align: right;">+0.45%</td>
+<td style="text-align: right;">0.02006</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">12</td>
+<td style="text-align: right;">0.000586</td>
+<td style="text-align: right;">0.0002</td>
+<td style="text-align: right;">0.2885</td>
+<td style="text-align: right;">+0.07%</td>
+<td style="text-align: right;">0.02006</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">14</td>
+<td style="text-align: right;">0.000146</td>
+<td style="text-align: right;">0.0000</td>
+<td style="text-align: right;">0.2883</td>
+<td style="text-align: right;">0.00%</td>
+<td style="text-align: right;">0.02005</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">16</td>
+<td style="text-align: right;">0.000037</td>
+<td style="text-align: right;">0.0000</td>
+<td style="text-align: right;">0.2883</td>
+<td style="text-align: right;">0.00%</td>
+<td style="text-align: right;">0.02005</td>
+</tr>
+</tbody>
+</table>
+<p><strong>表 71-7 定点位数对末段残差与性能的影响（限幅 <span class="math inline">\pm1.2</span>，按式 (71-10) 计算步长）</strong></p>
+<p>第一、二、三列之间可以读出一条经验：<strong>末段 RMS 约等于 <span class="math inline">q/2</span></strong>。6 位时 <span class="math inline">q/2=0.01875</span>，实测 0.0117（0.62 倍）；8 位时 0.0047 对 0.0048（几乎正好）；10 位时 0.00117 对 0.0007（0.60 倍）。比例在 0.6 到 1.0 之间浮动，取决于极限环落在哪个相位上。要它当设计公式用，取保守的 1.0 倍，反解位数</p>
+<p><span class="math display">
+b\ge\log_2\frac{2U_{\max}}{q_{\rm req}},\qquad q_{\rm req}=2\times{\rm RMS}_{\rm req}
+\tag{71-31}
+</span></p>
+<p>要求末段 RMS 不超过 0.001，则 <span class="math inline">q_{\rm req}=0.002</span>，<span class="math inline">b\ge\log_2(2.4/0.002)=10.2</span>，取 11 位。表 71-7 里 10 位实测 0.0007 已经达标，说明这个公式偏保守约一位——保守是好事，它把“相位运气”算进去了。</p>
+<p>最后一行 <span class="math inline">\Delta u</span> 的 RMS 从 6 位的 0.02024 到 16 位的 0.02005，只降 0.9%。对比表 71-5 里空间量化的 <span class="math inline">\Delta u</span> 从 0.02083 降到 0.01772（降 14.9%），差别是本质的：<strong>空间量化改的是抖振，幅度量化改的是死区</strong>。定点位数再低，控制量也是每拍连续变化的，只是被吸到离散档位上；格点再密，格子边界上的跳变也还在。所以“加了位数为什么还抖”这个问题，答案是抖振来自查表，不来自定点。</p>
+<figure>
+<img src="figs/ch071/fig_071_06_quantization.svg" alt="图 71-6 网格量化与定点量化的末段行为" /><figcaption aria-hidden="true">图 71-6 网格量化与定点量化的末段行为</figcaption>
+</figure>
+<p>图 71-6 左边是控制量增量的 RMS 随网格数变化，横轴对数、纵轴只跨 0.017 到 0.0215，所以看上去几乎是平的——把它放大看，网格从 161 降到 11，这条线单调上抬 14.9%。右边是末段误差随位数变化（对数纵轴），6 位在 <span class="math inline">10^{-2}</span> 量级，14 位以上掉到地板。左右两图纵轴差三个数量级，这就是“抖振”和“死区”在量级上的区别：抖振是控制量的高频抖动，幅值小但伤执行器；死区是稳态误差，幅值直接进精度指标。</p>
+<h3 id="安全层的代价可以精确算出来">安全层的代价可以精确算出来</h3>
+<p>表 71-8 是速度屏障的 4×3 扫描，基线是同一台激进控制器（目标 2.6、极点 <span class="math inline">-8/-10</span>）不加安全层：IAE 0.3949，峰值速度 3.643，调节时间 0.83 s。</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: right;"><span class="math inline">v_{\max}</span></th>
+<th style="text-align: right;"><span class="math inline">\kappa</span></th>
+<th style="text-align: right;"><span class="math inline">\max\lvert\dot y\rvert</span></th>
+<th style="text-align: right;">IAE</th>
+<th style="text-align: right;">调节时间/s</th>
+<th style="text-align: right;">干预拍数</th>
+<th style="text-align: right;">干预峰值</th>
+<th style="text-align: right;">IAE 代价</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">1.2</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">1.185</td>
+<td style="text-align: right;">0.7148</td>
+<td style="text-align: right;">1.29</td>
+<td style="text-align: right;">88</td>
+<td style="text-align: right;">1.0547</td>
+<td style="text-align: right;">+81.0%</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">1.2</td>
+<td style="text-align: right;">8</td>
+<td style="text-align: right;">1.200</td>
+<td style="text-align: right;">0.6577</td>
+<td style="text-align: right;">1.23</td>
+<td style="text-align: right;">80</td>
+<td style="text-align: right;">1.0581</td>
+<td style="text-align: right;">+66.5%</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">1.2</td>
+<td style="text-align: right;">16</td>
+<td style="text-align: right;">1.200</td>
+<td style="text-align: right;">0.6301</td>
+<td style="text-align: right;">1.20</td>
+<td style="text-align: right;">76</td>
+<td style="text-align: right;">1.0591</td>
+<td style="text-align: right;">+59.6%</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">1.0</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">0.994</td>
+<td style="text-align: right;">0.8146</td>
+<td style="text-align: right;">1.45</td>
+<td style="text-align: right;">107</td>
+<td style="text-align: right;">1.0817</td>
+<td style="text-align: right;">+106.3%</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">1.0</td>
+<td style="text-align: right;">8</td>
+<td style="text-align: right;">1.000</td>
+<td style="text-align: right;">0.7532</td>
+<td style="text-align: right;">1.38</td>
+<td style="text-align: right;">99</td>
+<td style="text-align: right;">1.0832</td>
+<td style="text-align: right;">+90.7%</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">1.0</td>
+<td style="text-align: right;">16</td>
+<td style="text-align: right;">1.000</td>
+<td style="text-align: right;">0.7231</td>
+<td style="text-align: right;">1.35</td>
+<td style="text-align: right;">95</td>
+<td style="text-align: right;">1.0836</td>
+<td style="text-align: right;">+83.1%</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">0.8</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">0.799</td>
+<td style="text-align: right;">0.9659</td>
+<td style="text-align: right;">1.69</td>
+<td style="text-align: right;">134</td>
+<td style="text-align: right;">1.1072</td>
+<td style="text-align: right;">+144.6%</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">0.8</td>
+<td style="text-align: right;">8</td>
+<td style="text-align: right;">0.800</td>
+<td style="text-align: right;">0.8981</td>
+<td style="text-align: right;">1.62</td>
+<td style="text-align: right;">126</td>
+<td style="text-align: right;">1.1076</td>
+<td style="text-align: right;">+127.4%</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">0.8</td>
+<td style="text-align: right;">16</td>
+<td style="text-align: right;">0.800</td>
+<td style="text-align: right;">0.8666</td>
+<td style="text-align: right;">1.58</td>
+<td style="text-align: right;">123</td>
+<td style="text-align: right;">1.1077</td>
+<td style="text-align: right;">+119.4%</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">0.6</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">0.600</td>
+<td style="text-align: right;">1.2147</td>
+<td style="text-align: right;">2.08</td>
+<td style="text-align: right;">180</td>
+<td style="text-align: right;">1.1313</td>
+<td style="text-align: right;">+207.6%</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">0.6</td>
+<td style="text-align: right;">8</td>
+<td style="text-align: right;">0.600</td>
+<td style="text-align: right;">1.1469</td>
+<td style="text-align: right;">2.01</td>
+<td style="text-align: right;">173</td>
+<td style="text-align: right;">1.1314</td>
+<td style="text-align: right;">+190.4%</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">0.6</td>
+<td style="text-align: right;">16</td>
+<td style="text-align: right;">0.600</td>
+<td style="text-align: right;">1.1114</td>
+<td style="text-align: right;">1.98</td>
+<td style="text-align: right;">168</td>
+<td style="text-align: right;">1.1314</td>
+<td style="text-align: right;">+181.4%</td>
+</tr>
+</tbody>
+</table>
+<p><strong>表 71-8 速度屏障的约束值、增益与性能代价（代价按 <span class="math inline">\eta={\rm IAE}_{\rm safe}/{\rm IAE}_0-1</span> 计，基线 0.3949）</strong></p>
+<p><strong>第一，约束是硬约束。</strong> <span class="math inline">\max\lvert\dot y\rvert</span> 那一列，<span class="math inline">v_{\max}=1.0</span> 时是 1.000，0.8 时是 0.800，0.6 时是 0.600，一位不多。<span class="math inline">v_{\max}=1.2</span> 时是 1.185，略低于约束，说明峰值恰好没顶到边界，约束在别处起作用。这种“贴着约束跑”的行为是屏障函数的设计目标：不是留裕度，而是<strong>把裕度用光</strong>。</p>
+<p><strong>第二，代价随约束收紧超线性增长。</strong> 从 1.2 收到 1.0，代价从 60% 量级涨到 83% 量级；再收到 0.8，涨到 119%；收到 0.6，涨到 181%。约束每收紧 0.2，代价分别涨约 24、36、62 个百分点，增量本身在变大，所以 <span class="math inline">\eta</span> 是<strong>凸的</strong>。工程含义很直接：把速度约束定得比工艺要求更严，代价会成倍付，而收益是零。</p>
+<p><strong>第三，<span class="math inline">\kappa</span> 越大越便宜。</strong> 同一 <span class="math inline">v_{\max}</span> 下，<span class="math inline">\kappa=16</span> 比 <span class="math inline">\kappa=4</span> 便宜 21 个百分点（1.2 时 59.6% 对 81.0%，1.0 时 83.1% 对 106.3%）。原因是 <span class="math inline">\kappa</span> 决定“离边界多远就开始刹车”：<span class="math inline">\kappa</span> 大，<span class="math inline">h</span> 的惩罚项 <span class="math inline">\kappa h</span> 大，屏障在 <span class="math inline">h</span> 还很正的时候就要求减速，制动提前、介入平滑、总行程短。<span class="math inline">\kappa</span> 小则相反，拖到边界上才猛刹，干预峰值大、时间长。</p>
+<p>但 <span class="math inline">\kappa</span> 不能无限加大。式 (71-28) 要求 <span class="math inline">\kappa T_s\le0.2</span>，<span class="math inline">T_s=0.01</span> 时 <span class="math inline">\kappa\le20</span>。表 71-8 的最大值取 16，就是留了 20% 的余量。这条上限是离散实现特有的，连续时间版本没有——连续里 <span class="math inline">\kappa</span> 只是“收敛速度”，可以任意大，离散里它必须与采样周期配套。</p>
+<p><strong>第四，干预峰值都在 1.05 以上。</strong> 这一列容易被忽略：控制量的单拍改动量达到 1.05 到 1.13，而限幅是 1.2。也就是说安全层不是“微调”，它几乎是在接管控制量——原本激进的 <span class="math inline">u</span> 被一次性砍掉 88%。这与“最小干预”的名字不矛盾：最小干预是相对“满足约束的所有 <span class="math inline">u</span>”而言的，而在这个算例里，满足约束的集合本身就很窄。</p>
+<figure>
+<img src="figs/ch071/fig_071_07_cbf.svg" alt="图 71-7 速度屏障下的输出与速度轨迹" /><figcaption aria-hidden="true">图 71-7 速度屏障下的输出与速度轨迹</figcaption>
+</figure>
+<p>图 71-7 上面是输出，下面是速度，虚线是 <span class="math inline">v_{\max}=1.0</span>（<span class="math inline">\kappa=8</span>）。无安全层那条线（黑）的速度冲到 3.643，是约束的 3.6 倍；加了屏障之后（红），速度曲线贴着虚线走了一段平顶，然后才下来。那个平顶就是 99 拍的干预区间，也是表 71-8 里 +90.7% 的全部来源。<strong>安全层的代价可以精确指认到时间区间</strong>，这一点对验收很重要：它不是“整体变慢了”，而是“在某一段被按住”。</p>
+<p>到这里，稳定性一侧的账算清了：判据能给什么（2.5716 的公共证书）、不能给什么（延迟、量化、Lipschitz 边界）、实测能补什么（延迟拐点、<span class="math inline">q/2</span> 死区、22 倍保守度）、安全层要付多少（60% 到 180%）。下一节把这些量逐个对应到旋钮上，回答“调哪个参数会动哪根曲线”。</p>
+<h2 id="参数意义与作用">71.7 参数意义与作用</h2>
+<p>这一节把旋钮逐个拧一遍，看每根曲线动多少。顺序按“影响力从大到小”排：先规则数与极点（决定性能），再网络宽度（决定可证明性与可解释性），再格数与位数（决定实现代价），最后是屏障参数与解释参数。每个参数都给一句“它其实在买什么”，这比给一个推荐值有用——推荐值随工艺变，买东西的逻辑不变。</p>
+<h3 id="规则数性能几乎不敏感可解释性线性变好">规则数：性能几乎不敏感，可解释性线性变好</h3>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: right;">规则数 <span class="math inline">m</span></th>
+<th style="text-align: right;">IAE</th>
+<th style="text-align: right;">相对 <span class="math inline">m=4</span></th>
+<th style="text-align: right;">全配对 <span class="math inline">\alpha</span></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">0.2884</td>
+<td style="text-align: right;">+0.03%</td>
+<td style="text-align: right;">2.5716</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">0.2883</td>
+<td style="text-align: right;">0.00%</td>
+<td style="text-align: right;">2.5716</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">0.2883</td>
+<td style="text-align: right;">—</td>
+<td style="text-align: right;">2.5716</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">5</td>
+<td style="text-align: right;">0.2883</td>
+<td style="text-align: right;">0.00%</td>
+<td style="text-align: right;">2.5716</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">7</td>
+<td style="text-align: right;">0.2883</td>
+<td style="text-align: right;">0.00%</td>
+<td style="text-align: right;">2.5716</td>
+</tr>
+</tbody>
+</table>
+<p><strong>表 71-9 规则数从 2 加到 7：性能与衰减率都不动</strong></p>
+<p>这张表最像“实验做错了”，其实不是。原因在配置方式：每条规则都是按同一组标称极点 <span class="math inline">(-3,-4)</span> 单独配增益，配出来的 <span class="math inline">K_i</span> 只是在同一个设计点上重复求解。运行时隶属度加权，等价于在这几条 <span class="math inline">K_i</span> 之间做凸组合，而凸组合给出的闭环极点仍在 <span class="math inline">(-3,-4)</span> 附近，所以 IAE 一位不动，<span class="math inline">\alpha</span> 也锁在 2.5716。</p>
+<p>这说明一件重要的事：<strong>在“每个局部都配同一组极点”的写法下，PDC 等价于增益调度</strong>。规则数买到的不是性能，是两样别的东西。</p>
+<p>第一样是<strong>前件的分辨率</strong>。<span class="math inline">m=2</span> 时前件只有“低段/高段”两句，工程师问“在 <span class="math inline">y=2.15</span> 时用哪套增益”，答案只能是“两套的加权，权重 0.46 和 0.54”；<span class="math inline">m=7</span> 时可以直接指到最近的一条规则。可解释性在这一层是<strong>线性</strong>收益：规则越多，每句话覆盖的区间越窄，越好指认。</p>
+<p>第二样是<strong>工作域覆盖</strong>。<span class="math inline">m=2</span> 时两条规则的中心在 1.5 和 2.7，<span class="math inline">y=2.1</span> 处离两个中心都远，隶属度都小，归一化后权重对 <span class="math inline">y</span> 极其敏感——输入一个很小的扰动，权重就会明显偏转。<span class="math inline">m=7</span> 时间距 0.2，同样的扰动只让权重动一点点。<strong>规则数少，模糊系统对输入的敏感度反而高</strong>，这一点与直觉相反。</p>
+<p>代价是规则库体积与 LMI 规模：<span class="math inline">m</span> 条规则对应 <span class="math inline">m^2</span> 个闭环矩阵，<span class="math inline">m=7</span> 时 49 个不等式，求解规模按 <span class="math inline">m^2</span> 增长。对本章这种离线验证无所谓，对在线自适应就要算账。</p>
+<p>工程上的取法是 <span class="math inline">m=4</span> 到 <span class="math inline">5</span>：够指认、够鲁棒，LMI 规模也还很小。再往上加，性能不再涨，只是把“解释”做得更细——那是文档问题，不是控制问题。</p>
+<h3 id="采样周期一个被忽略但影响全部的旋钮">采样周期：一个被忽略但影响全部的旋钮</h3>
+<p><span class="math inline">T_s</span> 不出现在任何一张性能表里，因为它被当成硬件给定。但它是唯一同时进入四个环节的参数：离散化的 <span class="math inline">A_d</span>、离散屏障的 <span class="math inline">\kappa T_s</span>、延迟的拍数 <span class="math inline">d=\tau/T_s</span>、以及量化死区与格距的比例。</p>
+<p>从 10 ms 放到 20 ms，同一条 50 ms 的物理延迟从 5 拍变成 2.5 拍（实际要向上取整成 3 拍）。若在增广模型（71-32）里比较，<span class="math inline">\alpha</span> 会显得“变好”——这不是系统变好了，是分辨率变粗了。同时 <span class="math inline">\kappa</span> 的上限从 20 降到 10，原本 <span class="math inline">\kappa=8</span> 仍可用，<span class="math inline">\kappa=16</span> 就不行了。</p>
+<p>从 10 ms 缩到 5 ms 则相反：延迟拍数翻倍到 10 拍，缓冲占用翻倍，<span class="math inline">\kappa</span> 上限升到 40，但单拍计算必须压缩一半。<strong>采样周期是“时间分辨率”与“计算预算”的交换</strong>，把它当常量会漏掉这一层；本章之所以固定 10 ms，是因为它同时满足 <span class="math inline">\kappa T_s\le0.2</span>（<span class="math inline">\kappa</span> 取 8 到 16）与十段实验的计算预算，不是因为 10 ms 本身有什么特殊性。</p>
+<h3 id="三对不能分开调的参数">三对不能分开调的参数</h3>
+<p><strong>极点与 <span class="math inline">v_{\max}</span>。</strong>极点是设计意图，<span class="math inline">v_{\max}</span> 是工艺约束，两者的比值决定屏障要不要介入。本章 <span class="math inline">(-3,-4)</span> 时峰值速度 3.643，<span class="math inline">v_{\max}=1.0</span> 意味着介入是必然的；若极点放到 <span class="math inline">(-1.5,-2)</span>，峰值速度会落到 1.0 附近，屏障几乎不介入。单看任何一个数都判断不了“设计是否合理”。</p>
+<p><strong>规则数与极点一致性。</strong>规则数影响前件分辨率，极点影响每一段的增益。若四段用不同极点，交叉闭环之间的差异变大，<span class="math inline">\alpha_{\rm all}</span> 掉得会比表 71-9 快得多。这一对的规矩是“要么都统一、要么都不统一”，混着调最费时间。</p>
+<p><strong>格数与定点位数。</strong>查表格数决定空间量化，位宽决定幅度量化。两者都小时，两种误差会叠加：11 格在 <span class="math inline">e</span> 方向的格距是 0.09，10 位定点在 <span class="math inline">u</span> 上的死区是 0.0012，前者主导。只优化其中一个，总误差下不来——这也是表 71-5 与表 71-7 必须一起读的原因。</p>
+<h3 id="标称极点唯一真正改变速度的旋钮">标称极点：唯一真正改变速度的旋钮</h3>
+<p>规则数不动性能，那什么动？标称极点。本章所有规则的增益都来自 <span class="math inline">(-3,-4)</span> 这一组，<span class="math inline">\alpha</span> 的上限就锁在 3.0；71.6 节安全层实验里换到 <span class="math inline">(-8,-10)</span>，峰值速度升到 3.643、调节时间缩到 0.83 s，代价是需要安全层把速度按回 1.0。</p>
+<p>极点的选择是<strong>性能与可执行性的交换</strong>：实部越负，响应越快，但需要的瞬时加速度越大。<span class="math inline">(-3,-4)</span> 下控制量离限幅还有余地，<span class="math inline">(-8,-10)</span> 下不加屏障速度就到 3.643——这才是安全层存在的理由，而不是安全层“额外加的保险”。</p>
+<p>从判据角度看，极点还决定 <span class="math inline">\alpha</span> 的天花板：LMI 求出的 <span class="math inline">\alpha</span> 不可能超过最慢极点的实部绝对值。所以“我把极点配到 <span class="math inline">-10</span>，为什么 LMI 只给 2.57”，答案不在 LMI，而在 16 个交叉闭环里有几个的衰减比名义慢。<strong>判据读数永远 ≤ 设计意图</strong>，差值就是交叉项的价格。</p>
+<h3 id="网络宽度性能有最优可证明性单调变差">网络宽度：性能有最优，可证明性单调变差</h3>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: right;">宽度</th>
+<th style="text-align: right;">IAE</th>
+<th style="text-align: right;"><span class="math inline">L</span> 上界</th>
+<th style="text-align: right;">首位/次位遮挡比</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">0.7614</td>
+<td style="text-align: right;">1.8219</td>
+<td style="text-align: right;">1.47</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">0.3815</td>
+<td style="text-align: right;">38.4159</td>
+<td style="text-align: right;">1.30</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">8</td>
+<td style="text-align: right;">0.3529</td>
+<td style="text-align: right;">25.8886</td>
+<td style="text-align: right;">1.26</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">16</td>
+<td style="text-align: right;">0.5477</td>
+<td style="text-align: right;">283.0016</td>
+<td style="text-align: right;">1.24</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">32</td>
+<td style="text-align: right;">0.5006</td>
+<td style="text-align: right;">306.5588</td>
+<td style="text-align: right;">1.22</td>
+</tr>
+</tbody>
+</table>
+<p><strong>表 71-10 隐层宽度对性能、Lipschitz 上界与归因集中度的影响</strong></p>
+<p>IAE 那一列是<strong>非单调</strong>的：宽度 2 严重欠拟合（0.7614，是宽度 8 的 2.16 倍），宽度 8 最好（0.3529），宽度 16 反而回到 0.5477，宽度 32 略降到 0.5006。原因是 ELM 的隐层权重是随机抽的，宽度小时特征不足，宽度大时随机特征之间的共线性变强，输出层的最小二乘解条件数变差，末端爬行更久。<strong>宽度不是越大越好，8 到 16 之间有一个谷</strong>。</p>
+<p><span class="math inline">L</span> 上界那一列则一路发散：1.82、38.4、25.9、283.0、306.6。它不但大，而且<strong>不稳定</strong>——宽度 4 到 8 之间回落，8 到 16 之间跳了十倍。这种不稳定来自随机矩阵的谱范数本身，不是某一组权重抽坏了。工程含义：拿这个上界做认证，结论会随机的种子而变，这本身就是不可接受的。</p>
+<p>第三列是解释侧的指标：首位输入的遮挡改变量除以次位的比值。宽度 2 时 1.47，宽度 32 时 1.22，<strong>随宽度单调下降</strong>。意思是网络越宽，归因越平均，越难指出“主要是哪一个输入”。这与“宽网络表征更分散”的直觉一致，但它的工程后果常被忽略：现场问“为什么给这个量”，宽度 32 的答案会是“三个都有贡献”，而宽度 2 的答案是“主要是误差项”。后者更容易被接受，哪怕它的控制性能更差。</p>
+<p>三列合起来的推荐是宽度 8：IAE 最优、上界虽然仍不满足判据但至少不是最坏、归因集中度 1.26 也够用。这个选择是<strong>三个目标折中</strong>的结果，不是单指标最优——这也是本章反复强调“表示的选择就是证明方式的选择”的具体落点。</p>
+<h3 id="格数与位数一个看抖振一个看死区">格数与位数：一个看抖振，一个看死区</h3>
+<p>格数由存储与算力决定。41×41 的查表，每格一个 32 位浮点数，占 6.6 KB，在任何一个 32 位 MCU 上都放得下；161×161 就要 101 KB，已经开始挤占程序空间。所以“格数能到多少”通常是存储问题，不是精度问题。</p>
+<p>真正要选的是“给定存储，格距落在哪里”。表 71-5 的 21 格反常说明选格数不能只看 IAE，也不能靠外推。工程上的做法是两步：先把格点取奇数个、让标称工作点（<span class="math inline">e=0</span>）落在中心格点上，保证工作点附近没有边界；再扫三到五个格数，看 <span class="math inline">\Delta u</span> 与末段 RMS 有没有共振峰。本章 41 格（<span class="math inline">e</span> 方向格距 0.0225）超调 0.40%、<span class="math inline">\Delta u</span> 0.01816，是表 71-5 里综合最好的。</p>
+<p>位数则看死区。表 71-7 给出的经验是末段 RMS ≈ <span class="math inline">q/2</span>，反解式 (71-31)。对本章，10 位够用（末段 0.0007），12 位保险（0.0002），14 位以上是浪费——末段已经到双精度噪声地板，再加位只增加存储与乘法位宽。</p>
+<p>一条容易踩的坑：<strong>位数与格数是两个独立的量化，误差会叠加</strong>。若查表是 41 格（格距 0.0225）又用 8 位定点（步长 0.0094），总误差不是两者相加，而是“格距决定抖振、步长决定死区”，各自独立起作用。要压低末段残差，先压位数；要压低 <span class="math inline">\Delta u</span>，先加格数。搞反了会白花钱。</p>
+<h3 id="v_max-与-kappa一个由工艺定一个由采样定"><span class="math inline">v_{\max}</span> 与 <span class="math inline">\kappa</span>：一个由工艺定，一个由采样定</h3>
+<p><span class="math inline">v_{\max}</span> 不该由控制工程师定。它来自机械限位、工艺节拍、安全规程，是<strong>需求</strong>，不是<strong>参数</strong>。控制侧的任务是在这个约束下把 IAE 做到最小，而不是反过来放宽约束换性能。表 71-8 已经说明代价的形状：约束每收紧 0.2，IAE 分别涨 24、36、62 个百分点，越收越贵。</p>
+<p><span class="math inline">\kappa</span> 才是控制侧的旋钮，它决定“离边界多远开始刹车”。表 71-8 里同一 <span class="math inline">v_{\max}</span> 下 <span class="math inline">\kappa</span> 从 4 加到 16，代价降 21 到 26 个百分点；再往上加，收益迅速饱和（<span class="math inline">\kappa</span> 从 8 到 16 只降 7 到 9 个百分点）。上限由离散条件 <span class="math inline">\kappa T_s\le0.2</span> 给出：<span class="math inline">T_s=0.01</span> 时 <span class="math inline">\kappa\le20</span>。推荐 <span class="math inline">\kappa=10</span> 到 <span class="math inline">16</span>，取“收益接近饱和、又留了离散余量”的区间。</p>
+<p>还有一个隐含参数是<strong>干预的施加位置</strong>。本章把安全层放在延迟缓冲之后，保证的是“实际执行量”不越界；如果放在之前，保证的是“计算量”不越界，而 5 拍后真正执行的可能已经越界。这两种放法的 <span class="math inline">\kappa</span> 取值应该不同——后者要更保守。这个细节在框图上看不出来，只能靠时序图确认。</p>
+<h3 id="解释侧的三个参数基线联盟噪声">解释侧的三个参数：基线、联盟、噪声</h3>
+<p><strong>基线 <span class="math inline">z_0</span></strong>。Shapley 值分摊的是“相对基线的增量”，基线换了，<span class="math inline">\phi_i</span> 的绝对值就换，但<strong>排序不变</strong>（只要基线不跨过非线性最强的区域）。本章取 <span class="math inline">z_0=(0,0,0)</span>，即“误差为零、工作点在目标值”的理想态。这个选择的好处是可与“控制量为零”对齐；坏处是当系统远离目标时，<span class="math inline">\phi_i</span> 会很大，数值上不好看。工程上可以改用“上一拍的稳态值”作基线，得到的是“这一拍相对上一拍的变化归因”，更适合做趋势分析。</p>
+<p><strong>联盟定义</strong>。遮挡实验里“去掉一个输入”有两种做法：置为基线（本章做法），或置为当前批次的均值。前者回答“没有这个信息会怎样”，后者回答“这个信息偏离常态多少”。两者在输入强相关时结论会分叉，所以报告里必须写清用的是哪一种——<strong>只写“做了遮挡实验”是不够的</strong>。</p>
+<p><strong>噪声水平 <span class="math inline">\sigma</span></strong>。解释稳定性是“在 <span class="math inline">\sigma</span> 下的秩相关”，<span class="math inline">\sigma</span> 取多大直接决定结论。本章取 <span class="math inline">\sigma=0.01</span>（传感器噪声的 1%）时秩相关 0.992，看起来很好；取 <span class="math inline">\sigma=0.2</span> 时掉到 0.775。没有任何一个 <span class="math inline">\sigma</span> 是“正确”的，正确做法是<strong>按现场实测噪声标定 <span class="math inline">\sigma</span></strong>，然后报这个 <span class="math inline">\sigma</span> 下的数字。若现场噪声是 0.05，就报 0.05 下的 0.950，不要报 0.01 下的 0.992——那是另一种形式的挑数据。</p>
+<p>下一节把这六个旋钮串成一条调参路径，并给出“先调哪个、什么时候停”的判断依据。</p>
+<h2 id="调参方法与经验">71.8 调参方法与经验</h2>
+<h3 id="次序不能反原因在依赖">次序不能反，原因在依赖</h3>
+<p>调参最容易犯的错不是“参数选错”，而是“次序调反”。三个典型反例：先调安全层再调极点（屏障一直介入，看不出极点配得对不对）；先调网络宽度再定规则数（宽度是相对教师拟合的，教师变了宽度要重选）；先算解释再定表示（解释的是网络输出，换了表示解释全废）。</p>
+<p>正序只有一条：<strong>对象与约束 → 极点 → 规则数 → 表示 → 判据 → 安全层 → 解释与监控</strong>。每一步的产出是下一步的输入，任何一步回头改，后面全部作废。这条规矩听起来像流程洁癖，实际是省时间：本章所有实验都是在正序下跑的，没有一次需要重跑前面的表。</p>
+<h3 id="七步流程与每步的停止条件">七步流程与每步的停止条件</h3>
+<p><strong>第一步，定极点。</strong>先跑一遍不加任何安全层的阶跃，看控制量峰值。判据是峰值不超过限幅的 70%，留 30% 给扰动与参数漂移。本章 <span class="math inline">(-3,-4)</span> 满足，<span class="math inline">(-8,-10)</span> 不满足，后者必须配安全层。</p>
+<p><strong>第二步，定规则数。</strong>按“前件要指认到什么粒度”来定，不按性能定。本章取 4，因为现场要区分“低于目标、略高于目标、明显高于目标”三档，加上一条兜底。</p>
+<p><strong>第三步，选表示。</strong>两条硬指标：闭环 IAE 与教师差不超过 5%，末段 RMS 不高于教师的一个数量级。前者筛掉拟合太差的表示，后者筛掉“IAE 好看但爬不动”的表示（表 71-6 的网络就是被后者筛的）。本章查表 41 格 + 双线性过，网络 8 隐元勉强过（IAE 差 22.4%，末段差一个量级）。</p>
+<p><strong>第四步，验判据。</strong>三个数一起看：<span class="math inline">\alpha_{\rm all}&gt;0</span>（公共 <span class="math inline">P</span> 存在）、<span class="math inline">\alpha_{\rm all}\ge0.8\alpha_{\rm diag}</span>（交叉项没有把裕度吃光）、<span class="math inline">\kappa T_s\le0.2</span>（离散条件）。本章 2.5716 对 3.0000，比值 0.857，刚过线。若比值低于 0.8，说明前件重叠太宽，交叉项太毒，应该收窄隶属函数——这是本章没做但值得做的改进。</p>
+<p><strong>第五步，加安全层。</strong><span class="math inline">v_{\max}</span> 由工艺给，<span class="math inline">\kappa</span> 从 4 往上扫，取“代价曲线开始饱和”的那个值。本章 <span class="math inline">\kappa=8</span> 到 16 之间代价只差 7 到 9 个百分点，取 8 就够。</p>
+<p><strong>第六步，算解释。</strong>三个检查按顺序做：效率性残差（必须 <span class="math inline">&lt;10^{-12}</span>）、与遮挡的排序一致性、噪声下的秩相关。任一不过就不许写进验收报告。</p>
+<p><strong>第七步，接监控。</strong>阈值用标称段的 99.9% 分位，不用 <span class="math inline">\chi^2</span> 理论分位（原因见 71.10 节）。误报率控制在 1% 以内，连续 5 拍超阈才报警。</p>
+<p>七步里唯一允许“回退”的是第五步到第一步：如果加了安全层之后 IAE 涨超过 100%，说明极点配得太激进，应该退回去重配，而不是继续加大 <span class="math inline">\kappa</span>。</p>
+<h3 id="判断调够了的三个停止条件">判断“调够了”的三个停止条件</h3>
+<p>调参必须有停的地方，否则会一直微调。三个可量化的停止条件：</p>
+<p><strong>IAE 的相对变化小于 1%。</strong>本章规则数从 3 加到 4，IAE 变化 0.0000（0.2883 对 0.2883），这就是停止信号——再调不会更好。反过来，宽度从 4 加到 8，IAE 从 0.3815 掉到 0.3529（-7.5%），还在有效区间，值得继续试。</p>
+<p><strong><span class="math inline">\alpha</span> 的变化小于 0.05。</strong>LMI 的二分精度是 <span class="math inline">10^{-7}</span>，但模型之间的差别才是有效信号。<span class="math inline">\alpha</span> 在 2.57 附近动 0.01，是数值噪声，不是改进。</p>
+<p><strong><span class="math inline">\Delta u</span> 没有新的共振峰。</strong>表 71-5 里 21 格那个反常就是共振峰：格数从 11 加到 21，<span class="math inline">\Delta u</span> 降了，IAE 却涨了。出现这种“两个指标反向”的情况，说明踩到了共振，应该换格数而不是继续加。</p>
+<p>三条里满足两条就可以停。三条都不满足，说明改的方向不对，不是“调得不够”。</p>
+<h3 id="参数冻结一次只改一个">参数冻结：一次只改一个</h3>
+<p>调参到某个阶段，参数之间会开始互相“顶”：加大 <span class="math inline">\kappa</span> 让安全层便宜了，可极点一改又不匹配了。这时最有效的做法不是继续试，而是<strong>冻结</strong>：把当前参数写进一个配置文件，之后每次只改一个，改完重跑全部十段，看哪几张表变了。</p>
+<p>本章的十段实验就是为这个流程设计的。改一个参数，通常只有两三张表会动，其余不动；若动了四张以上，说明这个参数耦合了别的东西，得先查清耦合再继续。例如把 <span class="math inline">T_s</span> 从 10 ms 改成 20 ms，表 71-4 的延迟列、表 71-5 的格距、表 71-8 的 <span class="math inline">\kappa</span> 上限会一起变——这不是三个 bug，是同一个参数的三条通路。</p>
+<p>冻结还有一个副作用是好的：它让“这次改动带来了什么”变成可回答的问题。不冻结时两次改动混在一起，谁也不知道是哪一次起了作用；冻结之后，每次改动的效果都能指到具体的表与具体的行。这一条在多人协作时尤其重要，因为别人的改动会通过同样的机制悄悄改变你的表。</p>
+<h3 id="解释侧的三项验收说得清说得对说得一样">解释侧的三项验收：说得清、说得对、说得一样</h3>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">输入</th>
+<th style="text-align: right;">Shapley 占比/%</th>
+<th style="text-align: right;">遮挡后输出改变</th>
+<th style="text-align: left;">排序</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><span class="math inline">e</span></td>
+<td style="text-align: right;">45.6</td>
+<td style="text-align: right;">0.1775</td>
+<td style="text-align: left;">2</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><span class="math inline">\dot e</span></td>
+<td style="text-align: right;">51.6</td>
+<td style="text-align: right;">0.2054</td>
+<td style="text-align: left;">1</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><span class="math inline">y-2</span></td>
+<td style="text-align: right;">2.7</td>
+<td style="text-align: right;">0.0169</td>
+<td style="text-align: left;">3</td>
+</tr>
+</tbody>
+</table>
+<p><strong>表 71-11 精确 Shapley 与遮挡实验的交叉验证（120 个样本平均）</strong></p>
+<p><strong>说得清</strong>看第一列：三个输入的贡献占比是 45.6%、51.6%、2.7%，加起来 99.9%（差的 0.1% 是四舍五入）。效率性残差 <span class="math inline">1.11\times10^{-16}</span>，是双精度舍入误差，说明分摊没算错。</p>
+<p><strong>说得对</strong>看第二列与第三列的排序是否一致。Shapley 说“<span class="math inline">\dot e</span> 最重要、<span class="math inline">e</span> 次之、<span class="math inline">y-2</span> 几乎不重要”，遮挡实验给出同样的排序，且首位比末位大 12.16 倍。两种方法原理完全不同——一个按联盟边际贡献分摊，一个按“去掉它会怎样”直接测——排序一致才叫可信。若两者冲突，说明模型在输入之间有强交互，Shapley 的加性假设不成立，此时应该报“交互项”，而不是硬选一个排序。</p>
+<figure>
+<img src="figs/ch071/fig_071_08_shapley.svg" alt="图 71-8 Shapley 贡献占比与遮挡忠实度" /><figcaption aria-hidden="true">图 71-8 Shapley 贡献占比与遮挡忠实度</figcaption>
+</figure>
+<p><span class="math inline">y-2</span> 只有 2.7% 这件事值得说一句。现场直觉会认为“工作点偏离目标”是个重要因素，实测却不是。原因是在本章的工作域（<span class="math inline">y\in[1.5,2.7]</span>）内，<span class="math inline">K(y)</span> 从 13 变到 20.2，只变 55%，而控制律对 <span class="math inline">y</span> 的依赖是乘性的、对 <span class="math inline">e</span> 与 <span class="math inline">\dot e</span> 的依赖是加性的；在稳态附近 <span class="math inline">e</span>、<span class="math inline">\dot e</span> 的量级远大于 <span class="math inline">y</span> 的归一化偏移，所以 <span class="math inline">y</span> 的份额小。<strong>这不是“<span class="math inline">y</span> 不重要”，而是“在当前工作域内它的边际贡献小”</strong>——换到 <span class="math inline">y</span> 跨度更大的工况，这个占比会变。</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: right;">噪声 <span class="math inline">\sigma</span></th>
+<th style="text-align: right;">Spearman 秩相关</th>
+<th style="text-align: right;">首位保持率</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">0.002</td>
+<td style="text-align: right;">1.000</td>
+<td style="text-align: right;">1.00</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">0.010</td>
+<td style="text-align: right;">0.992</td>
+<td style="text-align: right;">1.00</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">0.050</td>
+<td style="text-align: right;">0.950</td>
+<td style="text-align: right;">0.90</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">0.100</td>
+<td style="text-align: right;">0.858</td>
+<td style="text-align: right;">0.83</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">0.200</td>
+<td style="text-align: right;">0.775</td>
+<td style="text-align: right;">0.75</td>
+</tr>
+</tbody>
+</table>
+<p><strong>表 71-12 输入噪声下解释的稳定性（60 个样本，与无噪声结果对比）</strong></p>
+<p><strong>说得一样</strong>看这张表。<span class="math inline">\sigma=0.002</span> 时秩相关精确为 1.000（噪声小到不影响排序），<span class="math inline">\sigma=0.01</span> 时 0.992，<span class="math inline">\sigma=0.05</span> 时 0.950，<span class="math inline">\sigma=0.1</span> 时 0.858，<span class="math inline">\sigma=0.2</span> 时 0.775。首位保持率同步下降：1.00、1.00、0.90、0.83、0.75。</p>
+<p>两个指标的差别值得注意：<span class="math inline">\sigma=0.05</span> 时秩相关还有 0.950（“排序基本没变”），但首位保持率已经掉到 0.90（“十次里有一次主因指错”）。<strong>秩相关高不代表主因对</strong>——它衡量的是整体排序，而现场只关心“最主要的那一个”。验收时两个都要报，只报秩相关是避重就轻。</p>
+<figure>
+<img src="figs/ch071/fig_071_09_explanation_stability.svg" alt="图 71-9 噪声下解释的相关性与首位保持率" /><figcaption aria-hidden="true">图 71-9 噪声下解释的相关性与首位保持率</figcaption>
+</figure>
+<p>图 71-9 是双纵轴：左轴秩相关（0.7 到 1.05），右轴首位保持率。两条线在 <span class="math inline">\sigma=0.05</span> 之后开始分叉，<span class="math inline">\sigma=0.2</span> 时差 0.025。这个分叉就是“排序还稳、主因已飘”的区间。工程上把它当作解释的<strong>有效工作域边界</strong>：噪声超过 0.05，解释只能用于趋势分析，不能用于定责。</p>
+<h3 id="一次真实的调参记录">一次真实的调参记录</h3>
+<p>把上面七步放到一次实际过程里，数字是这样走的，都在本章这一个对象上。</p>
+<p>第一轮取极点 <span class="math inline">(-3,-4)</span>、4 条规则、查表 41 格，得到 IAE 0.3014、控制峰值约 1.10。峰值贴着 1.2 的限幅，按第一步“不超过 70%”的判据并不合格；但这一轮的目的是把流程跑通、定规则数，所以先记账不处理。</p>
+<p>第二轮验判据：<span class="math inline">\alpha_{\rm diag}=3.0000</span>、<span class="math inline">\alpha_{\rm all}=2.5716</span>，比值 0.857，刚过 0.8 的线。这一步同时回答了“规则数够不够”：若把规则加到 6 条，重叠区更宽，比值只会更低，所以第二步选 4 不是随手取的。</p>
+<p>第三轮换表示：ELM 8 隐元的 IAE 0.3529，比教师差 22.4%，按第三步“不超过 5%”的硬指标应当直接淘汰。它留在表里的唯一理由是用来说明“IAE 单项验收不够”这个坑——调节时间 5.49 s 在 6 s 的仿真里等于没停下来。</p>
+<p>第四轮加安全层：<span class="math inline">v_{\max}=1.0</span>、<span class="math inline">\kappa=8</span>，IAE 从 0.3949 涨到 0.7532，涨幅 90.7%，最大速度被压到 1.000。涨幅这么大是因为基线本身的峰值速度 3.643 远超 1.0，屏障在整个上升段都在介入。这一轮给出的教训不是“<span class="math inline">\kappa</span> 该调小”，而是“<span class="math inline">v_{\max}</span> 必须由工艺给”——它是需求，不是旋钮。</p>
+<p>第五轮算解释：效率性残差 <span class="math inline">1.11\times10^{-16}</span> 通过，遮挡排序一致通过，<span class="math inline">\sigma=0.05</span> 时首位保持率 0.90 刚好压在边界上。若现场实测噪声大于 0.05，这项就不过，解释只能降级为趋势分析。</p>
+<p>整条路径没有回头，因为每一步的输入都是上一步的产出。唯一值得回头的是第一轮那个贴限幅的峰值：它提示极点还可以再慢一点，但慢下来会把调节时间从 1.64 s 继续拉长，这属于需求取舍，不是调参能解决的问题。把“能调的”和“不能调的”分开，是这条记录最有用的一点。</p>
+<h3 id="五条踩过的坑">五条踩过的坑</h3>
+<p><strong>坑一：用 IAE 单项验收网络。</strong>表 71-6 里网络 IAE 只差 22.4%，看起来可接受；但调节时间 5.49 s 意味着 6 s 的仿真里它几乎没停下来。验收必须同时看 IAE、末段 RMS、调节时间三个数。</p>
+<p><strong>坑二：把 <span class="math inline">\alpha</span> 当调节时间用。</strong><span class="math inline">\alpha=2.5716</span> 对应时间常数 0.39 s，有人会直接乘 4 得 1.56 s 当调节时间。这只在最坏初值、最慢模态下成立；实际阶跃是 1.64 s，差 5%。反过来的误用更危险：拿实测 1.64 s 反推 <span class="math inline">\alpha=2.44</span>，然后声称“判据给的 2.57 太保守”——这两个数本来就不是一回事。</p>
+<p><strong>坑三：为压低 IAE 放宽 <span class="math inline">v_{\max}</span>。</strong>表 71-8 里把 <span class="math inline">v_{\max}</span> 从 1.0 放到 1.2，IAE 从 0.75 降到 0.66（-12%），看起来是“调好了”。但 <span class="math inline">v_{\max}</span> 是工艺约束，放宽它等于改需求，不是调参。评审时若发现“性能提升来自放宽约束”，这次调参应判为无效。</p>
+<p><strong>坑四：在 <span class="math inline">\sigma=0.01</span> 下报解释稳定性。</strong>表 71-12 的 0.992 很好看，但若现场噪声是 0.05，真实值就是 0.950、首位保持率 0.90。报小 <span class="math inline">\sigma</span> 的数字，等于给解释加了一层不存在的可信度。</p>
+<p><strong>坑五：把判据不满足当成“系统不稳定”。</strong>小增益在本章五种宽度下全部不满足，系统却跑得很好。判据不满足只说明“这个判据证不了”，不说明“系统不行”。报告里应写“未能给出小增益证书”，而不是“稳定性未通过”——这两句话在评审会上后果完全不同。</p>
+<h2 id="优化与改进">71.9 优化与改进</h2>
+<p>本章的每个结论都带着一个“这里还能更好”的尾巴。这一节把六条最值得做的改进列出来，每条都写清“改什么、为什么现在没做、做了能换来什么”。判断标准只有一条：<strong>改进必须能被验证</strong>，说不清怎么验的改进不进这一节。</p>
+<h3 id="改进一把延迟变成状态让判据看得见它">改进一：把延迟变成状态，让判据看得见它</h3>
+<p>71.5 节的核心结论是“LMI 对延迟完全盲”。补救的办法不是换判据，而是<strong>把延迟写进模型</strong>。五拍延迟最直接的写法是增广状态：</p>
+<p><span class="math display">
+z_k=\begin{bmatrix}x_k\\ u_{k-1}\\ u_{k-2}\end{bmatrix},\qquad
+z_{k+1}=\begin{bmatrix}A_d&amp;0&amp;0&amp;B_d\\0&amp;0&amp;0&amp;0\\0&amp;1&amp;0&amp;0\end{bmatrix}z_k+
+\begin{bmatrix}0\\1\\0\end{bmatrix}u_k
+\tag{71-32}
+</span></p>
+<p>这里 <span class="math inline">z_k</span> 把两拍的历史控制量串进状态，最后一列 <span class="math inline">B_d</span> 乘的是 <span class="math inline">u_{k-2}</span>——也就是真正作用到对象上的那个量。本章 <span class="math inline">d=5</span> 时状态维数从 2 增到 7，LMI 的矩阵规模随之增大，但结构与实现一一对应，写起来不会错。换来的是 <span class="math inline">\alpha</span> 会随延迟下降——判据第一次“看得见”延迟。代价是保守度上升：增广模型把延迟当成确定量，实际延迟若有 <span class="math inline">\pm1</span> 拍抖动，还得再加一层鲁棒性。</p>
+<p>另外两条路各有短板。Padé 近似把 <span class="math inline">e^{-s\tau}</span> 换成 <span class="math inline">(1-\tau s/2)/(1+\tau s/2)</span>，模型只加一维，但它在 <span class="math inline">\omega\tau</span> 大时相位严重失真，本章 <span class="math inline">\omega_c\tau=0.42</span> 尚可，延迟到 500 ms 就不可信了。Lyapunov-Krasovskii 泛函最严格，但要假设 <span class="math inline">\dot\tau\le1</span> 并对泛函做积分估计，保守度通常比增广状态还高。</p>
+<p><strong>选哪条取决于你要什么</strong>：要“能算且与实现对应”，选增广状态；要“少加维数”，选 Padé；要“理论最严”，选 Krasovskii。三条都不能把“判据盲区”变成“判据精确”，只能把盲区缩小。</p>
+<h3 id="改进二延迟补偿的安全层">改进二：延迟补偿的安全层</h3>
+<p>式 (71-29) 给出的是“<span class="math inline">d</span> 拍后的 <span class="math inline">h</span> 不跨零”，本章没有实现，原因是它需要预测未来 <span class="math inline">d</span> 拍的控制量，而未来几拍的 <span class="math inline">u</span> 取决于未来几拍的参考与状态。可行的落地方式是把标称律的 <span class="math inline">d</span> 拍预测缓存起来，每拍只优化当前这一拍的 <span class="math inline">u</span>，后续 <span class="math inline">d-1</span> 拍用缓存值。这样做的保证是<strong>条件保证</strong>：只要预测误差不超过某个界，安全性就成立。</p>
+<p>这个“界”可以量化。若参考在 <span class="math inline">d</span> 拍内变化不超过 <span class="math inline">\delta_r</span>，标称律的 Lipschitz 常数是 <span class="math inline">L</span>，则预测误差不超过 <span class="math inline">L\delta_r</span> 的量级；把它代入 <span class="math inline">h</span> 的一阶展开，就得到 <span class="math inline">\kappa</span> 需要额外留的余量。本章的阶跃参考在 5 拍内变化 0.5，这个余量不小，所以补偿的收益有限——<strong>延迟补偿在斜坡参考下才划算，在阶跃下不划算</strong>。</p>
+<h3 id="改进三位置约束的三条补救">改进三：位置约束的三条补救</h3>
+<p>71.4 节实测了位置约束的失败：阶跃瞬间 <span class="math inline">e=1.1</span> 已经超过 <span class="math inline">h_0=0.40</span>，集合的初值就被破坏，前向不变性无从谈起。这不是公式错，是<strong>用法错</strong>——屏障函数保证的是“已经在集合内就不出去”，不保证“从外面能进来”。</p>
+<p>三条补救，按可靠性排序：</p>
+<p><strong>第一条，让集合包含起点。</strong>取 <span class="math inline">h_0</span> 大于最大可能初始误差，再随时间收紧（时变屏障 <span class="math inline">h_0(t)</span> 从大到小）。这条最稳，因为它把“入集合”和“留集合”分成两段处理；代价是前期约束很松，等于没约束。</p>
+<p><strong>第二条，软约束。</strong>把 <span class="math inline">h\ge0</span> 改成惩罚项 <span class="math inline">\rho\max(0,-h)^2</span> 加进目标，允许短时越界但收回来。这条在优化型控制器（如 MPC）里常见，本章的“一步投影”结构放不下它，要换成 QP。</p>
+<p><strong>第三条，用速度约束间接管位置。</strong>限制 <span class="math inline">v_{\max}</span> 使 <span class="math inline">|e|</span> 在可接受时间内回到带内。这条最省事，但它给的是“间接保证”：位置不会因为速度失控而冲出去，但可能停在带外不动。所以它只能当兜底，不能当位置精度的手段。</p>
+<p>工程上的组合是“第一条 + 第三条”：先用时变屏障把轨迹收进集合，再用速度屏障防止冲出去。两条都实现起来简单，加起来才是一套完整的位置保护。</p>
+<h3 id="改进四输入维度一大精确-shapley-就得换算法">改进四：输入维度一大，精确 Shapley 就得换算法</h3>
+<p>精确 Shapley 的复杂度是 <span class="math inline">2^n</span>，本章 <span class="math inline">n=3</span> 才能每拍算。<span class="math inline">n=10</span> 时 1024 个联盟，一次归因要毫秒级；<span class="math inline">n=20</span> 时一百万次，必须采样。三条可选的近似路线：</p>
+<p><strong>置换采样。</strong>每次随机抽一个输入排列，按“逐个加入”的边际贡献累加，<span class="math inline">M</span> 次采样的方差按 <span class="math inline">1/\sqrt M</span> 下降。它的好处是无偏，坏处是方差大，要 <span class="math inline">M</span> 上千才稳。</p>
+<p><strong>KernelSHAP。</strong>把 Shapley 写成加权最小二乘，用采样代替穷举。它的价值是能给出“残差”这个误差棒——本章实测精确版残差 <span class="math inline">10^{-16}</span>，采样 100 次时升到 <span class="math inline">10^{-2}</span> 量级。报残差比报“用了哪种算法”有用。</p>
+<p><strong>分层采样。</strong>先按单输入遮挡量粗排，把大概率重要的输入放进“必选层”精确算，把明显不重要的放进“近似层”只算一阶项。这条在工程上最实用：现场通常只有两三个输入重要，其余可以粗算。</p>
+<p>三条的共同点是<strong>都不能保证排序与精确版一致</strong>，只能给出概率意义上的接近。所以输入维度大的系统，解释必须配“稳定性检查”（表 71-12 那一套），否则无法判断这次归因是否可信。</p>
+<h3 id="改进五监控再加一路模型残差">改进五：监控再加一路模型残差</h3>
+<p>71.10 节会看到，二维和三维残差都抓不到“执行增益损失 30%”这类故障，原因是稳态时 <span class="math inline">u\to0</span>，增益损失在 <span class="math inline">u</span> 上无处体现。补救的办法是加一路<strong>模型残差</strong>：用标称模型预测下一拍输出，与实际比。</p>
+<p><span class="math display">
+r_{k+1}=y_{k+1}-\begin{bmatrix}1&amp;0\end{bmatrix}\left(A_dx_k+B_du_{k-d}\right)
+\tag{71-33}
+</span></p>
+<p>若实际增益是标称的 <span class="math inline">g</span> 倍，则 <span class="math inline">r_{k+1}=(g-1)\begin{bmatrix}1&amp;0\end{bmatrix}B_du_{k-d}</span>，与 <span class="math inline">u</span> 成正比、符号随 <span class="math inline">u</span> 翻转。<span class="math inline">g=0.7</span>、<span class="math inline">u=0.5</span>、<span class="math inline">K=16</span> 时单拍残差约 <span class="math inline">1.9\times10^{-3}</span>，与 10 位定点的死区 <span class="math inline">q/2=1.2\times10^{-3}</span> 同量级——<strong>单拍看不出来，要累积</strong>。工程上用 CUSUM 或滑动平均，攒十拍以上再判，误报与漏报都能压住。</p>
+<p>这一路残差还有一个副产品：它能把“传感器偏置”和“执行器增益损失”分开。前者让 <span class="math inline">r</span> 恒为正（与 <span class="math inline">u</span> 无关），后者让 <span class="math inline">r</span> 随 <span class="math inline">u</span> 变号。两种故障在三维残差里长得一样，在模型残差里一眼可分。</p>
+<h3 id="改进六把解释做成轨迹而不只是一次快照">改进六：把解释做成轨迹，而不只是一次快照</h3>
+<p>本章的解释是“一拍一次”，报给现场的是一个三维分摊。更有用的是把它连成时间序列：横轴时间，纵轴三个输入的贡献占比，画成堆叠面积图。这条“解释轨迹”能回答单次快照答不了的问题——<strong>什么时候主因换了</strong>。</p>
+<p>主因切换本身就是一个报警信号。正常跟踪时主导项应该是 <span class="math inline">\dot e</span>（阻尼）或 <span class="math inline">e</span>（驱动），若某一刻主导项突然变成 <span class="math inline">y-2</span>，说明工作点漂移成了主要矛盾，可能是负载变了或传感器偏了。这个信号比任何阈值都早，因为它看的是“控制律在为什么使劲”，而不是“误差有多大”。</p>
+<p>代价是算力：8 次前向乘以每拍一次，在 10 ms 周期里占的比例不大（单次前向约百次浮点运算），但要占代码空间与调试接口。工程上的折中是<strong>降频计算</strong>：控制每拍跑，解释每 10 拍跑一次，轨迹的时间分辨率降到 100 ms，对工况切换的检测仍然够用。</p>
+<h3 id="六条改进怎么排序">六条改进怎么排序</h3>
+<p>六条不是并列的。按投入产出比排，顺序是：五（模型残差）→ 三（位置约束补救）→ 六（解释轨迹）→ 一（增广状态）→ 二（延迟补偿）→ 四（大维度 Shapley）。</p>
+<p>理由在于每条补的是什么。第五和第三条是<strong>补漏洞</strong>：模型残差把“增益损失 30%”从抓不到变成抓得到，时变屏障把一个已知失败的用法改对，两者都只改十几行、当天可验。第六条是<strong>加信息</strong>，成本低，收益取决于现场是否有人真的去看解释。第一条要重写 LMI 与全部 <span class="math inline">\alpha</span>，收益是判据第一次看得见延迟，代价是所有稳定性数字重算，属于结构性改动。第二条在阶跃参考下收益有限（原因见上），自然排在第一条之后。第四条只有输入维度真到 10 以上才需要，本章的三输入用不上。</p>
+<p>验证方式要提前写死，否则改完不知道算不算改好：</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">改进</th>
+<th style="text-align: left;">验证方式</th>
+<th style="text-align: left;">通过判据</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">一 增广状态</td>
+<td style="text-align: left;">用 <span class="math inline">d=1</span> 到 <span class="math inline">50</span> 重算 <span class="math inline">\alpha</span>，与表 71-4 的拐点对照</td>
+<td style="text-align: left;"><span class="math inline">\alpha</span> 在 20 到 30 拍之间出现明显下降</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">二 延迟补偿</td>
+<td style="text-align: left;">同一组屏障参数下比较约束违反拍数</td>
+<td style="text-align: left;">违反拍数下降，且 IAE 增幅小于 5%</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">三 位置补救</td>
+<td style="text-align: left;">直接复跑 71.4 节的斜坡工况</td>
+<td style="text-align: left;">最大偏差小于 <span class="math inline">h_0</span></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">五 模型残差</td>
+<td style="text-align: left;">在增益损失 30% 工况下测检出延迟</td>
+<td style="text-align: left;">检出延迟小于 500 ms，误报率不超过 1%</td>
+</tr>
+</tbody>
+</table>
+<p>表里四条都有一个共同点：<strong>判据是事先写的，不是事后挑的</strong>。第四与第六条没有进表，因为它们的验证方式已经写在前面的段落里——第四条看“采样版排序与精确版的一致率”，第六条看“主因切换时刻是否早于阈值报警”。这两条都属于“看着好但难判合格”的改进，现场要不要做，取决于解释结果是否真的进入决策流程。</p>
+<h3 id="两条想过但没写进来的改进">两条想过但没写进来的改进</h3>
+<p><strong>用平方和（SOS）放松公共 <span class="math inline">P</span>。</strong>把 <span class="math inline">V</span> 从二次型换成四次型，可行域会明显变大，<span class="math inline">\alpha</span> 也能抬高。没写进来是因为一旦用了它，<span class="math inline">P</span> 就不再是矩阵，“16 个闭环共用一个椭球”这个几何图像随之消失，读者很难把结论搬回自己的对象上。它属于“理论更强、可用性更差”的那一类，适合当论文的下一步，不适合当工程的第一版。</p>
+<p><strong>把 Shapley 换成因果推断。</strong>用干预分布代替联盟平均，回答的是“如果强行把 <span class="math inline">\dot e</span> 按住，输出会怎样”，这比 Shapley 更接近现场的问法。没写进来是因为它需要一个可干预的模型，而本章的教师只是一个确定性函数，没有噪声结构，干预与遮挡在数学上会退化成同一件事——换个名字，结论不变。</p>
+<p>两条的共同点是“换框架”而不是“加模块”。加模块的改进已经列了六条，换框架的改进留在这里，作为超出本章范围的入口；写它们的目的是让读者知道边界在哪，而不是暗示本章的做法已经到头。</p>
+<h2 id="工程落地">71.10 工程落地</h2>
+<p>工程落地与写论文的分界线在“证据”两个字。论文可以说“在若干工况下表现良好”，现场必须说“在哪些工况下被证明、在哪些工况下只被测试过、在哪些工况下没测”。这一节按这条线组织：先把稳定性翻译成验收单，再讲监控怎么设计，最后讲解释与文档怎么写。</p>
+<h3 id="把稳定翻译成验收单">把“稳定”翻译成验收单</h3>
+<p>71.1 节说的三个层次，落到交付物上是三份不同的东西。</p>
+<p><strong>定理级</strong>交的是一张证书：<span class="math inline">P</span> 的数值（<span class="math inline">2\times2</span> 矩阵，两个特征值）、<span class="math inline">\alpha=2.5716</span>、以及<strong>适用域</strong>——前件有界、延迟为零、量化无限精度的假设。适用域必须与证书写在同一页，否则读者会默认它管所有情况。本章的适用域里，“延迟为零”这一条就直接把 71.5 节的整张表排除在证书之外。</p>
+<p><strong>判据级</strong>交的是一份“未通过”的记录。本章小增益在五种宽度下全部不满足，正确写法是“未能给出小增益证书，实测抖振边界为增益 3.5”，而不是含混带过。含糊等于隐式声称“这一项没问题”，评审时被追问会比主动写出来更难看。</p>
+<p><strong>实测级</strong>交的是一组曲线加四个数：IAE、末段 RMS、调节时间、<span class="math inline">\Delta u</span> 的 RMS。四个数缺一不可，因为它们各自漏掉不同的失效：IAE 漏末段爬行（表 71-6 的网络），末段 RMS 漏超调，调节时间漏稳态精度，<span class="math inline">\Delta u</span> 漏执行器磨损。</p>
+<p>三份东西合起来才叫“稳定”。只交证书，现场不敢用（不知道边界在哪）；只交曲线，评审不敢签（没有可推广的结论）。</p>
+<h3 id="六种失效与监控设计">六种失效与监控设计</h3>
+<p>工程上真正会发生的失效不会按教科书分类。本章按“物理原因”列了四类可注入的故障，加上两类只能靠趋势判断的，逐一给出监控手段。</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">故障</th>
+<th style="text-align: left;">注入方式</th>
+<th style="text-align: right;">2 维残差检出/ms</th>
+<th style="text-align: right;">3 维残差检出/ms</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">传感器偏置 +0.12</td>
+<td style="text-align: left;">3.0 s 后加到测量上</td>
+<td style="text-align: right;">90</td>
+<td style="text-align: right;">90</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">负载突加 +0.15</td>
+<td style="text-align: left;">3.0 s 后加在执行器上</td>
+<td style="text-align: right;">40</td>
+<td style="text-align: right;">40</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">执行器卡滞</td>
+<td style="text-align: left;">3.0 s 起冻结控制量</td>
+<td style="text-align: right;">910</td>
+<td style="text-align: right;">620</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">执行增益 <span class="math inline">-30\%</span></td>
+<td style="text-align: left;">3.0 s 后乘 0.7</td>
+<td style="text-align: right;">未检出</td>
+<td style="text-align: right;">未检出</td>
+</tr>
+</tbody>
+</table>
+<p><strong>表 71-13 四类故障的注入方式与检出延迟（阈值取标称段 99.9% 分位，连续 5 拍确认）</strong></p>
+<p>另外两类不在这张表里，但同样要写进失效分析。<strong>延迟超预算</strong>（比如通信抖动让 5 拍变 12 拍）没有可注入的“事件”，它是一个缓变过程，只能靠“延迟余量”这个指标监控——做法见本节后面。<strong>量化不足</strong>（比如改成 8 位定点）也不是事件，它是配置变更，应该在变更评审时用表 71-7 拦截，而不是上线后监控。</p>
+<figure>
+<img src="figs/ch071/fig_071_10_monitor.svg" alt="图 71-10 三种故障下的 Mahalanobis 距离" /><figcaption aria-hidden="true">图 71-10 三种故障下的 Mahalanobis 距离</figcaption>
+</figure>
+<p>图 71-10 是三维残差的四条曲线：灰色是标称，三条彩色是故障，竖虚线在 3.0 s（注入时刻），水平虚线是阈值。三条故障曲线在注入后都迅速抬到阈值以上，但抬升的速度差别很大——负载突加几乎是垂直的，卡滞是缓慢爬升的。这个差别直接对应表 71-13 的 40 ms 与 620 ms。</p>
+<h3 id="阈值的取法与检测延迟的读法">阈值的取法与检测延迟的读法</h3>
+<p><strong>阈值不能用理论分位。</strong>三维残差在标称段的 Mahalanobis 距离理论上服从 <span class="math inline">\chi^2_3</span>，99.9% 分位是 16.27；但实测标称段的 99.9% 分位是 64.15，是理论值的四倍。二维更夸张：<span class="math inline">\chi^2_2</span> 的 99.9% 分位 13.82，实测 57.88。</p>
+<p>原因在残差的分布形状。标称段的残差不是高斯白噪声，而是<strong>量化纹波</strong>：误差被限幅与定点卡在 0.02 量级，形成有界的周期抖动，尾部比高斯厚得多。用理论分位做阈值，2.44% 的采样点会超阈（理论应 0.1%），监控等于一直响。改用实测 99.9% 分位后，误报降到 0.22%，这是本章能用的唯一取法。</p>
+<p><strong>连续拍数是第二个旋钮。</strong>单拍超阈就报，误报率仍是 0.22%（因为阈值已经卡在 99.9% 分位），但会有大量单点毛刺；连续 5 拍超阈才报，误报基本归零，代价是检测延迟增加 40 到 50 ms。本章取 5，是“延迟可接受、误报可忽略”的折中。若工艺要求 20 ms 内响应，就只能取 2 到 3 拍，并接受更高的误报——<strong>没有免费的灵敏度</strong>。</p>
+<p><strong>检测延迟的排序有物理含义。</strong>负载突加 40 ms 最快，因为它直接改变输出，任何以误差为基础的残差都会立刻看到。传感器偏置 90 ms，比负载慢，因为偏置是一个恒定偏移，控制器会把它当成误差去修正，残差先被反馈压一下才显现。执行器卡滞最慢（三维 620 ms、二维 910 ms），因为卡滞之后对象靠惯性继续走，误差是慢慢积累的，不是跳变的。</p>
+<p><strong>三维比二维多看见什么。</strong>多的是 <span class="math inline">u</span> 这一路。卡滞时 <span class="math inline">u</span> 被冻结成一个常数，而误差还在变，于是 <span class="math inline">(e,\dot e,u)</span> 的联合分布被破坏得比 <span class="math inline">(e,\dot e)</span> 更早——这就是 620 ms 对 910 ms 的来源，提前 290 ms。但三维不是无条件更好：多一维让标称段的分布更散，阈值从 57.88 抬到 64.15，对小故障的灵敏度反而下降。所以“加维数”要问一句“我加的这一维在故障时会不会变”，会变才加。</p>
+<p><strong>增益损失为什么看不见。</strong>稳态时 <span class="math inline">u\to0</span>，增益损失百分之三十也只是“零的百分之三十还是零”，残差里没有信息。这不是监控算法不好，是<strong>能观性</strong>问题：系统在稳态附近对执行器增益不敏感。要看见它，必须加一路与 <span class="math inline">u</span> 成正比的残差——也就是 71.9 节改进五的那条模型残差。本章没有实现，但结论应该写进报告：“当前监控对执行器增益损失不能观，需增加模型残差通道。”</p>
+<h3 id="延迟余量一个可以在线算的指标">延迟余量：一个可以在线算的指标</h3>
+<p>延迟不在 LMI 里，也不在残差里，但它会吃掉相位裕度。工程上把两件事换算成同一个单位，就能得到一个可以在线算的余量。</p>
+<p>穿越频率约 1.4 rad/s，延迟 <span class="math inline">\tau</span> 贡献的相位滞后是 <span class="math inline">\omega_c\tau</span>。5 拍（50 ms）只贡献 4°，10 拍 8°，30 拍 24°，50 拍 40°。若设计裕度是 45°，那么“延迟余量”大约是 55 拍——超过这个数，裕度就被吃光。表 71-4 的实测拐点在 30 到 40 拍之间，比这个估算更早，因为估算只算了线性相位，没算限幅与量化的额外滞后。<strong>估算给上限，实测给真值</strong>，两者都要有。</p>
+<p>在线判定不能靠“算”，只能靠“测”。两条可行的做法：</p>
+<p><strong>定期小阶跃。</strong>在工艺允许的间隙注入幅度 1% 到 2% 的阶跃，看响应的第一个振荡周期。延迟变大时，超调变大、振荡周期变长，对数衰减率变小。由衰减率反推阻尼，再反推裕度，精度足够判断“余量是否减半”。</p>
+<p><strong>跟踪响应时间。</strong>不注入任何信号，只统计正常运行中“参考变化到输出跟上的时间”。这个时间随延迟单调增长，虽然绝对值不准，但趋势可靠。设一个基线，涨 50% 就报警。</p>
+<p>两条都不需要额外硬件，只需要把数据记录下来。<strong>延迟余量是唯一一个“不测就会在事故里发现”的指标</strong>，所以它值得单独占一个监控位。</p>
+<h3 id="可解释性怎么写进验收报告">可解释性怎么写进验收报告</h3>
+<p>解释部分最容易写成“我们用了 SHAP，效果良好”。这种写法在评审里等于没写。可交付的形式是三张表加一句限定语。</p>
+<p><strong>第一张表是归因表</strong>：三个输入、各自的占比、排序。本章是 45.6%、51.6%、2.7%，排序 <span class="math inline">\dot e&gt;e&gt;y-2</span>。</p>
+<p><strong>第二张表是忠实度表</strong>：遮挡实验的改变量与排序，以及首末比 12.16。它的作用是证明第一张表不是算法自说自话——两种原理不同的方法给出同一排序。</p>
+<p><strong>第三张表是稳定性表</strong>：至少三个噪声水平下的秩相关与首位保持率，并标明现场噪声对应哪一行。本章 σ=0.05 时是 0.950 / 0.90。</p>
+<p>一句限定语必须写：“以上结论在输入噪声 σ=0.05、基线取零、遮挡方式为置零的条件下成立。” 这句话把解释的适用范围钉死，避免被引用到不适用的工况。</p>
+<p>还要写一句“解释不覆盖什么”。本章的解释只覆盖“这一拍控制量怎么分摊”，不覆盖“为什么选这个控制律”（那是设计文档的事），也不覆盖“模型哪里错了”（那需要残差分析）。<strong>把边界写清楚，比把结论写漂亮更能建立信任。</strong></p>
+<h3 id="灰度上线三段每段都有退出条件">灰度上线：三段，每段都有退出条件</h3>
+<p><strong>第一段，影子模式。</strong>控制器照常算，但输出不送到执行器，只记录“如果听它的会是什么值”。这一段验证的不是控制性能，而是“算得对不对”：把影子输出与原有的 PID 输出逐拍比对，差得离谱就说明模型或接口有问题。退出条件是连续 72 小时无跳变、无 NaN，且限幅触发次数与仿真预测同量级。</p>
+<p><strong>第二段，限幅内的闭环。</strong>把控制权交给新控制器，但把限幅压到标称值的 60%（本章是 0.72）。这一段的作用是把最坏情况装进盒子：即使新控制器想给 1.1，也只能给 0.72，超调与速度都被物理压住。退出条件是 IAE 与影子段预测的偏差小于 15%，且安全层没有触发。</p>
+<p><strong>第三段，全幅。</strong>解开放限幅，同时把监控阈值按实测标称段重新标定。这一段最容易出事，因为前两段的“温和”掩盖了激进工况下的失配。退出条件是连续运行一周、四类故障各注入一次全部检出、误报不超过 1%。</p>
+<p>三段的价值在于每段只改一个变量：影子模式改的是“有没有输出”，第二段改的是“输出多大”，第三段改的是“边界在哪”。一次改一个，出问题时才知道是哪一层的问题；一次全放开，出了事只能靠猜。</p>
+<h3 id="安全认证与三条回退">安全认证与三条回退</h3>
+<p>功能安全认证关心三件事：证据链是否完整、失效模式是否覆盖、出问题时能否回到安全状态。本章的方法对前两件有直接贡献，对第三件只能提供一部分。</p>
+<p><strong>证据链</strong>是“设计意图 → 判据 → 实测 → 监控”四段连续。本章的链条是：极点 <span class="math inline">(-3,-4)</span> → 公共 <span class="math inline">P</span> 与 <span class="math inline">\alpha=2.5716</span> → IAE 0.2883 与延迟余量 → Mahalanobis 监控。链条上任何一段缺失，认证都会被打回。特别要注意的是<strong>每一段都要写明适用域</strong>，因为认证审的是“边界是否说清”，不是“数字是否好看”。</p>
+<p><strong>失效模式覆盖</strong>要回答“哪些故障被检出、哪些没有、没有的怎么办”。本章的答案是：偏置、负载、卡滞检出（40 到 620 ms），增益损失与延迟漂移不能观或不可注入，靠模型残差与定期小阶跃补。这个答案不完美，但它是<strong>完整</strong>的——认证接受“有已知盲区且有补偿措施”，不接受“声称没有盲区”。</p>
+<p><strong>回退</strong>分三层，响应时间从快到慢：</p>
+<p>第一层是每拍执行的硬保护：限幅 <span class="math inline">\pm1.2</span>、速度屏障、输出变化率限制。这一层不依赖任何诊断，永远在线，是最后一道。</p>
+<p>第二层是诊断触发的降级：监控报警后，把控制器从 TS-PDC 切到一组保守的固定增益（本质上是第 44 章的 PID）。切换要无扰，所以两组控制器必须共享同一个积分状态或同一个稳态工作点。</p>
+<p>第三层是人机接口：报警、记录、等待确认，必要时急停。这一层不算控制，但它决定了前两层有没有人知道。</p>
+<p>本章方法不能替代 SIL 等级认证，也不试图替代。它能做的是把“这个控制器为什么可信”讲成一条可核查的链，而不是一句“仿真过了”。这条链在认证里叫“安全论证”，在工程里叫“交接文档”，两者是同一件东西。</p>
+<h2 id="优缺点与适用边界">71.11 优缺点与适用边界</h2>
+<h3 id="四条优点每条配一个证据">四条优点，每条配一个证据</h3>
+<p><strong>第一，结构透明，判据可以直接写。</strong>TS-PDC 的每条规则对应一个局部线性模型，公共李雅普诺夫条件因此能写成标准的 LMI，不需要任何松弛技巧。证据是 <span class="math inline">\alpha=2.5716</span> 与那 16 个闭环矩阵——任何人拿这 16 个矩阵都能复算，不依赖本章的代码。</p>
+<p><strong>第二，保守度可以量化。</strong>判据保守多少，不是靠感觉，而是靠“判据读数 ÷ 实测边界”。小增益给 0.17、实测 3.0（宽度 8），保守 18 倍；LMI 给 2.5716、极点上限 3.0，保守 14%。两个数都是可复核的比值，而不是“比较保守”这种形容词。</p>
+<p><strong>第三，解释可以验收。</strong>精确 Shapley 的效率性残差 <span class="math inline">1.11\times10^{-16}</span> 是硬指标，遮挡排序一致是交叉验证，噪声下的秩相关是稳定性。三条各自可查、互不依赖，合起来才叫“解释可信”。这比“模型可解释”这种说法扎实得多。</p>
+<p><strong>第四，失效可以定位到时间区间。</strong>安全层的代价不是一句“变慢了”，而是“88 到 107 拍被按住，IAE 涨 90.7%”。故障检测也不是“能报警”，而是“负载突加 40 ms、卡滞 620 ms”。<strong>能定位到区间和毫秒，才谈得上改进。</strong></p>
+<h3 id="五条局限每条配一个反例">五条局限，每条配一个反例</h3>
+<p><strong>局限一：判据保守，且保守度随规模恶化。</strong>小增益的保守度不是常数：宽度从 2 到 32，实测边界从 3.5 升到 8.5，预测值却一直卡在 0.13 到 0.17 之间，保守度因此从 22 倍涨到 65 倍；与此同时 <span class="math inline">L</span> 的上界从 1.82 涨到 306.6，若拿上界替代实测值，判据直接失效。反例就是表 71-10 那两列——网络越宽，“能不能证”这件事越没希望。</p>
+<p><strong>局限二：LMI 对延迟完全盲。</strong>反例是表 71-4：延迟从 1 拍加到 50 拍，末段 RMS 从 0 涨到 3.2111，<span class="math inline">\alpha</span> 一个数都不变。任何“LMI 通过所以稳定”的结论，都必须附一句“在延迟为零的假设下”。</p>
+<p><strong>局限三：精确 Shapley 的复杂度指数爆炸。</strong>反例很直接：<span class="math inline">n=3</span> 时 8 次前向、可每拍算；<span class="math inline">n=20</span> 时一百万次、只能离线。本章所有解释结论都建立在“输入只有三个”这个前提上，换成 20 维就得换成采样近似，残差从 <span class="math inline">10^{-16}</span> 掉到 <span class="math inline">10^{-2}</span>。</p>
+<p><strong>局限四：位置约束的屏障在一开始就失效。</strong>反例是 71.4 节的实测：阶跃瞬间 <span class="math inline">e=1.1&gt;h_0=0.40</span>，越界拍数一拍没减。这不是实现 bug，是“前向不变性只保证不出去、不保证能进来”。要修就得改用时变屏障或软约束，代价是结构变复杂。</p>
+<p><strong>局限五：有些故障在当前残差下不能观。</strong>反例是增益损失 30%——二维、三维残差全部未检出，因为稳态 <span class="math inline">u\to0</span>。要抓住它必须增加模型残差通道（71.9 节改进五），而那条通道依赖“标称模型准确”这个前提，模型不准就会误报。</p>
+<p>五条局限里，前两条是<strong>方法本身的边界</strong>（换方法才能解决），后三条是<strong>当前实现的边界</strong>（加东西就能缓解）。报告里应该分开写，因为它们对项目的含义完全不同：前者要求改需求，后者要求加工作量。</p>
+<h3 id="三个常被当成优点的东西">三个常被当成优点的东西</h3>
+<p><strong>“规则少所以简单。”</strong> 规则数少确实让前件好读，但它同时让隶属度对输入更敏感（71.7 节），并且减少了工作域的覆盖。规则少买到的是“解释成本低”，不是“系统简单”——真正决定复杂度的是表示里的参数个数与判据的规模，与规则条数只是间接相关。</p>
+<p><strong>“网络端到端训练，省掉了建模。”</strong> 本章的对比说明，省掉建模的代价是省掉了判据：ELM 只能给 Lipschitz 界，而那个界随宽度发散（表 71-10），实际给不出可用结论。建模不是额外工作，它是证书的来源；不建模也能跑，但跑到哪一步算安全，没人说得清。</p>
+<p><strong>“加了安全层就万无一失。”</strong> 屏障保证的是“已经在集合内就不出去”，不保证初始就在集合内，也不保证延迟后的执行量。71.4 节的位置约束失败就是明证：加了屏障，越界拍数一拍没减。</p>
+<p>三条合起来是一句话：<strong>每个“优点”都要追问一句“它替我买到了什么证据”</strong>。买不到证据的优点，在验收时不算数，在事故分析时更不算数。</p>
+<h3 id="规模上限四条随规模恶化的曲线">规模上限：四条随规模恶化的曲线</h3>
+<p>本章的数字都在“2 维状态、4 条规则、3 个输入、5 拍延迟”这个小规模上取得。规模一变，四条曲线的斜率不同，值得事先知道。</p>
+<p><strong>交叉项按规则数平方涨。</strong>4 条规则 16 对，10 条 100 对，40 条 1600 对。LMI 的约束个数与 <span class="math inline">m^2</span> 同比，而单个约束的矩阵维数只与状态维数有关。所以规则数到 10 时求解还是秒级，到 40 时就得考虑“只查相邻规则对”这类松弛，代价是证书变弱。</p>
+<p><strong>内存按格数平方涨。</strong><span class="math inline">41\times41</span> 的查表是 1681 个双精度数，6.6 KB；<span class="math inline">161\times161</span> 是 25921 个，101 KB。这还不算大，但若前件有三个变量、每维 41 格，就是 68921 个数、270 KB，且每拍要做三次插值。</p>
+<p><strong>解释按输入数指数涨。</strong><span class="math inline">n=3</span> 是 8 个联盟，<span class="math inline">n=10</span> 是 1024，<span class="math inline">n=20</span> 是一百万。10 ms 周期里能算的只有 <span class="math inline">n\le5</span>，再往上必须换采样近似。</p>
+<p><strong>延迟按拍数线性涨，代价却是断崖式的。</strong>表 71-4 里 20 拍以下几乎无影响，30 拍开始恶化，50 拍已经发散。它不是渐变，而是在某个拍数上突然掉下去，所以延迟余量要按最坏情形留，不能按平均值留。</p>
+<p>四条合起来给了一个粗判据：<strong>状态不超过 4 维、规则不超过 10 条、输入不超过 5 个、延迟不超过闭环时间常数的五分之一</strong>，本章这套方法可以直接套用；任一条超出，先解决那条对应的扩展问题，不要硬上。</p>
+<h3 id="适用边界四个必须">适用边界：四个“必须”</h3>
+<p>本章方法能用，前提是四条同时成立。</p>
+<p><strong>工作域必须有界且可分段线性化。</strong>前件依赖 <span class="math inline">y</span> 的区间，<span class="math inline">y</span> 跑出 1.5 到 2.7 之后，隶属度归一化还在，但局部模型的物理意义没了。若工况跨度是一个数量级，就得先做增益调度或者坐标变换，再套本章的方法。</p>
+<p><strong>输入维度必须小。</strong>三个输入是“能精确解释”的前提，也是“能每拍算”的前提。十几个输入的系统，Shapley 要采样、遮挡实验要组合，解释的置信度会显著下降。</p>
+<p><strong>采样周期必须远大于计算时间。</strong>本章 <span class="math inline">T_s=10</span> ms，8 次前向加一次控制律在百微秒量级，占 1% 到 2%。若 <span class="math inline">T_s=100</span> μs，解释就只能离线跑，或者降频到每百拍一次。</p>
+<p><strong>延迟必须已知且有界。</strong>本章的 5 拍是标称值，实际抖动要落在补偿能覆盖的范围内。若延迟是随机分布的（比如网络通信），得先做时间戳与缓冲，把它变成“有界延迟”再进来。</p>
+<h3 id="什么时候不该用它">什么时候不该用它</h3>
+<p><strong>工况大范围变化、且没有可靠的调度变量。</strong>这时 TS 模型的前件失去意义，强行分段会得到一堆“局部对、整体错”的规则。这种情况更适合增益调度加鲁棒控制，或者直接用第 58 章的 MPC。</p>
+<p><strong>延迟主导的系统。</strong>如果纯延迟比时间常数还大（比如 2 s 延迟、0.3 s 时间常数），本章的速度屏障与 LMI 都帮不上忙，正确的是 Smith 预估类方法，见第 47 章与第 107 章。</p>
+<p><strong>要求毫秒级以下硬实时的场合。</strong>8 次前向加 LMI 在线求解（如果要做自适应）在 1 kHz 以上吃紧，此时应退回固定增益 PID，见第 44 章与第 106 章。</p>
+<p><strong>需要形式化验证到代码级的场合。</strong>本章的证书止于模型层，代码层的溢出、截断、调度抖动都不在证明范围内。要覆盖这些，得用静态分析或专用验证工具，那是另一套方法。</p>
+<h3 id="与相邻方法的边界">与相邻方法的边界</h3>
+<p><strong>与 PID 的关系。</strong>PID 是本章方法在“单个工作点、单个回路”上的特例：把规则数压到 1，TS-PDC 就退化成一个固定增益，本章的判据也随之退化成“闭环极点是否在左半平面”。本章多花的成本（规则库、LMI、解释、监控）买的是“多工作点下仍然成立”。单工作点、工况稳定的场合，用不着这套，第 44 章与第 106 章就够了。</p>
+<p><strong>与 MPC 的关系。</strong>MPC 的强项是约束处理，本章的速度屏障是它的轻量替代：不算滚动优化，只做一步投影，算力低两个数量级，代价是只看一步、不能前瞻。反过来说，本章有 MPC 通常没有的两样东西——公共李雅普诺夫的稳定证书，和逐拍可算的归因。约束复杂、预测模型准确时用 MPC（第 58 章、第 80 章）；约束简单、算力紧张、要求可解释时用本章。</p>
+<p><strong>与 Smith 预估的关系。</strong>延迟主导时，正确做法是把延迟显式建模并补偿，见第 47 章与第 107 章。本章只把延迟当成“要留多少余量”的问题，不试图补偿，所以延迟超过时间常数时直接失效——这不是缺陷，是分工。</p>
+<p><strong>与强化学习类方法的关系。</strong>第 70 章的残余策略是纯黑箱，本章的 LMI 那一路对它完全用不上——它连“局部线性模型”都没有，谈不上公共 <span class="math inline">P</span>。能用的只有两条。一是判据级的 Lipschitz 界：第 70 章的策略是线性的，<span class="math inline">u=w^{\rm T}\varphi</span>，它的 <span class="math inline">L</span> 就是 <span class="math inline">\lVert w\rVert</span> 与特征归一化尺度之积，算得出来，但界会很松，只能做粗筛。二是本章这套“实测 + 监控”的兜底。第 70 章 70.6 节那个数字正好当反例：延迟从 5 拍加到 8 拍，残余策略的 RMS 从 0.0347 崩到 0.2267、饱和占比 28.25%，而训练时的评估一切正常——<strong>这类失效在训练集里看不见，只能靠故障注入与延迟余量提前发现</strong>。解释侧则可以直接套用：Shapley、遮挡、噪声稳定性对黑箱策略同样成立，只是“输入”换成策略的特征向量，而第 70 章只有 6 维，<span class="math inline">2^6=64</span> 次前向仍在每拍预算内。</p>
+<h3 id="上线前的六个自检问题">上线前的六个自检问题</h3>
+<p>这六个问题答不上来，说明还不该上线。它们不是流程要求，而是本章所有反例的浓缩。</p>
+<p><strong>一、工作域的边界写下来了吗？</strong>写不出上下界，前件就没有意义；工况一旦越界，局部模型的物理含义立刻失效，而控制器不会报错。</p>
+<p><strong>二、延迟实测过吗，抖动范围多少？</strong>标称 5 拍不等于实际 5 拍。若抖动范围没测，延迟余量就是猜的。</p>
+<p><strong>三、判据的适用域和证书在同一页吗？</strong>分开写，读者会默认证书管所有情况，这是最常见的误用。</p>
+<p><strong>四、安全层的干预量与 IAE 代价测过吗？</strong>只知道“加了屏障更安全”不够，还要知道“被按住多少拍、代价涨多少”。表 71-8 那样的扫描是最低要求。</p>
+<p><strong>五、解释在现场噪声下的秩相关与首位保持率是多少？</strong>答“很高”不算，要给出 σ 与对应的两个数。</p>
+<p><strong>六、监控的误报率与检测延迟是实测的还是理论的？</strong>若引用 <span class="math inline">\chi^2</span> 分位而没测标称段分布，误报率会差一个数量级（本章是 2.44% 对 0.22%）。</p>
+<p>六个问题里，第四和第六个最容易被跳过，因为它们需要跑实验；第一和第三个最容易被糊弄，因为它们只是“写清楚”。<strong>恰恰是这两类最致命</strong>：跳过的会在事故里暴露，糊弄的会在评审里暴露。</p>
+<h2 id="python-仿真代码">71.12 Python 仿真代码</h2>
+<h3 id="两个文件的分工">两个文件的分工</h3>
+<p>本章的代码只有两个文件，分工是一条线：<code>ch071_sim.py</code> 负责<strong>产生数字</strong>，<code>ch071_figs.py</code> 负责<strong>把数字画成图</strong>。后者 <code>import</code> 前者，调用同一批函数，所以正文里每一个数与每一张图都出自同一条计算路径——这是“图与表对得上”的唯一可靠办法。</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># ch071_figs.py 的开头：直接复用仿真模块</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> ch071_sim <span class="im">as</span> cs</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> plot_styles <span class="im">import</span> setup, save, annotate, LINE_MAIN, LINE_COMP, SINGLE, DOUBLE</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>setup()</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>teacher <span class="op">=</span> cs.TSPDC(np.linspace(<span class="fl">1.5</span>, <span class="fl">2.7</span>, <span class="dv">4</span>))     <span class="co"># 与 ch071_sim 完全同一个教师</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>s <span class="op">=</span> cs.simulate(teacher)                          <span class="co"># 同一条仿真函数</span></span></code></pre></div>
+<p>如果图脚本自己重写一遍仿真，迟早会出现“表里 0.2883、图上 0.29”这种对不上的情况。本章从一开始就掐掉这条路：图脚本不许有自己的模型。</p>
+<h3 id="教师与仿真器四十行撑起全部实验">教师与仿真器：四十行撑起全部实验</h3>
+<p>整个章节的物理内容，压缩下来就是下面两段。第一段是教师，第二段是安全层。</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> TSPDC:</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">&quot;&quot;&quot;按 y 分段线性化的 TS 模型 + 并行分布补偿。&quot;&quot;&quot;</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>, y_grid, poles<span class="op">=</span>(<span class="op">-</span><span class="fl">3.0</span>, <span class="op">-</span><span class="fl">4.0</span>)):</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.yg <span class="op">=</span> np.asarray(y_grid, <span class="bu">float</span>)</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.Bs <span class="op">=</span> [bmat(y) <span class="cf">for</span> y <span class="kw">in</span> <span class="va">self</span>.yg]</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.Ks <span class="op">=</span> [place_poles(A, B, np.asarray(poles)).gain_matrix[<span class="dv">0</span>]</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>                   <span class="cf">for</span> B <span class="kw">in</span> <span class="va">self</span>.Bs]</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> raw(<span class="va">self</span>, x, r):</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>        <span class="co">&quot;&quot;&quot;未限幅控制量；三输入 Shapley 解释的也是这个量。&quot;&quot;&quot;</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>        e, ed <span class="op">=</span> x[<span class="dv">0</span>] <span class="op">-</span> r, x[<span class="dv">1</span>]</span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>        w <span class="op">=</span> <span class="va">self</span>.memberships(x[<span class="dv">0</span>])           <span class="co"># 三角隶属，归一化</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="bu">float</span>(<span class="op">-</span><span class="bu">sum</span>(wi <span class="op">*</span> (Ki <span class="op">@</span> np.array([e, ed]))</span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>                          <span class="cf">for</span> wi, Ki <span class="kw">in</span> <span class="bu">zip</span>(w, <span class="va">self</span>.Ks)))</span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__call__</span>(<span class="va">self</span>, x, r):</span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="bu">float</span>(np.clip(<span class="va">self</span>.raw(x, r), <span class="op">-</span>UMAX, UMAX))</span></code></pre></div>
+<p><code>place_poles</code> 每调用一次就为一个局部模型单独配增益，这是 PDC 与“一个控制器加调度系数”的根本区别：前者是几条局部控制器之间的插值，后者是一个控制器乘一个系数。前者的稳定性要查 16 个交叉闭环，后者只需查一个。</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> VelCBF:</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">&quot;&quot;&quot;速度屏障的一步投影，相对阶 1，解是单边投影。&quot;&quot;&quot;</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>, v_max<span class="op">=</span><span class="fl">1.0</span>, kappa<span class="op">=</span><span class="fl">8.0</span>):</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.v_max, <span class="va">self</span>.kappa <span class="op">=</span> v_max, kappa</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__call__</span>(<span class="va">self</span>, x, u, r):</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>        v <span class="op">=</span> x[<span class="dv">1</span>]</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>        h <span class="op">=</span> <span class="va">self</span>.v_max <span class="op">**</span> <span class="dv">2</span> <span class="op">-</span> v <span class="op">**</span> <span class="dv">2</span>                       <span class="co"># 屏障函数</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>        coef <span class="op">=</span> <span class="op">-</span><span class="fl">2.0</span> <span class="op">*</span> v <span class="op">*</span> gain(x[<span class="dv">0</span>])                       <span class="co"># u 的系数</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>        rhs <span class="op">=</span> <span class="fl">4.0</span> <span class="op">*</span> v <span class="op">**</span> <span class="dv">2</span> <span class="op">+</span> <span class="va">self</span>.kappa <span class="op">*</span> h                <span class="co"># 右端</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="bu">abs</span>(coef) <span class="op">&gt;</span> <span class="fl">1e-9</span>:</span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>            bound <span class="op">=</span> <span class="op">-</span>rhs <span class="op">/</span> coef</span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>            u <span class="op">=</span> <span class="bu">max</span>(u, bound) <span class="cf">if</span> coef <span class="op">&gt;</span> <span class="dv">0</span> <span class="cf">else</span> <span class="bu">min</span>(u, bound)</span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="bu">float</span>(np.clip(u, <span class="op">-</span>UMAX, UMAX))</span></code></pre></div>
+<p>十几行里没有迭代、没有矩阵求逆，只有一次乘法和一次比较。这就是“最小干预”能在 10 ms 周期里跑起来的原因——它不是优化，是投影。</p>
+<p>仿真主循环有三处必须按顺序做对，否则结果全错：<strong>先查延迟缓冲</strong>（取出 <span class="math inline">d</span> 拍前的指令），<strong>再过安全层</strong>（保证实际执行量不越界），<strong>最后进 RK4</strong>（用实际执行量积分）。顺序错了，屏障保护的是一个还没生效的量，等于没保护。</p>
+<h3 id="十段实验与正文的对应">十段实验与正文的对应</h3>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: right;">段</th>
+<th style="text-align: left;">函数</th>
+<th style="text-align: left;">产出</th>
+<th style="text-align: left;">正文位置</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">1</td>
+<td style="text-align: left;"><code>exp1_representations</code></td>
+<td style="text-align: left;">四表示的 IAE、超调、调节时间</td>
+<td style="text-align: left;">表 71-6、图 71-2</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">2</td>
+<td style="text-align: left;"><code>exp2_lmi</code></td>
+<td style="text-align: left;">四个 <span class="math inline">\alpha</span>、八行延迟扫描</td>
+<td style="text-align: left;">图 71-3、表 71-4</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">3</td>
+<td style="text-align: left;"><code>exp3_lipschitz</code></td>
+<td style="text-align: left;"><span class="math inline">L</span> 上界、实测 <span class="math inline">L</span>、<span class="math inline">\beta_{\rm crit}</span></td>
+<td style="text-align: left;">图 71-4</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">4</td>
+<td style="text-align: left;"><code>exp4_grid</code></td>
+<td style="text-align: left;">五档网格的 IAE 与 <span class="math inline">\Delta u</span></td>
+<td style="text-align: left;">表 71-5</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">5</td>
+<td style="text-align: left;"><code>exp5_fixedpoint</code></td>
+<td style="text-align: left;">六档位数的末段残差</td>
+<td style="text-align: left;">表 71-7</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">6</td>
+<td style="text-align: left;"><code>exp6_cbf</code></td>
+<td style="text-align: left;"><span class="math inline">4\times3</span> 屏障扫描</td>
+<td style="text-align: left;">表 71-8、图 71-7</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">7</td>
+<td style="text-align: left;"><code>exp7_shap</code></td>
+<td style="text-align: left;">占比、效率性残差、遮挡</td>
+<td style="text-align: left;">表 71-11、图 71-8</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">8</td>
+<td style="text-align: left;"><code>exp8_stability</code></td>
+<td style="text-align: left;">五个噪声水平的秩相关</td>
+<td style="text-align: left;">表 71-12、图 71-9</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">9</td>
+<td style="text-align: left;"><code>exp9_tradeoff</code></td>
+<td style="text-align: left;">规则数与宽度扫描</td>
+<td style="text-align: left;">表 71-9、表 71-10</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">10</td>
+<td style="text-align: left;"><code>exp10_monitor</code></td>
+<td style="text-align: left;">四类故障的检出延迟</td>
+<td style="text-align: left;">表 71-13、图 71-10</td>
+</tr>
+</tbody>
+</table>
+<p><strong>表 71-14 十段实验与正文的对应关系</strong></p>
+<p>十段按“表示 → 判据 → 量化 → 安全 → 解释 → 工程”排列，与正文第 6 到第 10 节的顺序一致。这样排的好处是：跑通一段就能核对一节，不必等全部跑完才知道哪里错了。</p>
+<h3 id="三个容易写错的实现细节">三个容易写错的实现细节</h3>
+<p><strong>延迟缓冲的方向。</strong>缓冲初始化成 <span class="math inline">d</span> 个零，每拍 <code>pop(0)</code> 取出最早的一个作为执行量，再把新算出的指令 <code>append</code> 到队尾。若写反了（新指令直接执行），延迟就变成零，表 71-4 整张表都会好看得不像话——这是最容易骗过自己的 bug，因为结果“更好”而不是“报错”。</p>
+<p><strong>限幅的位置。</strong>教师内部限幅一次（<code>__call__</code> 里的 <code>clip</code>），屏障输出再限幅一次，负载扰动叠加后还要限幅一次。三次限幅看着冗余，但少任何一次都会让某个实验的数据失真：少了第一次，函数差 <span class="math inline">\max|u_{\rm ELM}-u_{\rm TS}|</span> 会比较的是未限幅值；少了最后一次，扰动叠加可能让执行量超出物理上限。</p>
+<p><strong>LMI 的尺度。</strong>约束里用 <span class="math inline">P\succeq I</span> 而不是 <span class="math inline">\operatorname{trace}(P)=1</span>。原因是判据对 <span class="math inline">P</span> 的整体缩放不变：<span class="math inline">P</span> 乘任何正常数，<span class="math inline">A^{\mathrm T}P+PA+2\alpha P\prec0</span> 的真假不变。用迹归一化会在 <span class="math inline">\alpha</span> 较大时把可行域压没，得到“不可行”的假结论；用 <span class="math inline">P\succeq I</span> 则给了一个固定的下界，二分才稳定。</p>
+<h3 id="复现与排错">复现与排错</h3>
+<p>运行顺序固定为三步：先跑 <code>ch071_sim.py</code>（约 16 s，输出十段文本），再跑 <code>ch071_figs.py</code>（约 14 s，输出 20 个图件），最后 <code>tools/build.py --chapter 71</code> 出 HTML 与 PDF。三步都成功，正文里的数字才可引用。</p>
+<p>依赖只有三个：<code>numpy</code>、<code>scipy</code>、<code>cvxpy</code>（求解器用 CLARABEL）。缺 <code>cvxpy</code> 时第 2 段会直接报错，但前 1 段与后 8 段仍能跑——这也是分段设计的好处：一段失败不影响其他段的核对。</p>
+<p>两个常见提示都不是错误。一是 CLARABEL 的 <code>Solution may be inaccurate</code>：<span class="math inline">\alpha</span> 二分到临界点时必然出现，本章只用可行/不可行的二值结论，已在文件头用 <code>warnings.filterwarnings</code> 屏蔽。二是 matplotlib 的缺字形警告：它的根因是把中文与 <code>$...$</code> 写进同一个字符串，本章的图脚本统一遵守“中文纯文本、公式单独成串”，所以不该再出现；若出现，去查那一行的字符串写法，不要去改字体配置。</p>
+<p>最后一个提醒：所有随机量统一种子（<code>default_rng(20261101)</code>），换种子会让 ELM 的随机特征、网络宽度扫描的 IAE、Shapley 的占比都变。正文的数字是这一组种子下的结果，<strong>换种子后要重跑全部十段并重写表</strong>，不能只改一处。</p>
+<h3 id="数值自检三个能立刻发现错误的检查">数值自检：三个能立刻发现错误的检查</h3>
+<p>跑完十段之后，先做三个不依赖正文的检查，它们能挡住绝大多数实现错误，而且每个都只需要几秒钟。</p>
+<p><strong>一、教师自身的闭环要落在配置的极点上。</strong>把 <span class="math inline">y</span> 固定在工作区中点，令参考为 0、初值为一个小扰动，按闭环矩阵 <span class="math inline">A-BK</span> 算特征值，应当就是配置的 <span class="math inline">(-3,-4)</span>。若对不上，多半是符号约定错了：把 <span class="math inline">u=-\sum_iw_iK_ix</span> 里的负号漏掉，闭环就变成 <span class="math inline">A+BK</span>，极点跑到右半平面，仿真会发散。这类错误在只看曲线时很像“增益太大”，很容易被误诊成调参问题。</p>
+<p><strong>二、无扰动时的末段误差应当接近机器精度。</strong>教师与双线性查表的末段 RMS 都是 0.0000（表 71-5 末两行），因为它们没有量化环节。若你的实现里教师也出现了 <span class="math inline">10^{-3}</span> 量级的稳态误差，先查积分步长是否与采样周期一致，再查参考是否被一阶滤波——本章的参考是纯阶跃，任何平滑都会引入滞后，被误读成稳态误差。</p>
+<p><strong>三、把限幅触发的拍数打印出来。</strong>本章阶跃幅度 0.5、静态增益 13 到 20，峰值控制量约 1.1，紧贴 1.2 的限幅，实际只在最初两三拍触发。若打印出来是几十拍，说明增益配得过大或参考给得过猛；此时 §71.4 那条“证书不覆盖饱和区”的警告已经在生效，继续读 <span class="math inline">\alpha</span> 的数值没有意义。</p>
+<h3 id="换一个对象改动清单只有五处">换一个对象：改动清单只有五处</h3>
+<p>本章的对象是 <span class="math inline">y&#39;&#39;=-2y&#39;+K(y)u</span>。若换成一个别的单输入单输出对象（带惯性的温度回路、带摩擦的速度回路都行），要改的只有下面五处，其余代码不动。</p>
+<ul>
+<li><code>A</code>：状态矩阵。本章取 <span class="math inline">\begin{bmatrix}0&amp;1\\0&amp;-2\end{bmatrix}</span>，第二行是阻尼项。换成近似无阻尼的对象时这一行变成 <span class="math inline">[0,0]</span>，<code>place_poles</code> 仍能配出极点，但同样的判据会给出更小的延迟余量。</li>
+<li><code>bmat(y)</code> 与 <code>gain(y)</code>：输入矩阵与静态增益。两处定义必须一致，否则局部模型的 <span class="math inline">B_i</span> 与真实对象对不上，PDC 的插值就失去物理含义，只剩数值上的“看着还行”。</li>
+<li><code>y_grid</code>：规则中心。惯例是覆盖整个工作区，并在两端各外扩一格，这样输出越界时端点的隶属度仍能算出合理值；不外扩会在边界出现权重全零，代码里只能用“最近格点”兜底。</li>
+<li><code>TS</code>、<code>DELAY</code>、<code>UMAX</code>：采样周期、纯延迟拍数、限幅。三者都得按实际硬件填，<code>DELAY</code> 尤其不能照抄本章的 5 拍——它直接决定表 71-4 的拐点位置。</li>
+<li>随机种子：只影响 ELM 的随机特征与网络宽度扫描，但换了就要重跑全部十段。</li>
+</ul>
+<p>改完之后，凡是与对象无关的结论（判据形式、量化与抖振的对应、Shapley 的效率性）仍然成立；凡是与对象有关的数字（具体 <span class="math inline">\alpha</span>、延迟余量、IAE）都要重算重写。把这两类结论在正文里分开写，是本章从第 6 节起一直遵守的规矩。</p>
+<h3 id="与第-66-至-69-章的数字怎么对照">与第 66 至 69 章的数字怎么对照</h3>
+<p>本章沿用同一对象（式 71-1、10 ms、5 拍、<span class="math inline">\pm1.2</span>），所以第 66 到 69 章的 IAE 与本章的表可以直接比，但比之前要先过三条。</p>
+<p><strong>阶跃幅度要相同。</strong>四章都是 1.5 到 2.0，本章也一样；若某章用了 1.5 到 2.2 的算例，那个 IAE 不能直接对照，因为误差积分随幅度近似线性增长。</p>
+<p><strong>延迟的实现方式要相同。</strong>本章用“缓冲区里放 5 个数”，若某章用一阶惯性近似延迟，两者的相位滞后在低频接近、在高频差很多，抖振指标不可比。</p>
+<p><strong>限幅的触发情况要相同。</strong>本章峰值约 1.1，只在最初两三拍触发；若某章的控制器增益更大、长期贴着限幅跑，它的 IAE 里就混进了饱和的影响。</p>
+<p>三条合起来的意思是：<strong>同一对象不等于同一实验</strong>。本章把对象与采样对齐到前四章，是为了让“表示、判据、安全层”这三个新变量成为唯一差别；对照时若发现某个数字差得离谱，先查这三条，再怀疑方法。</p>
+<p>十段实验里，第 1 段（表示对照）与第 6 段（安全层）最能直接与前四章比；第 2、3、5 段讲的是判据与量化，前四章没有对应项，只能自己与自己比。把“能横向比的”与“只能纵向比的”分开，是写对照表时最省口舌的一条。</p>
+<p>三步的耗时也值得记：仿真约 16 s、出图约 14 s、build 半分钟左右。这三个数决定了“改一个参数要等多久”，也就是调参时试错循环的长度。若把十段拆成可单独运行的子命令，单段通常在两秒内，循环能从分钟级压到秒级；本章为了保持“一次跑出全部数字”的可核对性没有拆，读者按需自行拆即可——拆的时候注意让每段自己打印所用的参数，否则半年后又说不清那张表是哪组参数跑出来的。</p>
+
+<nav class="footnav"><a href="ch070.html">← 上一章</a><a href="index.html">返回目录</a><a href="ch072.html">下一章 →</a></nav>
+</body>
+</html>

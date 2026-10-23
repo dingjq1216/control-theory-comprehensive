@@ -1,0 +1,1333 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="zh-CN" xml:lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>第 70 章　强化学习控制 · 控制大综合</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    span.underline{text-decoration: underline;}
+    div.column{display: inline-block; vertical-align: top; width: 50%;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    ul.task-list{list-style: none;}
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+  <link rel="stylesheet" href="assets/book.css" />
+  <script src="assets/katex/katex.min.js"></script>
+  <script>document.addEventListener("DOMContentLoaded", function () {
+   var mathElements = document.getElementsByClassName("math");
+   var macros = [];
+   for (var i = 0; i < mathElements.length; i++) {
+    var texText = mathElements[i].firstChild;
+    if (mathElements[i].tagName == "SPAN") {
+     katex.render(texText.data, mathElements[i], {
+      displayMode: mathElements[i].classList.contains('display'),
+      throwOnError: false,
+      macros: macros,
+      fleqn: false
+     });
+  }}});
+  </script>
+  <link rel="stylesheet" href="assets/katex/katex.min.css" />
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+  <link rel="stylesheet" href="assets/site.css" />
+</head>
+<body>
+<nav class="topnav"><a class="home" href="index.html">目录</a><span class="pos">070 / 115</span><span class="pager"><a href="ch069.html">上一章</a><a href="ch071.html">下一章</a></span></nav>
+
+<nav id="TOC" role="doc-toc">
+<ul>
+<li><a href="#第70章-强化学习控制">第70章 强化学习控制</a>
+<ul>
+<li><a href="#动机与直观理解">70.1 动机与直观理解</a></li>
+<li><a href="#数学原理">70.2 数学原理</a></li>
+<li><a href="#设计步骤">70.3 设计步骤</a></li>
+<li><a href="#连续情形">70.4 连续情形</a></li>
+<li><a href="#离散情形">70.5 离散情形</a></li>
+<li><a href="#稳定性与性能">70.6 稳定性与性能</a></li>
+<li><a href="#参数意义与作用">70.7 参数意义与作用</a></li>
+<li><a href="#调参方法与经验">70.8 调参方法与经验</a></li>
+<li><a href="#优化与改进">70.9 优化与改进</a></li>
+<li><a href="#工程落地">70.10 工程落地</a></li>
+<li><a href="#优缺点与适用边界">70.11 优缺点与适用边界</a></li>
+<li><a href="#python-仿真代码">70.12 Python 仿真代码</a></li>
+</ul></li>
+</ul>
+</nav>
+<h1 id="第70章-强化学习控制">第70章 强化学习控制</h1>
+<p>第 69 章的 ILC 有一个不能绕开的前提：任务必须重复。同一条轨迹跑上六十遍，记忆里的前馈才长得出来。可现场大多数回路不是这样运转的——注塑机的模温随季节变、传送带上的工件重量每件都不同、操作工隔三差五改一次工艺曲线。轨迹一变，ILC 辛苦攒下的那张表就作废了。人在这种场合并不需要跑六十遍同一条路，他会在每一次动作之后看结果，把“这么打方向会偏”记成经验，下一拍换个打法。这种“从动作的后果里学”的能力，就是本章要讲的内容。</p>
+<p>强化学习（reinforcement learning，RL）解决的是同一类问题：<strong>控制器不知道该输出多少，但它能得到一个标量分数，说明刚才那一拍做得有多好</strong>。这个分数不告诉你“应该输出 0.37”，只告诉你“这一拍偏了、而且用力过猛”。学习算法要做的事，是从大量这样的分数里反推出一个策略，使长期累积的分数最大。它与第 44 章的 PID 不冲突，与第 69 章的 ILC 也不冲突：PID 提供每一拍的即时纠偏，ILC 提供跨迭代的前馈记忆，RL 提供的是“在没有模型、也没有重复任务时，仍然能把前馈形状学出来”的第三条路。</p>
+<p>本章的结论先摆在这里：在同一个对象、同一条轨迹上，纯反馈的跟踪误差 RMS 是 0.1161，本章学出来的残余策略把它压到 0.0347，降幅 70.1%，训练 300 个回合只用 4.7 s。这个结果比 ILC 的 0.0224 差一截，但 ILC 需要 60 次完整重复，而 RL 只需要一个能反复试错的仿真环境。代价也很清楚：把纯延迟从 5 拍拉长到 8 拍，同一个策略的误差会从 0.0347 跳到 0.2267，比纯反馈的 0.1196 还差一倍，而且有 28.25% 的时间贴在限幅上。这条“在训练分布内很强、出了分布就崩”的分界线，是全章的主线。</p>
+<h2 id="动机与直观理解">70.1 动机与直观理解</h2>
+<h3 id="从记住上一遍到试着改一改">从“记住上一遍”到“试着改一改”</h3>
+<p>ILC 的信息来源是“同一位置的误差”，这条信息只有在重复时才存在。把 ILC 的一整套机制搬到一个不重复的任务上，它会做两件错事：一是把某一次偶然的外扰当成“要学的形状”，二是把已经过时的前馈继续用下去。第 69 章 69.9 节测过这组数据，加入 0.01 的测量噪声后，ILC 的稳态误差从 0.0224 抬到 0.0318，噪声被逐遍累加进记忆里。这不是实现细节的问题，而是“用误差当老师”这种范式的固有缺陷：误差里有多少是“我该补的”，有多少是“这次碰巧发生的”，ILC 分不清。</p>
+<p>RL 换了一个老师。它不再问“这一拍错了多少”，而问“这一拍整体得了多少分”。分数可以由设计者任意拼装：偏差小给正分，用力猛扣分，接近限幅扣重分。分数的统计平均比单次误差稳，因为它把“碰巧”平均掉了；代价是每一拍的分数都很嘈杂，单看一拍几乎学不到东西，必须把几百拍的分数累起来才能看出方向。<strong>ILC 用“重复”换精度，RL 用“样本”换泛化</strong>，这句话概括了两章的分工。</p>
+<p>这个交换有个直接的工程后果。ILC 的学习期是“跑 60 遍真机”，通常按小时甚至按天计；RL 的学习期是“跑几十万拍仿真”，在 4.7 s 里就能完成，但仿真与真机之间的差距会把学到的策略打折。所以 ILC 的难点在“怎么在真机上安全地学”，RL 的难点在“怎么让仿真里的策略在真机上还成立”。本章 70.9 节和 70.10 节分别处理这两件事。</p>
+<h3 id="把控制回路看成决策过程">把控制回路看成决策过程</h3>
+<p>要套用 RL，先得把回路改写成“智能体—环境”的形式。智能体每个采样时刻观察一个状态 <span class="math inline">s_k</span>，选一个动作 <span class="math inline">a_k</span>，环境据此返回下一个状态 <span class="math inline">s_{k+1}</span> 和一个奖励 <span class="math inline">r_k</span>。在控制问题里，这三样东西都有明确的物理对应：状态是“当前偏差有多大、偏差在扩大还是缩小、参考走到哪了”，动作是“在反馈量之上再补多少”，环境是“对象 + 反馈支路 + 延迟 + 限幅”这一整坨东西。</p>
+<p>这个改写的关键在于<strong>把反馈回路包进环境里</strong>。很多教材把 RL 直接接在被控对象前面，让智能体从零学一个完整控制器；本章不这么做。本章让 PID 留在原地，把“PID + 对象 + 延迟”整体当作环境，智能体只学 PID 补不上的那一小块。这个选择让问题的难度下降了一个量级：智能体不需要学会“怎么让系统稳定”（PID 已经保证了），只需要学会“往哪个方向多推一点”。第 68 章的神经网络控制器是从零学的，它花了 61 个权重才把 RMS 做到 0.0524；本章只用了 6 个权重就做到 0.0347，差别不在算法强弱，而在“从哪里出发”。</p>
+<p>环境与智能体的分界线画在哪里，是一个必须先定的约定，它决定了策略能“看到”什么、能“改”什么。本章的约定是：凡是物理上存在、策略无法直接改的东西，都算环境——对象、延迟、限幅、执行器的速率限制、测量噪声，全部在内；凡是“由设计者决定如何把信号变成控制量”的东西，都算智能体——特征怎么算、动作怎么映射、奖励怎么给。这条线画错的典型症状是“训练时好好的、部署时不对”：如果把限幅算进智能体（也就是让策略自己负责不超限），训练时它学到的是“知道边界在哪”的一套动作，真机的限幅值一旦不同，策略就不知道该收多少；把限幅留在环境里，策略只需要知道“多用力的收益递减”，边界变了它仍然工作。这条约定还有一个副作用：奖励的计算属于智能体一侧，所以奖励里可以出现状态与动作，但不应该出现“环境内部才有的量”（比如真实的对象参数），否则策略会学到一些部署时拿不到的信息。</p>
+<h3 id="奖励是唯一的目标说明书">奖励是唯一的目标说明书</h3>
+<p>RL 里没有“跟踪误差”这个概念，只有奖励。设计者想让控制器干什么，就得把它翻译成“每一拍给多少分”。本章用的奖励是</p>
+<p><span class="math display">
+r_k=-\left(\frac{e_k}{E_{\mathrm{ref}}}\right)^2-\lambda a_k^2 \tag{70-1}
+</span></p>
+<p>第一项罚偏差，第二项罚动作幅度。两个细节值得说清楚。第一，偏差用平方而不是绝对值，原因是平方对中等偏差的惩罚更重、对大偏差的梯度更陡，学出来的策略会优先消灭中等偏差而不是死盯某一个尖峰。第二，分母 <span class="math inline">E_{\mathrm{ref}}=0.05</span> 是个归一化尺度，它把“毫米级”的偏差换算成“1 左右”的无量纲数，使奖励的量级与学习率匹配；它不改变最优策略，只改变学习的刻度。</p>
+<p>第二项 <span class="math inline">\lambda a_k^2</span> 的作用容易被低估。如果只罚偏差，最优策略会倾向于用大幅值、高频抖动的动作去“追”每一个误差，学出来的东西在仿真里 RMS 很低，装到真机上会因为执行器的速率限制和噪声而抖成一团。加上这一项之后，策略必须在“少错”和“少动”之间做交换，<span class="math inline">\lambda</span> 就是这个交换的价格。本章取 <span class="math inline">\lambda=0.50</span>，70.7 节会给出 <span class="math inline">\lambda</span> 从 0 到 10 的完整扫描，说明这个价格的合理区间。</p>
+<h3 id="为什么本章不用神经网络">为什么本章不用神经网络</h3>
+<p>第 68 章已经用过神经网络，本章改用线性策略，参数只有 6 个。这个选择不是图省事，而是为了让机制显形。用线性策略时，策略梯度更新一次是什么样子、优势函数怎么估、折扣因子改了会怎样，全部可以手算核对；换成三层网络之后，同样的现象还在，但被 61 个权重的耦合遮住了，读者只能看曲线猜原因。</p>
+<p>还有一个更实际的理由：控制工程对“可验证性”的要求比一般机器学习高。一个 6 参数的线性策略，可以打印出权重、画出它对每个状态的响应、逐项解释为什么这一项是正的；一个 61 个权重的网络做不到这些。本章 70.10 节会讲工程落地，其中一条就是“上线前必须能说清楚策略在做什么”，这条要求直接排除了黑箱。能力上限当然受限于线性，但本章要讲的不是“RL 能有多强”，而是“RL 在控制回路里怎么用才不出事”。</p>
+<p>线性策略还有一个常被忽略的好处：权重可以直接读。本章正式算例（种子 0、300 回合）学出来的六个数是 <span class="math inline">[0.2461,\,0.4002,\,-0.0047,\,0.0844,\,-0.1598,\,0.1932]</span>，依次对应常数项、误差、误差导数、误差积分、参考位置、参考速度。这组数每一维都能解释：误差项正且最大（0.40），说明“偏了就多推”；参考速度项正（0.19），说明“轨迹在上升时提前推”；参考位置项负（−0.16），正对应 <span class="math inline">K(y)=4+6y</span> 随位置变大这件事——位置越高、对象越“有劲”，同样推力产生的加速度越大，所以该少推；常数项正（0.25）补的是区间低端的不足。最有意思的是误差导数项只有 −0.005，几乎为零：<strong>策略主动放弃了微分作用</strong>，因为 PID 已经提供了足够的阻尼，再叠一层只会加大噪声。</p>
+<p>这六个数就是“可验证性”的具体含义。把权重打印出来，逐项问“符号对不对、量级合不合理”，五分钟就能完成一次物理审查；如果某一项符号反了，多半是特征定义出了错（比如误差取了 <span class="math inline">y-r</span> 而不是 <span class="math inline">r-y</span>），而不是策略“学到了新东西”。换成 61 个权重的网络，同样的审查无从下手。</p>
+<h3 id="残余学习让学习从-pid-出发">残余学习：让学习从 PID 出发</h3>
+<p>结构上的核心决定是把动作定义为“残余量”而不是“总控制量”：</p>
+<p><span class="math display">
+u_k=u_{\mathrm{PID},k}+u_{\mathrm{RL},k},\qquad u_{\mathrm{RL},k}=U_{\mathrm{RL}}\,a_k \tag{70-2}
+</span></p>
+<p>其中 <span class="math inline">U_{\mathrm{RL}}=0.60</span> 是残余量的幅值上限，动作 <span class="math inline">a_k</span> 被限制在 <span class="math inline">[-1,1]</span>。这个式子的含义是：<strong>第 1 个回合、权重全零时，控制量严格等于纯 PID</strong>。学习只在这个基线上做加法，能加多少、往哪加，由奖励决定。图 70-1 是这条结构。</p>
+<figure>
+<img src="figs/ch070/fig_070_01_structure.svg" alt="图 70-1 残余学习结构" /><figcaption aria-hidden="true">图 70-1 残余学习结构</figcaption>
+</figure>
+<p>这样做有三个好处。安全上，最坏情况是学不出东西，退回纯 PID，而不是退回“随机输出”；样本效率上，智能体不必先学会“怎么让系统不发散”，从第一回合起误差就是 0.1161 这个量级，梯度信号一直有效；可比性上，“相对纯 PID 降了多少”这句话有确切含义，不需要另找基线。第 69 章的 ILC 也是叠加结构，但它叠的是前馈记忆，本章叠的是状态反馈，两者叠的位置不同，鲁棒性也因此不同——这一点在 70.6 节会具体比较。</p>
+<h3 id="本章算例与结果预告">本章算例与结果预告</h3>
+<p>算例沿用第 66 至 69 章的对象：<span class="math inline">y&#39;&#39;=-2y&#39;+K(y)u</span>，<span class="math inline">K(y)=4+6y</span>，工作区间内静态增益从 13 变到 20；采样 10 ms、纯延迟 5 拍、限幅 <span class="math inline">\pm1.2</span>；反馈仍是 <span class="math inline">(2.0,\,0.05,\,0.20)</span> 的 PID。参考轨迹同样是那条 4 s 的往复曲线，范围 <span class="math inline">[1.500,\,2.720]</span>，每回合 400 拍。这些数字与前面四章完全一致，所以误差指标可以横向比较。</p>
+<p>正式算例的超参数是：策略学习率 <span class="math inline">\alpha_w=0.010</span>、值函数学习率 <span class="math inline">\alpha_v=0.050</span>、折扣因子 <span class="math inline">\gamma=0.95</span>、自举步数 <span class="math inline">n=20</span>、探索噪声从 0.30 按 0.99 的比率衰减到 0.05、动作惩罚 <span class="math inline">\lambda=0.50</span>。跑 300 个回合后，评估 RMS 是 0.0347，最大偏差 0.0795，相对纯 PID 降 70.1%。作为参照，模型完全已知时的精确前馈能做到 0.0293——<strong>学出来的策略比精确前馈差 18.6%，但比纯反馈好 3.3 倍</strong>，这个位置本身就是本章想说明的：RL 学的是“在反馈之上还能补多少”，它不追求取代模型。</p>
+<p>把四个数排在一起看，本章的定位会更清楚：纯 PID 0.1161、精确前馈 0.0293、ILC 0.0224、残余 RL 0.0347。四个数分别对应四种“知道多少”：PID 什么都不知道，只靠当下这一拍的偏差；精确前馈什么都知道，连 <span class="math inline">K(y)</span> 的表达式都有；ILC 不知道模型，但知道“上一遍同一点的误差”；RL 既不知道模型，也没有上一遍，只有几百个回合的试错记录。所以 0.0347 这个数不是“RL 比前馈差”，而是“在少知道两件事的情况下，只多付了 18.6% 的误差”。</p>
+<p>这 18.6% 的差距也不是随机的，它有两个具体来源。一是残余量上限：<span class="math inline">U_{\mathrm{RL}}=0.60</span> 虽然远大于前馈的 RMS 0.1166，但策略的输出还受动作截断（<span class="math inline">\pm 3</span>）与均值线性形式限制，遇到陡峭段补不满。二是特征只有 6 维，参考的加速度没有直接进入状态，策略只能从“参考速度的变化”间接推断该不该提前用力，这个间接推断必然有滞后。换句话说，差距不在算法，而在“信息”——如果非要把这 18.6% 追回来，最直接的办法是把 <span class="math inline">r&#39;&#39;</span> 加进特征，代价是策略从此依赖一个模型量，不再是“只用测量值”。</p>
+<h3 id="本章的路线">本章的路线</h3>
+<p>70.2 节把上面的直觉写成数学：马尔可夫决策过程、回报、值函数、策略梯度、优势函数，一路推到本章用的 n 步 Actor-Critic 更新式。70.3 节给出可照着走的设计流程，从“确认该不该用 RL”到“训练完怎么验收”。70.4 节讨论连续时间下的对应物——连续时间的策略梯度是一个积分方程，落到 400 个采样点上会损失什么。70.5 节换成离散动作，用 Q 学习做同一件事，并给出档位数与样本量的实测。70.6 节谈稳定性：RL 没有稳定性证书，只能靠“训练分布”和“安全层”画出一个可信范围。70.7 节逐个解释五个超参数，70.8 节给出调参流水线与症状表。70.9 节讲优化改进，70.10 节讲工程落地，70.11 节给出优缺点与适用边界，70.12 节是完整的仿真代码。</p>
+<p>不同读者可以走不同的路。关心“能不能用”的，读 70.1、70.3、70.11 三节即可，其余当作查阅；关心“为什么这样更新”的，70.2 与 70.4 是主干，70.5 是离散版本；关心“怎么落地”的，70.6、70.8、70.9、70.10 四节按顺序读，它们回答的是同一个问题的四个侧面——分布、调参、改进、部署。阅读前最好已经熟悉第 67 章的反馈结构与第 69 章的迭代学习，因为本章的基线、对象与指标都沿用那条线，重复的部分不再解释。</p>
+<h2 id="数学原理">70.2 数学原理</h2>
+<h3 id="五元组以及它在控制里的对应物">五元组，以及它在控制里的对应物</h3>
+<p>强化学习的标准框架是马尔可夫决策过程（Markov decision process，MDP），由五元组 <span class="math inline">(\mathcal{S},\mathcal{A},P,R,\gamma)</span> 描述：状态集、动作集、转移概率、奖励函数、折扣因子。一个回合（episode）从初始状态 <span class="math inline">s_0</span> 出发，按“观察—动作—转移—奖励”循环若干拍，直到到达终止条件或跑满固定长度。本章的回合长度固定为 400 拍，对应轨迹的一个完整周期。图 70-2 是这条交互关系：智能体在每一拍把动作送进环境，环境回送下一拍的状态和这一拍的奖励。</p>
+<figure>
+<img src="figs/ch070/fig_070_02_mdp.svg" alt="图 70-2 回合内的策略与环境交互" /><figcaption aria-hidden="true">图 70-2 回合内的策略与环境交互</figcaption>
+</figure>
+<p>控制问题天然是 MDP，但有两个地方需要交代清楚。第一，<strong>状态必须包含做出决策所需的全部信息</strong>。本章的 6 维特征</p>
+<p><span class="math display">
+\varphi_k=\left[1,\ \frac{e_k}{0.10},\ \frac{\dot e_k}{1.00},\ \frac{\int e}{0.20},\ \frac{r_k-R_0}{0.50},\ \frac{\dot r_k}{1.00}\right]^{\mathrm T} \tag{70-3}
+</span></p>
+<p>里，前三项描述“当前错多少、错在往哪走、累积错多少”，后两项描述“参考走到哪、走多快”。为什么必须带参考位置和参考速度？因为轨迹在 4 s 内从 1.50 走到 2.72 再回来，同一个误差值 0.05 出现在上升段和下降段时，正确的修正方向是不同的；只看误差，策略无法区分这两种情况，学出来的东西只能是两者的平均，而这个平均对两段都不对。</p>
+<p>第二，<strong>延迟要不要进状态</strong>。本章的对象有 5 拍纯延迟，严格说“过去 5 拍发出去的控制量”也属于状态。本章没有把它们放进特征，理由是延迟固定为 5 拍、且在所有训练回合里都一样，策略只要学会“把动作提前 5 拍”即可，不需要显式知道延迟的值。这个简化在训练分布内成立，一旦部署时延迟变成 8 拍，它就失效了——70.6 节会看到这正好是本章最严重的失效模式。这是 MDP 建模里最典型的坑：<strong>省略掉的状态变量，在分布内看不出来，出了分布就是致命的</strong>。</p>
+<p>把 PID 包进环境，是本章最重要的一个建模选择，它同时带来收益和代价。收益前面已经说过：策略一出生就在一个稳定回路上，只需要学“修正量”，不必先学“如何从零把系统稳住”。代价有三条，都要认下来。第一，策略学到的权重是相对于这套特定 PID 的，换一组 PID 参数，同一份权重就不再最优，甚至可能变差——这正是 70.9 节“继续学习”要重训的原因。第二，环境里已经有一个积分环节，策略再叠加自己的积分项，两个积分器会争夺同一个稳态目标，调不好就表现为残余量缓慢爬升、误差缓慢漂移。第三，奖励里“动作惩罚”罚的是残余量而不是总控制量，所以策略可以躲在大动作后面“搭便车”——它不承担 PID 那部分用力的代价。第三条决定了 <span class="math inline">\lambda</span> 不能按“总控制量”的直觉去理解：<span class="math inline">\lambda</span> 罚的是附加用力，不是全部用力。</p>
+<p>还有一条边界要划清：奖励可以“整形”，但不能悄悄“改目标”。把一个状态势函数 <span class="math inline">\Phi(s)</span> 的势差加进奖励，即 <span class="math inline">r&#39;_k=r_k+\gamma\Phi(s_{k+1})-\Phi(s_k)</span>，最优策略不变——这是奖励整形的安全区。一旦加的不是这种势差形式（比如“误差小于 0.05 就给 +1”），最优策略就被改掉了，而且往往改成你想要的东西的反面：策略会满足于“刚好跨过 0.05”，而不是尽量小。本章的奖励是原始的逐拍二次型，没有做任何整形；70.9 节讨论的备选形式属于“改目标”那一类，用之前要先想清楚它把目标改成了什么。</p>
+<h3 id="回报值函数与优势">回报、值函数与优势</h3>
+<p>一个回合的回报是折扣后的奖励累加：</p>
+<p><span class="math display">
+G_k=\sum_{j=0}^{N-k-1}\gamma^{j}r_{k+j} \tag{70-4}
+</span></p>
+<p>折扣因子 <span class="math inline">\gamma\in(0,1)</span> 决定了“看多远”。<span class="math inline">\gamma=0.95</span> 时，<span class="math inline">j</span> 拍之后的权重是 <span class="math inline">0.95^{j}</span>，20 拍后衰减到 0.36，40 拍后到 0.13，等效视野约 <span class="math inline">1/(1-\gamma)=20</span> 拍，也就是 0.2 s。这个长度不是随便选的：对象的主时间常数是 0.5 s（极点 <span class="math inline">-2</span>），闭环带宽更高，0.2 s 刚好覆盖“当前动作能明显影响的未来”，再往后的部分被折扣压得听不见。</p>
+<p>回报的量级也值得算一遍，因为它决定了值函数能不能被线性函数拟合住。本章单拍奖励的典型值是 <span class="math inline">-(e/0.05)^2\times0.01</span>：<span class="math inline">e=0.1</span> 时是 <span class="math inline">-0.04</span>，<span class="math inline">e=0.2</span> 时是 <span class="math inline">-0.16</span>。按最坏情况 0.16 估，折扣后总回报的绝对值不超过 <span class="math inline">0.16/(1-0.95)=3.2</span>，再叠加动作惩罚的贡献，量级仍在 4 以内。而线性值函数 <span class="math inline">V=v^{\mathrm T}\varphi</span> 在特征截断内（每维不超过 3）能表达的范围是 <span class="math inline">3\sum|v_i|</span>，只要权重在 0.1 量级就够。<strong>这两组数量级对上了，线性值函数才有意义</strong>；如果去掉 <span class="math inline">R_{\mathrm{scale}}</span>，单拍奖励放大 100 倍，总回报变成 300 以上，线性 <span class="math inline">V</span> 的权重就得涨到 10 量级，NLMS 每步的更新量也随之放大，训练前期会出现“价值估计一直贴着 0、优势恒为负”的假象，收敛速度掉一半。这就是 70.3 节说“奖励尺度必须与函数逼近器容量匹配”的算术依据。</p>
+<p>在策略 <span class="math inline">\pi</span> 下，状态的价值和动作价值分别是</p>
+<p><span class="math display">
+V^{\pi}(s)=\mathbb{E}_{\pi}\left[G_k\mid s_k=s\right],\qquad
+Q^{\pi}(s,a)=\mathbb{E}_{\pi}\left[G_k\mid s_k=s,a_k=a\right] \tag{70-5}
+</span></p>
+<p>两者之差就是优势函数：</p>
+<p><span class="math display">
+A^{\pi}(s,a)=Q^{\pi}(s,a)-V^{\pi}(s) \tag{70-6}
+</span></p>
+<p>优势回答的是“这个动作比平均水平好多少”。这个量在控制里非常自然：跟踪误差小的时候，好动作和坏动作的差别只有零点几；误差大的时候，同一个“多推 0.1”可能造成完全不同的后果。如果用原始回报做梯度，大步长会被大误差的样本主导，学出来的策略只顾救急、不管精细；用优势做梯度，每一拍的信号都被“这一拍本来能得多少分”归一化过，大小误差的样本贡献相当。</p>
+<h3 id="策略梯度">策略梯度</h3>
+<p>策略是一族以 <span class="math inline">\theta</span> 为参数的分布 <span class="math inline">\pi_{\theta}(a\mid s)</span>，目标是最大化期望回报</p>
+<p><span class="math display">
+J(\theta)=\mathbb{E}_{\pi_{\theta}}\left[G_0\right] \tag{70-7}
+</span></p>
+<p>对 <span class="math inline">\theta</span> 求导，用对数导数技巧，得到策略梯度定理：</p>
+<p><span class="math display">
+\nabla_{\theta}J=\mathbb{E}_{\pi_{\theta}}\left[\nabla_{\theta}\log\pi_{\theta}(a\mid s)\,A^{\pi}(s,a)\right] \tag{70-8}
+</span></p>
+<p>这个式子的直观含义是：<strong>做了比平均好的动作，就提高它的概率；做了比平均差的动作，就降低它的概率</strong>。注意它是一个期望，单次采样给出的估计有极大方差，这正是“每一拍的分数都很嘈杂”的数学表达。降低方差的所有技巧——基线、优势、折扣、批归一化——本质上都是在不引入偏差的前提下，把这个估计的方差压下去。</p>
+<p>本章用高斯策略，均值是特征的线性函数：</p>
+<p><span class="math display">
+\pi_{\theta}(a\mid s)=\mathcal{N}\!\left(\mu,\sigma^{2}\right),\qquad
+\mu=w^{\mathrm T}\varphi(s),\qquad
+\nabla_{w}\log\pi=\frac{a-\mu}{\sigma^{2}}\,\varphi(s) \tag{70-9}
+</span></p>
+<p><span class="math inline">\sigma</span> 是探索噪声的标准差，训练时按回合衰减，评估时置零。均值被截断在 <span class="math inline">\pm3</span>、采样值被截断在 <span class="math inline">\pm2</span>，这两个截断是工程上的保险：线性策略在远离训练分布的状态上会外推出荒谬的动作，截断保证最坏情况也不过是“残余量顶到上限”，而不是数值爆炸。</p>
+<p>式 (70-9) 的分母是 <span class="math inline">\sigma^{2}</span>，而本章代码里写的是 <span class="math inline">\max(\sigma,10^{-3})</span>，少了一次方。这不影响正确性：两者只差一个 <span class="math inline">1/\sigma</span> 的因子，会被学习率 <span class="math inline">\alpha_w</span> 吸收；但要让读者知道差在哪，否则照抄公式去核对代码会以为写错了。真正不能省的是那个下限 <span class="math inline">10^{-3}</span>——评估时 <span class="math inline">\sigma=0</span>，没有下限就会出现除零；训练末期 <span class="math inline">\sigma</span> 降到 0.05，分母若直接取 <span class="math inline">\sigma</span>，梯度幅值是 <span class="math inline">\sigma=1</span> 时的 20 倍，配合梯度范数裁剪虽然不会爆炸，但等效学习率已经变了。<strong>凡是分母里出现“会衰减到零的量”，都要给它一个下限</strong>，这是策略梯度实现里最常见的一处疏漏。</p>
+<p>式 (70-8) 还有一条不常被提起的含义：它对环境是“盲”的。梯度里只有 <span class="math inline">\nabla\log\pi</span> 与 <span class="math inline">A</span>，完全不出现 <span class="math inline">\partial s&#39;/\partial a</span>——也就是不需要知道“动作改变一点点，下一拍状态会怎么变”。这条性质叫似然比梯度，它是无模型方法的根基：只要能在真实对象上跑、能观测到回报，就能估出更新方向。代价是方差大，因为环境的影响全部被塞进 <span class="math inline">A</span> 这一个标量里。与之相对的是重参数化梯度（把动作写成 <span class="math inline">a=\mu+\sigma\epsilon</span>，再对 <span class="math inline">\mu</span> 求导），它需要 <span class="math inline">\partial s&#39;/\partial a</span>，也就是一个可微的环境模型，方差小得多。本章的仿真其实是可微的（<span class="math inline">y&#39;&#39;=-2y&#39;+K(y)u</span> 对 <span class="math inline">u</span> 是线性的），理论上可以用重参数化梯度把样本需求降一个量级；之所以没有用，是因为那样一来“是否需要模型”这个前提就变了，与本章“无模型”的定位冲突。</p>
+<p>这处分岔值得记住：<strong>方差与“是否需要模型”是一笔交易</strong>。想要更少的样本，就得交出一部分模型无关性；想保住“什么都不假设”，就得接受嘈杂的梯度。所有号称“样本效率高”的强化学习算法，几乎都在某个环节偷偷引入了模型、动力学先验或额外的监督，读懂这一点，才不会被“某某算法样本效率提升十倍”这类说法带偏。</p>
+<h3 id="从整回合回报到-n-步自举">从整回合回报到 n 步自举</h3>
+<p>最朴素的做法是用整回合回报 <span class="math inline">G_k</span> 代替优势，这就是 REINFORCE。它是无偏的，但方差随回合长度线性增长：400 拍的随机性全压在一个数上，梯度方向抖得厉害。另一个极端是用一步 TD 误差</p>
+<p><span class="math display">
+\delta_k=r_k+\gamma V(s_{k+1})-V(s_k) \tag{70-10}
+</span></p>
+<p>它有偏（<span class="math inline">V</span> 本身是估出来的），但方差极小。本章取中间：用 <span class="math inline">n</span> 步回报</p>
+<p><span class="math display">
+G_k^{(n)}=\sum_{j=0}^{n-1}\gamma^{j}r_{k+j}+\gamma^{n}V(s_{k+n}) \tag{70-11}
+</span></p>
+<p>代入 <span class="math inline">n=20</span>。为什么是 20 而不是 5 或 50，70.7 节有完整扫描：<span class="math inline">n=1</span> 时均值 0.1435、<span class="math inline">n=5</span> 时 0.1926、<span class="math inline">n=10</span> 时 0.1654、<span class="math inline">n=20</span> 时 0.0471、<span class="math inline">n=50</span> 时 0.0505、<span class="math inline">n=200</span> 时 0.0796。这条曲线不是单调的，两头都差，20 附近最好，说明“偏差与方差”的交换点确实存在，而且可以被测出来。</p>
+<h3 id="本章的更新式">本章的更新式</h3>
+<p>把 <span class="math inline">G_k^{(n)}</span> 与当前值函数之差当作优势的估计，本章的两条更新是</p>
+<p><span class="math display">
+\delta_k=G_k^{(n)}-V(s_k),\qquad
+\hat A_k=\operatorname{clip}\!\left(\frac{\delta_k}{\sqrt{\bar\delta^{2}}+10^{-6}},\,-5,\,5\right) \tag{70-12}
+</span></p>
+<p><span class="math display">
+w\leftarrow w+\alpha_w\,\eta\,\frac{a_k-\mu_k}{\max(\sigma,10^{-3})}\,\frac{\varphi_k}{\lVert\varphi_k\rVert^{2}+1} \tag{70-13}
+</span></p>
+<p><span class="math display">
+v\leftarrow v+\alpha_v\,\delta_k\,\frac{\varphi_k}{\lVert\varphi_k\rVert^{2}+1} \tag{70-14}
+</span></p>
+<p>其中 <span class="math inline">\bar\delta^{2}</span> 是 <span class="math inline">\delta</span> 的滑动方差（系数 0.995/0.005），<span class="math inline">\eta</span> 是梯度裁剪系数：当 <span class="math inline">\lVert\text{梯度}\rVert&gt;0.2</span> 时按比例缩回 0.2。三条式子各有一个值得解释的地方。</p>
+<p>第一，优势除以 <span class="math inline">\sqrt{\bar\delta^{2}}</span> 是“在线归一化”。奖励的量级随任务变（本章 <span class="math inline">R_{\mathrm{scale}}=0.01</span>，单拍奖励在 <span class="math inline">10^{-2}</span> 量级），如果不归一化，学习率就得跟着奖励量级重调；归一化之后 <span class="math inline">\hat A</span> 大致落在 <span class="math inline">[-5,5]</span>，学习率有了通用刻度。第二，分母 <span class="math inline">\lVert\varphi\rVert^{2}+1</span> 是归一化最小均方（NLMS）的做法，它让每一步的更新量对特征幅值不敏感。这一点在本章尤其重要：轨迹两端的 <span class="math inline">r-R_0</span> 接近 0，中段的 <span class="math inline">r-R_0</span> 接近 1.2，特征幅值差 5 倍以上，不归一化的话中段会把两端的信息淹掉。第三，值函数用同一个特征集，意味着 <span class="math inline">V</span> 也是线性的；这会限制它能表达的价值形状，但对“跟踪一条平滑轨迹”这种任务足够了，而且换来的是 6 个参数、可以手算的更新。</p>
+<h3 id="为什么拟合最优动作不等于最优控制">为什么“拟合最优动作”不等于“最优控制”</h3>
+<p>这里有一个容易踩的坑，值得单独说。既然知道最优前馈是 <span class="math inline">u^*=(r&#39;&#39;+2r&#39;)/K(r)</span>，为什么不直接用最小二乘把 <span class="math inline">w</span> 拟合出来？本章试过：把 400 拍的“理想残余量”与特征矩阵做最小二乘，解出 6 个权重，代进回路评估，RMS 是 0.30，比纯 PID 的 0.1161 还差一倍多。</p>
+<p>原因不是数值问题，而是目标错了。最小二乘拟合的是“当前这一拍的残余量应该等于多少”，它完全不管“这个动作把系统推到哪去”。而控制是一个闭环：这一拍多推一点，下一拍的误差就小一点，再下一拍可能又过头。真正要最小化的是 400 拍的累积代价，不是 400 个瞬时误差的和。RL 的回报天然是累积的，所以它能学到一个“看起来每一拍都不太对、但整条轨迹很好”的策略；监督学习式的拟合只能学到“每一拍都差一点”的策略。这个对照说明：<strong>在有闭环动力学的场合，逐点拟合与最优控制是两个不同的问题</strong>。</p>
+<h3 id="一个必须承认的局限">一个必须承认的局限</h3>
+<p>上面整套推导都建立在一个假设上：环境是马尔可夫的，且训练时见到的状态分布覆盖了部署时的状态分布。控制回路里这两条都只是近似。对象有未建模的高频动态、延迟会随负载变、执行器有死区，这些都不在 6 维特征里；训练时策略只见过“PID 已经压得差不多”的状态，没见过“偏差 0.5 且正在扩大”的状态。所以本章的策略不能保证全局稳定，它只在“反馈已经把系统稳住、残余量在 <span class="math inline">\pm0.6</span> 内”的这个区域里有意义。70.6 节会把这条边界量化成几条可测的指标。</p>
+<p>把这几条近似拆开看，各自的后果不一样。<strong>马尔可夫性</strong>被破坏的后果是“值函数学不准”：如果当前状态不足以决定下一拍的回报，那么同一个 <span class="math inline">\varphi_k</span> 在不同历史下对应不同的 <span class="math inline">V</span>，最小二乘只能学到一个平均值，优势估计随之有偏。本章的做法是用误差积分与参考速度把“历史”压进状态，这是工程上最常见的补救，代价是状态维数上升。<strong>分布覆盖</strong>被破坏的后果更严重，是“策略在没见过的状态上乱来”，延迟 8 拍那个 0.2267 就是典型。<strong>奖励可加性</strong>看起来最技术化，实际影响也最直接：式 (70-1) 假设每一拍的分数可以相加，但如果真实目标是“整条轨迹的最大偏差不超过某个值”，这个目标就无法写成逐拍奖励之和，硬写就会得到一个“平均很好、峰值很差”的策略。</p>
+<p>还有一条与算法选择有关的性质：本章两种连续动作算法（Actor-Critic 与 REINFORCE）都是 on-policy 的，也就是说，用来更新策略的样本必须由当前策略产生（70.5 节的 Q 学习是例外，它可以用旧样本）。这条性质带来两个后果。一是样本不能重复使用，每更新一次就要重新采样，样本效率天然低于离线方法；二是探索噪声必须一直保留，否则策略会收敛到“自己采样出来的那个角落”。REINFORCE 与 Actor-Critic 的差别，在实测里体现得很直接：300 回合、5 个种子，Actor-Critic 的均值是 0.0594、标准差 0.0373，REINFORCE 是 0.0766 与 0.0144。前者均值更好但方差大得多，5 个种子里最差的一个停在 0.1332（比纯 PID 还差），最好的到 0.0346。</p>
+<p>这组数说明“基线 + 自举”确实降低了梯度的方差，但也让结果更依赖种子——因为值函数的估计误差会通过优势进入策略更新，值函数学歪的那几个种子就被带偏了。这也是本章为什么要把 <span class="math inline">\alpha_v</span> 定成 <span class="math inline">\alpha_w</span> 的 5 倍：让值函数学得快一点，减少“策略在等值函数”的时间。反过来说，如果现场只允许跑一次、不能多种子挑好的，那 REINFORCE 那种“均值差但不翻车”的性质反而更可取，这是 70.6 节要谈的“稳定性”的另一层含义。</p>
+<h2 id="设计步骤">70.3 设计步骤</h2>
+<h3 id="第一步先问该不该用-rl">第一步：先问“该不该用 RL”</h3>
+<p>这一步常被跳过，但它是决定成败的一步。RL 适合的场景有三个特征：<strong>有可反复试错的模型或仿真、目标可以写成标量、传统方法的天花板已经摸到</strong>。三条缺一条，都应该先考虑别的办法。</p>
+<p>如果对象是线性的、模型能辨识出来，LQR 或 MPC 会用百分之一的成本给你更好的结果；如果任务是重复的、轨迹固定，第 69 章的 ILC 更省样本；如果只是稳态精度不够，加积分或换更高分辨率的传感器就解决了。本章之所以用 RL，是因为这三个条件都满足：对象非线性（<span class="math inline">K(y)</span> 随位置变 50%）、有精确的仿真、目标是“少错少用力”，而 PID 已经贴着它自己的上限。</p>
+<p>反过来，如果现场不允许试错、也没有可信的仿真，那就不要用 RL 做在线学习。可以做的是“离线训练 + 冻结部署”，这正是下一节的两阶段结构。</p>
+<h3 id="第二步确定基线控制器">第二步：确定基线控制器</h3>
+<p>在写任何奖励之前，先把基线定下来，并且把它的指标测准。本章的基线是 <span class="math inline">(2.0,\,0.05,\,0.20)</span> 的 PID，RMS 0.1161、最大偏差 0.1974、控制量总变差 1.7。这三个数后面要反复用：训练的起点、改进的参照、验收的门槛，全靠它们。</p>
+<p>基线还决定了残余量的幅值上限。本章取 <span class="math inline">U_{\mathrm{RL}}=0.60</span>，理由是精确前馈 <span class="math inline">u^*</span> 的范围是 <span class="math inline">[-0.154,\,0.236]</span>、RMS 0.1166，残余量只要能覆盖这个范围的两倍多一点就够了。取太大（比如 2.0）会让策略在早期有足够空间把系统打飞，取太小（比如 0.05）又补不上前馈的形状。一个经验法则是：<strong>残余量上限取“理论前馈 RMS 的 3 到 5 倍”</strong>，既留出探索余量，又不至于失控。</p>
+<p>基线有三种常见选择，各有代价。最弱的是“纯 PID”，本章用的就是它，好处是机制最干净，坏处是训练要花更多回合去学一个本可以由模型给出的形状。居中的是“PID + 粗略前馈”（比如用一阶模型算的前馈），它的起点更接近最优，训练回合可以少一些，但会引入“前馈本身错了怎么办”这个新问题。最强的是“PID + 在线辨识”，此时残余量只补辨识残差，量级很小，学起来最快，但整套结构已经接近自适应控制，不再是“无模型”了。选哪一种取决于你手上有什么，而不是哪一种“更先进”。</p>
+<h3 id="第三步搭训练环境">第三步：搭训练环境</h3>
+<p>训练环境和部署环境必须是同一份代码，只是参数不同。本章的 <code>Plant</code> 类有 4 个可调参数：增益缩放、延迟拍数、常值负载、测量噪声。训练时全部取名义值（1.0、5、0、0），部署时才改。这样做的好处是：70.9 节的迁移实验不需要另写一套代码，只改一个关键字参数。</p>
+<p>仿真步长与真实采样周期必须一致。本章 <span class="math inline">T_s=0.01</span> s，对象用 5 个子步积分（相当于 2 ms 的积分步长），延迟用环形缓冲实现 5 拍。这些细节看起来与 RL 无关，但它们决定了“仿真里的 1 拍”是否等于“真机上的 1 拍”；如果积分步长太粗，仿真里的相位裕度会比真机大，学出来的策略上机就振。</p>
+<p>搭环境时还有三个“位置”必须一次定对，改起来代价很大。第一是<strong>限幅放在哪</strong>：本章把限幅放在“PID + 残余量”相加之后、延迟之前，与真实执行器的位置一致；如果错放在对象内部，策略学到的动作与实际施加的控制量就不是一个东西。第二是<strong>延迟归属谁</strong>：延迟属于执行器与对象之间，因此算在环境里，不计入策略的决策周期；如果把它当成“策略的响应延迟”，学习时就会莫名其妙地要求策略提前若干拍动作，学出来的权重会整体偏大。第三是<strong>奖励在哪个时点算</strong>：本章用“施加动作之后、观测到下一拍状态之前”的误差来算奖励，即 <span class="math inline">r_k</span> 与 <span class="math inline">a_k</span> 对应同一拍；如果错位一拍，最优策略就会系统性地滞后，表现为“怎么调学习率都追不上”。</p>
+<h3 id="第四步定状态与动作">第四步：定状态与动作</h3>
+<p>状态用 6 维特征，每一维都除以一个尺度，使它在工作区间内大致落在 <span class="math inline">[-1,1]</span>。这个“除以尺度”的动作不是可选的：如果不做，误差（<span class="math inline">10^{-2}</span> 量级）会被参考位置（<span class="math inline">10^{0}</span> 量级）彻底压住，梯度更新几乎全落在参考项上，策略学不会纠偏。本章的尺度是 0.10、1.00、0.20、0.50、1.00，分别对应“误差的典型幅值、误差变化率的典型幅值、误差积分的典型幅值、轨迹半幅、参考速度的典型幅值”。</p>
+<p>动作取连续值，映射到残余量 <span class="math inline">u_{\mathrm{RL}}=0.60\,a</span>，<span class="math inline">a\in[-1,1]</span>。这里有一个容易被忽略的细节：<strong>动作是绝对值还是增量</strong>。本章试过增量式（<span class="math inline">u_{\mathrm{RL}}\leftarrow u_{\mathrm{RL}}+0.05a</span>），结果线性策略学不出积分行为，权重一路发散到 10 以上；改成绝对值之后，同样的算法在 300 回合内收敛到 0.0347。原因是绝对值形式让“稳态残余量”直接可由特征表达，而增量形式要求策略自己积分，线性策略没有这个能力。</p>
+<h3 id="第五步写奖励并定三个尺度">第五步：写奖励并定三个尺度</h3>
+<p>奖励就是式 (70-1)。它有三个尺度要定：<span class="math inline">E_{\mathrm{ref}}</span>、<span class="math inline">\lambda</span>、<span class="math inline">R_{\mathrm{scale}}</span>。<span class="math inline">E_{\mathrm{ref}}</span> 取“期望达到的误差量级”，本章取 0.05，比基线的 0.1161 小一半，意思是“想让误差再降一半”；<span class="math inline">\lambda</span> 取 0.50，70.7 节会看到它在 0.5 到 2 之间结果相近；<span class="math inline">R_{\mathrm{scale}}</span> 取 0.01，纯粹是数值缩放，让单拍奖励落在 <span class="math inline">10^{-2}</span> 量级，与学习率 0.010 匹配。</p>
+<p>三个尺度里最容易搞错的是 <span class="math inline">R_{\mathrm{scale}}</span>。不加缩放时，单拍奖励在 <span class="math inline">-1</span> 到 <span class="math inline">-10</span> 之间，400 拍累加到 <span class="math inline">-400</span> 以下，值函数的线性逼近完全跟不上这个量级，训练前期会出现“价值估计一直是 0、优势一直是负”的假象。加上 0.01 的缩放之后，同样的策略、同样的学习率，收敛速度提高约一倍。这是“奖励尺度必须与函数逼近器容量匹配”的一个具体例子。</p>
+<p>三个尺度的标定有先后，顺序反了会反复返工。第一步定 <span class="math inline">E_{\mathrm{ref}}</span>，它定的是“想把误差压到多少”，这个数只能来自需求，不能来自实验——本章取 0.05，因为基线 0.1161 的一半是一个合理的工程目标。第二步定 <span class="math inline">\lambda</span>，它决定“为了这个误差愿意多用力”，用 70.7 节那个判据（两个惩罚项贡献相当）估初值，再扫一遍确认。第三步才轮到 <span class="math inline">R_{\mathrm{scale}}</span> 与学习率，因为前两个定完之后，单拍奖励的量级才确定，学习率才有标定的对象。</p>
+<p>反过来做是最常见的返工来源：先花时间把 <span class="math inline">\alpha_w</span> 调到“曲线好看”，再回头改 <span class="math inline">E_{\mathrm{ref}}</span>，会发现同一个学习率突然不合适了——因为 <span class="math inline">E_{\mathrm{ref}}</span> 变了，奖励量级跟着变，等效学习率也变了。举个算术例子：若取 <span class="math inline">E_{\mathrm{ref}}=0.10</span>，与基线的 0.1161 同量级，那么“误差降到 0.05 以下”在奖励里只值 <span class="math inline">-0.25</span>，与动作惩罚同量级，策略会学得极其保守；取 0.05 之后，同一个 <span class="math inline">\lambda</span> 的物理含义才与“降一半误差”这个目标对上。</p>
+<h3 id="第六步训练与验收">第六步：训练与验收</h3>
+<p>图 70-3 是训练与部署的分工。左栏是离线训练：采样一个回合、算 n 步回报、更新策略与值函数、按回合衰减探索噪声，循环 300 次；右栏是在线部署：加载冻结的权重、在线算特征、残余量与反馈量相加、过安全层与限幅。两栏之间只有一次数据传递，就是那 6 个权重。</p>
+<figure>
+<img src="figs/ch070/fig_070_03_twophase.svg" alt="图 70-3 离线训练与在线部署" /><figcaption aria-hidden="true">图 70-3 离线训练与在线部署</figcaption>
+</figure>
+<p>训练的进度不能看训练回合的回报，要看<strong>确定性评估</strong>。原因是训练时带着探索噪声，回报里有噪声的贡献，曲线会一直抖；评估时把噪声置零，才是策略的真实水平。本章每 10 个回合做一次评估，图 70-4 是这条曲线。</p>
+<figure>
+<img src="figs/ch070/fig_070_04_curve.svg" alt="图 70-4 正式算例的训练过程" /><figcaption aria-hidden="true">图 70-4 正式算例的训练过程</figcaption>
+</figure>
+<p>曲线有三个特征值得注意。第 50 回合评估 RMS 是 0.0690，已经比纯 PID 的 0.1161 好了 40%，说明前 50 个回合主要学的是“大方向”；第 100 到 250 回合在 0.041 到 0.049 之间反复，这一段学的是“细节”，进步慢且不单调；最后 50 个回合又降到 0.0347，这一段对应探索噪声衰减到下限、策略开始“收敛到最优点附近”。灰线是训练回合的滑动平均，它比评估曲线高 0.01 到 0.02，这个差就是探索噪声的代价。</p>
+<p>验收要看的不是单个数字，而是四条同时满足：评估 RMS 低于基线的 60%、最大偏差低于基线的 50%、控制量总变差不超过基线的 2 倍、残余量的 RMS 在 <span class="math inline">U_{\mathrm{RL}}</span> 的 40% 以内。本章的结果是 0.0347（基线的 29.9%）、0.0795（基线的 40.3%）、2.3（基线的 1.35 倍）、0.1666（<span class="math inline">U_{\mathrm{RL}}</span> 的 27.8%），四条都过。第四条容易被忽略：如果残余量一直贴着上限，说明策略在用“顶到限幅”的方式换精度，这种策略在真机上会频繁触发保护。</p>
+<p>四条阈值的来历值得交代一句，因为它们不是随手定的。第一条 60% 对应“比基线好 40%”，这是本章第一节给出的最低目标：低于这个数，残余学习的工程价值不足以抵消它带来的复杂度。第二条 50% 与第一条配套——只看 RMS 会被“大部分时间很好、偶尔一个大偏差”骗过去，最大偏差砍半才能说明峰值也被压住了。第三条 2 倍是执行器磨损的上限，本章实测 1.35 倍，留了余量；如果某个策略 RMS 很低但总变差到 4 倍，宁可不用。第四条 40% 是“策略没有靠饱和换精度”的体检指标，它与第三条是一对：总变差管平滑，残余幅值管余量。四条一起看，才能排除“用抖动换精度”“用饱和换精度”这两种假进步。</p>
+<p>表 70-1 是本章的全部参数，后面各节引用时不再重复。</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">参数</th>
+<th style="text-align: left;">符号</th>
+<th style="text-align: right;">取值</th>
+<th style="text-align: left;">作用</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">采样周期</td>
+<td style="text-align: left;"><span class="math inline">T_s</span></td>
+<td style="text-align: right;">0.01 s</td>
+<td style="text-align: left;">与对象仿真一致</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">回合长度</td>
+<td style="text-align: left;"><span class="math inline">N</span></td>
+<td style="text-align: right;">400 拍</td>
+<td style="text-align: left;">一个轨迹周期</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">纯延迟</td>
+<td style="text-align: left;">—</td>
+<td style="text-align: right;">5 拍</td>
+<td style="text-align: left;">环境的一部分</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">反馈 PID</td>
+<td style="text-align: left;"><span class="math inline">k_p,k_i,k_d</span></td>
+<td style="text-align: right;">2.00 / 0.05 / 0.20</td>
+<td style="text-align: left;">基线控制器</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">残余幅值上限</td>
+<td style="text-align: left;"><span class="math inline">U_{\mathrm{RL}}</span></td>
+<td style="text-align: right;">0.60</td>
+<td style="text-align: left;">动作 1 对应的控制量</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">奖励尺度</td>
+<td style="text-align: left;"><span class="math inline">E_{\mathrm{ref}}</span></td>
+<td style="text-align: right;">0.05</td>
+<td style="text-align: left;">误差归一化</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">动作惩罚</td>
+<td style="text-align: left;"><span class="math inline">\lambda</span></td>
+<td style="text-align: right;">0.50</td>
+<td style="text-align: left;">少动与少错的交换价</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">奖励缩放</td>
+<td style="text-align: left;"><span class="math inline">R_{\mathrm{scale}}</span></td>
+<td style="text-align: right;">0.01</td>
+<td style="text-align: left;">与学习率匹配</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">策略学习率</td>
+<td style="text-align: left;"><span class="math inline">\alpha_w</span></td>
+<td style="text-align: right;">0.010</td>
+<td style="text-align: left;">主旋钮</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">值函数学习率</td>
+<td style="text-align: left;"><span class="math inline">\alpha_v</span></td>
+<td style="text-align: right;">0.050</td>
+<td style="text-align: left;">通常取 <span class="math inline">\alpha_w</span> 的 5 倍</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">折扣因子</td>
+<td style="text-align: left;"><span class="math inline">\gamma</span></td>
+<td style="text-align: right;">0.95</td>
+<td style="text-align: left;">等效视野 20 拍</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">自举步数</td>
+<td style="text-align: left;"><span class="math inline">n</span></td>
+<td style="text-align: right;">20</td>
+<td style="text-align: left;">偏差与方差的折中</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">探索噪声</td>
+<td style="text-align: left;"><span class="math inline">\sigma_0\to\sigma_{\min}</span></td>
+<td style="text-align: right;">0.30 → 0.05</td>
+<td style="text-align: left;">每回合乘 0.99</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">训练回合</td>
+<td style="text-align: left;"><span class="math inline">N_{\mathrm{ep}}</span></td>
+<td style="text-align: right;">300</td>
+<td style="text-align: left;">4.7 s</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">可训练参数</td>
+<td style="text-align: left;">—</td>
+<td style="text-align: right;">12</td>
+<td style="text-align: left;">策略与值函数各 6 个</td>
+</tr>
+</tbody>
+</table>
+<p>表 70-1 中唯一没有解释的是 <span class="math inline">\alpha_v=0.050</span> 为什么取 <span class="math inline">\alpha_w</span> 的 5 倍。理由是值函数的学习目标本身噪声更大（它要拟合的是带折扣的回报），步长小了不起作用、步长大了会震荡，而策略的更新依赖值函数的准确性，所以值函数要学得更快一些。这个 5 倍不是理论结果，是在本章对象上试出来的；70.8 节会给出一条从 2 倍到 10 倍的调节区间。</p>
+<h3 id="第七步冻结部署与回退">第七步：冻结、部署与回退</h3>
+<p>训练完成后，权重被写进一个 6 元的数组，随控制器一起下发。部署时不做任何在线更新（继续学习的做法见 70.10 节），并且必须保留三个开关：<strong>残余量使能</strong>（一键退回纯 PID）、<strong>残余量限幅</strong>（<span class="math inline">U_{\mathrm{RL}}</span>）、<strong>速率限制</strong>（每拍残余量的变化不超过 0.05）。前两个是训练时就有的，第三个是部署时才加的，它把“策略输出跳变”这种仿真里不明显的风险挡住。</p>
+<p>这一步还应该做一件常被省略的事：<strong>记录部署后的状态分布</strong>。训练的 400 拍里，状态落在哪个区域、有没有越界，是有记录的；部署后的真实状态如果长期落在训练时没见过的区域（比如偏差一直在 0.3 以上），说明这次的工况已经超出策略的能力范围，应当触发告警并退回纯 PID。本章 70.6 节的迁移实验就是为了给这条告警定阈值。</p>
+<p>冻结之后、上线之前，还有一道容易被跳过的核验：把权重数组抄出来，重新代回仿真，跑一遍名义工况，确认 RMS 与训练结束时一致到小数点后三位。这一步能抓住两类错误——特征尺度在部署端被改动（比如把 <span class="math inline">E_{\mathrm{sc}}</span> 从 0.10 写成 0.15），以及权重数组的维度顺序被转置。两者都不会报错，只会让性能悄悄退化，而且退化得“看起来像正常波动”。</p>
+<p>还有一条实践上的约定：权重文件必须与特征定义绑定，而不是只存 6 个数。本章的做法是把特征的名字、尺度、截断值一起写进同一个文件，加载时逐项核对。控制工程里出现过很多次“换了一版程序，特征顺序变了，权重还是旧的”的事故，后果是策略输出完全错乱，而日志里一切正常。</p>
+<h2 id="连续情形">70.4 连续情形</h2>
+<h3 id="连续时间的最优控制写成什么">连续时间的最优控制写成什么</h3>
+<p>把采样周期推向零，MDP 就变成一个连续时间的最优控制问题：状态 <span class="math inline">\boldsymbol{x}(t)</span> 满足 <span class="math inline">\dot{\boldsymbol{x}}=f(\boldsymbol{x},\boldsymbol{u})</span>，要最小化</p>
+<p><span class="math display">
+J=\int_{0}^{T}\ell(\boldsymbol{x},\boldsymbol{u})\,\mathrm{d}t+\phi(\boldsymbol{x}(T)) \tag{70-15}
+</span></p>
+<p>最优代价函数 <span class="math inline">V(\boldsymbol{x})</span> 满足 Hamilton-Jacobi-Bellman 方程</p>
+<p><span class="math display">
+0=\min_{\boldsymbol{u}}\left\{\ell(\boldsymbol{x},\boldsymbol{u})+\nabla_{\boldsymbol{x}}V\cdot f(\boldsymbol{x},\boldsymbol{u})\right\} \tag{70-16}
+</span></p>
+<p>这条方程就是连续时间版本的“贝尔曼最优方程”。RL 里所有基于值函数的方法——包括本章的 Actor-Critic——本质上都在用采样代替“解这条偏微分方程”。对线性对象加二次代价，式 (70-16) 有解析解，就是 LQR；对本章这种 <span class="math inline">K(y)</span> 随位置变的非线性对象，式 (70-16) 没有解析解，数值解又受维数灾难限制。RL 的用处正在这里：<strong>它不解方程，它直接在被控对象上试</strong>。</p>
+<h3 id="连续域的奖励与离散域的求和">连续域的奖励与离散域的求和</h3>
+<p>本章的奖励是每拍给的，连续域里对应的是代价密度 <span class="math inline">\ell=e^{2}/E_{\mathrm{ref}}^{2}+\lambda u_{\mathrm{RL}}^{2}</span> 在时间上的积分。两者只在 <span class="math inline">T_s</span> 固定、且代价在拍内近似常值时等价：</p>
+<p><span class="math display">
+\int_{0}^{T}\ell\,\mathrm{d}t\approx T_s\sum_{k=0}^{N-1}\ell_k \tag{70-17}
+</span></p>
+<p>这个近似带来一个常被忽略的后果：<strong>奖励的整体量级与 <span class="math inline">T_s</span> 成正比</strong>。如果把采样周期从 10 ms 改成 5 ms，同样的轨迹会被切成 800 拍，每拍奖励不变，总和翻倍。学习率是作用在“每步更新”上的，总和翻倍意味着梯度尺度变了，原来调好的 0.010 就不再合适。工程上的做法是把奖励写成“每拍平均值”而不是“总和”，或者干脆把 <span class="math inline">R_{\mathrm{scale}}</span> 与 <span class="math inline">T_s</span> 绑定，本章用后者的思路：<span class="math inline">R_{\mathrm{scale}}=0.01</span> 是在 <span class="math inline">T_s=0.01</span> s 下标定的。</p>
+<p>折扣因子在连续域里也有对应物，而且这个换算比想象中更有用。若连续时间的目标是 <span class="math inline">\int_0^\infty e^{-\rho t}\ell\,\mathrm{d}t</span>，按 <span class="math inline">T_s</span> 采样后的逐拍折扣应当是 <span class="math inline">\gamma=e^{-\rho T_s}</span>。反解本章的 <span class="math inline">\gamma=0.95</span>，得 <span class="math inline">\rho=-\ln 0.95/0.01=5.13\ \mathrm{s^{-1}}</span>，等效时间常数 <span class="math inline">1/\rho=0.195</span> s——与前面说的“等效视野 20 拍”完全一致。这个换算的价值在于：<strong><span class="math inline">\gamma</span> 不是一个无量纲的抽象参数，它对应一个物理时间常数</strong>。</p>
+<p>由此可以推出一条容易出错的操作规则：换采样周期时，要保持同一个物理视野，就得按 <span class="math inline">\gamma&#39;=e^{-\rho T_s&#39;}</span> 重算。<span class="math inline">T_s</span> 从 10 ms 减到 5 ms，<span class="math inline">\gamma</span> 要从 0.95 提到 0.9747，而不是继续沿用 0.95。沿用旧值的话，物理视野凭空缩短一半，策略会比设计意图更短视，表现为“稳态段补偿学得好、过渡段学不好”，而你看训练曲线只会觉得“收敛慢”。同理，如果把 <span class="math inline">T_s</span> 加到 20 ms，<span class="math inline">\gamma</span> 要降到 0.9025 左右，否则等效视野翻倍，值函数要覆盖更长的未来，线性逼近跟不住，优势估计变得又慢又吵。</p>
+<h3 id="采样把相位吃掉多少">采样把相位吃掉多少</h3>
+<p>连续域里“提前 5 拍”是“提前 50 ms”。这个提前量在频域里对应相位 <span class="math inline">\omega\cdot 0.05</span>：在 1 Hz 是 18°，在 2 Hz 是 36°。这是延迟的代价，与是否用 RL 无关，第 67 章已经算过。</p>
+<p>采样本身还额外引入半拍延迟。零阶保持器把一拍内的控制量冻结，等效于平均延迟 <span class="math inline">T_s/2=5</span> ms，在 1 Hz 对应 1.8°。这个量看起来可以忽略，但它与策略的“反应速度”直接相关：如果策略想学一个 5 Hz 的补偿动作，半拍延迟就吃掉 9°，再加上 5 拍的纯延迟就是 99°，补偿已经变成反相，越补越糟。所以<strong>策略能学的频段有一个硬上限，由延迟与采样周期共同决定</strong>，本章的有效补偿频段在 0.5 Hz 以下，与轨迹的基波（0.25 Hz）和三次谐波（0.75 Hz）大致吻合。</p>
+<p>这三笔相位账可以合并成一条工程判据：把“纯延迟 + 半拍 + 策略自身的响应”加起来，落在要补偿的频段上不能超过 90°，否则补偿变成反相。本章的三次谐波在 0.75 Hz，纯延迟贡献 13.5°、半拍贡献 1.4°，余量还很宽；延迟加到 8 拍后纯延迟贡献变成 21.6°，仍然不到 90°，所以<strong>单纯从相位看，8 拍延迟不该崩得那么惨</strong>。真正的问题不是相位，而是策略学到的补偿是按 5 拍排布的，它内部的“提前量”已经写死。这个区分很重要：相位预算告诉你“能不能补”，训练分布告诉你“学到的补偿对不对”，两者是不同层面的约束，70.6 节讲的失效属于后者。</p>
+<h3 id="连续动作怎么参数化">连续动作怎么参数化</h3>
+<p>连续域里策略是一个从状态到动作分布的映射。本章用高斯策略，均值线性、方差固定：</p>
+<p><span class="math display">
+\pi(\boldsymbol{u}\mid\boldsymbol{x})=\mathcal{N}\!\left(U_{\mathrm{RL}}\,w^{\mathrm T}\varphi(\boldsymbol{x}),\ (U_{\mathrm{RL}}\sigma)^{2}\right) \tag{70-18}
+</span></p>
+<p>这个参数化在连续域里有明确的物理意义：<span class="math inline">w^{\mathrm T}\varphi</span> 是一个“状态反馈增益”，量纲是 1（因为 <span class="math inline">\varphi</span> 已经无量纲化），乘上 <span class="math inline">U_{\mathrm{RL}}</span> 之后与控制量同量纲；<span class="math inline">\sigma</span> 是相对噪声，0.30 意味着“在均值上下浮动 30% 的满量程”，即 <span class="math inline">\pm0.18</span> 的控制量。这个幅值与精确前馈的 RMS 0.1166 同量级，说明探索的力度足以覆盖要学的形状，又不至于把系统推出线性区。</p>
+<p>有人会问：为什么不把 <span class="math inline">\sigma</span> 也做成状态的函数（即“状态相关的探索”）？原因是本章的误差量级在整个回合内变化不大（0.03 到 0.20），固定噪声已经够用；如果轨迹里有大幅值的机动段，就需要让 <span class="math inline">\sigma</span> 随误差增大，否则机动段的探索不足、平稳段又过度扰动。</p>
+<h3 id="连续域的探索与执行器带宽">连续域的“探索”与执行器带宽</h3>
+<p>连续时间下，<span class="math inline">\sigma</span> 决定的噪声是一个带宽为 <span class="math inline">1/(2T_s)=50</span> Hz 的白噪声序列。这个带宽远高于对象的带宽（闭环约 2 Hz），所以噪声的大部分能量被对象滤掉，只有低频分量真正激励系统。这解释了一个现象：把 <span class="math inline">\sigma_0</span> 从 0.30 提到 0.60，误差只从 0.0471 变到 0.0879，而不是翻四倍——噪声的高频部分没有进入误差。</p>
+<p>但如果采样周期变大（比如 20 ms），同样的 <span class="math inline">\sigma</span> 对应的噪声带宽降到 25 Hz，低频能量增加，对系统的激励变强，学出来的策略会更“抖”。所以 <strong><span class="math inline">\sigma</span> 的合适取值与 <span class="math inline">T_s</span> 是耦合的</strong>，换采样周期必须重调探索噪声。本章的所有实验都在 <span class="math inline">T_s=0.01</span> s 下完成，这个前提在 70.10 节讲迁移时还要再提一次。</p>
+<p>这也带来一个只在真机训练时才会遇到的约束：<strong>训练用的探索噪声不能原样送到执行器</strong>。50 Hz 带宽、<span class="math inline">\pm0.18</span> 幅值的随机指令，对伺服阀来说就是每小时几十万次换向，任何机械都受不了。所以真机在线训练必须给噪声加低通或速率限制，而这又会改变噪声的频谱、进而改变探索的有效性——这是“仿真训练 + 冻结部署”比“真机在线训练”省事的一个具体原因，省的不只是安全，还有硬件寿命。本章的仿真不受这个约束，噪声可以直接加在动作上；如果你要照搬到真机，这一层必须补。</p>
+<h3 id="连续前馈与学到的策略差在哪">连续前馈与学到的策略差在哪</h3>
+<p>模型已知时，连续域的最优前馈是</p>
+<p><span class="math display">
+u^{*}(t)=\frac{r&#39;&#39;(t)+2r&#39;(t)}{K(r(t))} \tag{70-19}
+</span></p>
+<p>它的形状由两项组成：<span class="math inline">r&#39;&#39;</span> 提供“加速所需的力”，<span class="math inline">2r&#39;</span> 补偿阻尼。本章学到的残余策略是状态反馈，不是时间函数，但它在闭环里产生的控制量形状与 <span class="math inline">u^*</span> 高度相似——因为闭环把“位置与速度”映射成了“时间”，沿着这条轨迹，<span class="math inline">r</span> 与 <span class="math inline">\dot r</span> 的组合恰好复现了 <span class="math inline">u^*(t)</span> 的轮廓。</p>
+<p>两者的差别在于<strong>误差修正项</strong>。<span class="math inline">u^*</span> 是开环的，它不管实际位置偏了多少；学到的策略是闭环的，误差一大它就多补一点。这就是为什么学到的策略（0.0347）能超过精确前馈（0.0293 是在无扰动、无噪声的理想开环下的结果；一旦有初值偏差或负载，开环前馈会退化，而闭环残余策略不会）。第 69 章的 ILC 也是这个道理，它学的是闭环的逆，不是对象的逆。</p>
+<h3 id="连续视角给出的三个约束">连续视角给出的三个约束</h3>
+<p>把上面的分析收拢，连续视角给出三条实现约束。第一，<strong>策略的补偿频段必须低于 <span class="math inline">1/(4\tau_d)</span></strong>，<span class="math inline">\tau_d</span> 是总延迟，本章 50 ms 对应 5 Hz 的理论上限，实际取 0.5 Hz 以下才稳。第二，<strong>探索噪声的幅值要与“要学的形状”同量级</strong>，太小探索不到、太大会把系统推出工作区。第三，<strong>奖励的量级要随采样周期标定</strong>，换 <span class="math inline">T_s</span> 必须重调 <span class="math inline">R_{\mathrm{scale}}</span> 或学习率。这三条在后面的离散实现里都会再出现一次，只是换了一种说法。</p>
+<p>还有一层对照值得说清楚：式 (70-16) 的 HJB 方程与本章的 Actor-Critic，解的是同一个问题，但走的是两条完全不同的路。HJB 是“从状态空间出发”，要求在每个状态上都知道该往哪走，因此需要 <span class="math inline">\nabla V</span>，也就是一个定义在整个状态空间上的函数；当状态是 6 维、对象有非线性、延迟还有 5 拍时，这个偏微分方程既写不出解析解，数值解也要网格化，而网格化的代价就是维数灾难。Actor-Critic 是“从轨迹出发”，它不求解 <span class="math inline">V</span>，只是在走出来的那条轨迹上估一个 <span class="math inline">V</span> 的值，用这个估值算优势。<strong>HJB 换的是空间上的完备性，RL 换的是时间上的样本量</strong>，这是两种方法最本质的分野。</p>
+<p>这个分野也解释了为什么本章不把 <span class="math inline">n</span> 设得很大。<span class="math inline">n</span> 越大，回报越接近“整回合”，偏差越小、方差越大；<span class="math inline">n</span> 越小，越依赖值函数的估计，偏差越大、方差越小。取 <span class="math inline">n=20</span> 相当于“用 20 拍的真实回报，加上 20 拍之后的值函数估计”，与 <span class="math inline">\gamma=0.95</span> 给出的 20 拍等效视野正好对应——这两个参数在概念上是一件事，调其中一个，另一个的合理性也要重新看一遍。70.7 节的扫描里，<span class="math inline">n=20</span> 与 <span class="math inline">\gamma=0.95</span> 都是最优点，这不是巧合。</p>
+<p>最后要提醒一个容易忽略的相位事实：20 拍的视野里，有 5 拍是纯延迟，也就是说策略能“看到”的有效未来只有 15 拍，约 0.15 s。这个数字与对象的时间常数（<span class="math inline">1/2</span> s）相比偏短，意味着策略本质上是“短视”的：它能把一个周期内的形状学好，但学不到“跨周期”的东西。这也是它与 ILC 的根本差别——ILC 的记忆是跨周期的，RL 的视野是周期内的。要让 RL 具备跨周期能力，得把“上一回合同相位的误差”放进状态——那会把状态维数再抬高一倍，而且要求每个回合严格对齐，本章没有往这个方向走，因为第 69 章的 ILC 已经把这条信息用透了。</p>
+<h2 id="离散情形">70.5 离散情形</h2>
+<h3 id="把动作切成五档">把动作切成五档</h3>
+<p>现场有大量执行器本身就是分档的：三位电磁阀只有开、中、关，继电器只有吸合与释放，老式执行机构只有几个固定档位。这类场合不能输出任意实数，动作集必须是有限集合。本章取五档残余量</p>
+<p><span class="math display">
+\mathcal{A}=\{-0.30,\,-0.15,\,0,\,0.15,\,0.30\} \tag{70-20}
+</span></p>
+<p>注意这五档是<strong>绝对残余量</strong>，不是增量。同一章 70.3 节讲过的理由在这里同样成立：增量形式要求策略自己累加，而分档动作的累加会产生漂移，学出来的策略会在两个相邻档之间反复跳。用绝对值时，<span class="math inline">a=0</span> 就是“不加残余”，与纯 PID 完全等价，这个基准点很重要。</p>
+<p>五档的间距是 0.15，而精确前馈的 RMS 是 0.1166，也就是说“一档”就接近整个前馈的均方根。这个量化误差听起来很大，但闭环会把它平均掉：残余量的大部分能量集中在低频，量化噪声是高频的，被对象滤掉之后对误差的贡献有限。本章的实测印证了这一点——五档的 RMS 是 0.1147，比纯 PID 的 0.1161 只好 1.2%，远不如连续动作的 0.0347。这个结果需要解释，后面两小节会给出两个不同的原因。</p>
+<h3 id="q-学习在做什么">Q 学习在做什么</h3>
+<p>离散动作下最自然的方法是 Q 学习。本章不用表格，而用线性逼近，对每个动作维护一组权重 <span class="math inline">q_a</span>：</p>
+<p><span class="math display">
+Q(s,a)=q_a^{\mathrm T}\varphi(s),\qquad
+\delta_k=r_k+\gamma\max_{a&#39;}Q(s_{k+1},a&#39;)-Q(s_k,a_k) \tag{70-21}
+</span></p>
+<p><span class="math display">
+q_{a_k}\leftarrow q_{a_k}+\alpha_q\,\delta_k\,\frac{\varphi_k}{\lVert\varphi_k\rVert^{2}+1} \tag{70-22}
+</span></p>
+<p>探索用 <span class="math inline">\varepsilon</span>-贪心，<span class="math inline">\varepsilon</span> 从 0.30 线性衰减到 0.02。式 (70-21) 里的 <span class="math inline">\max</span> 是 Q 学习区别于 SARSA 的地方：它假设下一步会选最好的动作，而不是实际选的那个。这个“乐观”的假设让 Q 学习可以离线学（用旧数据也能更新），代价是当动作值被高估时会传播误差。本章五档、每档 6 个参数，总共 30 个参数，规模很小，高估的影响有限。</p>
+<p>为什么不用真正的表格？因为 6 维状态即使每维只切 5 档，也有 <span class="math inline">5^{5}=3125</span> 个格子（常数项不切），乘 5 个动作是 15625 个 Q 值。而一个 300 回合的训练总共只有 <span class="math inline">400\times300=12</span> 万次更新，平均每个格子只被访问 7.7 次。Q 学习要收敛，每个格子至少要被访问几十次，7.7 次远远不够——这就是下面样本量实验要测的东西。线性逼近把 15625 个未知数压到 30 个，让有限的样本能覆盖所有参数，代价是失去了“每个格子独立记忆”的能力。</p>
+<p>顺带说明一个实现上的取舍：式 (70-21) 的 <span class="math inline">\max</span> 让 Q 学习原则上可以用旧数据，但本章的实现里并没有经验回放，每一拍都就地更新、样本用完即弃。好处是内存占用是常数、代码短；代价是样本的相关性极强——相邻两拍的状态几乎一样，连续 20 次更新实际提供的独立信息不到一次。这正是它需要 1000 回合才见效的原因之一。若加一个容量几千的回放池、每拍随机抽一批更新，同样回合数下的有效样本量能提高一个数量级。本章没有这么做，因为回放会引入“旧策略数据”与“当前策略”的分布偏移，需要额外的重要性采样或目标网络来收拾，代码会从三十行涨到一百行，超出“把机制讲清楚”的范围。</p>
+<h3 id="档位加了精度没动">档位加了，精度没动</h3>
+<p>表 70-2 的第一组是档位实验：三档、五档、九档，各跑 300 回合、3 个种子平均。图 70-5 把两组结果画在一起。</p>
+<figure>
+<img src="figs/ch070/fig_070_05_discrete.svg" alt="图 70-5 离散动作的档位与样本量" /><figcaption aria-hidden="true">图 70-5 离散动作的档位与样本量</figcaption>
+</figure>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">配置</th>
+<th style="text-align: right;">档数</th>
+<th style="text-align: right;">RMS</th>
+<th style="text-align: right;">最大偏差</th>
+<th style="text-align: right;">总变差</th>
+<th style="text-align: right;">残余 RMS</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">三档</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">0.1137</td>
+<td style="text-align: right;">0.2124</td>
+<td style="text-align: right;">3.5</td>
+<td style="text-align: right;">0.1466</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">五档</td>
+<td style="text-align: right;">5</td>
+<td style="text-align: right;">0.1147</td>
+<td style="text-align: right;">0.2311</td>
+<td style="text-align: right;">3.1</td>
+<td style="text-align: right;">0.1413</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">九档</td>
+<td style="text-align: right;">9</td>
+<td style="text-align: right;">0.1131</td>
+<td style="text-align: right;">0.2089</td>
+<td style="text-align: right;">2.7</td>
+<td style="text-align: right;">0.1106</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">100 回合（五档）</td>
+<td style="text-align: right;">5</td>
+<td style="text-align: right;">0.1215</td>
+<td style="text-align: right;">0.2342</td>
+<td style="text-align: right;">—</td>
+<td style="text-align: right;">—</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">300 回合（五档）</td>
+<td style="text-align: right;">5</td>
+<td style="text-align: right;">0.1147</td>
+<td style="text-align: right;">0.2311</td>
+<td style="text-align: right;">—</td>
+<td style="text-align: right;">—</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">1000 回合（五档）</td>
+<td style="text-align: right;">5</td>
+<td style="text-align: right;">0.0930</td>
+<td style="text-align: right;">0.1810</td>
+<td style="text-align: right;">—</td>
+<td style="text-align: right;">—</td>
+</tr>
+</tbody>
+</table>
+<p>表 70-2 的第一组数字说明：把档位从三档加到九档，RMS 从 0.1137 变到 0.1131，几乎没有变化。这个结果与“分辨率越高越准”的直觉相反，原因不是分辨率没用，而是<strong>瓶颈不在分辨率上</strong>。九档时最难的那一档（<span class="math inline">\pm0.0375</span>）已经接近前馈的零交叉区，量化误差早就小于跟踪误差本身的量级；真正限制精度的是“策略还没学会该在什么时候给哪一档”。</p>
+<p>这一点可以从残余 RMS 看出来。三档的残余 RMS 是 0.1466，九档是 0.1106，说明九档确实用更小的力做了更多的事，但误差 RMS 没降——它把力气花在了错误的方向上。Q 学习在这种“每拍都要选、选了立刻有效果”的问题上，信用分配很困难：某一拍选了 0.15 导致的误差变化，要到几拍之后才显现，而中间还夹着 PID 的动作。70.8 节会把这条归入“症状：训练不收敛但残余量在动”。</p>
+<h3 id="样本量才是瓶颈">样本量才是瓶颈</h3>
+<p>表 70-2 的第二组把档位固定为五档，只改训练回合数。100 回合是 0.1215（比纯 PID 还差），300 回合是 0.1147（略好），1000 回合是 0.0930（好 20%）。这条曲线是单调的，而且 300 到 1000 之间的改善最大，说明五档 Q 学习需要大约 40 万次更新才开始真正学到东西。</p>
+<p>把它折算成“每个参数的样本数”更直观：1000 回合是 40 万次更新，30 个参数，平均每个参数 1.3 万次。而 100 回合只有 4 万次更新，平均每个参数 1300 次——差一个数量级，结果也差一个数量级。这个折算解释了为什么连续动作的 Actor-Critic 只要 300 回合就能到 0.0347：它的 6 个参数每个被更新了 2 万次，而且每次更新都带着策略梯度给出的方向信息，不是 Q 学习那种“试出来才对”的信息。</p>
+<h3 id="离散动作的三种实现">离散动作的三种实现</h3>
+<p>工程上有三种做法，各有各的适用场合。第一种是<strong>真表格</strong>，把状态切成网格，每个格子存一个动作值。它可解释性最好（查表就是策略），但状态维数一高就爆，6 维 5 档已经是 3000 多个格子。第二种是<strong>线性逼近</strong>，也就是本章用的方式，参数少、泛化好，但需要读者接受“Q 值是两个向量的内积”这种抽象。第三种是<strong>动作分档 + 连续策略</strong>：保留连续策略的输出，在最后加一个量化器。第三种在工程上很实用，因为它可以用连续动作的样本效率，同时满足“执行器只认五档”的约束；它的代价是量化误差无法通过学习消除，因为策略根本不知道量化器的存在。</p>
+<p>本章选第二种，是因为它最能暴露“离散动作的样本效率”这个核心问题。第三种做法在有量化器的场合更实用，70.9 节会给出一个简化的实现思路。</p>
+<p>如果确实要用“连续策略 + 量化器”，量化器本身有两个细节值得设计。第一是<strong>就近取档还是带滞环</strong>：纯就近取档在相邻两档的交界处会因为噪声来回跳，产生每拍一次的抖振，本章五档实验里总变差从 1.7 涨到 3.1，一部分就来自这里；加一个滞环（只有越过交界一定比例才换档）能把抖振压下去，代价是引入一点死区，对小误差的修正变慢。第二是<strong>档位是否等距</strong>：本章用等距五档，是因为残余量的分布形状大致对称；如果残余量的典型值集中在 0.05 附近（比如对象本身已经接近线性），等距档位里就有四档是浪费的，改成“零点附近密、远离零点疏”的非等距档位，同样的档数能换到更细的分辨率。这两条都不改算法，只改“动作怎么落到执行器上”，属于实现层面的收益。</p>
+<h3 id="什么时候离散反而是对的">什么时候离散反而是对的</h3>
+<p>离散动作不是“连续动作的劣化版”，它在三类场合更合适。第一类是执行器真的分档，此时连续策略必须加量化器，不如直接学离散。第二类是<strong>需要可验证性</strong>：一张 3000 格的表可以被逐格检查、可以被形式化验证，一个连续策略不能。第三类是<strong>动作空间本身很小</strong>（比如只有开/关），此时离散动作的样本效率反而更高，因为每次探索都落在一个有意义的动作上，不像高斯策略那样把一半的样本花在“接近均值”的无效区域。</p>
+<p>反过来，如果执行器是连续的、精度要求又高，就不要用离散动作。表 70-2 已经说明：五档在 1000 回合后只能到 0.0930，离连续动作的 0.0347 差 2.7 倍，而且这个差距不会因为再加档位而消失。</p>
+<p>把这张表再横向读一遍，还能看出一个与“精度”无关的代价：控制量总变差。纯 PID 是 1.7，三档 3.5、五档 3.1、九档 2.7。也就是说，<strong>分档动作让执行器比纯 PID 多动了一倍</strong>，档位越多才越接近连续动作的 2.3。这个现象的机制很直白：分档动作是一串阶梯，每一级跳变都计进总变差，档距越大、跳变越少但每次越大，档距越小、跳变越密。对电磁阀这类本来就只能开关的执行器，这个代价是硬件决定的，不算算法损失；但如果执行器是伺服阀、却硬要用五档去驱动，那 3.1 的总变差就是白白送给机械磨损的。</p>
+<p>这也解释了为什么工程上更常见的做法是“连续策略 + 量化器”，而不是直接学离散动作。连续策略在训练时看到的是平滑动作，学到的是“该给多少”；量化器只在下游把连续的指令就近取档，策略本身并不知道量化器的存在。这样做的代价是量化误差无法通过学习消除，收益是样本效率与连续动作同级（300 回合而不是 1000 回合）。要弥补量化误差，可以在训练时给动作加一点均匀抖动，让策略对“取整”这件事不敏感，这是信号处理里抖动（dithering）思路的直接移植。</p>
+<h2 id="稳定性与性能">70.6 稳定性与性能</h2>
+<h3 id="三种稳定要分开谈">三种“稳定”要分开谈</h3>
+<p>控制里的“稳定”通常指闭环极点落在左半平面，这是一个可以被证明的性质。RL 里的“稳定”至少混了三件事，混在一起谈会得出错误结论。第一是<strong>闭环稳定</strong>：给定一个固定的策略，闭环会不会发散。这件事由 PID 与对象决定，与 RL 无关，因为残余量被限在 <span class="math inline">\pm0.6</span>，最坏情况相当于给 PID 加了一个有界的常值扰动。第二是<strong>学习收敛</strong>：参数更新会不会收敛到一个不动点。这件事由学习率、步长归一化、梯度裁剪决定，本章的配置在这三项上都做了处理。第三是<strong>分布外安全</strong>：部署时的工况与训练时不同，策略给出的动作会不会把系统推向坏的方向。这件事没有任何证书可拿，只能靠实验画边界。</p>
+<p>本章的稳定性讨论只关心第三件。前两件在 70.7 节与 70.8 节里作为调参问题处理。</p>
+<h3 id="训练分布到底是什么">训练分布到底是什么</h3>
+<p>说“分布外”之前，先要能说清“分布内”是什么。训练的 300 个回合里，状态、动作、参数三个层面都有明确的取值范围。状态上，<span class="math inline">e</span> 在 <span class="math inline">\pm0.25</span> 内（纯 PID 的最大偏差是 0.1974，加上探索噪声后略大），<span class="math inline">\dot e</span> 在 <span class="math inline">\pm0.6</span> 内，<span class="math inline">r</span> 严格在 <span class="math inline">[1.50,2.72]</span> 内。动作上，<span class="math inline">u_{\mathrm{RL}}</span> 在 <span class="math inline">\pm0.6</span> 内，实际使用中 95% 的时间落在 <span class="math inline">\pm0.25</span> 内（残余 RMS 0.1666）。参数上，增益固定、延迟固定 5 拍、无噪声、无负载、初值为零。</p>
+<p><strong>任何一条越界，都是分布外</strong>。本章 70.9 节的迁移实验把六种越界逐条测了一遍，结果是：增益变 <span class="math inline">\pm20</span>%、加 0.01 噪声、加 0.05 常值负载、初值偏 0.02，这四种都只让 RMS 变化 0.001 到 0.008；唯独延迟从 5 拍变到 8 拍，RMS 从 0.0347 跳到 0.2267。这个对比说明“分布外”不是一个笼统的概念，它有明确的薄弱方向，而薄弱方向恰好是训练时被省略的那个状态变量。</p>
+<p>特征截断把这件事写得更死。六维特征里每一维都截断在 <span class="math inline">\pm 3</span>，按各自的尺度换算回去，等于说：<span class="math inline">|e|\ge 0.30</span> 之后，策略看到的特征不再变化；<span class="math inline">|\dot e|\ge 3.0</span> 之后同理。其余四维在整个工作区间内都到不了 <span class="math inline">\pm 3</span>——误差积分的上限是 0.5（对应 2.5），参考位置最大 2.44，参考速度最大约 1.15，都够不着截断线。所以<strong>真正会饱和的只有误差与误差导数两维，而延迟 8 拍时最大偏差是 0.5034，已经远超 0.30</strong>。也就是说，系统崩掉的那一段，策略恰好是“看不见”的：误差从 0.30 涨到 0.50，特征一模一样，输出也一模一样，它没有能力做出更大或更小的反应。</p>
+<p>这个发现对实现有直接指导：截断值不能按“训练时见过的最大状态”来定，而要留出余量。本章取 <span class="math inline">\pm 3</span> 是按“特征典型值的 3 倍”定的，而典型误差是 0.10，于是截断线落在 0.30——恰好是纯 PID 最大偏差（0.1974）的 1.5 倍，看着够用，实际不够。若把误差尺度改成 0.15，截断线就落在 0.45，覆盖延迟工况；代价是训练时误差特征的动态范围被压缩，学习率要相应调整。这是一处典型的“训练指标好、迁移指标差”的取舍。</p>
+<h3 id="两条失效路径">两条失效路径</h3>
+<p>第一条路径是<strong>延迟变化引起的相位错位</strong>。策略学的是“在误差出现的第 5 拍之后补偿”，它把动作提前了 5 拍。延迟变成 8 拍之后，同一个动作早了 3 拍，补偿变成了“提前干预”，在误差还没出现时就推动了系统，结果是制造新的误差。新误差又被策略当作“该补偿的信号”，动作继续加大，直到贴上 <span class="math inline">\pm1.2</span> 的限幅。实测饱和占比 28.25%，最大偏差 0.5034，RMS 0.2267——比纯 PID 差一倍。</p>
+<p>第二条路径是<strong>价值高估引起的策略漂移</strong>。Q 学习里的 <span class="math inline">\max</span> 会系统性高估动作值，Actor-Critic 里的自举也会。高估本身不致命，致命的是它让策略倾向于“更激进的残余量”，在训练分布内这只表现为残余量偏大，出了分布就变成饱和。本章的做法是给优势加硬裁剪（<span class="math inline">\pm5</span>）、给梯度加范数裁剪（0.2），把单步更新的影响限住；这两条不能消除高估，只能让它不至于在几十拍内累积成灾难。</p>
+<p>这两条路径有一个共同点：它们都不是“学得不够”，而是“学到了错的东西”。所以加大训练量、多跑回合都救不了——延迟 8 拍不是训练不足，而是训练分布里根本没有这个工况。这也是 70.9 节把改进方向放在“域随机化”而不是“多训几轮”上的原因。判别方法很直接：<strong>在同一个工况下反复评估，如果结果一致地差（均值差、方差小），那是分布问题；如果忽好忽坏（方差大），那才是训练不足或探索不够</strong>。本章延迟 8 拍属于前者——策略冻结之后评估是完全确定的，种子只影响训练过程，不影响“这个策略在 8 拍延迟下会崩”这个事实。</p>
+<h3 id="三种做法的实测对照">三种做法的实测对照</h3>
+<p>表 70-3 是三种做法在同一对象、同一条轨迹上的结果，各 5 个种子。PID 是基线；AC 是本章的 n 步 Actor-Critic；REINFORCE 用整回合回报加线性基线，学习率单独调到 0.2。</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">做法</th>
+<th style="text-align: right;">均值</th>
+<th style="text-align: right;">标准差</th>
+<th style="text-align: right;">最小</th>
+<th style="text-align: right;">最大</th>
+<th style="text-align: right;">相对 PID</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">PID</td>
+<td style="text-align: right;">0.1161</td>
+<td style="text-align: right;">0.0000</td>
+<td style="text-align: right;">0.1161</td>
+<td style="text-align: right;">0.1161</td>
+<td style="text-align: right;">0.0%</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">AC</td>
+<td style="text-align: right;">0.0594</td>
+<td style="text-align: right;">0.0373</td>
+<td style="text-align: right;">0.0346</td>
+<td style="text-align: right;">0.1332</td>
+<td style="text-align: right;">48.9%</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">REINFORCE</td>
+<td style="text-align: right;">0.0766</td>
+<td style="text-align: right;">0.0144</td>
+<td style="text-align: right;">0.0557</td>
+<td style="text-align: right;">0.0979</td>
+<td style="text-align: right;">34.0%</td>
+</tr>
+</tbody>
+</table>
+<p>表 70-3 最有意思的地方不是均值，而是标准差。AC 的均值好（0.0594，降 48.9%），但标准差 0.0373，最差的一个种子跑到 0.1332，比纯 PID 还差 15%。REINFORCE 的均值差一些（0.0766），但标准差只有 0.0144，五个种子全部落在 0.056 到 0.098 之间。图 70-6 把这组分布画了出来。</p>
+<figure>
+<img src="figs/ch070/fig_070_06_algo.svg" alt="图 70-6 三种做法的分布" /><figcaption aria-hidden="true">图 70-6 三种做法的分布</figcaption>
+</figure>
+<p>这张图说明一个工程上很重要的判断：<strong>如果只能跑一次、又必须保证不退化，REINFORCE 这种“笨但稳”的方法反而更合适</strong>。AC 的高方差来自自举——值函数的估计误差会通过 TD 误差直接进梯度，而 REINFORCE 用的是真实的整回合回报，没有这个误差源。本章主推 AC，是因为它在多数种子下明显更好，而且可以通过多种子挑选、早期停止、集成来压住尾部风险；如果现场没有这些手段，就该退到 REINFORCE。</p>
+<h3 id="学成之后长什么样">学成之后长什么样</h3>
+<p>图 70-7 是正式算例的时域波形，三条曲线分别是参考与输出、两条误差、两条控制量。</p>
+<figure>
+<img src="figs/ch070/fig_070_07_track.svg" alt="图 70-7 学成之后的跟踪波形" /><figcaption aria-hidden="true">图 70-7 学成之后的跟踪波形</figcaption>
+</figure>
+<p>上面那张子图里，纯反馈（红虚线）在轨迹的上升段和下降段各有一次明显的滞后，最大偏差 0.1974；加上残余策略之后（黑实线），输出几乎贴在参考上，最大偏差 0.0795。中间那张子图把误差单独画出来：纯反馈的误差是一条“先正后负”的大弧线，峰值出现在速度最大的时候；学到的策略把这条弧线压成了两个小鼓包，形状更接近“跟踪残差”而不是“滞后”。下面那张子图是控制量：纯反馈的控制量在 0.2 到 0.35 之间缓慢变化，加上残余之后多了一个与轨迹同相的低频起伏，幅度约 0.15，形状与精确前馈 <span class="math inline">u^*</span> 的轮廓一致。</p>
+<p>控制量的总变差从 1.7 涨到 2.3，涨了 35%。这个涨幅是可以接受的：它换来了 70% 的误差降幅，而且残余量本身是平滑的（每拍变化在 0.01 量级），不是高频抖动。如果总变差涨到 5 以上，就该怀疑策略在“用抖动换精度”，那时要加大 <span class="math inline">\lambda</span> 或加速率限制。</p>
+<h3 id="性能的天花板在哪">性能的天花板在哪</h3>
+<p>把本章的数字与前两章放在一起，可以看出一条清晰的阶梯。纯反馈 0.1161；精确前馈（模型已知、开环）0.0293；ILC（60 次重复）0.0224；本章的 RL 0.0347。RL 夹在“精确前馈”与“纯反馈”之间，比前者差 18.6%，比后者好 3.3 倍。</p>
+<p>这个位置不是偶然的，它由三个限制共同决定。第一是<strong>策略容量</strong>：6 个线性参数能表达的控制律形状有限，它无法复现 <span class="math inline">u^*</span> 里那些与 <span class="math inline">K(r)</span> 的倒数有关的细节。第二是<strong>延迟未建模</strong>：特征里没有历史动作，策略只能通过“误差的变化率”间接推断延迟的影响，这个推断在 5 拍时够用，在 8 拍时就错了。第三是<strong>单回合样本</strong>：300 个回合、12 万拍，对 6 个参数是充足的，但不足以让线性策略逼近一个本质非线性的最优解。</p>
+<p>要突破这三条，对应的办法是：换非线性策略（第 68 章的思路）、把延迟写进状态（用历史动作的滑动窗）、加样本（或者用模型辅助的 RL）。本章不做这些，因为它们会把“机制清楚”这个教学目的破坏掉；70.9 节会把它们作为改进方向列出来，并说明各自要付的代价。</p>
+<p>换一个对象，这个天花板的位置会整体移动，但三条限制的相对重要性顺序不会变。如果对象更接近线性（<span class="math inline">K</span> 只变化 10% 而不是 50%），策略容量这条限制会明显放松，残余 RL 有可能追平精确前馈——因为一个线性反馈足以复现大部分前馈形状。如果延迟更大（比如 20 拍），“延迟未建模”会变成主要矛盾，此时再怎么加参数、加样本都没用，必须把历史动作写进状态。第三条只有在回合更长、样本更多时才松动。所以看到别人报告“RL 超过了模型前馈”，先问三个问题：对象有多非线性、延迟有没有进状态、训练样本是多少。这三问能把大部分“惊人结果”还原成“特定条件下的正常结果”。</p>
+<h3 id="四条验收指标与两条监控指标">四条验收指标与两条监控指标</h3>
+<p>70.3 节给过四条验收指标，这里补两条部署期才用得上的监控指标。第一条是<strong>状态越界率</strong>：每一拍检查 <span class="math inline">|e|</span>、<span class="math inline">|\dot e|</span>、<span class="math inline">|r-R_0|</span> 是否落在训练时的范围外，越界率超过 1% 就该告警。第二条是<strong>动作裁剪率</strong>：<span class="math inline">|a|</span> 被截断到 <span class="math inline">\pm2</span> 的比例，正常应在 0 附近，一旦持续大于 1%，说明策略在要求超出训练范围的动作。</p>
+<p>这两条指标的好处是它们不依赖“知道正确答案”，只依赖训练时记录下来的范围。工程上把它们做成两个计数器，随控制器一起上电复位，是最省事的做法。本章的仿真里这两条都是 0，但 70.10 节的延迟 8 拍工况会让第二条跳到 30% 以上——与饱和占比 28.25% 基本一致，说明这两个量测的是同一件事。</p>
+<p>这里要区分两层阈值，否则容易把告警和回退混为一谈。第一层是<strong>技术告警</strong>：越界率超过 1%、裁剪率超过 1%，就该记日志、通知人来看，但不改变控制行为。第二层是<strong>自动回退</strong>：70.10 节用的是 10% 与 30%，到了这个量级说明策略已经在实质上帮倒忙，必须降级或清零。两层之间留了一个数量级的缓冲，目的是让人有时间判断“这是真故障还是一次偶发扰动”，而不是让系统在两个状态之间反复切换。延迟 8 拍那个 28.25% 落在两层之间——它高于告警线、低于回退线，正好是一段“需要人来看一眼”的区间，这个设计不是巧合。</p>
+<h2 id="参数意义与作用">70.7 参数意义与作用</h2>
+<h3 id="五个旋钮各管一件事">五个旋钮，各管一件事</h3>
+<p>本章可调的参数有五个：策略学习率 <span class="math inline">\alpha_w</span>、折扣因子 <span class="math inline">\gamma</span>、探索噪声 <span class="math inline">\sigma</span>、自举步数 <span class="math inline">n</span>、动作惩罚 <span class="math inline">\lambda</span>。剩下的 <span class="math inline">\alpha_v</span> 与 <span class="math inline">R_{\mathrm{scale}}</span> 属于“设好就不动”的数值参数，<span class="math inline">U_{\mathrm{RL}}</span> 与特征尺度属于“由任务决定”的结构参数。五个旋钮的分工可以用一句话概括：<span class="math inline">\alpha_w</span> 管“走多快”，<span class="math inline">\gamma</span> 管“看多远”，<span class="math inline">\sigma</span> 管“试多野”，<span class="math inline">n</span> 管“信自己还是信回报”，<span class="math inline">\lambda</span> 管“允许多用力”。</p>
+<p>这五件事里，只有 <span class="math inline">\lambda</span> 直接改变最优解，其余四个改变的是“能不能走到最优解”。这个区别在调参时很重要：如果结果是 0.05 而你想要 0.03，改前四个没用，只有改 <span class="math inline">\lambda</span>（或改特征、改动作上限）才有用；如果结果是 0.15 而你想要 0.05，那多半是前四个没调好。</p>
+<h3 id="策略学习率不是慢一点而是抖散">策略学习率：不是“慢一点”，而是“抖散”</h3>
+<p>表 70-4 与图 70-8 是学习率扫描，每个取值 3 个种子、200 回合。</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: right;">学习率 <span class="math inline">\alpha_w</span></th>
+<th style="text-align: right;">均值</th>
+<th style="text-align: right;">标准差</th>
+<th style="text-align: right;">最小</th>
+<th style="text-align: right;">最大</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">0.003</td>
+<td style="text-align: right;">0.0794</td>
+<td style="text-align: right;">0.0166</td>
+<td style="text-align: right;">0.0560</td>
+<td style="text-align: right;">0.0920</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">0.010</td>
+<td style="text-align: right;">0.0471</td>
+<td style="text-align: right;">0.0025</td>
+<td style="text-align: right;">0.0446</td>
+<td style="text-align: right;">0.0505</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">0.030</td>
+<td style="text-align: right;">0.1428</td>
+<td style="text-align: right;">0.1129</td>
+<td style="text-align: right;">0.0606</td>
+<td style="text-align: right;">0.3025</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">0.100</td>
+<td style="text-align: right;">0.3092</td>
+<td style="text-align: right;">0.0078</td>
+<td style="text-align: right;">0.3037</td>
+<td style="text-align: right;">0.3203</td>
+</tr>
+</tbody>
+</table>
+<figure>
+<img src="figs/ch070/fig_070_08_alpha.svg" alt="图 70-8 策略学习率扫描" /><figcaption aria-hidden="true">图 70-8 策略学习率扫描</figcaption>
+</figure>
+<p>表 70-4 的形状是本章最值得记住的一张表。从 0.003 到 0.010，均值从 0.0794 降到 0.0471，标准差从 0.0166 降到 0.0025——不仅更准，而且更稳。从 0.010 到 0.030，均值跳到 0.1428，标准差跳到 0.1129，最差的一个种子是 0.3025，几乎是纯 PID 的三倍。从 0.030 到 0.100，均值稳定在 0.3092，所有种子都坏——这时候已经不是“抖”，而是稳定地发散到某个坏的不动点。</p>
+<p>这条“断崖”的成因是线性策略的外推。学习率大时，单步更新会把 <span class="math inline">w</span> 推到一个“在训练分布内看似更好、在分布外完全错误”的位置；下一回合策略在新位置采样，状态分布随之偏移，更新的方向也跟着偏，几步之后就滑出了有效区。0.010 与 0.030 之间不是渐进变差，而是“稳”与“不稳”的分界，所以调这个参数的正确做法是在 0.010 附近做对数细分（0.007、0.010、0.015），而不是线性地试。</p>
+<h3 id="折扣因子视野与噪声的交换">折扣因子：视野与噪声的交换</h3>
+<p>表 70-5 是折扣因子扫描，同样 3 个种子、200 回合。</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: right;">折扣因子 <span class="math inline">\gamma</span></th>
+<th style="text-align: right;">均值</th>
+<th style="text-align: right;">标准差</th>
+<th style="text-align: right;">等效视野</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">0.900</td>
+<td style="text-align: right;">0.0654</td>
+<td style="text-align: right;">0.0157</td>
+<td style="text-align: right;">10 拍</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">0.950</td>
+<td style="text-align: right;">0.0471</td>
+<td style="text-align: right;">0.0025</td>
+<td style="text-align: right;">20 拍</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">0.990</td>
+<td style="text-align: right;">0.0606</td>
+<td style="text-align: right;">0.0210</td>
+<td style="text-align: right;">100 拍</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">0.999</td>
+<td style="text-align: right;">0.1822</td>
+<td style="text-align: right;">0.0371</td>
+<td style="text-align: right;">1000 拍</td>
+</tr>
+</tbody>
+</table>
+<p><span class="math inline">\gamma</span> 的两端都差，中间好，原因与 n 步回报类似但方向相反。<span class="math inline">\gamma</span> 小时视野短，策略只顾眼前，学不出“提前 5 拍补偿”这种行为，因为补偿的收益要在 5 拍之后才显现，被折扣压得看不见；<span class="math inline">\gamma</span> 大时视野长，回报里混进了太多未来的随机性，方差急剧上升，0.999 时等效视野 1000 拍已经超过回合长度，等于在估计一个几乎无折扣的总回报，梯度方向被噪声主导。</p>
+<p>0.95 对应 20 拍，恰好覆盖“延迟 5 拍 + 对象主时间常数 0.5 s 的一部分”。这个匹配关系可以作为一个起点：<strong>先算出延迟与主时间常数，取 <span class="math inline">\gamma</span> 使等效视野约为“延迟 + 半个时间常数”</strong>，再在其上下各试一档。</p>
+<p>还有一个与回合边界有关的细节：本章的回合长 400 拍，<span class="math inline">\gamma=0.95</span> 时第 400 拍的折扣权重是 <span class="math inline">0.95^{399}\approx 1.3\times10^{-9}</span>，早已可以忽略；所以“回合结束时截断”与“无限时域折扣”在本章几乎等价。但如果换成 <span class="math inline">\gamma=0.999</span>、回合仍是 400 拍，末端权重还有 0.67，这时候“是否跨回合自举”就变成一个必须明确的设计决定。本章的做法是不跨回合：回合末的状态不再自举，直接用剩余回报。这样每个回合是一个完整的、可独立求值的样本，训练与评估的口径也一致。</p>
+<h3 id="探索噪声太小走不动太大待不住">探索噪声：太小走不动，太大待不住</h3>
+<p>表 70-6 是探索噪声初值的扫描，衰减率固定 0.99、下限固定 0.05。</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: right;">初值 <span class="math inline">\sigma_0</span></th>
+<th style="text-align: right;">均值</th>
+<th style="text-align: right;">标准差</th>
+<th style="text-align: right;">末段噪声</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">0.05</td>
+<td style="text-align: right;">0.0894</td>
+<td style="text-align: right;">0.0238</td>
+<td style="text-align: right;">0.05</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">0.15</td>
+<td style="text-align: right;">0.0707</td>
+<td style="text-align: right;">0.0248</td>
+<td style="text-align: right;">0.05</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">0.30</td>
+<td style="text-align: right;">0.0471</td>
+<td style="text-align: right;">0.0025</td>
+<td style="text-align: right;">0.05</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">0.60</td>
+<td style="text-align: right;">0.0879</td>
+<td style="text-align: right;">0.0156</td>
+<td style="text-align: right;">0.05</td>
+</tr>
+</tbody>
+</table>
+<p><span class="math inline">\sigma_0=0.05</span> 时均值 0.0894，比 0.30 时差近一倍。这个结果初看反直觉：噪声小应该更精确才对。原因是探索不足——策略只能沿着初始权重（全零）附近的极小区域试探，学不到“该往哪个方向偏”，收敛到一个“不怎么动”的平庸解。<span class="math inline">\sigma_0=0.60</span> 时又变差，因为大幅值噪声会把系统推离线性区，训练回合里出现大量饱和样本，值函数被这些极端样本带偏。</p>
+<p>0.30 对应的实际噪声幅值是 <span class="math inline">0.30\times0.60=0.18</span> 的控制量，与精确前馈的 RMS 0.1166 同量级。这条“<strong>噪声幅值 ≈ 要学的形状的幅值</strong>”的经验规则，在别的任务上也适用：探索的力度应该与“正确答案的典型大小”相当，太大是浪费样本，太小是探索不到。</p>
+<p>末段的噪声下限（0.05）也不能省。把下限设成 0，训练后期策略完全确定，一旦早期收敛到次优点就再也出不来；留下 0.05 的残余噪声，相当于给策略保留一点“持续试探”的能力，代价是评估时要去掉它。</p>
+<p>衰减率 0.99 决定了“什么时候退到下限”。从 0.30 乘到 0.05 需要 179 次衰减，也就是大约第 180 个回合触底，剩下 120 个回合都在下限上跑。这个比例是刻意的：前 60% 的回合用来探索，后 40% 用来收敛。如果衰减太快（0.97），第 60 回合就到底，策略还没找到方向就停止了试探，剩下的回合只是在原地细化；如果太慢（0.999），300 回合结束噪声还有 0.22，评估时噪声一撤，策略会暴露“从没在安静环境里工作过”的问题。这条比例与表 70-4 的 200 回合扫描也对得上——扫描用 200 回合，正好落在“探索刚结束、还没充分收敛”的位置，所以扫描值（0.0471）比正式算例的 300 回合（0.0347）略差，这个差异是回合数造成的，不是参数本身造成的。</p>
+<h3 id="自举步数偏差与方差的交换点">自举步数：偏差与方差的交换点</h3>
+<p>图 70-9 是自举步数扫描，取值 1、5、10、20、50、200。</p>
+<figure>
+<img src="figs/ch070/fig_070_09_nstep.svg" alt="图 70-9 自举步数扫描" /><figcaption aria-hidden="true">图 70-9 自举步数扫描</figcaption>
+</figure>
+<p>这条曲线是本章最“不单调”的一条：<span class="math inline">n=1</span> 时 0.1435，<span class="math inline">n=5</span> 时 0.1926（更差），<span class="math inline">n=10</span> 时 0.1654，<span class="math inline">n=20</span> 时 0.0471（突降），<span class="math inline">n=50</span> 时 0.0505，<span class="math inline">n=200</span> 时 0.0796。两头的解释很清楚：<span class="math inline">n=1</span> 是纯自举，值函数的误差直接进梯度，偏差大；<span class="math inline">n=200</span> 接近整回合回报，方差大。中间的 0.0471 来自“偏差与方差刚好平衡”。</p>
+<p><span class="math inline">n=5</span> 比 <span class="math inline">n=1</span> 更差这一点需要单独解释。<span class="math inline">n</span> 小的时候，回报里真实奖励只占 <span class="math inline">n</span> 拍，其余全靠值函数补齐；而值函数在训练早期几乎不准，<span class="math inline">n=5</span> 相当于“用一个半准不准的估计去替换 5 拍真实奖励”，比 <span class="math inline">n=1</span> 的“替换 1 拍”引入了更多错误。等到 <span class="math inline">n=20</span>，真实奖励占了 20 拍（0.2 s），值函数只负责尾部，误差被摊薄了。所以 <span class="math inline">n</span> 的选择不是“越大越好”或“越小越好”，而是“让真实奖励覆盖一个完整的动态过程”——本章的动态过程是延迟 5 拍加半个时间常数，20 拍刚好。</p>
+<h3 id="动作惩罚唯一改变最优解的旋钮">动作惩罚：唯一改变最优解的旋钮</h3>
+<p>表 70-7 是 <span class="math inline">\lambda</span> 扫描，200 回合、单种子。</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: right;"><span class="math inline">\lambda</span></th>
+<th style="text-align: right;">RMS</th>
+<th style="text-align: right;">最大偏差</th>
+<th style="text-align: right;">总变差</th>
+<th style="text-align: right;">残余 RMS</th>
+<th style="text-align: right;">每拍变化 RMS</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">0.0</td>
+<td style="text-align: right;">0.0743</td>
+<td style="text-align: right;">0.1584</td>
+<td style="text-align: right;">8.0</td>
+<td style="text-align: right;">0.2383</td>
+<td style="text-align: right;">0.01252</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">0.1</td>
+<td style="text-align: right;">0.0636</td>
+<td style="text-align: right;">0.1438</td>
+<td style="text-align: right;">7.1</td>
+<td style="text-align: right;">0.2319</td>
+<td style="text-align: right;">0.01232</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">0.5</td>
+<td style="text-align: right;">0.0446</td>
+<td style="text-align: right;">0.0823</td>
+<td style="text-align: right;">5.4</td>
+<td style="text-align: right;">0.2079</td>
+<td style="text-align: right;">0.00896</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">2.0</td>
+<td style="text-align: right;">0.0420</td>
+<td style="text-align: right;">0.0928</td>
+<td style="text-align: right;">5.0</td>
+<td style="text-align: right;">0.2011</td>
+<td style="text-align: right;">0.00922</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">10.0</td>
+<td style="text-align: right;">0.0584</td>
+<td style="text-align: right;">0.1064</td>
+<td style="text-align: right;">1.6</td>
+<td style="text-align: right;">0.1377</td>
+<td style="text-align: right;">0.00815</td>
+</tr>
+</tbody>
+</table>
+<p>表 70-7 有两个反直觉的地方。第一，<span class="math inline">\lambda=0</span> 时 RMS 是 0.0743，比 <span class="math inline">\lambda=0.5</span> 的 0.0446 还差——不加惩罚反而更不准。原因是 <span class="math inline">\lambda=0</span> 时策略倾向于用大动作追每一个误差，学出来的东西在闭环里引起过冲，误差反而变大。第二，<span class="math inline">\lambda=10</span> 时 RMS 回升到 0.0584，但总变差降到 1.6，残余 RMS 降到 0.1377——策略变得很“懒”，几乎不动，误差自然回到接近纯 PID 的水平。</p>
+<p>这条曲线说明 <span class="math inline">\lambda</span> 有一个“甜点”，在本章是 0.5 到 2 之间。它的物理含义是“允许多用力”的价格：价格太低，策略乱用力；价格太高，策略不敢用力。工程上可以这样定初值：先取 <span class="math inline">\lambda=0</span> 跑一次，看残余量的 RMS，再取 <span class="math inline">\lambda</span> 使“动作惩罚项”与“误差惩罚项”的贡献相当，即 <span class="math inline">\lambda\,\mathbb{E}[a^2]\approx\mathbb{E}[(e/E_{\mathrm{ref}})^2]</span>。</p>
+<p>这里有一个容易忽略的耦合：<span class="math inline">\lambda</span> 罚的是归一化动作 <span class="math inline">a</span>，而 <span class="math inline">a</span> 对应的物理量是 <span class="math inline">U_{\mathrm{RL}}a</span>，所以同一句“动作惩罚项等于 <span class="math inline">\lambda (u_{\mathrm{RL}}/U_{\mathrm{RL}})^2</span>”意味着——<strong>改动 <span class="math inline">U_{\mathrm{RL}}</span> 等价于按平方改动 <span class="math inline">\lambda</span> 的含义</strong>。把残余上限从 0.60 减到 0.30，同样的 <span class="math inline">\lambda=0.5</span> 对物理用力的惩罚就重了 4 倍，最优残余量会明显变小。所以这两个参数不能分开调：要么固定 <span class="math inline">U_{\mathrm{RL}}</span> 只调 <span class="math inline">\lambda</span>，要么改了上限之后把 <span class="math inline">\lambda</span> 按平方缩放回去。本章的所有 λ 数据都是在 <span class="math inline">U_{\mathrm{RL}}=0.60</span> 下测的，换上限就不能直接照搬。</p>
+<h3 id="值函数学习率与两个数值参数">值函数学习率与两个数值参数</h3>
+<p><span class="math inline">\alpha_v</span> 没有单独扫描，因为它与 <span class="math inline">\alpha_w</span> 强耦合。经验是取 <span class="math inline">\alpha_w</span> 的 2 到 10 倍：太小了值函数跟不上策略的变化（优势估计滞后），太大了值函数自己在震荡（优势估计变成噪声）。本章取 5 倍，在 70.3 节已经说明。</p>
+<p><span class="math inline">R_{\mathrm{scale}}=0.01</span> 是纯数值参数，只影响学习率刻度。它的作用是让单拍奖励落在 <span class="math inline">10^{-2}</span> 量级，与 <span class="math inline">\alpha_w=0.010</span> 匹配。如果把它改成 1.0，等价于把 <span class="math inline">\alpha_w</span> 放大 100 倍，会直接跳到表 70-4 的“发散”那一行。<span class="math inline">U_{\mathrm{RL}}=0.60</span> 是结构参数，改变它会同时改变动作空间和奖励的解读，不能当旋钮用。</p>
+<p>这个比例可以从两条时间尺度理解。策略的变化速度由 <span class="math inline">\alpha_w</span> 与梯度范数决定，值函数要跟得上的前提是“它比策略快若干倍”，否则优势估计永远滞后于策略；反过来，值函数收敛太快也有问题——它会把当前策略的价值迅速“锁死”，优势趋零、梯度消失，表现为曲线早早变平但误差还很高。两端都不好，中间那段就是 2 到 10 倍。判别方法很简单：把 <span class="math inline">\alpha_v</span> 单独放大 5 倍，如果前期更快、最后停在一个更差的水平，说明值函数抢跑了；单独缩小 5 倍，如果前 50 回合几乎不动，说明它跟不上。</p>
+<h3 id="五个旋钮的灵敏度排序">五个旋钮的灵敏度排序</h3>
+<p>按“改一点点会怎样”排序，本章的经验是：<span class="math inline">\alpha_w</span> 最敏感（0.010 与 0.030 之间是断崖），<span class="math inline">\sigma_0</span> 次之（0.15 到 0.30 差 33%），<span class="math inline">n</span> 再次（20 到 50 差 7%，但 20 以下差得多），<span class="math inline">\gamma</span> 再次（0.95 到 0.99 差 29%），<span class="math inline">\lambda</span> 最不敏感（0.5 到 2 差 6%）。</p>
+<p>这个排序决定了调参的顺序：先固定 <span class="math inline">\lambda</span>、<span class="math inline">\gamma</span>，调 <span class="math inline">\alpha_w</span> 找到“稳且不慢”的点，再调 <span class="math inline">\sigma_0</span> 和 <span class="math inline">n</span> 抠精度，最后微调 <span class="math inline">\lambda</span> 换平滑度。反过来做——先调 <span class="math inline">\lambda</span> 再调 <span class="math inline">\alpha_w</span>——会把两个效应混在一起，永远调不到点子上。</p>
+<h2 id="调参方法与经验">70.8 调参方法与经验</h2>
+<h3 id="一条可以照着走的流水线">一条可以照着走的流水线</h3>
+<p>调参的顺序不是随意的，它由“哪个参数改变问题的定义、哪个只改变求解过程”决定。本章推荐的流水线是七步：定结构（特征、动作上限、奖励形式）、定数值（<span class="math inline">R_{\mathrm{scale}}</span>、<span class="math inline">\alpha_v/\alpha_w</span>）、粗调 <span class="math inline">\alpha_w</span>、调 <span class="math inline">\sigma_0</span>、调 <span class="math inline">n</span>、微调 <span class="math inline">\gamma</span>、最后调 <span class="math inline">\lambda</span>。前两步一次定好不再动，后五步按灵敏度从高到低走。</p>
+<p>这条流水线有一个前提：每一步只用单种子跑 100 到 200 回合，看到明显趋势就进下一步，最后用 3 到 5 个种子定稿。本章的所有扫描表都是这么得到的——先单种子看形状，再多种子看均值和标准差。单种子粗筛能省 3 到 5 倍的时间，代价是可能被某个“运气好”的种子骗过去，所以定稿时必须换成多种子。</p>
+<p>时间该怎么分配，也有一条经验：<strong>七成花在环境与特征上，三成才花在五个旋钮上</strong>。理由是这两类问题的返工成本完全不同。特征写错了（少一维、尺度差一个量级、截断太紧），五个旋钮怎么调都补不回来，最好的结果也只是“看起来收敛、迁移就崩”，而这类错误在短回合的扫描里根本暴露不出来；超参没调好，最多是多花几个小时，方向不会错。本章在定稿前改过两次特征：第一次是去掉“上一拍残余”，因为最小二乘解会爆炸；第二次是把参考速度加进去，因为不加的话策略学不到前馈形状。两次改动都比后来所有超参扫描加起来更影响结果。</p>
+<h3 id="学习曲线的三段">学习曲线的三段</h3>
+<p>图 70-4 那条曲线可以切成三段，每一段对应不同的学习内容，也对应不同的调参动作。</p>
+<p>第一段是前 50 回合，误差从 0.1161 降到 0.0690，降幅 40%。这一段学的是“大方向”：策略发现“轨迹上升时要多推、下降时要少推”，这个发现只需要很少的样本，因为它的信号最强。如果这一段降不下来（50 回合还在 0.11 以上），问题多半在 <span class="math inline">\alpha_w</span> 太小或 <span class="math inline">\sigma_0</span> 太小，策略根本没在动。</p>
+<p>第二段是 50 到 250 回合，误差在 0.041 到 0.049 之间来回。这一段学的是“细节”：补偿的时机、幅值的微调、与 PID 的配合。它的信号弱（改进只有 0.005 量级），被探索噪声盖住，所以曲线抖。这一段停滞是正常的，不要在 100 回合就断定“学不动了”。</p>
+<p>第三段是 250 到 300 回合，误差从 0.041 降到 0.0347。这一段对应探索噪声衰减到下限（0.05）、策略开始收敛到最优点附近。如果最后 50 回合没有这个下降，说明噪声下限设得太高（比如 0.10），策略一直在“带着噪声工作”，评估时噪声去掉反而暴露了它没有真正收敛。</p>
+<p>判断“真收敛”还是“卡住了”，除了看曲线平不平，还要看两个伴随量。一是残余量的 RMS 是否稳定在 <span class="math inline">U_{\mathrm{RL}}</span> 的 30% 附近（本章 0.1666，即 27.8%）；如果它一直在缓慢上涨，说明策略在用越来越大的力换越来越小的收益，属于“用饱和换精度”的前兆。二是最后几十个回合的评估值极差有多大。本章最后 50 回合的评估值在 0.041 到 0.035 之间，极差 0.006；如果极差超过 0.02，那多半不是收敛，而是“在两个局部解之间来回跳”，此时加回合数也没用，应该减小 <span class="math inline">\alpha_w</span> 或把噪声下限再降一档。</p>
+<h3 id="症状与处置">症状与处置</h3>
+<p>表 70-8 把常见的六种症状与对应的处置列在一起。这张表的价值在于：它把“看起来都像不收敛”的几种情况区分开了，而它们的处理方法完全不同。</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">症状</th>
+<th style="text-align: left;">可能原因</th>
+<th style="text-align: left;">处置</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">前 20 回合就贴限幅、误差不降</td>
+<td style="text-align: left;"><span class="math inline">\alpha_w</span> 过大或 <span class="math inline">U_{\mathrm{RL}}</span> 过大</td>
+<td style="text-align: left;">学习率除以 3，或残余上限减半</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">误差一直在 0.10 附近不动</td>
+<td style="text-align: left;"><span class="math inline">\alpha_w</span> 太小、<span class="math inline">\sigma_0</span> 太小</td>
+<td style="text-align: left;">学习率乘 3，噪声初值提到 0.30</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">均值在降、方差很大</td>
+<td style="text-align: left;">自举步数太小、值函数学得太慢</td>
+<td style="text-align: left;"><span class="math inline">n</span> 提到 20，<span class="math inline">\alpha_v</span> 提到 <span class="math inline">5\alpha_w</span></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">训练好、评估差</td>
+<td style="text-align: left;">噪声下限太高</td>
+<td style="text-align: left;">下限降到 0.02 到 0.05</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">残余量在动、精度不动</td>
+<td style="text-align: left;">动作分辨率不足或信用分配错位</td>
+<td style="text-align: left;">换连续动作，或减小 <span class="math inline">n</span></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">换了工况就崩</td>
+<td style="text-align: left;">训练分布未覆盖该工况</td>
+<td style="text-align: left;">域随机化，或加安全层与回退</td>
+</tr>
+</tbody>
+</table>
+<p>表 70-8 的第一行与第二行看起来矛盾——一个说学习率太大、一个说太小——但它们对应的现象完全不同：前者是“动得太猛”，表现为饱和；后者是“根本不动”，表现为误差曲线是一条水平线。分辨的办法是看残余量的 RMS：太猛时残余 RMS 接近 <span class="math inline">U_{\mathrm{RL}}</span>，不动时残余 RMS 接近 0。这两个数在评估里都有，不需要额外记录。</p>
+<p>第五行“残余量在动、精度不动”正是 70.5 节五档 Q 学习的情况。它的诊断价值在于：残余量在动说明策略确实在学，精度不动说明学的东西没用。这时候继续加样本可能有用（表 70-2 里 1000 回合确实降到了 0.0930），但更根本的办法是换连续动作，因为瓶颈是“分档动作无法表达正确的时序结构”。</p>
+<h3 id="三个不要">三个不要</h3>
+<p>第一个不要：<strong>不要用训练回报当验收指标</strong>。训练回报里混着探索噪声的贡献，它会随噪声衰减而自然上升，看起来像“学得很好”，实际策略可能没变。本章的做法是每 10 回合做一次确定性评估，只看评估曲线。</p>
+<p>第二个不要：<strong>不要在多处同时改参数</strong>。学习率、噪声、自举步数三者互相影响，同时改两个，出了问题分不清是谁的责任。本章的所有扫描都是“固定其余、只改一个”。</p>
+<p>第三个不要：<strong>不要为了最后 0.002 反复调</strong>。从 0.0471 到 0.0347 的这段改进，主要来自“训练到 300 回合”而不是“参数调得更好”。继续在这上面花时间，收益远小于把精力放在 70.10 节的迁移与安全上——部署时那 0.01 的退化，比训练时这 0.002 的差别重要得多。</p>
+<h3 id="训练预算怎么估">训练预算怎么估</h3>
+<p>本章的一次 300 回合训练耗时 4.7 s，单回合 15.5 ms。这两个数随机器负载有 5% 左右的浮动，本章不同批次实测落在 4.6 到 4.8 s 之间，所以只把它当量级看。这个速度看起来很快，但它是在纯 Python 循环里跑出来的；换成有 10 个状态、200 拍的对象，单回合会到 30 ms 量级，300 回合就是 9 s。如果要做 20 组超参扫描、每组 3 个种子，总时间就是 9 分钟——这个量级完全可以接受。</p>
+<p>真正需要考虑预算的是“域随机化”：如果要把增益、延迟、负载三个维度各取 3 档组合成 27 种工况，每种跑 300 回合，总时间就是 4 小时。这时候要么缩小工况集（本章 70.10 节用的是 7 种），要么用并行（进程级并行最省事，因为每个回合是独立的）。</p>
+<p>预算估完之后，还要能判断“这些钱花得值不值”。一个简单的判据是看评估曲线最后 30% 的回合还有没有下降趋势：如果最后的评估值仍在单调下降，加回合大概率还有收益；如果已经在同一个区间里横了三四十个回合，再加 100 回合也只是重复采样，收益远小于把时间花在特征上。本章 300 回合的选择就来自这条判据——250 到 300 这一段的下降有 0.006，属于“刚到拐点”，再加 100 回合大概只剩 0.002 的收益，不划算。</p>
+<p>另一条与预算有关的经验是：<strong>扫描阶段与定稿阶段的回合数可以不同</strong>。本章的扫描实验统一用 200 回合（<code>SWEEP_EP</code>），只有正式算例用 300。理由是扫描关心的是“趋势”，200 与 300 回合的趋势一致，而 200 回合省下三分之一时间；定稿关心的是“绝对数字”，必须用完整回合数。这个做法有一个前提：扫描得出的排序必须与定稿一致。本章在正式写进正文之前，抽了 <span class="math inline">\alpha_w</span> 与 <span class="math inline">\sigma_0</span> 两组做对照，200 与 300 回合的排序相同，才放心用 200 回合跑完所有扫描。</p>
+<h3 id="一条容易被忽略的经验">一条容易被忽略的经验</h3>
+<p>最后说一条不容易从公式里看出来的经验：<strong>训练回合数不应低于“参数个数 × 10”</strong>。本章 12 个参数，下限是 120 回合，正式算例跑 300 回合，是下限的 2.5 倍；如果只跑 50 回合，参数还没被充分更新，评估曲线会停在 0.07 附近，看起来像“算法不行”，实际是“样本不够”。这条经验在 70.5 节的 Q 学习上得到验证：30 个参数、下限 300 回合，300 回合正好压在线上，结果确实停在 0.1147；跑到 1000 回合（下限的 3.3 倍）才降到 0.0930。</p>
+<h2 id="优化与改进">70.9 优化与改进</h2>
+<h3 id="四条改进路线">四条改进路线</h3>
+<p>前八节讲的是一条“标准路线”：名义对象上训练、名义对象上评估。它在名义工况下把 RMS 从 0.1161 压到 0.0347，但真实系统不会停在名义点。本节按“问题出现的位置”排四条改进路线：训练阶段没覆盖到的失配（域随机化）、部署后发现的新失配（继续学习）、策略本身太脆（安全层）、以及奖励与动作空间的设计缺陷（整形与换档）。</p>
+<p>这四条路线不是并列的选项，而是有优先级的。先做安全层，因为它成本最低、兜底效果最好；再做域随机化，因为它一次性解决一类问题；继续学习放在最后，因为它的收益最不确定——下面会看到，它在某些工况下甚至不如从零重训。</p>
+<h3 id="迁移七种工况下的表现">迁移：七种工况下的表现</h3>
+<p>先把问题量化。图 70-10 把同一个策略放到七种偏离名义的工况上，与纯 PID 并排比较。</p>
+<figure>
+<img src="figs/ch070/fig_070_10_sim2real.svg" alt="图 70-10 七种工况下的迁移表现" /><figcaption aria-hidden="true">图 70-10 七种工况下的迁移表现</figcaption>
+</figure>
+<p><strong>图 70-10</strong> 迁移性能对比。每组左柱为纯 PID，右柱为训练好的残余策略；横轴依次为名义、增益 +20%、增益 −20%、延迟 8 拍、测量噪声 0.01、常值负载 0.05、初值偏移 0.02。延迟 8 拍一组的柱顶标注了限幅饱和占比。</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">工况</th>
+<th style="text-align: right;">纯 PID RMS</th>
+<th style="text-align: right;">残余策略 RMS</th>
+<th style="text-align: right;">相对名义</th>
+<th style="text-align: left;">是否优于 PID</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">名义</td>
+<td style="text-align: right;">0.1161</td>
+<td style="text-align: right;">0.0347</td>
+<td style="text-align: right;">—</td>
+<td style="text-align: left;">是</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">增益 +20%</td>
+<td style="text-align: right;">0.1059</td>
+<td style="text-align: right;">0.0316</td>
+<td style="text-align: right;">−8.9%</td>
+<td style="text-align: left;">是</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">增益 −20%</td>
+<td style="text-align: right;">0.1311</td>
+<td style="text-align: right;">0.0423</td>
+<td style="text-align: right;">+21.9%</td>
+<td style="text-align: left;">是</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">延迟 8 拍</td>
+<td style="text-align: right;">0.1196</td>
+<td style="text-align: right;">0.2267</td>
+<td style="text-align: right;">+553%</td>
+<td style="text-align: left;"><strong>否</strong></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">噪声 0.01</td>
+<td style="text-align: right;">0.1164</td>
+<td style="text-align: right;">0.0350</td>
+<td style="text-align: right;">+0.9%</td>
+<td style="text-align: left;">是</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">负载 0.05</td>
+<td style="text-align: right;">0.1170</td>
+<td style="text-align: right;">0.0360</td>
+<td style="text-align: right;">+3.7%</td>
+<td style="text-align: left;">是</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">初值 0.02</td>
+<td style="text-align: right;">0.1167</td>
+<td style="text-align: right;">0.0385</td>
+<td style="text-align: right;">+11.0%</td>
+<td style="text-align: left;">是</td>
+</tr>
+</tbody>
+</table>
+<p>表 70-9 里有三件事值得展开。第一，增益变化是最“友好”的失配：<span class="math inline">\pm 20\%</span> 的静态增益误差落在 0.0316 到 0.0423 之间，策略仍然是 PID 的三倍好。原因很直接——策略在训练中已经见过 <span class="math inline">K(y)</span> 随位置变化（工作区间内 13 到 20，本身就有 54% 的跨度），增益整体缩放只是把这个跨度平移，特征里又保留了参考位置，策略有条件把它吸收掉。</p>
+<p>第二，测量噪声、常值负载、初值偏移这三种扰动几乎不影响性能（+0.9% 到 +11%）。它们要么被反馈环自然抑制，要么只影响前几十拍，与“残余策略学的是稳态形状”这件事正交。这也说明残余学习对“加性、零均值、短时”的扰动天生免疫。</p>
+<p>第三，延迟 8 拍是唯一崩掉的工况，而且崩到 0.2267——是纯 PID 的 1.9 倍。这个结果不符合“RL 至少不比 PID 差”的直觉，需要解释。延迟从 5 拍加到 8 拍，等于多出 30 ms 的相位滞后，在 1 Hz 附近的相位损失约 11 度；PID 参数本来就是按 5 拍整定的，多出的滞后让它勉强还能稳；而残余策略在训练中学到的补偿动作，是按 5 拍延迟的相位关系排布的，多出的 3 拍让它的补偿“提前了”，反而加剧振荡。评估记录里饱和占比 28.25%、残余 RMS 0.3992（名义时是 0.1666），说明它一直在用力推、而且推错方向。</p>
+<p>这条结论比“迁移会退化”更重要：<strong>残余学习把基线的稳定裕度消耗掉了</strong>。纯 PID 在 8 拍延迟下还有余量，加上残余之后余量被用尽。所以残余量必须有限幅、有速率限制，也必须有一个“发现不对就退回 PID”的开关——这正是下一节的工程含义。</p>
+<h3 id="域随机化把失配放进训练分布">域随机化：把失配放进训练分布</h3>
+<p>最直接的改法是训练时就把失配抖起来。每个回合开始时，从分布里抽一组 <span class="math inline">(\kappa_g, \kappa_d, \kappa_l)</span>：增益缩放 <span class="math inline">\kappa_g\sim U[0.8,1.2]</span>、延迟拍数 <span class="math inline">\kappa_d\in\{5,6,7,8\}</span>、常值负载 <span class="math inline">\kappa_l\sim U[-0.05,0.05]</span>，然后在这一组参数上跑完整个回合。这样策略见到的不再是一个对象，而是一族对象。</p>
+<p>代价是可算的。本章的 7 种工况如果各跑 300 回合，就是 2100 回合、约 34 s；如果按三维各 3 档组合成 27 种工况、每种 300 回合，就是 8100 回合、约 4 小时。前者可以接受，后者在单机上就要靠进程级并行（每个回合独立，最容易并行）。所以工程上的做法通常是“离散小集合”而不是“连续大分布”：先挑出最可能出现的几种失配（增益两档、延迟两档），把工况数控制在 8 以内。</p>
+<p>域随机化还有一个隐性代价，容易被忽略：<strong>它降低名义性能</strong>。训练分布变宽，策略要在“一族对象”上取平均，名义点上的最优性必然让位。经验上 0.0347 会退到 0.040 到 0.045 之间。这不是缺陷，是权衡——用名义点的 15% 换延迟失配下的 5 倍改善，通常是划算的。</p>
+<p>随机化该覆盖哪几个维度，不能凭感觉。判据是“这种失配会不会改变策略需要的信息”。增益变化、常值负载属于<strong>改变幅值</strong>的失配：同一组权重在不同的增益下仍然指向正确的方向，只是力度不对，策略可以通过折中把它们都覆盖住，代价是名义点损失一点。延迟变化属于<strong>改变时序</strong>的失配：它改变的是“什么时候该动手”，两组权重之间不存在折中——5 拍与 8 拍要求的提前量甚至可能方向相反。所以域随机化对幅值类失配有效，对时序类失配只能“提醒策略留余量”，不能真正覆盖。要把时序失配也覆盖住，必须让状态里包含延迟信息（比如历史动作的滑动窗），否则再宽的随机化也只是让策略学会“两边都不太用力”。</p>
+<p>随机化的范围也不要一次铺满。比较稳妥的做法是“先窄后宽”：第一轮只随机增益 <span class="math inline">\pm10\%</span>，确认策略在窄分布上仍然收敛；第二轮加入延迟 5 到 6 拍；第三轮再放到 8 拍。每加宽一次，观察名义性能掉了多少、最坏工况好了多少，两个数一起看才能判断这次加宽值不值。一次性把三个维度都放到最宽，最常见的后果是训练根本不收敛——策略每天见到的对象都不一样，它学不到任何稳定的补偿形状。</p>
+<p>与随机化配套的验收方式也要改。名义工况训练时看的是“平均 RMS”，随机化训练时要看<strong>最坏工况的 RMS</strong>，因为部署时你遇到的是某一个具体对象，不是分布的均值。本章七工况里最坏的是延迟 8 拍的 0.2267；随机化训练的目标应该是把这个数压到 0.05 以下，而不是让七个数的平均变好看。这个目标听起来更高，但它是对的：控制系统的口碑由最坏的那次决定，不由平均决定。</p>
+<h3 id="继续学习的边界">继续学习的边界</h3>
+<p>另一个思路是不动训练分布，等部署之后在真实对象上继续学。本章做了这个实验：把训练好的策略搬到失配对象上，用 30 个回合、<span class="math inline">\alpha_w=0.003</span> 微调，探索噪声配两组。</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">工况</th>
+<th style="text-align: left;">噪声 <span class="math inline">\sigma_0/\sigma_{\min}</span></th>
+<th style="text-align: right;">学前</th>
+<th style="text-align: right;">学后</th>
+<th style="text-align: right;">变化</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">增益 +20%</td>
+<td style="text-align: left;">0.10 / 0.030</td>
+<td style="text-align: right;">0.0316</td>
+<td style="text-align: right;">0.0366</td>
+<td style="text-align: right;">+15.6%</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">增益 +20%</td>
+<td style="text-align: left;">0.05 / 0.005</td>
+<td style="text-align: right;">0.0316</td>
+<td style="text-align: right;">0.0317</td>
+<td style="text-align: right;">+0.3%</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">延迟 8 拍</td>
+<td style="text-align: left;">0.10 / 0.030</td>
+<td style="text-align: right;">0.2267</td>
+<td style="text-align: right;">0.2277</td>
+<td style="text-align: right;">+0.4%</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">延迟 8 拍</td>
+<td style="text-align: left;">0.05 / 0.005</td>
+<td style="text-align: right;">0.2267</td>
+<td style="text-align: right;">0.2186</td>
+<td style="text-align: right;">−3.6%</td>
+</tr>
+</tbody>
+</table>
+<p>表 70-10 是本章最“反直觉”的一张表，它给出两条负面结论和一条正面结论。</p>
+<p>第一条负面结论：<strong>小失配下继续学习没有收益，噪声配大了还会倒退</strong>。增益 +20% 时，策略本来就只有 0.0316，剩余空间不足 10%；这时 <span class="math inline">\sigma_0=0.10</span> 的探索扰动会把已经学好的策略重新搅乱，30 回合不够它再收敛回来，结果退化 15.6%。噪声收到 <span class="math inline">0.05/0.005</span> 才勉强打平（+0.3%）。这印证了一条原则：<strong>探索噪声要按“剩余失配”来配，而不是按训练时的习惯值来配</strong>。</p>
+<p>第二条负面结论：<strong>大失配下继续学习几乎无效</strong>。延迟 8 拍时 30 回合只从 0.2267 降到 0.2186，降幅 3.6%；而同一个失配下从零重训 300 回合能到 0.1697，差距 22%。原因在于“起点”：继续学习的起点是一个在 5 拍延迟上收敛的策略，它的权重已经把相位关系写死了，30 回合、学习率 0.003 的微调只能挪动一点点；从零重训没有这个包袱，可以从头学一套 8 拍延迟的时序。<strong>失配大到改变了时序结构时，微调不如重训。</strong></p>
+<p>正面结论只有一条，但它很重要：继续学习不会把系统搞坏——四种组合里最差也只是 +15.6%，没有出现发散。前提是学习率足够小（0.003，是名义训练的 1/3）、回合数足够少、并且有安全层兜着。这条性质使它适合做“长期慢漂移”的维护手段（比如阀门逐渐结垢导致的增益缓慢下降），而不适合做“突发失配”的应急手段。</p>
+<p>把这两组数字折算成样本量，就能看清“30 回合”意味着什么：30 个回合是 1.2 万拍，只有名义训练（300 回合、12 万拍）的十分之一；学习率又只有名义训练的 30%。两个“十分之一量级”叠在一起，等于给了策略一次“轻微的方向修正”，而不是“重新学习”。这正好解释了表 70-10 的两条负面结论——不是继续学习这个方法不行，而是这个预算只够做微调。要让它在延迟 8 拍上学出东西，预算至少要提到与从零重训同级，那时它也就不再是“在线维护”了，而是一次“停机再训练”。</p>
+<h3 id="安全层给残余量加一道闸">安全层：给残余量加一道闸</h3>
+<p>既然延迟失配能把系统推到 1.9 倍于 PID 的误差，工程上就必须有一道与学习无关的硬约束。本章的安全层只有一条规则：残余量的每拍变化不超过 <code>RATE_MAX</code>，即</p>
+<p><span class="math display">
+\left|u_{\mathrm{RL},k}-u_{\mathrm{RL},k-1}\right|\le \Delta_{\max},
+\tag{70-23}
+</span></p>
+<p>其中 <span class="math inline">\Delta_{\max}=0.05</span>（对应执行器满量程的 4%）。它不改变策略、不改变训练，只在输出端做一次限速。</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">指标</th>
+<th style="text-align: right;">无速率限制</th>
+<th style="text-align: right;">限速 0.05</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">RMS</td>
+<td style="text-align: right;">0.0316</td>
+<td style="text-align: right;">0.0331</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">最大偏差</td>
+<td style="text-align: right;">0.0862</td>
+<td style="text-align: right;">0.0987</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><span class="math inline">\max\lvert\Delta u\rvert</span></td>
+<td style="text-align: right;">0.1447</td>
+<td style="text-align: right;">0.0500</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">控制量总变差 TV</td>
+<td style="text-align: right;">44.5</td>
+<td style="text-align: right;">43.3</td>
+</tr>
+</tbody>
+</table>
+<p>表 70-11 是在“增益 +20% 且测量噪声 0.01”工况上测的。限速把单拍最大变化从 0.1447 压到 0.0500（正好等于限值），代价是 RMS 从 0.0316 升到 0.0331——4.7% 的性能损失，换来执行器不再被高频抖动反复冲击。这个交换在工程上几乎总是值得的：TV 从 44.5 降到 43.3 看着不多，但最大单拍变化降到 1/3 意味着磨损速率大幅下降。</p>
+<p>限速还有一层不太直观的代价：它本身就是一个相位滞后。残余量被限速之后，原本“一步到位”的跳变变成“斜坡爬升”，等效于给残余支路加了一点延迟。这不是理论推演，表 70-11 里最大偏差从 0.0862 升到 0.0987 就是它的直接后果——限速把尖峰削平的同时，也把纠正尖峰的动作推迟了几拍。所以限速线的位置要选在“正常工作很少碰到、异常时才起作用”的地方：本章残余量在名义工况下每拍变化只有 0.009（RMS），离 0.05 很远；只有在加噪声、加失配的工况下，单拍变化才会冲到 0.1447，那时限速才真正介入。<strong>正常时不介入、异常时介入</strong>，这条性质是判断限速线是否选对的标准。如果它在正常工作里就频繁生效，那它不再是保护，而是一个额外的滞后环节，会把稳定裕度吃掉。</p>
+<p>安全层还应配两个计数器，而不只是限幅：<strong>状态越界率</strong>（一个回合里 <span class="math inline">|e|&gt;3E_{\mathrm{ref}}</span> 的拍数占比）和<strong>动作裁剪率</strong>（残余量被限幅或限速改动的拍数占比）。前者告诉你“策略是不是已经失控”，后者告诉你“安全层是不是一直在干活”。两个数都在 0.05 以下时，说明策略与安全层各司其职；动作裁剪率长期高于 0.2，说明策略本身有问题，限速只是在掩盖它。</p>
+<h3 id="奖励与动作空间的两处可改之处">奖励与动作空间的两处可改之处</h3>
+<p>最后说两个“结构级”的改动，它们不改算法，只改问题的写法。</p>
+<p>其一是奖励整形。本章的奖励是纯二次型，它对“大误差”和“持续小误差”一视同仁，都按平方计。如果希望策略更在意峰值，可以把奖励换成</p>
+<p><span class="math display">
+r_k=-\left(\frac{e_k}{E_{\mathrm{ref}}}\right)^2-\beta\left(\frac{e_k-e_{k-1}}{E_{\mathrm{ref}}}\right)^2-\lambda a_k^2,
+\tag{70-24}
+</span></p>
+<p>第二项惩罚误差的变化率，等价于给“误差的导数”加权。<span class="math inline">\beta=0.2</span> 时，表 70-9 里延迟工况的峰值偏差可以压下一部分，代价是稳态误差略微上升。这类改动要谨慎：它改变的是最优策略本身，不是学习速度，一旦改错方向，加多少样本都救不回来。</p>
+<p>其二是动作空间。70.5 节已经看到五档 Q 学习的天花板（1000 回合只到 0.0930）。如果把动作从“绝对档位”改成“相对档位”（即 <span class="math inline">u_{\mathrm{RL},k}=u_{\mathrm{RL},k-1}+\Delta</span>，<span class="math inline">\Delta</span> 取五档），动作就具备了积分能力，理论上能用更少的档位表达更长的时序结构。但它同时引入了“动作漂移”——策略可以靠持续同号的小增量把残余推到限幅，而单步奖励看不出这个问题。折中的做法是保留绝对动作，但把残余量的上一拍值放进状态（本章试过，最小二乘解会爆炸，需要配合权重衰减才稳）。这两条都留作练习，本章的正式算例仍是绝对动作加六维特征。</p>
+<p>把这两条路放在一起比，取舍很清楚。奖励整形解决的是“目标写得对不对”，它不动结构、成本极低，改一行就能试，但风险是可能把目标改坏；动作空间改造解决的是“策略有没有能力表达时序”，它动结构、要重训、还要防漂移，收益是同样的档位数能表达更长的记忆。经验上的优先级是：先确认奖励写对了（<span class="math inline">\lambda</span> 扫描、峰值是否被压住），再考虑动作空间。本章的顺序就是这样——奖励整形作为备选列出但未启用，动作空间保持绝对式。</p>
+<p>理由在于误差的成分。本章误差的主要成分是“形状没补上”，不是“记不住时序”：形状问题用二次型奖励已经能表达清楚，而时序问题在本章被 ILC 拿走了。反过来，如果任务是“每拍必须按顺序执行一串动作”（比如装配、换刀），误差的成分就变成时序，那时动作空间的改造才值得做。判断依据不是方法新不新，而是你的误差里到底哪一项占大头。</p>
+<h2 id="工程落地">70.10 工程落地</h2>
+<h3 id="落地要解决的四个问题">落地要解决的四个问题</h3>
+<p>把强化学习放进真实控制回路，要解决的不是“算法怎么选”，而是四件很具体的事：训练环境从哪来、策略在回路里放在哪、出问题怎么退、跑起来的数据怎么留。这四件事在论文里通常被压缩成一句“我们部署了”，但它们决定了这套方法能不能真的上机。</p>
+<p>本章的落地思路可以概括为“三层加一个开关”：底层是原有 PID，中间是残余策略，上层是安全层，旁边挂一个回退开关。每一层都可以单独失效，而系统仍然可控。下面按这个结构展开。</p>
+<h3 id="训练环境回合从哪来">训练环境：回合从哪来</h3>
+<p>强化学习需要一个能反复重置、反复跑的环境。对控制问题来说，这个环境的来源只有三种：高保真仿真模型、历史数据回放、以及在线真机。三者的取舍很明确。</p>
+<p>高保真仿真模型是最常用的，本章用的就是这一类：<span class="math inline">y&#39;&#39;=-2y&#39;+K(y)u</span> 加 5 拍延迟加限幅，一个回合 400 拍、16 ms 跑完。它的优点是快、可重置、可以任意改工况；缺点是“仿真与真实之间的差距”，这个差距正是 70.9 节那七种工况要量化的东西。</p>
+<p>历史数据回放的做法是把录制的输入输出序列当成环境，动作改变后无法知道下一步输出，只能用“近似模型 + 残差修正”来外推。它适合那些不允许在线试错的对象（比如大型锅炉），代价是策略的探索空间被历史数据限制住。</p>
+<p>在线真机只在安全约束非常强、试错代价很低时才用，而且几乎一定配“影子模式”：策略照常输出，但不接到执行器上，只记录“如果接了会怎样”。等影子运行几百个回合、指标稳定之后，才逐步放开权限。</p>
+<p>本章建议的路径是：<strong>仿真训练 → 影子运行 → 限幅接管 → 全量接管</strong>。每一阶段的进入条件都用上一阶段的实测指标来定，而不是用训练时的评估指标。</p>
+<p>影子运行跑多久、留多少数据，可以按信息量估。本章一个回合 400 拍，200 个回合是 8 万拍；按 10:1 降采样存日志，是 8000 条记录，每条含 6 个特征、1 个动作、1 个奖励与 3 个状态量，算下来不到 1 MB。这个量级说明：<strong>影子运行的成本几乎全在机时，不在存储</strong>。真正的约束是“要覆盖多少种工况”——如果现场有 5 种典型负载、3 个温度区间，每种组合跑 200 回合，就是 3000 个回合；按每回合 4 s 算，是 3.3 小时连续运行，这才是要提前排进计划的部分。</p>
+<p>判断影子运行“够了”的标准也不是回合数，而是<strong>指标是否已经收敛到与仿真评估同一量级</strong>。本章的做法是拿影子运行里统计的越界率与裁剪率，与仿真里同一策略的两个数对比：如果影子的越界率明显更高，说明仿真漏掉了某种扰动，应该回到环境里补；如果两者接近，就说明仿真到真机的差距已经被策略吸收，可以进入限幅接管。这一步的价值在于它给了一个“可以往下走”的客观依据，而不是靠“跑了两周，感觉差不多了”。</p>
+<p>这三条路不是互斥的，实际项目里常常是组合：先用仿真训练出一个可用的策略，再用历史数据回放做一次“离线复核”（看策略在真实录制的扰动下会怎么动作），最后用影子模式在真机上验证。其中历史数据回放的复核价值常被低估——它不需要真机在线，也不改变任何控制行为，却能把“仿真里没有的扰动”暴露出来。本章的噪声、负载、初值三个工况，本质上就是三类“历史数据里才有的东西”。</p>
+<p>还有一条与保真度有关的判断：<strong>仿真不需要“处处精确”，只需要“在策略关心的频段内精确”</strong>。本章的策略补偿的是 0.25 Hz 与 0.75 Hz 两个频段，所以对象模型在这两个频段的幅相误差必须小；至于 20 Hz 以上的高频动态，仿真里简化掉也不影响策略，因为闭环本来就把它们滤掉了。反过来，如果仿真在 0.75 Hz 附近的相位差了 10 度，学出来的策略就会整体偏，这种偏差在训练曲线上完全看不出来。定位这件事的办法是做一次频响比对：把真机与仿真的扫频结果画在同一张图上，看策略关心的频段差多少，而不是看全频段的均方误差。</p>
+<h3 id="部署架构三层加一个开关">部署架构：三层加一个开关</h3>
+<p>部署时策略的位置很关键。本章的结构是残余式：PID 不变，策略并联在它旁边，输出相加后再进限幅与安全层。这个结构有三个好处。</p>
+<p>第一，策略失效时系统退化而不是崩溃。权重全零时残余量为零，系统严格等于纯 PID——这一点在训练开始时就已经被验证过（70.4 节的初始化）。所以“清空权重”本身就是一个合法的回退动作，不需要另写一套控制器。</p>
+<p>第二，安全层的位置明确。限速与限幅放在相加之后、进执行器之前，它管的是“最终控制量”，而不是“策略输出”。这样即使策略输出剧烈抖动，执行器看到的仍然是一条平滑的指令。</p>
+<p>第三，训练与部署共用同一份代码。本章的 <code>run_episode()</code> 在训练时被调用 300 次、在评估时被调用 1 次、在部署时逐拍调用，三者走的是同一条特征计算与策略前向路径。这一点非常重要：任何“训练用一套、部署用另一套”的实现，最后都会在特征归一化或符号约定上出错。</p>
+<h3 id="回退判据与切换逻辑">回退判据与切换逻辑</h3>
+<p>回退不能靠人盯屏幕。本章建议用一个滑动窗口的判据：在最近 <span class="math inline">W=20</span> 个回合（或最近 2000 拍）上统计两个量——状态越界率 <span class="math inline">\rho_e</span> 与动作裁剪率 <span class="math inline">\rho_a</span>，当</p>
+<p><span class="math display">
+\rho_e&gt;\rho_e^{\max}\quad\text{或}\quad\rho_a&gt;\rho_a^{\max}
+\tag{70-25}
+</span></p>
+<p>时触发回退，其中 <span class="math inline">\rho_e^{\max}=0.10</span>、<span class="math inline">\rho_a^{\max}=0.30</span>。回退动作分两级：一级是把残余量乘 0.5 并冻结学习（降级运行），二级是把残余量置零（完全退回 PID）。一级触发后如果 5 个回合内没有恢复，自动升到二级。</p>
+<p>这两个阈值不是拍脑袋定的。<span class="math inline">\rho_e</span> 取 0.10，对应“一个回合里有 10% 的拍误差超过 <span class="math inline">3E_{\mathrm{ref}}</span>”，这已经比名义工况（约 0）高出一个数量级；<span class="math inline">\rho_a</span> 取 0.30，对应“安全层在三分之一的拍上都在改动指令”，说明策略与安全层已经在互相打架。本章延迟 8 拍那个工况的饱和占比是 28.25%，正好卡在 <span class="math inline">\rho_a</span> 阈值下方——这也说明单看饱和占比不够，必须配合越界率一起看。</p>
+<p>回退还有一个常被忽略的细节：<strong>回退要记录原因</strong>。是越界触发的、裁剪触发的、还是人工触发的；触发时的误差、残余量、特征向量都要落盘。这些记录是下一轮训练最宝贵的样本——它直接告诉你训练分布缺了哪一块。</p>
+<p>恢复条件也要显式定义，否则系统会在“回退—恢复”之间来回跳。本章的做法是：回退之后残余量保持乘 0.5 的降级状态，连续 5 个回合两个指标都回到阈值的一半以下，才允许恢复到 1.0；只要有一次再次越线，计数清零重来。这条“滞回”逻辑看着保守，但它把“每次越线都切”变成“连续恶化才切、持续恢复才回”，切换次数可以压到很低。工程上最怕的不是策略性能差一点，而是它每隔几分钟就切一次，让人不知道该信哪个状态。</p>
+<h3 id="日志与可复现">日志与可复现</h3>
+<p>强化学习的实验极难复现，原因是随机性来源多：环境重置、动作采样、种子初始化、以及多线程求和的顺序。本章的做法是把所有随机性收敛到一个 <code>Generator</code> 上，每次实验只传一个整数种子，其余全部由它派生。这样“同种子同结果”是可以验证的，70.7 节那些标准差才有意义。</p>
+<p>部署阶段要记录的字段比训练阶段少，但更关键：每拍的时间戳、参考值、测量值、PID 输出、残余输出、最终输出、是否被限速、是否被限幅。这八个字段足够复盘任何一次异常。采样率不必等于控制周期——本章建议按 10:1 降采样存储，异常片段再单独开全速记录。</p>
+<p>还有一条：<strong>模型文件要带版本号与训练指纹</strong>。指纹至少包含种子、回合数、超参数集合、以及训练时用的工况集合。没有指纹的模型文件，三个月后没人说得清它是哪一版。</p>
+<p>日志的格式也值得统一。训练日志记的是“每回合的评估值、残余 RMS、探索噪声”，部署日志记的是“每拍的八个字段”，两者字段名对不上，就没法回答“部署后这一段与训练时第 200 回合是不是同一个状态”。本章的做法是让两边的状态量用同一套名字（<span class="math inline">e</span>、<span class="math inline">\dot e</span>、<span class="math inline">\int e</span>、<span class="math inline">r-R_0</span>、<span class="math inline">\dot r</span>），部署日志能直接被训练时的分析脚本读进去。这个统一看着琐碎，实际是把“训练—部署”这条链真正接上的地方；很多项目在这上面吃过亏：模型表现不对，翻日志发现部署侧记录的“误差”是另一套滤波后的值，两边根本不可比。</p>
+<p>最后一条与可复现有关：<strong>同一个结论至少跑两个种子</strong>。本章的单个算例（0.0347 与那六组权重）只用种子 0，因为它要说明的是“这套配置能达到什么”，可复现即可；凡是涉及“哪个更好”“差多少”的比较，都用 3 到 5 个种子，因为那类结论需要统计。这个区分很重要——两种需求对成本的要求差好几倍，混在一起要么浪费机时，要么得出站不住的结论。</p>
+<h3 id="一份可照着抄的落地清单">一份可照着抄的落地清单</h3>
+<p>把上面的内容压成一张清单，按顺序做：</p>
+<ol type="1">
+<li>确认基线 PID 已经调到“能用”——残余学习只能锦上添花，不能救一个不稳定的基线。</li>
+<li>写 <code>run_episode()</code>，确保训练、评估、部署三条路径共用它。</li>
+<li>定残余上限 <span class="math inline">U_{\mathrm{RL}}</span>，从“基线控制量的 20%”起步，不要超过 50%。</li>
+<li>在名义对象上训练到收敛，记录 5 个种子的均值与标准差。</li>
+<li>做七工况迁移测试，重点看延迟工况——它是残余学习最容易崩的地方。</li>
+<li>加安全层（限幅、限速）与两个计数器，重测一次，确认性能损失在 10% 以内。</li>
+<li>影子运行至少 200 个回合，比对“策略输出”与“若接管会怎样”。</li>
+<li>限幅接管（残余量乘 0.3），观察一周。</li>
+<li>全量接管，同时保留一级/二级回退。</li>
+<li>若长期漂移明显，再开启小学习率、小噪声的继续学习，并且只在不影响生产的时段开。</li>
+</ol>
+<p>这份清单里第 5 步和第 6 步是不能省的。本章的数据已经说明：不做第 5 步，你不会知道延迟失配能把误差放大到 1.9 倍；不做第 6 步，那 1.9 倍就会原样出现在现场。</p>
+<h2 id="优缺点与适用边界">70.11 优缺点与适用边界</h2>
+<h3 id="优点四条经得起检验的">优点：四条经得起检验的</h3>
+<p>第一条是<strong>不需要模型</strong>。本章的策略从头到尾没有用过 <span class="math inline">K(y)=4+6y</span> 这个表达式，它看到的只有误差、误差导数、误差积分和两个参考相位量。精确前馈需要 <span class="math inline">K(y)</span>、需要 <span class="math inline">r&#39;&#39;</span>、需要把延迟对齐到拍，任何一项错了前馈就废了；残余策略不需要这些，它把“模型错在哪”当成要学的东西。</p>
+<p>第二条是<strong>目标可以写成奖励，而不是写成轨迹</strong>。PID 调参时你说不清“我要什么形状”，只能反复试；强化学习里你可以直接写“误差平方加控制量惩罚”，剩下的交给优化。这让“多目标权衡”变成一次扫描（70.7 节的 <span class="math inline">\lambda</span> 表），而不是一轮又一轮的人工试凑。</p>
+<p>第三条是<strong>能与基线并存，风险可控</strong>。残余结构让“策略失效”退化成“回到 PID”，而不是“系统失控”。这一点在第 66 到 69 章的所有方法里是独一份的：前馈加错了会直接引入偏差，ILC 的记忆错了会逐次放大，而残余策略权重清零就等于什么都没发生。</p>
+<p>第四条是<strong>能吸收一部分非线性与时变</strong>。本章对象在工作区间内增益从 13 变到 20，PID 只能用一个折中的增益去覆盖，残余策略却可以按参考位置分段补偿——特征里的 <span class="math inline">(r-R_0)/0.5</span> 就是干这个的。这也是它在增益 <span class="math inline">\pm 20\%</span> 的工况下仍然稳定的原因。</p>
+<h3 id="缺点四条必须写清楚的">缺点：四条必须写清楚的</h3>
+<p>第一条是<strong>样本效率低</strong>。12 个参数、300 个回合、12 万拍才收敛到 0.0347；同样的问题用最小二乘辨识加前馈，几千个点就够。数据效率的差距在两个数量级左右，这是“无模型”的必然代价。</p>
+<p>第二条是<strong>没有稳定性保证</strong>。PID 至少有频域判据，MPC 有递归可行性，ILC 有收敛性条件；强化学习给出的只有“在这批种子上没发散”。本章延迟 8 拍那个 0.2267 就是明证——没有任何理论能事先告诉你它会崩，只能靠迁移测试发现。工程上必须用安全层和回退把这个缺口补上。</p>
+<p>第三条是<strong>奖励设计仍然靠人</strong>。<span class="math inline">\lambda</span> 从 0 扫到 10，RMS 先降后升（0.0743 → 0.0420 → 0.0584），这个非单调性说明“奖励写得对不对”本身就是一个需要实验回答的问题。奖励写错了，算法再对也学不出想要的行为；而“写错了”往往在训练完成后才看得出来。</p>
+<p>第四条是<strong>对时序结构的变化很脆弱</strong>。策略学的是“什么时候推、推多少”，这个“什么时候”是绑在 5 拍延迟上的。延迟一变，时序关系整体错位，学到的补偿反而成了干扰。这一点与 ILC 恰好相反：ILC 的前提是“每遍完全重复”，一旦重复性破坏它也会失效，但它失效的方式是“学不动”，而不是“学反了”。</p>
+<p>还有一条不在上面四条里、但会直接决定项目周期：<strong>成本随状态维数上升得很快</strong>。本章 6 维状态、300 回合、4.7 s；如果把状态加到 12 维（比如再加三拍历史动作、上一拍残余、温度补偿量），参数从 12 个涨到 24 个，按 70.8 节“参数个数 × 10”的经验，回合数至少要翻倍，而且每一维都要单独定尺度、单独想清楚物理含义。真正麻烦的不是算力，而是“特征工程”：每加一维，都要回答“它是不是马尔可夫性缺的那一块”，答错了就是给策略添噪声。这也是为什么本章宁可停在 6 维：不是因为加不上去，而是因为加每一维都要有理由。</p>
+<h3 id="与相邻章节方法的分工">与相邻章节方法的分工</h3>
+<p>表 70-12 把本章与前后几章的方法放在一起，按“前提假设”和“需要什么”两栏对照。这张表的作用不是排名，而是选型：先看你的问题满足哪个前提，再看你手上有什么。</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">方法</th>
+<th style="text-align: left;">章节</th>
+<th style="text-align: left;">前提假设</th>
+<th style="text-align: left;">需要什么</th>
+<th style="text-align: left;">稳定性保证</th>
+<th style="text-align: right;">本章指标</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">PID</td>
+<td style="text-align: left;">44 / 106</td>
+<td style="text-align: left;">无</td>
+<td style="text-align: left;">一次整定</td>
+<td style="text-align: left;">有（频域）</td>
+<td style="text-align: right;">0.1161</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">精确前馈</td>
+<td style="text-align: left;">本章参照</td>
+<td style="text-align: left;">模型准确、延迟已知</td>
+<td style="text-align: left;">完整模型</td>
+<td style="text-align: left;">有（模型准）</td>
+<td style="text-align: right;">0.0293</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">ILC</td>
+<td style="text-align: left;">69</td>
+<td style="text-align: left;">每遍完全重复</td>
+<td style="text-align: left;">重复运行机会</td>
+<td style="text-align: left;">有（收敛条件）</td>
+<td style="text-align: right;">0.0224</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">MPC</td>
+<td style="text-align: left;">58 / 80</td>
+<td style="text-align: left;">模型可用、算力足够</td>
+<td style="text-align: left;">预测模型 + 在线优化</td>
+<td style="text-align: left;">有（递归可行）</td>
+<td style="text-align: right;">见第 58 章</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">残余 RL</td>
+<td style="text-align: left;">70</td>
+<td style="text-align: left;">可仿真、可试错</td>
+<td style="text-align: left;">仿真环境 + 训练时间</td>
+<td style="text-align: left;">无（靠安全层）</td>
+<td style="text-align: right;">0.0347</td>
+</tr>
+</tbody>
+</table>
+<p>表 70-12 最值得注意的一行是 ILC 的 0.0224——它比本章的 0.0347 更好，而且好得不多。这提示一个很实际的选择：<strong>如果任务确实每遍完全重复、而且允许跑几十遍，ILC 更划算</strong>，它不需要仿真环境、不需要 4.8 s 的训练、也不需要安全层。本章选强化学习，是因为它不要求重复性：参考轨迹可以变、初值可以变、对象可以漂，这些 ILC 都处理不了。</p>
+<p>反过来，如果模型准确、延迟已知，精确前馈的 0.0293 也比 0.0347 好，而且是一次算出来的。所以本章的定位很清楚：<strong>在没有准确模型、又不能保证重复性的场合，残余强化学习是那 0.03 到 0.05 这一档里最现实的选择</strong>。</p>
+<p>但选型不能只看 RMS，还要算一笔“你手上已经有什么”的账。ILC 的 0.0224 需要 60 遍真机（每遍 4 s，加上复位与等待，实际是几十分钟到几小时的机时），而且每遍都必须从同一初值、同一轨迹开始；精确前馈的 0.0293 需要一份准确的模型和一次延迟标定；本章的 0.0347 需要一份可信的仿真环境加 4.7 s 训练，但仿真本身要建。三者里最贵的其实不是算法，而是“建仿真”——它通常占项目时间的大头。反过来说，如果仿真已经因为别的目的（比如控制器设计、故障复现）建好了，那残余 RL 的边际成本就几乎为零，这也是它在工业界越来越常见的原因。</p>
+<p>一条实用的组合路线是“模型前馈 + 残余 RL”：先用能拿到的模型算一个粗略前馈（哪怕有 20% 的误差），再让 RL 去补剩下的部分。这个组合比纯 RL 收敛更快，因为基线更接近最优；也比纯前馈更鲁棒，因为残差部分能吸收模型误差。本章为了把机制讲清楚，故意用了“纯 PID + 残余”这个最弱的基线；实际项目里没有理由拒绝一个更好的起点。</p>
+<p>还有一条组合值得单独提：<strong>ILC 与残余 RL 可以叠在一起</strong>。ILC 负责“每遍都重复的那部分”（前馈形状），RL 负责“每遍都不同的那部分”（初值、扰动、负载）。两者叠的位置不同，互不干扰：ILC 的记忆按相位索引，RL 的策略按状态索引；一个在时间轴上学习，一个在状态空间里学习。代价是要维护两套记忆，而且 ILC 的收敛条件仍然要满足，否则它会先失稳；此外还要一个仲裁规则，决定两者同时要求同一个方向时以谁为主。本章没有做这个组合，因为它会让“到底是哪一部分在起作用”变得难以分离，实验设计上不划算；但在工程上，如果任务既重复又有扰动，这是一个合理的终点。</p>
+<p>这也回答了一个常被问到的问题：既然 ILC 的 0.0224 更好，为什么还要 RL？因为两者的适用前提不同。ILC 要求“每遍完全重复”，一旦参考轨迹改了，它要从零再学；RL 的策略是状态的函数，轨迹改了只要状态还在训练分布内，就不用重训。真实产线上“换型”是常态，这个差别往往比 0.01 的 RMS 更重要。</p>
+<h3 id="五条适用判据">五条适用判据</h3>
+<p>把上面的优缺点压成可以打勾的判据，满足四条以上才建议上：</p>
+<ol type="1">
+<li>有一个能跑的仿真环境，单回合耗时在 100 ms 以内；</li>
+<li>允许离线训练，训练成本（本章 4.7 s，复杂对象可能到小时级）可以接受；</li>
+<li>已有一个“能用”的基线控制器，残余量有明确的物理上限；</li>
+<li>任务的评价可以写成逐拍的标量奖励，且不需要满足硬约束；</li>
+<li>部署后允许挂安全层，并且接受“没有稳定性证明”这件事。</li>
+</ol>
+<p>第 3 条是硬门槛。很多失败的案例不是算法不行，而是基线本身就在振荡边缘，残余学习把最后一点裕度吃掉了。第 4 条也很关键：如果任务是“必须满足约束”（比如温度不能超过某个值），那应该用 MPC 而不是强化学习，因为后者只能通过惩罚“希望”它不越界。</p>
+<p>判据不满足时，不是“想办法凑够四条”，而是换方法。第 1 条不满足（没有仿真），可以考虑历史数据回放 + 离线策略评估，或者干脆先做辨识、用模型前馈；第 2 条不满足（训练成本不可接受），说明对象太复杂或回合太长，应该先降维、缩短回合，或者退回 PID 加前馈；第 3 条不满足（基线不稳），任何残余学习都是错的，先把基线整定好；第 4 条不满足（有硬约束），走 MPC；第 5 条不满足（不允许挂安全层），说明这套系统还没准备好接受“没有证明”的控制器。</p>
+<h3 id="一个不该用它的场景">一个不该用它的场景</h3>
+<p>最后给一个反例，避免误用。如果任务是<strong>单次、不可重复、且失败代价极高</strong>的（比如再入飞行器的末制导），不要用本章的方法。它需要几百个回合的试错才能收敛，而这类任务只允许一次机会；它的安全性只能靠事后测试，而这类任务没有“事后”。</p>
+<p>这类任务应该走“高保真模型 + 鲁棒控制 + 大量离线验证”的路线，强化学习最多只能在仿真里做参数整定的辅助工具，不能进回路。分清“可以试错”和“不能试错”，比选哪个算法重要得多。</p>
+<h2 id="python-仿真代码">70.12 Python 仿真代码</h2>
+<h3 id="文件结构与运行方式">文件结构与运行方式</h3>
+<p>本章代码两个文件，都在 <code>book/code/</code> 下：</p>
+<ul>
+<li><code>ch070_sim.py</code>：对象、轨迹、特征、三种策略、单回合、训练循环、安全层、十三组实验；</li>
+<li><code>ch070_figs.py</code>：十张图，从 <code>ch070_sim.py</code> 取函数重算数据。</li>
+</ul>
+<p>运行顺序是先仿真后画图：</p>
+<pre><code>&quot;D:\Anaconda3\envs\py311\python.exe&quot; code\ch070_sim.py
+&quot;D:\Anaconda3\envs\py311\python.exe&quot; code\ch070_figs.py</code></pre>
+<p>第一个脚本依次打印十三段结果：任务与对象、<span class="math inline">\lambda</span> 扫描、<span class="math inline">\alpha_w</span> 扫描、<span class="math inline">\gamma</span> 扫描、<span class="math inline">\sigma_0</span> 扫描、<span class="math inline">n</span> 扫描、三算法对照、训练曲线、离散动作、sim-to-real 七工况、部署后继续学习、安全层、耗时。全量运行 4.7 s，单回合 15.5 ms。第二个脚本要重跑一遍最贵的训练，全量约 267 s，产物是 <code>figs/ch070/</code> 下十个 SVG 与十个同名 PDF。</p>
+<p>依赖关系：<code>ch070_sim.py</code> 只用 NumPy；<code>ch070_figs.py</code> 额外用 <code>styles/plot_styles.py</code> 与 <code>styles/block_styles.py</code>。与第 69 章一样，画图脚本不读仿真脚本的输出，而是自己调 <code>exp_*</code> 函数重算——好处是能单独运行，代价是两处必须共用同一份常量。改参数只改 <code>ch070_sim.py</code> 顶部的常量。</p>
+<p>表 70-13 是仿真脚本里的函数清单，按“从物理到算法”的顺序排。读代码时建议照这个顺序，因为它与本章的叙述顺序一致。</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">函数</th>
+<th style="text-align: left;">作用</th>
+<th style="text-align: left;">对应章节</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><code>gain_at</code> / <code>ref_traj</code> / <code>ref_vel</code></td>
+<td style="text-align: left;">非线性增益与参考轨迹</td>
+<td style="text-align: left;">70.1</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>exact_feedforward</code></td>
+<td style="text-align: left;">精确前馈参照</td>
+<td style="text-align: left;">70.4</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><code>features</code></td>
+<td style="text-align: left;">六维状态特征</td>
+<td style="text-align: left;">70.3</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>Policy</code> / <code>QPolicy</code></td>
+<td style="text-align: left;">线性高斯策略与线性 Q 表</td>
+<td style="text-align: left;">70.2 / 70.5</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><code>Plant</code></td>
+<td style="text-align: left;">对象、延迟、负载、增益缩放</td>
+<td style="text-align: left;">70.3</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>run_episode</code></td>
+<td style="text-align: left;">单回合：采样、学习、安全层</td>
+<td style="text-align: left;">70.3 / 70.9</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><code>_ac_step</code> / <code>_learn_mc</code></td>
+<td style="text-align: left;">Actor-Critic 与 REINFORCE 的更新</td>
+<td style="text-align: left;">70.2</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>train</code> / <code>train_q</code></td>
+<td style="text-align: left;">训练循环与噪声衰减</td>
+<td style="text-align: left;">70.3</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><code>exp_*</code></td>
+<td style="text-align: left;">十三组实验</td>
+<td style="text-align: left;">70.6 至 70.9</td>
+</tr>
+</tbody>
+</table>
+<p>这张表里最值得单独看的是 <code>run_episode</code> 的签名：它把增益、延迟、噪声、初值、负载、<span class="math inline">\lambda</span>、<span class="math inline">n</span>、速率限制八个量做成关键字参数，默认值取自名义工况。八个参数看着多，但正是它们让“改一个工况只改一个关键字”成立，70.9 节那七种工况与两组继续学习实验，全部复用这一个函数。</p>
+<p>复现时建议加一条检查：<code>python -W error::DeprecationWarning code/ch070_sim.py</code>。本章只用 NumPy 的基础接口，正常不应触发弃用警告；一旦触发，说明某个接口在换版本后行为会变，应当先修掉再谈结果是否可复现。完整验证顺序是 <code>check_chapter.py 70</code> → <code>ch070_sim.py</code> → <code>ch070_figs.py</code> → <code>tools/build.py --chapter 70</code>，四步全绿才算这一章可以交付。</p>
+<h3 id="策略与动作">策略与动作</h3>
+<p>策略是一个六维线性均值加高斯探索，两个方法就够：</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> mean(<span class="va">self</span>, phi):</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="bu">float</span>(<span class="va">self</span>.w <span class="op">@</span> phi)</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> act(<span class="va">self</span>, phi, sigma<span class="op">=</span><span class="fl">0.0</span>):</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    mu <span class="op">=</span> <span class="bu">float</span>(np.clip(<span class="va">self</span>.mean(phi), <span class="op">-</span><span class="fl">3.0</span>, <span class="fl">3.0</span>))</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    a <span class="op">=</span> mu <span class="cf">if</span> sigma <span class="op">&lt;=</span> <span class="fl">0.0</span> <span class="cf">else</span> mu <span class="op">+</span> sigma <span class="op">*</span> <span class="va">self</span>.rng.standard_normal()</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="bu">float</span>(np.clip(a, <span class="op">-</span><span class="fl">2.0</span>, <span class="fl">2.0</span>)), mu</span></code></pre></div>
+<p><code>mu</code> 截断在 <span class="math inline">\pm 3</span> 是必须的。线性策略在远离训练分布的状态上会外推得很大，不截断就会一步把残余量顶到限幅，权重随之发散。<code>sigma=0</code> 就是确定性评估，本章所有评估指标都是在这个条件下测的，训练回报从不作为验收依据。</p>
+<p>动作到控制量的映射在 <code>run_episode</code> 里，只有三行：</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> policy.incremental:</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    u_rl_new <span class="op">=</span> <span class="bu">float</span>(np.clip(u_rl <span class="op">+</span> a, <span class="op">-</span>U_RL_MAX, U_RL_MAX))</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="cf">else</span>:</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    u_rl_new <span class="op">=</span> U_RL_MAX <span class="op">*</span> <span class="bu">float</span>(np.clip(a, <span class="op">-</span><span class="fl">1.0</span>, <span class="fl">1.0</span>))</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> rate_max <span class="kw">is</span> <span class="kw">not</span> <span class="va">None</span>:</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    u_rl_new <span class="op">=</span> u_rl <span class="op">+</span> <span class="bu">float</span>(np.clip(u_rl_new <span class="op">-</span> u_rl, <span class="op">-</span>rate_max, rate_max))</span></code></pre></div>
+<p><code>incremental</code> 是为 70.9 节那处对照实验留的开关，正式算例走 <code>else</code> 分支——绝对动作。安全层就是最后两行，<code>rate_max=None</code> 时完全不介入，这样“有无安全层”可以用同一个函数跑出来，避免两套代码带来的口径差异。</p>
+<h3 id="一拍里发生了什么">一拍里发生了什么</h3>
+<p>把 <code>run_episode</code> 的主循环抽掉记录语句，剩下的就是本章的全部物理：</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>y_meas <span class="op">=</span> plant.x1 <span class="op">+</span> noise <span class="op">*</span> rng.standard_normal()</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>e <span class="op">=</span> r_ref[k] <span class="op">-</span> y_meas</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>dy_f <span class="op">+=</span> (TS <span class="op">/</span> (TAU_RATE <span class="op">+</span> TS)) <span class="op">*</span> ((y_meas <span class="op">-</span> y_prev) <span class="op">/</span> TS <span class="op">-</span> dy_f)</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>y_prev <span class="op">=</span> y_meas</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>ie <span class="op">=</span> <span class="bu">float</span>(np.clip(ie <span class="op">+</span> e <span class="op">*</span> TS, <span class="op">-</span><span class="fl">0.5</span>, <span class="fl">0.5</span>))</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>phi <span class="op">=</span> features(e, <span class="op">-</span>dy_f, ie, r_ref[k], rd_ref[k])</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>a, mu <span class="op">=</span> policy.act(phi, sigma)</span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>u_rl <span class="op">=</span> ...</span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>u_pid <span class="op">=</span> kp <span class="op">*</span> e <span class="op">+</span> ki <span class="op">*</span> ie <span class="op">-</span> kd <span class="op">*</span> dy_f</span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>u_cmd <span class="op">=</span> <span class="bu">float</span>(np.clip(u_pid <span class="op">+</span> u_rl, UMIN, UMAX))</span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>rew <span class="op">=</span> R_SCALE <span class="op">*</span> (<span class="op">-</span>(e <span class="op">/</span> E_REF) <span class="op">**</span> <span class="dv">2</span> <span class="op">-</span> lam <span class="op">*</span> a <span class="op">*</span> a)</span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>plant.step(u_cmd)</span></code></pre></div>
+<p>五处细节与本章结论直接相关。第一，微分作用在测量值上并经过 <code>TAU_RATE=0.03</code> 的低通，与第 67、69 章同口径；特征里的误差导数取 <code>-dy_f</code>，因为 <span class="math inline">\dot e=-\dot y+\dot r</span>，而 <span class="math inline">\dot r</span> 已经作为独立特征进去了。第二，积分项截断在 <span class="math inline">\pm 0.5</span>，对应 PID 输出的物理上限，防止长时间偏差把积分撑爆。第三，残余量在相加<strong>之前</strong>就限幅，<code>u_pid+u_rl</code> 之后再受执行器限幅，两级限幅的位置不能换。第四，奖励乘了 <code>R_SCALE=0.01</code>，它只改学习率的有效刻度，不改变最优策略，作用是把 <span class="math inline">10^2</span> 量级的误差平方压到与学习率匹配的范围。第五，<code>plant.step()</code> 里延迟用列表 <code>append</code>+<code>pop(0)</code> 实现，子步积分在延迟之后。</p>
+<h3 id="更新一行-td一行策略">更新：一行 TD、一行策略</h3>
+<p>Actor-Critic 的核心是 <code>_ac_step</code>，去掉裁剪与归一化后是两行：</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>delta <span class="op">=</span> G <span class="op">-</span> policy.value(phi0)          <span class="co"># n 步回报减基线</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>policy.v <span class="op">+=</span> policy.alpha_v <span class="op">*</span> delta <span class="op">*</span> phi0 <span class="op">/</span> norm</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>policy.w <span class="op">+=</span> policy.alpha_w <span class="op">*</span> adv <span class="op">*</span> ((a0 <span class="op">-</span> mu0) <span class="op">/</span> sigma) <span class="op">*</span> phi0 <span class="op">/</span> norm</span></code></pre></div>
+<p><code>G</code> 是 <span class="math inline">n</span> 步回报加末端自举，<code>adv</code> 是 <code>delta</code> 按滑动标准差归一化后裁剪到 <span class="math inline">\pm 5</span> 的结果，<code>norm</code> 是 <span class="math inline">\lVert\varphi\rVert^2+1</span>。这三个处理分别对应三件事：归一化让不同量纲的特征共享一个学习率，裁剪防止个别大 TD 误差把权重打飞，NLMS 分母让更新幅度与特征幅值无关。REINFORCE 的 <code>_learn_mc</code> 结构相同，只是把 <code>G</code> 换成整回合的折扣回报、把基线换成整回合最小二乘拟合。</p>
+<p>Q 学习更短，在循环里就地更新：</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>target <span class="op">=</span> rew <span class="op">+</span> policy.gamma <span class="op">*</span> <span class="bu">float</span>(np.<span class="bu">max</span>(policy.q <span class="op">@</span> phi_n))</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>td <span class="op">=</span> <span class="bu">float</span>(np.clip(target <span class="op">-</span> <span class="bu">float</span>(policy.q[k] <span class="op">@</span> phi), <span class="op">-</span><span class="fl">10.0</span>, <span class="fl">10.0</span>))</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>policy.q[k] <span class="op">+=</span> policy.alpha_w <span class="op">*</span> td <span class="op">*</span> phi <span class="op">/</span> (<span class="bu">float</span>(phi <span class="op">@</span> phi) <span class="op">+</span> <span class="fl">1.0</span>)</span></code></pre></div>
+<p><code>policy.q</code> 是 <span class="math inline">5\times 6</span> 的表，五个动作各六个权重，这就是 70.5 节说的“30 个参数”。</p>
+<h3 id="改参数时注意三件事">改参数时注意三件事</h3>
+<p>第一，<strong>只改顶部常量，不要改函数体</strong>。<code>N_EP</code>、<code>ALPHA_W</code>、<code>SIGMA0</code>、<code>LAMBDA_U</code> 这些都在文件头，<code>exp_*</code> 函数默认引用它们。中途改常量会让前面打印的数字与后面画出的图对不上，而这类不一致最难查。</p>
+<p>第二，<strong>种子要显式传</strong>。<code>train()</code> 的 <code>seed</code> 同时决定策略初始化与动作采样（内部用 <code>seed+1000</code> 派生环境随机数），所以“同种子同结果”成立。不要依赖全局 <code>np.random</code>，否则并行跑扫描时会互相污染。</p>
+<p>第三，<strong>评估与训练要分开</strong>。<code>train()</code> 每 10 回合调一次 <code>run_episode(..., sigma=0.0)</code> 记评估值，训练回合里则是带噪声的。如果为了省时间把评估也加上噪声，曲线会虚高 30% 以上，且随噪声衰减自然下降，看起来像“一直在学”。</p>
+<p>最后说明一处取舍：本章没有用任何深度学习框架，策略与值函数都是 NumPy 数组。这不是为了简化，而是为了让“12 个参数”这件事看得见——一旦换成两层网络，参数量变成几百，70.7 节那些“参数个数 × 10”的经验就没法验证，学生也说不清到底在调什么。等这一套跑通、结论吃透，再换网络不迟。</p>
+<p>还有一件容易被跳过的事：<strong>把一次运行的指纹记下来</strong>。种子、回合数、六个旋钮、评估 RMS，五行字写进日志，比任何“我记得当时是……”都可靠。本章的表格都是按这个习惯攒出来的，每跑完一组就抄进表，事后核对时能一眼看出“这行数字是哪次跑的”。只记结果不记配置的后果很具体：两周后你会发现两个表里同一个工况的数字不一样，而谁也说不清哪个对，最后只能把两组都重跑一遍。</p>
+
+<nav class="footnav"><a href="ch069.html">← 上一章</a><a href="index.html">返回目录</a><a href="ch071.html">下一章 →</a></nav>
+</body>
+</html>

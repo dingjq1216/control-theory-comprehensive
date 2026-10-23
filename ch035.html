@@ -1,0 +1,1254 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="zh-CN" xml:lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>第 35 章　博弈论与多智能体强化学习 · 控制大综合</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    span.underline{text-decoration: underline;}
+    div.column{display: inline-block; vertical-align: top; width: 50%;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    ul.task-list{list-style: none;}
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+  <link rel="stylesheet" href="assets/book.css" />
+  <script src="assets/katex/katex.min.js"></script>
+  <script>document.addEventListener("DOMContentLoaded", function () {
+   var mathElements = document.getElementsByClassName("math");
+   var macros = [];
+   for (var i = 0; i < mathElements.length; i++) {
+    var texText = mathElements[i].firstChild;
+    if (mathElements[i].tagName == "SPAN") {
+     katex.render(texText.data, mathElements[i], {
+      displayMode: mathElements[i].classList.contains('display'),
+      throwOnError: false,
+      macros: macros,
+      fleqn: false
+     });
+  }}});
+  </script>
+  <link rel="stylesheet" href="assets/katex/katex.min.css" />
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+  <link rel="stylesheet" href="assets/site.css" />
+</head>
+<body>
+<nav class="topnav"><a class="home" href="index.html">目录</a><span class="pos">035 / 115</span><span class="pager"><a href="ch034.html">上一章</a><a href="ch036.html">下一章</a></span></nav>
+
+<nav id="TOC" role="doc-toc">
+<ul>
+<li><a href="#第35章-博弈论与多智能体强化学习">第35章 博弈论与多智能体强化学习</a>
+<ul>
+<li><a href="#动机与要解决的问题">35.1 动机与要解决的问题</a></li>
+<li><a href="#定义与数学基础">35.2 定义与数学基础</a></li>
+<li><a href="#推导与性质">35.3 推导与性质</a></li>
+<li><a href="#离散对应与数值实现">35.4 离散对应与数值实现</a></li>
+<li><a href="#工程含义与适用边界">35.5 工程含义与适用边界</a></li>
+<li><a href="#仿真与验证">35.6 仿真与验证</a></li>
+<li><a href="#小结与常见错误">35.7 小结与常见错误</a></li>
+</ul></li>
+</ul>
+</nav>
+<h1 id="第35章-博弈论与多智能体强化学习">第35章 博弈论与多智能体强化学习</h1>
+<p>上一章的一致性协议有一个隐含前提：<strong>所有个体想要的是同一件事</strong>。四台 AGV 保持同一个队形、八个节点收敛到同一个平均值，目标函数是共同的，冲突只存在于“信息传递得够不够快”。真实系统很少这么和气：两台机组争同一段输电容量、四台 AGV 争同一个充电桩、两支车队在同一路口抢通行权——<strong>每个人的最优，合起来未必是大家的最优；甚至“每个人都做了对自己最有利的事”这件事本身，就会把系统推到一个谁都不想要的位置。</strong></p>
+<p>这一章要回答的是：<strong>当个体的目标彼此冲突时，系统会停在哪里、为什么会停在那里、以及能不能把它推到更好的地方。</strong></p>
+<h2 id="动机与要解决的问题">35.1 动机与要解决的问题</h2>
+<h3 id="从目标一致到目标冲突">35.1.1 从“目标一致”到“目标冲突”</h3>
+<p>第 34 章的所有结论都建立在同一个矩阵 <span class="math inline">L</span> 上：一致性协议把状态投影到 <span class="math inline">\mathbf{1}</span> 方向，剩下的分量被指数衰减。<strong>这套机制对“目标冲突”完全无效</strong>，因为冲突不在“不一致”里，而在“每个个体对什么好有不同定义”里。</p>
+<p>最直观的例子是囚徒困境。两个智能体各有两个动作，收益矩阵取</p>
+<p><span class="math display">
+A=\begin{bmatrix}3&amp;0\\5&amp;1\end{bmatrix},\qquad B=A^{\top}
+</span></p>
+<p>行玩家选“合作 C”或“背叛 D”，列玩家同理。<strong>无论对方选什么，背叛都比合作多拿 2</strong>（对方合作时 <span class="math inline">5&gt;3</span>，对方背叛时 <span class="math inline">1&gt;0</span>）——背叛是严格占优策略。于是唯一的纳什均衡是 (D,D)，双方各得 1；而 (C,C) 双方各得 3。<strong>均衡点不是帕累托最优点，甚至差了三倍。</strong></p>
+<p>这个结构在工程里到处都是：</p>
+<ul>
+<li><strong>两台并联运行的机组</strong>：都希望自己少出力、让对方多出力，因为出力有磨损成本；结果总出力不足，频率掉下去，两台都被迫加出力，磨损反而更大。</li>
+<li><strong>四台 AGV 争一个充电桩</strong>：每台都希望自己先充、别人等着；结果四台同时驶向充电桩，在窄巷道里互相堵住，谁都到不了。</li>
+<li><strong>两个车间共用一套除尘设备</strong>：都希望对方开、自己省电；结果两边都不开，环保超标后被同时限产。</li>
+</ul>
+<p><strong>“每个人都在做对自己最有利的事”这句话，在目标冲突的场合不但不能保证全局最优，反而可能保证全局最差。</strong> 这不是道德问题，是结构问题：收益矩阵的形状决定了均衡的位置，而个体只能看到自己那一行。</p>
+<h3 id="三个必须回答的定量问题">35.1.2 三个必须回答的定量问题</h3>
+<p>把“冲突”形式化之后，工程上要回答的还是三个问题，与第 34 章一一对应，但内容全变了。</p>
+<p><strong>第一，系统会停在哪里？</strong> 这是均衡的存在性与位置问题。第 34 章停在哪由 <span class="math inline">\lambda_2</span> 和初值决定（一致值等于初值均值），本章停在哪由收益结构决定。<strong>要能算出均衡，而不只是“仿真跑一跑看看停在哪”。</strong></p>
+<p><strong>第二，会不会停下来？</strong> 这是动力学的收敛性问题。第 34 章有 <span class="math inline">\rho=1-\varepsilon\lambda_2&lt;1</span> 的硬保证；本章没有这样的保证——最佳响应可能循环、复制者动力学可能走闭轨、两个同时学习的智能体可能永远互相追逐。<strong>“不收敛”在本章是常态而不是异常。</strong></p>
+<p><strong>第三，停下来之后好不好？</strong> 这是效率问题。纳什均衡只保证“没有人愿意单方面偏离”，完全不保证“大家满意”。E1 会给两个数：囚徒困境的均衡福利只有最优的 <span class="math inline">1/3</span>，猎鹿博弈则取决于落到哪个均衡（<span class="math inline">6/8</span> 或 <span class="math inline">8/8</span>）。<strong>工程上真正要优化的是第三个问题，而它恰恰是博弈论本身给不出答案的那一个。</strong></p>
+<p>三个问题的关系是递进的：<strong>算不出均衡，就谈不上收敛；不谈收敛，“好不好”就没有意义。</strong> 但反过来，<strong>只算均衡、只看收敛，会把一个糟糕的均衡当成设计成功</strong>——这是本章后面反复要防的错误。</p>
+<h3 id="一个统一的框架玩家动作收益信息">35.1.3 一个统一的框架：玩家、动作、收益、信息</h3>
+<p>任何多决策主体的问题都可以写成四要素：<strong>玩家集合 <span class="math inline">\mathcal{N}=\{1,\dots,n\}</span>、动作集 <span class="math inline">\{\mathcal{A}_i\}</span>、收益函数 <span class="math inline">\{J_i\}</span>、信息结构 <span class="math inline">\mathcal{I}</span>。</strong> 四要素里任何一个变了，解法就完全不同：</p>
+<ul>
+<li>收益是<strong>共同</strong>的（<span class="math inline">J_1=\cdots=J_n</span>），问题退化成第 34 章的分布式优化，一致性加梯度就够；</li>
+<li>收益<strong>相反</strong>（<span class="math inline">J_1=-J_2</span>），是零和博弈，鞍点存在，可以用极小极大；</li>
+<li>收益<strong>部分重叠</strong>，是一般和博弈，只能求纳什均衡，而且可能不唯一；</li>
+<li>动作<strong>连续可微</strong>且收益是光滑的，可以用梯度类方法；动作是离散的，只能枚举或采样。</li>
+</ul>
+<p>表 35-1 把这四要素与工程语言对齐。</p>
+<p>表 35-1　博弈四要素与工程对象的对应</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">要素</th>
+<th style="text-align: left;">数学写法</th>
+<th style="text-align: left;">工程对象</th>
+<th style="text-align: left;">常见的建模错误</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">玩家</td>
+<td style="text-align: left;"><span class="math inline">\mathcal{N}</span></td>
+<td style="text-align: left;">机组、AGV、车间、微网</td>
+<td style="text-align: left;">把“一个控制器管多个执行器”拆成多个玩家</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">动作</td>
+<td style="text-align: left;"><span class="math inline">a_i\in\mathcal{A}_i</span></td>
+<td style="text-align: left;">出力设定值、路径选择、开关</td>
+<td style="text-align: left;">动作集里混入连续量与离散量</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">收益</td>
+<td style="text-align: left;"><span class="math inline">J_i(a_i,a_{-i})</span></td>
+<td style="text-align: left;">成本、收益、磨损、延误</td>
+<td style="text-align: left;">用全局目标替代个体目标</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">信息</td>
+<td style="text-align: left;"><span class="math inline">\mathcal{I}_i</span></td>
+<td style="text-align: left;">邻居广播、集中调度、历史</td>
+<td style="text-align: left;">假设所有人都知道别人的收益</td>
+</tr>
+</tbody>
+</table>
+<p><strong>第三列里最后一行最容易出错：</strong> 一旦用全局目标替代个体目标，冲突就被抹掉了，算出来的“均衡”其实是第 34 章的一致值。<strong>博弈建模的第一步不是写收益函数，而是确认“谁在为自己的什么负责”。</strong></p>
+<h3 id="与第-34-章与经典控制的接口">35.1.4 与第 34 章、与经典控制的接口</h3>
+<p>三处接口必须说清，否则读者会把两章的方法混用。</p>
+<p><strong>接口一：一致性是博弈的一个特例。</strong> 当所有个体的收益都是“与他人偏差的平方”时，纳什均衡恰好是一致值。这一点在 §35.3.1 会给出证明。<strong>所以第 34 章不是被推翻，而是被包含：它处理的是“收益完全一致”这一条退化边界。</strong></p>
+<p><strong>接口二：分布式优化是“合作博弈”。</strong> 第 30、34 章的 DGD 与 ADMM 最小化的是<strong>同一个</strong>全局目标，个体只是分工不同；本章的个体各有各的目标。<strong>合作博弈可以用势函数或价格机制化成分布式优化，非合作博弈不行</strong>——这是两条路的分水岭，§35.3.4 讲势博弈时会用到。</p>
+<p><strong>接口三：单智能体 RL 是 <span class="math inline">n=1</span> 的退化情形。</strong> 第 33 章的收敛性结论都建立在“环境平稳”上；本章把其他学习者放进环境里，平稳性立刻破掉。<strong>这不是“多了一个智能体”的小改动，而是把 MDP 变成了随机博弈，Bellman 算子的时变性是结构性的</strong>（§35.3.6）。</p>
+<p>与经典控制的接口则更微妙：<strong>PID 调的是“给定目标下的跟踪”，博弈调的是“目标本身怎么定”</strong>。多台机组的下垂控制、AGV 的路权分配，本质上都是“先把目标谈好，再让 PID 去执行”。<strong>把这两层混在一起调，是现场最常见的失败模式之一</strong>（§35.5.2）。</p>
+<h3 id="本章的走法">35.1.5 本章的走法</h3>
+<p>§35.2 建立博弈的语言：收益矩阵、最优反应、纳什均衡、混合策略、效率与均衡选择，并给出随机博弈这个 MARL 的标准框架；§35.3 从“纳什均衡是最优反应的不动点”出发，依次推出最佳响应流、复制者动力学、势博弈、独立 Q 学习、非平稳性、信用分配、中心化评论家与约束博弈；§35.4 讲回合与步的对应、探索、经验回放、参数共享与最小实现；§35.5 讲什么时候该用博弈、怎么与第 34 章的一致性协议拼接、三个现场与七种不该用的场合；§35.6 用六组实验把每条结论变成可复现的数；§35.7 收成一页纸选型与十条错误。</p>
+<p>一句话核心先放在这里：<strong>博弈论告诉你“系统会停在哪”，多智能体学习告诉你“怎么把它推到那里”，而工程要回答的第三个问题——“那里值不值得停”——两边都不管，必须自己算。</strong></p>
+<h3 id="一个贯穿全章的例子">35.1.6 一个贯穿全章的例子</h3>
+<p>沿用第 34 章的四台 AGV，只改一件事：<strong>车间的充电桩只有一个，四台车都要充电。</strong></p>
+<p><strong>设定</strong>：四台 AGV 在 <span class="math inline">40\ \text{m}\times20\ \text{m}</span> 车间里搬运料箱，电量低于 30% 时必须去充电；充电桩位于窄巷道尽头，同一时刻只能停一台车，充一次 20 min。<strong>每台车的收益</strong>：早充完早接单，收益高；排队等待不产生收益；但如果四台同时挤进窄巷道，会互相堵死，全部延误。</p>
+<p>用四要素写出来：玩家是 4 台车；动作是“现在去 / 再等一个任务周期 / 去备用慢充桩”；收益是“本班次完成的搬运量减去等待与堵车损失”；信息是“自己知道自己的电量与位置，只知道别人的大概位置”（不完全信息）。</p>
+<p><strong>这个例子与第 34 章的差别，正好是本章要讲的全部内容：</strong></p>
+<ul>
+<li>第 34 章问“四台车能不能保持菱形队形”——答案是能，而且有闭式的收敛时间；</li>
+<li>本章问“四台车会不会同时冲向充电桩”——答案是会，而且这个结果对每台车都是理性的；</li>
+<li>第 34 章的最优是唯一的（队形），本章的最优不唯一（谁先充都行，只要别同时去）；</li>
+<li>第 34 章的失败模式是“收敛太慢”，本章的失败模式是“收敛到一个所有人都难受的点，而且谁都不想单独改变”。</li>
+</ul>
+<p><strong>把这两个问题放在同一台车上，就能看清“协作”与“博弈”的分界：队形问题里，别人的成功就是我的成功；充电问题里，别人先充就是我多等。</strong> 本章后面每讲一个概念，都会回到这个充电桩。</p>
+<h2 id="定义与数学基础">35.2 定义与数学基础</h2>
+<h3 id="收益矩阵把冲突写成一张表">35.2.1 收益矩阵：把冲突写成一张表</h3>
+<p>两人、每人两个动作的博弈可以用一张 <span class="math inline">2\times2</span> 的表写尽。表里每个格子放两个数，前一个是行玩家的收益，后一个是列玩家的收益。图 35-1 画了两个标准例子。</p>
+<figure>
+<img src="figs/ch035/fig_035_01_games.svg" alt="图 35-1　两个 2×2 博弈的收益矩阵与纳什均衡（红框）" /><figcaption aria-hidden="true">图 35-1　两个 2×2 博弈的收益矩阵与纳什均衡（红框）</figcaption>
+</figure>
+<p>左图是囚徒困境：<span class="math inline">A=\begin{bmatrix}3&amp;0\\5&amp;1\end{bmatrix}</span>，<span class="math inline">B=A^{\top}</span>。右图是猎鹿博弈：<span class="math inline">A=\begin{bmatrix}4&amp;0\\3&amp;3\end{bmatrix}</span>，<span class="math inline">B=A^{\top}</span>。两个矩阵只差几个数，结论天差地别——<strong>这正是博弈论最反直觉的地方：结构由数字的形状决定，不由叙事的复杂度决定。</strong></p>
+<p>一般地，<span class="math inline">n</span> 人博弈记作 <span class="math inline">\mathcal{G}=\langle\mathcal{N},\{\mathcal{A}_i\},\{J_i\}\rangle</span>，其中 <span class="math inline">J_i:\mathcal{A}_1\times\cdots\times\mathcal{A}_n\to\mathbb{R}</span>。<strong>注意 <span class="math inline">J_i</span> 的下标：每个人有自己的收益函数，但它的定义域是所有人的联合动作。</strong> 这就是“耦合”的来源——我的收益取决于你做什么，而你的收益也取决于我做什么。</p>
+<p>若收益可以写成“自己动作的函数 + 别人动作的函数之和”，即</p>
+<p><span class="math display">
+J_i(a_i,a_{-i})=f_i(a_i)+\sum_{j\neq i}g_{ij}(a_j)
+</span></p>
+<p>则各玩家的决策互不影响，博弈退化成 <span class="math inline">n</span> 个独立的单智能体问题。<strong>工程上应当先检查这个可分离性：能分离就不要用博弈论，因为博弈论的所有麻烦（多重均衡、不收敛、信用分配）都来自不可分离的那一项。</strong></p>
+<h3 id="占优最优反应与纳什均衡">35.2.2 占优、最优反应与纳什均衡</h3>
+<p>三个概念层层递进。</p>
+<p><strong>占优</strong>：若对任意 <span class="math inline">a_{-i}</span> 都有 <span class="math inline">J_i(a_i&#39;,a_{-i})\ge J_i(a_i&#39;&#39;,a_{-i})</span>（且至少一处严格），称 <span class="math inline">a_i&#39;</span> 弱占优 <span class="math inline">a_i&#39;&#39;</span>；若处处严格，称严格占优。<strong>严格占优的动作可以被无条件删除</strong>，这是唯一不需要知道别人会怎么做就能做的决策。</p>
+<p><strong>最优反应</strong>：给定别人的动作 <span class="math inline">a_{-i}</span>，我的最优反应集是</p>
+<p><span class="math display">
+\mathrm{BR}_i(a_{-i})=\arg\max_{a_i\in\mathcal{A}_i}J_i(a_i,a_{-i}) \tag{35-1}
+</span></p>
+<p><strong>纳什均衡</strong>：联合动作 <span class="math inline">a^\star=(a_1^\star,\dots,a_n^\star)</span> 满足</p>
+<p><span class="math display">
+a_i^\star\in\mathrm{BR}_i(a_{-i}^\star),\qquad \forall i\in\mathcal{N} \tag{35-2}
+</span></p>
+<p>一句话：<strong>没有人能通过单方面改变自己的动作而变得更好。</strong> 注意“单方面”三个字——纳什均衡允许“大家一起改会更好”，只是没有任何一个人有动力单独先动。<strong>这正是它作为“稳定点”的含义，也是它作为“最优点”的失效之处。</strong></p>
+<p>囚徒困境里，(D,D) 是唯一纳什均衡：给定对方 D，我选 D 得 1、选 C 得 0；给定对方 C，我选 D 得 5、选 C 得 3。<strong>而 (C,C) 虽然双方都更好，却不是均衡——因为任何一方单独改成 D 都能从 3 涨到 5。</strong> 这个“单独偏离有利”就是均衡的检验，也是它无法阻止集体变差的根源。</p>
+<h3 id="混合策略随机化不是犹豫是必需">35.2.3 混合策略：随机化不是犹豫，是必需</h3>
+<p>有些博弈没有纯策略均衡，比如石头剪刀布：给定对方出石头，我出布最好；给定对方出布，我出剪刀最好；给定对方出剪刀，我出石头最好。<strong>任何确定性策略都会被针对。</strong></p>
+<p>于是允许玩家按概率分布选动作。设玩家 <span class="math inline">i</span> 的混合策略为 <span class="math inline">p_i\in\Delta(\mathcal{A}_i)</span>，期望收益是</p>
+<p><span class="math display">
+U_i(p_i,p_{-i})=\sum_{a\in\mathcal{A}}p(a)\,J_i(a),\qquad p(a)=\prod_{j\in\mathcal{N}}p_j(a_j) \tag{35-3}
+</span></p>
+<p><strong>混合纳什均衡</strong>的定义与纯策略一致，只是把“动作”换成“分布”。它有一个非常实用的等价判据：<strong>在均衡处，凡是进入支撑集（概率大于零）的动作，期望收益必须相等；否则玩家会把概率全移到收益高的那个动作上。</strong></p>
+<p>用这条判据算 2×2 对称博弈。设对手以概率 <span class="math inline">q</span> 选动作 0，我在两个动作间无差异：</p>
+<p><span class="math display">
+q\,a+(1-q)\,b=q\,c+(1-q)\,d
+\quad\Longrightarrow\quad
+q=\frac{d-b}{a-b-c+d} \tag{35-4}
+</span></p>
+<p>其中 <span class="math inline">A=\begin{bmatrix}a&amp;b\\c&amp;d\end{bmatrix}</span>。代入猎鹿的 <span class="math inline">A=\begin{bmatrix}4&amp;0\\3&amp;3\end{bmatrix}</span> 得 <span class="math inline">q=3/4</span>；代入囚徒困境的 <span class="math inline">A=\begin{bmatrix}3&amp;0\\5&amp;1\end{bmatrix}</span> 得 <span class="math inline">q=-1</span>。</p>
+<p><strong><span class="math inline">q=-1</span> 这个“解”比 <span class="math inline">q=0.75</span> 更有信息量：它落在单纯形之外，说明囚徒困境没有内点混合均衡，只有那个纯策略的 (D,D)。</strong> 很多初学者算出负数就以为算错了，其实那是“不存在”的正确表达方式——<strong>代数解越界，本身就是一条结论。</strong></p>
+<p>混合策略在工程上的对应物不是“随机数”，而是<strong>时隙化的轮换</strong>：四台 AGV 争充电桩，最优的做法是按固定比例轮流（比如电量最低者优先，权重 3:3:2:1），这在数学上就是一个混合策略，在实现上是一张排班表。<strong>随机化在这里的作用是“让对手无法针对”，代价是“自己也失去了确定性”。</strong></p>
+<h3 id="均衡的存在性与多重性">35.2.4 均衡的存在性与多重性</h3>
+<p>纳什在 1950 年证明：<strong>任何有限博弈（玩家有限、动作有限）至少存在一个混合策略纳什均衡。</strong> 证明用的是 Kakutani 不动点定理，思路只有一句话：把“每个人的最优反应集”拼成一个从单纯形到自身的上半连续凸值映射，不动点就是均衡。</p>
+<p>这个定理给的是<strong>存在性</strong>，不是<strong>唯一性</strong>，更不是<strong>可计算性</strong>。三件事要分开看：</p>
+<p><strong>存在性</strong>：有限博弈必有均衡，所以“找不到均衡”从来不是“不存在”，而是“没找到”。</p>
+<p><strong>多重性</strong>：猎鹿有两个纯均衡加一个混合均衡。<strong>E1 的两个数（福利 6 与 8）说明多重性不是学术细节——落到哪个均衡，效率差 33%。</strong></p>
+<p><strong>可计算性</strong>：两人零和博弈可以用线性规划在多项式时间内解出；一般和博弈的均衡计算是 PPAD 完全问题，<strong>大规模下没有多项式算法，只能靠学习或动力学去逼近。</strong> 这就是 MARL 存在的理由——不是为了“更智能”，而是因为精确求解不可行。</p>
+<h3 id="效率无政府代价与风险占优">35.2.5 效率、无政府代价与风险占优</h3>
+<p>既然均衡可能很糟，就需要一个数来衡量“糟到什么程度”。最常用的是<strong>无政府代价</strong>（price of anarchy）：</p>
+<p><span class="math display">
+\mathrm{PoA}=\frac{\max_{a}\sum_i J_i(a)}{\min_{a^\star\in\mathcal{E}}\sum_i J_i(a^\star)} \tag{35-5}
+</span></p>
+<p>分子是全局最优的福利，分母是<strong>最坏</strong>纳什均衡的福利。E1 算出：囚徒困境 <span class="math inline">\mathrm{PoA}=3</span>（福利 6 对 2），猎鹿 <span class="math inline">\mathrm{PoA}=1.333</span>（福利 8 对 6）。<strong>前者是“理性导致的损失”，后者是“均衡选择导致的损失”——两者的治理手段完全不同。</strong></p>
+<p><strong>均衡选择</strong>是另一个问题：当有多个均衡时，实际会落到哪个？猎鹿给出了一个干净的答案——<strong>风险占优</strong>。比较两个纯均衡处“单边偏离的损失”：</p>
+<ul>
+<li>在 (S,S) 处偏离到 H，损失 <span class="math inline">4-3=1</span>；</li>
+<li>在 (H,H) 处偏离到 S，损失 <span class="math inline">3-0=3</span>。</li>
+</ul>
+<p><strong>(H,H) 的偏离损失更大，说明它更“稳固”，称为风险占优。</strong> 而 (S,S) 的福利更高，称为<strong>收益占优</strong>。<strong>风险占优与收益占优在猎鹿里正好冲突，这就是“安全”与“高效”的经典两难。</strong></p>
+<p>工程含义很直接：<strong>一个高效但脆弱的协作方案（猎鹿），在缺乏信任或沟通时会输给一个低效但稳固的方案（兔子）。</strong> 四台 AGV 的充电排队也是这样：理想方案是“电量最低的先充”，但它要求每台车如实报告电量；一旦有人虚报，方案就崩，最后大家退回到“谁先到谁先充”这个低效但不需要信任的均衡。<strong>要跳出这个陷阱，靠的不是更强的学习算法，而是让“如实报告”成为个体的最优反应</strong>——也就是机制设计，那是博弈论的另一半，本章只在 §35.5.3 提一句。</p>
+<h3 id="从博弈到随机博弈marl-的标准框架">35.2.6 从博弈到随机博弈：MARL 的标准框架</h3>
+<p>静态博弈没有状态，一步定输赢。真实系统有状态演化，于是把博弈“加上时间”：<strong>随机博弈</strong>（Markov game）是一个五元组</p>
+<p><span class="math display">
+\langle\mathcal{N},\mathcal{S},\{\mathcal{A}_i\},P,\{R_i\},\gamma\rangle \tag{35-6}
+</span></p>
+<p>其中 <span class="math inline">P(s&#39;|s,a_1,\dots,a_n)</span> 是联合动作下的转移概率，<span class="math inline">R_i(s,a)</span> 是每个智能体各自的即时奖励。每个智能体的目标是最大化自己的折扣回报：</p>
+<p><span class="math display">
+\pi_i^\star=\arg\max_{\pi_i}\ \mathrm{E}\Big[\sum_{k=0}^{\infty}\gamma^{k}R_i(s_k,a_{1,k},\dots,a_{n,k})\Big] \tag{35-7}
+</span></p>
+<p><strong>两条必须看清的性质：</strong></p>
+<p><strong>其一，<span class="math inline">n=1</span> 时式 (35-7) 退化成标准 MDP</strong>，第 32、33 章的全部结论都回来了。所以随机博弈不是新东西，而是“把别人的策略也放进环境里”。</p>
+<p><strong>其二，<span class="math inline">P</span> 与 <span class="math inline">R_i</span> 都依赖联合动作，而联合动作里含着别人正在更新的策略。</strong> 站在智能体 <span class="math inline">i</span> 的角度，环境是 <span class="math inline">P(s&#39;|s,a_i,a_{-i})</span>，而 <span class="math inline">a_{-i}\sim\pi_{-i}</span> 是<strong>时变的</strong>。<strong>这就是非平稳性，本章后面所有麻烦的根源</strong>（§35.3.6）。</p>
+<p>三种目标结构对应三类算法：<strong>完全合作</strong>（<span class="math inline">R_1=\cdots=R_n</span>，用第 34 章的分布式优化或 CTDE）、<strong>完全竞争</strong>（<span class="math inline">R_1=-R_2</span>，用极小极大）、<strong>混合</strong>（一般和，用纳什学习）。<strong>工程上先确定自己属于哪一类，再谈算法；搞错类别比调错参数严重得多。</strong></p>
+<h3 id="三条求解路线学习动力学优化">35.2.7 三条求解路线：学习、动力学、优化</h3>
+<p>同一个均衡，有三条路子去够它，各有各的适用面。</p>
+<p><strong>学习路线</strong>：把博弈当成环境，每个智能体用 Q 学习或策略梯度更新，靠采样逼近均衡。优点是只依赖采样、能处理大状态空间；缺点是<strong>没有收敛保证</strong>（一般和博弈），且样本效率低。本章 E3、E4 走这条路。</p>
+<p><strong>动力学路线</strong>：假设每个玩家按“最优反应”或“按收益比例调整”更新策略分布，研究这个连续时间系统的轨道。优点是<strong>能画出相图、能算出吸引域</strong>，适合分析与解释；缺点是假设了“玩家会按某个固定规则更新”，与真实学习算法有距离。E2、E6 走这条路。</p>
+<p><strong>优化路线</strong>：把均衡写成变分不等式或互补问题，用优化算法求解。优点是精度高、有收敛率；缺点是<strong>规模一大就算不动</strong>（PPAD 完全）。工程上只在两人零和或小规模场景用。</p>
+<p><strong>三条路线不是竞争关系，而是分工：</strong> 分析用动力学（能画相图）、设计用优化（能给界）、部署用学习（能上规模）。<strong>本章的结构也是这样排的：§35.3 先给动力学与不动点的性质，§35.4 再落到学习算法的实现。</strong></p>
+<h3 id="信息结构与三类博弈">35.2.8 信息结构与三类博弈</h3>
+<p>最后一个基础维度是“谁知道什么”。表 35-2 把它与工程场景对齐。</p>
+<p>表 35-2　信息结构、合作性与工程场景</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">维度</th>
+<th style="text-align: left;">取值</th>
+<th style="text-align: left;">含义</th>
+<th style="text-align: left;">工程场景</th>
+<th style="text-align: left;">主要难点</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">信息</td>
+<td style="text-align: left;">完全</td>
+<td style="text-align: left;">收益与动作全公开</td>
+<td style="text-align: left;">内部结算的机组调度</td>
+<td style="text-align: left;">计算量</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">信息</td>
+<td style="text-align: left;">不完全</td>
+<td style="text-align: left;">各自知道私有信息</td>
+<td style="text-align: left;">车队与充电桩、用户侧响应</td>
+<td style="text-align: left;">机制设计、激励相容</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">合作性</td>
+<td style="text-align: left;">完全合作</td>
+<td style="text-align: left;"><span class="math inline">R_i</span> 相同</td>
+<td style="text-align: left;">编队、协同搬运</td>
+<td style="text-align: left;">信用分配</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">合作性</td>
+<td style="text-align: left;">完全竞争</td>
+<td style="text-align: left;"><span class="math inline">R_i</span> 相反</td>
+<td style="text-align: left;">对抗演练、零和调度</td>
+<td style="text-align: left;">鞍点、震荡</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">合作性</td>
+<td style="text-align: left;">混合</td>
+<td style="text-align: left;">有共同项也有冲突项</td>
+<td style="text-align: left;">共享充电桩、共享路权</td>
+<td style="text-align: left;">均衡选择</td>
+</tr>
+</tbody>
+</table>
+<p><strong>这张表最有用的一列是最后一行“主要难点”：</strong> 完全合作的问题出在“功劳怎么分”（§35.3.7），完全竞争的问题出在“追不上”（§35.3.5），混合的问题出在“停在哪个均衡”（§35.2.5）。<strong>三类问题的解法几乎不重叠，所以建模时把类别定错，后面所有工作都会白做。</strong></p>
+<h3 id="三种等价写法矩阵树网络">35.2.9 三种等价写法：矩阵、树、网络</h3>
+<p>同一个博弈可以写成三种形式，<strong>选哪种形式决定了你能用哪套工具，也决定了你会不会漏掉某类信息。</strong></p>
+<p><strong>其一，矩阵形式（标准式）。</strong> 表 35-1 与图 35-1 用的就是它：行是一个人的动作、列是另一个人的动作，格子里放收益。<strong>它只适合“同时决策”且动作离散可枚举的场合。</strong> 优点是均衡可以逐格检查，缺点是动作一多就爆炸，且完全表达不了“谁先谁后”。</p>
+<p><strong>其二，树形式（扩展式）。</strong> 每个节点是一个决策点，边是动作，叶子是收益。<strong>它表达的是序贯决策</strong>：谁在什么时候知道什么、做过什么。<strong>扩展式里最重要的概念是“信息集”——把“从当事人角度看无法区分”的若干节点圈在一起。</strong> 若一个信息集里包含多个节点，说明当事人不知道自己处在哪一个，这就是<strong>不完全信息</strong>的图形化表达；若所有信息集都是单点，就是完全信息。</p>
+<p><strong>同时决策与序贯决策的差别不是形式上的，是结果上的。</strong> 同一个收益矩阵，“同时出”与“我先看着你出”可以给出完全不同的均衡：石头剪刀布里同时出是各 <span class="math inline">1/3</span>，而“后手能看到先手”则后手必胜。<strong>所以建模时必须回答：现场到底是谁先动、后动的人能看到什么。</strong> 很多“算法不收敛”的现场问题，根子是把序贯当成了同时。</p>
+<p><strong>其三，网络形式。</strong> 每个玩家是图上的一个节点，边表示“谁的收益受谁影响”。<strong>拥塞博弈、一致性、电力市场的分区定价都属于这一类。</strong> 它的价值在于把“交互稀疏”这件事显式画出来：<strong>若图是稀疏的（每个节点只连几个邻居），就可以用局部信息做决策，规模可以做到很大（§35.5.7 的分组正是建立在这张图上）。</strong></p>
+<p>三种形式之间可以互相转换，但转换会丢信息：矩阵转树会丢掉“同时性”（必须人为规定顺序），树转矩阵会丢掉“信息集”（把不对称信息抹平）。<strong>工程上的建议是：先把问题画成树或网络（这两者不会丢信息），再决定要不要压成矩阵去算。</strong></p>
+<h3 id="重复博弈为什么以后还会见面能改变均衡">35.2.10 重复博弈：为什么“以后还会见面”能改变均衡</h3>
+<p>前面所有分析都默认博弈只进行一次。<strong>现场几乎从不如此：AGV 每天都在同一个仓库里相遇，用户每个月都在同一个电价下用电。</strong> 把“一次性”换成“重复”，结论会变，而且变得很有工程价值。</p>
+<p>考虑重复的囚徒困境，单次收益仍是图 35-1 左边那个矩阵（<span class="math inline">T=5</span>、<span class="math inline">R=3</span>、<span class="math inline">P=1</span>、<span class="math inline">S=0</span>）。<strong>一次性时背叛严格占优；但若双方都采用“以牙还牙”（第一回合合作，之后照抄对方上一回合的动作），合作就可以维持。</strong> 条件是比较“背叛一次的收益”与“长期合作的收益”：</p>
+<p><span class="math display">
+\underbrace{T}_{\text{背叛一次}}+\underbrace{\frac{\delta P}{1-\delta}}_{\text{此后永远被罚}}
+\;\le\;
+\underbrace{\frac{R}{1-\delta}}_{\text{一直合作}} ,
+</span></p>
+<p>整理得</p>
+<p><span class="math display">
+\delta\;\ge\;\frac{T-R}{T-P}=\frac{5-3}{5-1}=0.5 .
+</span></p>
+<p><strong>这个 <span class="math inline">\delta</span> 就是“未来的影子”：它越接近 1，说明当事人越看重以后。</strong> <span class="math inline">\delta=0.9</span> 时满足条件，合作可维持；<span class="math inline">\delta=0.4</span> 时不满足，背叛划算。<strong>工程上 <span class="math inline">\delta</span> 可以由“双方继续合作到下一期的概率”折算——设备更换周期长、合同期长、声誉传播快，都会把 <span class="math inline">\delta</span> 抬高。</strong></p>
+<p>三条工程含义：</p>
+<p><strong>其一，一次性交易最容易崩塌。</strong> 若两台车“这辈子只相遇一次”（比如临时调度的外协车辆），那么背叛是理性的，指望学习算法自发形成合作是不现实的。<strong>这时只能靠外部机制（调度员、押金、路权规则），而不是靠“多训几轮”。</strong></p>
+<p><strong>其二，重复会把“非平稳性”变成“可预测的互动”。</strong> 在重复博弈里，对手的策略是对你上一回合动作的函数，于是“非平稳”有了结构——<strong>这正是以牙还牙这类策略能被学到、也能被利用的原因。</strong></p>
+<p><strong>其三，报复循环是重复博弈的副作用。</strong> 以牙还牙在有一次误判（观测噪声导致的“看起来像背叛”）之后会陷入互相报复的死循环。<strong>工程做法是加“宽恕”：以一定概率原谅，或每隔若干回合无条件合作一次。</strong> 这与第 36 章讲的“故障后的恢复策略”是同一个问题。</p>
+<p><strong>民间定理</strong>把这件事推到了极致：只要 <span class="math inline">\delta</span> 足够大，<strong>任何“可行且个人理性”的收益组合都可以作为某个均衡的结果</strong>。这句话的工程含义有点反直觉——<strong>重复博弈里“均衡”几乎不能预测结果，“历史”才能。</strong> 这也从另一个角度印证了 §35.6.5 的实验结论：早期经历决定结局。</p>
+<h3 id="不完全信息当类型是私有的">35.2.11 不完全信息：当“类型”是私有的</h3>
+<p>表 35-2 把信息分成完全与不完全两类，这里把不完全这一类说清。<strong>不完全信息的核心是“类型”：每个人有一个只有自己知道的参数，这个参数影响他的收益。</strong></p>
+<p>四台 AGV 的例子就是典型的：<strong>每台车的电量是私有的。</strong> 电量高的车去充电是浪费，电量低的车不去会趴窝；但“谁电量低”这件事，别人不知道。形式化地写：玩家 <span class="math inline">i</span> 的类型 <span class="math inline">\theta_i\in\Theta_i</span>，收益是 <span class="math inline">J_i(a_i,a_{-i};\theta_i)</span>，类型按先验 <span class="math inline">p(\theta)</span> 抽取。</p>
+<p><strong>贝叶斯纳什均衡</strong>的定义与普通纳什均衡只差一个字：把“给定对方动作”换成“给定对方类型分布下动作的期望”——</p>
+<p><span class="math display">
+a_i\in\arg\max_{a_i&#39;}\ \mathrm{E}_{\theta_{-i}\sim p(\cdot\mid\theta_i)}\big[J_i(a_i&#39;,a_{-i}(\theta_{-i});\theta_i)\big].
+</span></p>
+<p><strong>注意这里出现了“策略是类型的函数”这层结构</strong>：每个人不只选一个动作，而是选一套“什么类型做什么动作”的规则。<strong>这与控制里的“状态反馈”是同一件事——反馈律就是“状态到动作”的映射，只不过这里的“状态”只有自己看得到。</strong></p>
+<p>三条工程含义：</p>
+<p><strong>其一，私有信息决定了必须“报”或“估”。</strong> 系统要么让每台车主动上报电量（可能谎报），要么从行为里估计（可能估错）。<strong>这不是通信问题，是激励问题。</strong></p>
+<p><strong>其二，机制设计在这里的作用最大。</strong> 若上报可以不诚实，就需要设计让“说真话”成为最优的规则（§35.3.14 的拍卖思路）。<strong>最简单的做法是让谎报有代价：低报电量会被立刻安排充电，占用自己的任务时间。</strong></p>
+<p><strong>其三，不知道类型时，均衡会变“软”。</strong> 因为期望收益把不同类型混在一起，同一个动作对“高电量”和“低电量”的最优性不同，均衡往往是一个“按概率分配”的混合结果。<strong>这解释了现场常见的一种现象：同样的策略，在不同车队构成下表现差别很大——因为先验 <span class="math inline">p(\theta)</span> 变了。</strong></p>
+<h2 id="推导与性质">35.3 推导与性质</h2>
+<p>本节从“纳什均衡是最优反应的不动点”这一条出发，把三条路线（动力学、学习、优化）的定量结论逐条推出来。<strong>所有推导只用一个工具：把“单方面偏离”写成一个小小的扰动，看收益差是正还是负。</strong></p>
+<h3 id="纳什均衡就是最优反应的不动点">35.3.1 纳什均衡就是最优反应的不动点</h3>
+<p>把式 (35-1) 与式 (35-2) 拼起来，定义联合最优反应映射</p>
+<p><span class="math display">
+\mathrm{BR}(a)=\mathrm{BR}_1(a_{-1})\times\cdots\times\mathrm{BR}_n(a_{-n}) \tag{35-8}
+</span></p>
+<p>则 <span class="math inline">a^\star</span> 是纳什均衡<strong>当且仅当</strong> <span class="math inline">a^\star\in\mathrm{BR}(a^\star)</span>。这不是同义反复，而是把“均衡”翻译成了“不动点”，于是可以借用整条不动点理论：Brouwer 给存在性，Banach 给唯一性与收敛速度，Kakutani 给集值情形。</p>
+<p><strong>这条等价还顺手解释了一个工程现象：一致性是博弈的退化特例。</strong> 取 <span class="math inline">J_i(\mathbf{x})=-\sum_{j\in\mathcal{N}_i}(x_i-x_j)^2</span>，则</p>
+<p><span class="math display">
+\frac{\partial J_i}{\partial x_i}=-2\sum_{j\in\mathcal{N}_i}(x_i-x_j)=0
+\ \Longrightarrow\
+x_i=\frac{1}{|\mathcal{N}_i|}\sum_{j\in\mathcal{N}_i}x_j \tag{35-9}
+</span></p>
+<p><strong>每个节点都等于邻居的平均值</strong>，这正是第 34 章的一致平衡点。再用一个“最大值原理”就能证明它唯一：取 <span class="math inline">x_i</span> 最大的那个节点，它的邻居平均等于它，所以所有邻居也取最大值；图连通，逐跳传开，全图相等。</p>
+<p><strong>所以“一致性”不是另一种算法，而是“收益函数完全相同、且形式为偏差平方”时纳什均衡的特解。</strong> 一旦收益函数里出现“我多得一点、你就少得一点”的项，式 (35-9) 的那个漂亮结论立刻失效——这就是本章与第 34 章的分界。</p>
+<h3 id="最佳响应流吸引域由混合均衡划开">35.3.2 最佳响应流：吸引域由混合均衡划开</h3>
+<p>假设每个玩家按“看到别人的策略，就把自己的策略往最优反应挪一点”更新。写成连续时间：</p>
+<p><span class="math display">
+\dot p_i=\mathrm{BR}_i(p_{-i})-p_i \tag{35-10}
+</span></p>
+<p>这个系统的平衡点就是纳什均衡（纯的或混合的）。<strong>它的价值不在于“能收敛”——它当然会收敛到某个不动点——而在于“收敛到哪一个”完全由初值决定，而分界线恰好是混合均衡。</strong></p>
+<p>以猎鹿为例。设对手以概率 <span class="math inline">p</span> 选猎鹿 S，则我选 S 的收益是 <span class="math inline">4p</span>，选 H 的收益是 <span class="math inline">3</span>（因为 <span class="math inline">3p+3(1-p)=3</span>，与 <span class="math inline">p</span> 无关）。于是</p>
+<p><span class="math display">
+\mathrm{BR}(p)=
+\begin{cases}
+S, &amp; 4p&gt;3\\
+H, &amp; 4p&lt;3
+\end{cases}
+\quad\Longrightarrow\quad
+\text{分界 }p=\frac{3}{4} \tag{35-11}
+</span></p>
+<p><strong><span class="math inline">3/4</span> 正是 §35.2.3 算出的混合均衡概率。</strong> 这不是巧合：混合均衡的定义就是“在两点之间无差异”，而无差异点正是最佳反应发生跳变的地方。</p>
+<p>E2 从 <span class="math inline">[0,1]</span> 上均匀取 21 个初值跑这条流（步长 0.02，上限 2000 回合），结果是：<strong>只有 5 个初值（<span class="math inline">p&gt;0.75</span>）收敛到猎鹿，16 个收敛到兔子，中位收敛 616 回合。</strong> 具体到几个点：初值 <span class="math inline">0.70</span> 与 <span class="math inline">0.75</span> 都落到兔子，<span class="math inline">0.80</span> 落到猎鹿。</p>
+<p><strong>这两个数的工程含义很不客气：如果“别人会跟我一起选高效方案”这个信念的初值低于 75%，系统就会自己走到低效均衡去，而且走得很慢（616 回合）。</strong> 这与“多沟通就能协调”的直觉相反——<strong>沟通改变的是初值，而初值必须跨过 0.75 这条线才有效。</strong></p>
+<h3 id="复制者动力学收益决定增长率">35.3.3 复制者动力学：收益决定增长率</h3>
+<p>另一条更“生物学”的更新规则是：<strong>收益高于平均的策略，其占比按收益差增长。</strong></p>
+<p><span class="math display">
+\dot x_i=x_i\big(u_i(x)-\bar u(x)\big),\qquad
+u_i=(Ax)_i,\quad \bar u=x^{\top}Ax \tag{35-12}
+</span></p>
+<p>其中 <span class="math inline">x</span> 是策略分布（单纯形上）。它的三条性质值得记住：</p>
+<p><strong>第一，单纯形是不变集。</strong> 因为 <span class="math inline">\sum_i\dot x_i=\bar u-\bar u=0</span>，概率之和恒为 1；且 <span class="math inline">x_i=0</span> 时 <span class="math inline">\dot x_i=0</span>，不会从零变正。</p>
+<p><strong>第二，纳什均衡是它的平衡点，但平衡点不一定是稳定的。</strong> 如果均衡处有“收益等于平均”的策略被赋予正概率，则 <span class="math inline">\dot x=0</span>；但若该均衡是鞍点，微小扰动就会把轨道推走。</p>
+<p><strong>第三，某些博弈存在守恒量，轨道是闭轨。</strong> 石头剪刀布（<span class="math inline">A</span> 反对称）就是一个标准例子。此时 <span class="math inline">\sum_i u_i=x^{\top}A^{\top}\mathbf{1}=0</span>，于是</p>
+<p><span class="math display">
+\frac{d}{dt}\ln(x_1x_2x_3)=\sum_i\big(u_i-\bar u\big)=3\bar u-3\bar u=0
+\ \\Longrightarrow\ x_1x_2x_3=\text{常数} \tag{35-13}
+</span></p>
+<p><strong>乘积守恒 ⇒ 轨道是围绕中心的闭合曲线，永远不收敛到混合均衡。</strong> E2 的数值结果与此一致：周期 <strong>11.512</strong>，而线性化（在中心处取 <span class="math inline">\dot{\delta}=\frac{1}{3}A\delta</span>，<span class="math inline">A</span> 的特征值为 <span class="math inline">0,\pm\mathrm{i}\sqrt{3}</span>）给出的周期是 <span class="math inline">2\pi\sqrt{3}=10.883</span>，<strong>实测比线性化大 5.8%，因为振幅不小、非线性已经起作用</strong>；前 1/6 段与后 1/6 段的峰峰值从 <span class="math inline">0.3628</span> 变到 <span class="math inline">0.3771</span>，<strong>增大 3.9%，这是显式欧拉在闭轨上的数值漂移，不是动力学的真实性质。</strong></p>
+<p><strong>守恒量这件事的工程含义是：零和对抗里没有“收敛”这回事。</strong> 两个势均力敌的对手互相针对，策略会一直在环上转；此时任何“训练到收敛”的判据都会失效，正确的问题是“轨道离均衡有多远”，而不是“什么时候停”。</p>
+<h3 id="势博弈存在一个共同的账本">35.3.4 势博弈：存在一个“共同的账本”</h3>
+<p>有一类博弈，虽然每个人的收益不同，但存在一个全局函数 <span class="math inline">\Phi</span>，使得任何单方面偏离引起的收益变化，恰好等于 <span class="math inline">\Phi</span> 的变化：</p>
+<p><span class="math display">
+J_i(a_i,a_{-i})-J_i(a_i&#39;,a_{-i})=\Phi(a_i,a_{-i})-\Phi(a_i&#39;,a_{-i}),\qquad \forall i \tag{35-14}
+</span></p>
+<p>这样的 <span class="math inline">\Phi</span> 叫<strong>势函数</strong>，这类博弈叫<strong>势博弈</strong>。它的价值在于：<strong>“每个人都想改善自己的收益”与“大家共同把 <span class="math inline">\Phi</span> 往上推”是同一件事</strong>，于是非合作问题可以用合作工具分析。</p>
+<p>最经典的例子是<strong>拥塞博弈</strong>（congestion game）：<span class="math inline">n</span> 个智能体各自选一个资源，选资源 <span class="math inline">r</span> 的代价等于该资源上的总人数 <span class="math inline">l_r</span>。取</p>
+<p><span class="math display">
+\Phi(l)=\sum_{r=1}^{m}\frac{l_r(l_r+1)}{2} \tag{35-15}
+</span></p>
+<p>则某个智能体从资源 <span class="math inline">r</span> 换到 <span class="math inline">r&#39;</span>，<span class="math inline">\Phi</span> 的变化是 <span class="math inline">-l_r+(l_{r&#39;}+1)</span>，正好等于它自己的代价变化。<strong>这就是 Rosenthal 势。</strong></p>
+<p><strong>异步更新必然收敛。</strong> 若每回合只让一个智能体做“严格改善”的切换（代价变小），则 <span class="math inline">\Phi</span> 严格下降；<span class="math inline">\Phi</span> 是非负整数、有下界，所以只能下降有限次，系统必在有限步内停在纯纳什均衡。<strong>这是本章唯一一条“无条件收敛”的结论，条件只有两个：势函数存在、一次只动一个人。</strong></p>
+<p><strong>同步更新没有这个保证。</strong> 所有人同时根据旧状态做最优反应，可能一起冲向同一个空位，下一轮又一起离开。E6 的六个智能体、三个资源给出了很干净的对比（全局最小势 9，即负载 (2,2,2)）：</p>
+<ul>
+<li><strong>异步</strong>：100 个种子全部到达最小势 9，势函数 100/100 单调不增；</li>
+<li><strong>同步</strong>：100 个种子没有一个收敛，末值均值 <span class="math inline">18.320</span>（最坏情况 21，即全部挤在一个资源上），末 50 回合的峰峰值 <span class="math inline">9.0</span>——<strong>系统在“全挤一起”和“全散开”之间来回摆。</strong></li>
+</ul>
+<p><strong>这条结论直接接上第 34 章 §34.4.3 的“同步还是异步”：</strong> 在一致性协议里，同步只是慢一点；在势博弈里，同步可能永远不收敛。<strong>因为一致性是线性系统（有 <span class="math inline">\rho&lt;1</span> 的硬保证），最佳响应是分段常值的非线性系统（没有这样的保证）。</strong></p>
+<h3 id="独立-q-学习什么时候会收敛">35.3.5 独立 Q 学习：什么时候会收敛</h3>
+<p>最朴素的 MARL 算法是让每个智能体把别人当成环境的一部分，各自跑单智能体 Q 学习：</p>
+<p><span class="math display">
+Q_i(a_i)\leftarrow Q_i(a_i)+\alpha\Big[r_i+\gamma\max_{a_i&#39;}Q_i(a_i&#39;)-Q_i(a_i)\Big] \tag{35-16}
+</span></p>
+<p>（无状态、<span class="math inline">\gamma=0</span> 的表格情形，本章实验用的就是这个最简形式。）</p>
+<p><strong>它收敛的条件可以精确说清：</strong></p>
+<p><strong>情形一：有严格占优策略。</strong> 囚徒困境里背叛严格占优，无论对方怎么学，我选 D 都不亏。于是两个学习者的 Q 值各自单调逼近，100 个种子 100 次收敛到 (D,D)。E3 实测 <span class="math inline">Q(D)=1.220</span>、<span class="math inline">Q(C)=0.158</span>——<strong><span class="math inline">Q(D)</span> 不是 1 而是 1.22，因为 <span class="math inline">\varepsilon</span>-贪心让对手偶尔合作，而合作时背叛能拿 5。</strong> 这个“偏差”不是错误，它精确反映了探索带来的收益。</p>
+<p><strong>情形二：有多个纯均衡且都稳定。</strong> 猎鹿的两个纯均衡都是“自洽”的：如果我认为你会选 S，我就选 S；如果我认为你会选 H，我就选 H。学习会锁在其中一个上，<strong>锁在哪个取决于早期探索</strong>。E4 的 100 个种子分裂成 <strong>9 个 (S,S) 与 91 个 (H,H)</strong>。</p>
+<p><strong>为什么是 91 比 9，而不是 50 比 50？</strong> 因为风险占优。落到 (H,H) 需要“双方同时误选 H”这一次事件；落到 (S,S) 需要“双方一直不误选 H”。<strong>任何一次双边误探索都会把系统推向 H，而 H 一旦形成就非常稳固（偏离损失 3 对 1）。</strong> 所以分裂比例不是随机的，它由偏离损失的比值决定方向、由探索率决定幅度。<strong>这也解释了为什么“先跑起来再调”在猎鹿型问题里特别危险：早期的几十个回合就决定了最终落在哪个均衡。</strong></p>
+<p><strong>情形三：一般和博弈，没有保证。</strong> 最典型的是匹配 pennies 这类零和博弈：我变你也变，Q 值互相追逐，<strong>策略在环上转，不收敛到任何纯策略</strong>。教科书上的补救是 WoLF（“输快赢慢”）、PHC（策略爬山）或改用极小极大 Q 学习，代价是<strong>要么收敛到混合均衡但很慢，要么收敛到纯策略但可能被利用</strong>。</p>
+<p><strong>把三种情形压成一句工程判据：先问“有没有占优策略”，再问“有几个稳定均衡”，最后才问“用哪个算法”。</strong> 前两个问题是结构问题，算法改变不了；只有第三个问题才是调参能解决的。</p>
+<h3 id="非平稳性追一个会跑的靶">35.3.6 非平稳性：追一个会跑的靶</h3>
+<p>站在智能体 <span class="math inline">i</span> 的角度，环境转移是 <span class="math inline">P(s&#39;|s,a_i,a_{-i})</span>，而 <span class="math inline">a_{-i}</span> 服从 <span class="math inline">\pi_{-i}(t)</span>。于是它的 Bellman 最优算子<strong>每一步都在变</strong>：</p>
+<p><span class="math display">
+(T_t V)(s)=\max_{a_i}\Big[R_i(s,a_i,\pi_{-i}(t))+\gamma\sum_{s&#39;}P(s&#39;|s,a_i,\pi_{-i}(t))V(s&#39;)\Big] \tag{35-17}
+</span></p>
+<p><strong>式 (35-17) 的下标 <span class="math inline">t</span> 就是非平稳性的全部内容。</strong> 单智能体时 <span class="math inline">T</span> 固定，压缩映射定理保证 <span class="math inline">V_k\to V^\star</span>；现在 <span class="math inline">T_t</span> 每步换一个，<strong>复合映射 <span class="math inline">T_t\circ\cdots\circ T_1</span> 不再是压缩映射，不动点也不存在</strong>。</p>
+<p>用一个一阶估计看清后果。设每一步目标值移动 <span class="math inline">\Delta</span>，学习率 <span class="math inline">\alpha</span>，收缩因子近似 <span class="math inline">1-\alpha(1-\gamma)</span>，则稳态滞后约为</p>
+<p><span class="math display">
+\text{滞后}\ \approx\ \frac{\Delta}{\alpha(1-\gamma)} \tag{35-18}
+</span></p>
+<p><strong>三个因子都在分母上：学习率越小、折扣越接近 1、目标移动越快，滞后越大。</strong> <span class="math inline">\gamma=0.99</span> 时 <span class="math inline">1-\gamma=0.01</span>，同样的目标移动量会把滞后放大 100 倍。<strong>这就是为什么多智能体训练里“把 <span class="math inline">\gamma</span> 调到 0.99 以便看长远”往往适得其反：它同时把非平稳性的代价放大了一个量级。</strong></p>
+<p>三条缓解手段，按代价从低到高：</p>
+<p><strong>其一，让对手变得慢一些。</strong> 轮流更新（一次只训练一个智能体，其余冻结）、或者给对手策略加滞后（用 0.9 倍旧策略 + 0.1 倍新策略）。<strong>这等价于把 <span class="math inline">\Delta</span> 压小，式 (35-18) 直接受益。</strong></p>
+<p><strong>其二，把对手的策略放进观测。</strong> 若智能体能看到对手上一回合的动作或策略参数，非平稳性就从“隐变量”变成“可观测状态”，MDP 假设部分恢复。<strong>代价是观测维度上升，且训练与执行的观测必须一致。</strong></p>
+<p><strong>其三，用中心化评论家。</strong> 训练时让评论家看到所有人的动作（§35.3.8），把“别人的策略”从环境里挪到输入里。<strong>这是 CTDE 的全部动机，也是最有效的一条。</strong></p>
+<h3 id="信用分配全局奖励为什么不够">35.3.7 信用分配：全局奖励为什么不够</h3>
+<p>完全合作时 <span class="math inline">R_1=\cdots=R_n=R</span>。<strong>每个人都收到同一个数，于是每个人都无法判断“这个数里有多少是我的功劳”。</strong></p>
+<p>形式化地说，用全局奖励训练的 <span class="math inline">Q_i(a_i)</span> 估计的是 <span class="math inline">\mathrm{E}[R\mid a_i]</span>，其中期望是对别人的动作取的。它包含了别人的贡献：</p>
+<p><span class="math display">
+Q_i(a_i)=\underbrace{f_i(a_i)}_{\text{我的贡献}}+\underbrace{\mathrm{E}\big[\textstyle\sum_{j\neq i}g_j(a_j)\mid a_i\big]}_{\text{别人的贡献，通常与 }a_i\text{ 无关}} \tag{35-19}
+</span></p>
+<p><strong>只要别人的动作与我的动作独立，第二项就是一个与 <span class="math inline">a_i</span> 无关的常数，会被 <span class="math inline">Q_i(1)-Q_i(0)</span> 差分掉</strong>——这是全局奖励“没有偏差”的一面。<strong>但它的方差不为零：</strong> 采样噪声会全部落进这个常数里，于是“无关的智能体”也会得到一个非零的边际估计。</p>
+<p>E5 把这件事量化了。三人团队、动作各两个，奖励</p>
+<p><span class="math display">
+r=\mathbf{1}[a_1=1]+\mathbf{1}[a_2=1]+2\cdot\mathbf{1}[a_1=a_2=1] \tag{35-20}
+</span></p>
+<p>第三个智能体对奖励毫无影响。按均匀基准算，真实边际是 <span class="math inline">(2.0,2.0,0)</span>。20 个种子、每个 4000 回合的结果：</p>
+<ul>
+<li><strong>全局共享</strong>：边际估计 <span class="math inline">(2.828,2.807,-0.051)</span>，标准差 <span class="math inline">(0.106,0.085,0.184)</span>；</li>
+<li><strong>差分奖励</strong>：<span class="math inline">(2.813,2.798,0.000)</span>，标准差 <span class="math inline">(0.066,0.060,0.000)</span>。</li>
+</ul>
+<p><strong>两个读数：</strong></p>
+<p><strong>第一，差分奖励对无关智能体的信用估计精确为零。</strong> 因为 <span class="math inline">D_i=r-r(a_i\leftarrow 0)</span>，当 <span class="math inline">a_i</span> 根本不影响 <span class="math inline">r</span> 时，<span class="math inline">D_i\equiv0</span>，无论采样多少回合、噪声多大。<strong>这不是“更准”，而是“结构上不可能错”。</strong></p>
+<p><strong>第二，两者对关键智能体的估计都约为 2.8，而不是 2.0，并且两者几乎一样。</strong> 这个 0.8 的差距不是算法误差，而是<strong>基准分布不同</strong>：真实边际按“别人均匀随机”算，而训练时别人按 <span class="math inline">\varepsilon</span>-贪心行动，两个关键智能体倾向于同时选 1（协同项让它们都更愿意选 1）。<strong>Q 的边际是“在行为分布下”的边际，不是反事实边际——这一条在任何信用分配方案里都成立，必须在报告里写清基准。</strong></p>
+<p>工程上的取舍很清楚：<strong>差分奖励需要一次反事实查询</strong>（把某个动作替换成基线再算一次奖励），这要求有模型或可重置的仿真；<strong>全局奖励不需要任何额外查询，代价是无辜的智能体被塞进一堆噪声</strong>。<strong>智能体越多、无关者越多，全局奖励的噪声累积越致命</strong>——因为每个无关者的策略都会按这些噪声更新，几十个回合后就是系统性漂移。</p>
+<h3 id="中心化评论家训练时看全局执行时看局部">35.3.8 中心化评论家：训练时看全局，执行时看局部</h3>
+<p>CTDE（centralized training, decentralized execution）的做法是：<strong>评论家看全局状态与联合动作，演员只看自己的局部观测。</strong></p>
+<p><span class="math display">
+Q_i^{\pi}(s,a_1,\dots,a_n)\ \approx\ \mathrm{E}\big[R_i+\gamma Q_i^{\pi}(s&#39;,a_1&#39;,\dots,a_n&#39;)\big],\qquad
+a_i=\pi_i(o_i) \tag{35-21}
+</span></p>
+<p><strong>它一次解决两个问题：</strong> 对非平稳性，评论家的输入里显式含有别人的动作，环境重新变成平稳的；对信用分配，评论家可以精确算出“我的动作改变了多少”，而不必依赖一个与 <span class="math inline">a_i</span> 无关的常数。</p>
+<p><strong>代价有三条，都要在工程上付：</strong></p>
+<p><strong>其一，评论家的输入维度随智能体数线性增长</strong>，<span class="math inline">n=50</span> 时联合动作空间是 <span class="math inline">|\mathcal{A}|^{50}</span>，网络必须用某种结构（注意力、低秩分解）压住。</p>
+<p><strong>其二，训练与执行的观测不一致。</strong> 演员只看 <span class="math inline">o_i</span>，评论家看全局；一旦训练时的全局信息与执行时的局部观测存在系统性差异（比如仿真里能给全局真值、现场只能给带噪的估计），策略就会在部署时退化。<strong>这是 CTDE 最常见的翻车点，比算法选错更常见。</strong></p>
+<p><strong>其三，评论家本身可能过拟合到“当前对手”。</strong> 对手一变，<span class="math inline">Q_i^\pi</span> 就失效，于是又回到非平稳性——只是把它从“环境层”搬到了“评论家层”。</p>
+<h3 id="约束博弈把安全写进收益还是写进约束">35.3.9 约束博弈：把安全写进收益还是写进约束</h3>
+<p>工程上几乎没有“只最大化收益”的博弈，总有约束：AGV 不能撞、机组不能超温、充电电流不能超限。把这些写成<strong>约束随机博弈</strong>：</p>
+<p><span class="math display">
+\max_{\pi_i}\ \mathrm{E}\Big[\sum_k\gamma^k R_i\Big]
+\quad\text{s.t.}\quad
+\mathrm{E}\Big[\sum_k\gamma^k C_i\Big]\le d_i \tag{35-22}
+</span></p>
+<p>用拉格朗日乘子把它变成无约束问题：</p>
+<p><span class="math display">
+\mathcal{L}_i(\pi_i,\lambda_i)=\mathrm{E}\Big[\sum_k\gamma^k\big(R_i-\lambda_i(C_i-d_i)\big)\Big] \tag{35-23}
+</span></p>
+<p>并在外层更新 <span class="math inline">\lambda_i\leftarrow[\lambda_i+\eta(\mathrm{E}[C_i]-d_i)]_+</span>。<strong>互补松弛条件告诉我们：约束不起作用时 <span class="math inline">\lambda_i=0</span>；起作用时 <span class="math inline">\lambda_i&gt;0</span>，且它等于“多松一点约束值多少收益”的边际价格。</strong></p>
+<p><strong>“写进收益”与“写进约束”是两种不同的安全观，不能混用：</strong></p>
+<ul>
+<li><strong>写进收益</strong>（罚函数）：<span class="math inline">R_i&#39;=R_i-\mu C_i</span>。简单，但<strong>约束违反量与 <span class="math inline">\mu</span> 的关系不透明</strong>，调 <span class="math inline">\mu</span> 就是在“性能”与“安全”之间试凑，而且不同工况下同一个 <span class="math inline">\mu</span> 给出的违反量不同。</li>
+<li><strong>写进约束</strong>（拉格朗日）：能给出“违反量不超过 <span class="math inline">d_i</span>”的明确目标，但<strong>收敛更慢、需要内外两层更新</strong>，且 <span class="math inline">\lambda</span> 的初值与学习率都要整定。</li>
+</ul>
+<p><strong>工程建议：安全底线写进约束（或直接写进动作屏蔽层），性能取舍写进收益。</strong> 第 36 章会给完整的 SIL/HAZOP 框架，本章只到“约束怎么进优化”这一层。</p>
+<h3 id="均衡的细化相关均衡与调度员">35.3.10 均衡的细化：相关均衡与“调度员”</h3>
+<p>纳什均衡要求“每个人都独立随机化”。如果允许一个<strong>第三方信号</strong>（调度员、交通灯、拍卖行）在博弈开始前给每个人发一个私人建议，并要求“知道建议后无人愿意偏离”，得到的就是<strong>相关均衡</strong>。它比纳什均衡弱（每个纳什均衡都是相关均衡），但集合更大，<strong>往往能达到更高的福利</strong>。</p>
+<p>四台 AGV 的充电桩就是一个现成例子：如果有一个调度员按“电量 + 排队长度”发号（“3 号现在去，1 号等 8 min”），四台车照做就没人想偏离——<strong>这是一个相关均衡，而“谁先到谁先充”是一个纳什均衡。</strong> 前者福利更高，但它要求所有车相信调度员、且调度员的建议可执行。</p>
+<p><strong>这条思路的工程价值在于：它把“多智能体协调”从“改算法”变成“改机制”。</strong> 当学习算法在猎鹿型问题里反复落到低效均衡时，最省力的解法往往不是换一个更强的 MARL 算法，而是<strong>加一个信号通道</strong>——哪怕这个通道只传一个二值标志（“本轮谁先走”），也足以把系统推到高效均衡上。</p>
+<h3 id="零和博弈唯一有最优解的一类">35.3.11 零和博弈：唯一有“最优解”的一类</h3>
+<p>在所有博弈里，零和是唯一能给出“确定答案”的一类。它的定义是两人的收益处处相反：</p>
+<p><span class="math display">
+A+A^{\mathsf T}=0 .
+</span></p>
+<p>此时不存在“福利”这个概念——一个人多拿一分，另一个人就少一分，总福利恒为零。<strong>于是“效率”这条评价轴失效，只剩下一条：在对手最坏的情况下，我能保证多少。</strong> 这就是极大极小：</p>
+<p><span class="math display">
+\max_{p}\min_{q}\ p^{\mathsf T}Aq
+\;=\;
+\min_{q}\max_{p}\ p^{\mathsf T}Aq .
+</span></p>
+<p><strong>这个等号是零和博弈的核心定理（极小极大定理），它说的是“先后手不影响结果”。</strong> 左边是“我先亮策略、对手针对我”，右边是“对手先亮、我针对他”，两者相等，于是这个共同值被称为<strong>博弈值</strong> <span class="math inline">v</span>。工程上它的意义很直接：<strong>若你的策略能保证 <span class="math inline">v</span>，你就不需要关心对手到底怎么打。</strong></p>
+<p>零和是<strong>唯一</strong>具有这种性质的一类。一旦收益之和不为常数，极大极小与极小极大一般不等，两个不等式之间的间隙就是“双方可以共同改善的空间”——<strong>这也正是合作与协调能带来收益的原因。</strong></p>
+<p>三个工程含义：</p>
+<p><strong>其一，零和博弈的最优策略通常需要随机化。</strong> 匹配 pennies 里任何确定性策略都会被对手算死，唯一的均衡是各 <span class="math inline">1/2</span>。<strong>这与“随机化等于不专业”的直觉相反：在对抗场合，可预测就是可被利用。</strong></p>
+<p><strong>其二，零和博弈的复制者动力学不收敛到均衡，而是绕圈。</strong> 石头剪刀布就是零和博弈（<span class="math inline">\sum A=0</span>，且 <span class="math inline">A^{\mathsf T}=-A</span>），E2b 的闭轨正是这个事实的数值体现。<strong>所以在零和对抗里，评价指标不该是“收敛到均衡的回合数”，而该是“长期平均收益是否接近博弈值”。</strong></p>
+<p><strong>其三，鲁棒控制是零和博弈的一个特例。</strong> <span class="math inline">H_\infty</span> 设计里“扰动取最坏、控制器取最好”就是一个极大极小问题，扰动是那个“玩家”，控制器是另一个。<strong>这条对应关系有实用价值：凡是能写成 <span class="math inline">\max_u\min_w</span> 的问题，都可以借用博弈的直觉去理解——包括“为什么鲁棒设计总是保守”这个老问题（保守性就是博弈值与你实际策略之间的差）。</strong></p>
+<h3 id="从两人到-n-人为什么复杂度突然变坏">35.3.12 从两人到 <span class="math inline">n</span> 人：为什么复杂度突然变坏</h3>
+<p>两人零和可以用线性规划在多项式时间内求解，这是博弈论里少有的“干净”结果。<strong>但只要离开这两个前提中的任何一个，问题就会突然变难。</strong></p>
+<p><strong>两人一般和</strong>：均衡的计算属于 PPAD 类，目前没有已知的多项式时间算法。<strong>这不是“算法还没发明出来”，而是有理论依据的困难性。</strong></p>
+<p><strong><span class="math inline">n</span> 人博弈</strong>：联合动作空间是 <span class="math inline">|\mathcal{A}|^n</span>，纯策略枚举的代价指数增长；即使只做“检查某个组合是不是均衡”，也要对每个玩家检查 <span class="math inline">|\mathcal{A}|</span> 个替代动作，总代价是 <span class="math inline">n|\mathcal{A}|^{n+1}</span>。<strong>六个智能体、每个三个动作，这个数就是 <span class="math inline">6\times3^7=13122</span>——还能算；十个智能体、每个五个动作，就是 <span class="math inline">10\times5^{11}\approx4.9\times10^{8}</span>，已经不适合在线跑了。</strong></p>
+<p>这条复杂度曲线解释了 §35.2.7 那三条路线为什么必须并存：</p>
+<ul>
+<li><strong>能集中算且规模小</strong> → 直接枚举或线性规划，给的是精确均衡，可作为其他方法的基准（E1 就是这么做的）。</li>
+<li><strong>有势结构</strong> → 用异步最佳响应，代价是每回合 <span class="math inline">O(n|\mathcal{A}|)</span>，且必然收敛（E6）。</li>
+<li><strong>规模大且无结构</strong> → 只能分布式学习，代价是失去收敛保证。</li>
+</ul>
+<p><strong>工程上最重要的判断是“我的问题有没有可利用的结构”。</strong> 有势函数（拥塞、路由、电价响应）、有占优策略（安全联锁、明显更优的技术路线）、有可分性（任务互不干扰），这三类结构能把指数问题压成多项式问题。<strong>没有结构又非要精确解，就只能砍规模——这是建模问题，不是算法问题。</strong></p>
+<h3 id="为什么博弈的收敛总比一致性慢">35.3.13 为什么博弈的收敛总比一致性慢</h3>
+<p>第 34 章的一致性算法有明确的速率：误差按 <span class="math inline">\rho^k</span> 下降，<span class="math inline">\rho</span> 由 <span class="math inline">\lambda_2</span> 决定。<strong>本章的博弈动力学没有这种统一速率，原因有三层，逐层加深。</strong></p>
+<p><strong>第一层，分段常值。</strong> 最佳响应的输出只取有限个值，信念靠近分界时，<span class="math inline">\mathrm{BR}</span> 会在两个值之间反复切换。<strong>收敛所需的回合数大致按 <span class="math inline">\ln(1/|p_0-p^\ast|)</span> 增长</strong>，<span class="math inline">p^\ast</span> 是分界。初值离分界越近，等得越久——E2 的中位收敛回合 616 远大于 <span class="math inline">\alpha=0.02</span> 下的“直线距离”估计 148，就是这一层的直接体现。</p>
+<p><strong>第二层，特征值落在虚轴上。</strong> 复制者动力学在内部均衡处线性化，特征值的实部可能为零（石头剪刀布就是这样），于是系统不收敛而是绕圈（E2b 的周期 11.512）。<strong>“不收敛”在这里不是数值问题，是结构问题：系统的守恒量把轨道锁在一条闭曲线上。</strong></p>
+<p><strong>第三层，非平稳性。</strong> 每个智能体的目标都在被别人改写，于是“收敛”这个概念本身要重新定义：不是“参数不再变”，而是“参数进入一个统计稳态”。§35.3.6 的滞后公式 <span class="math inline">\Delta/[\alpha(1-\gamma)]</span> 描述的就是这个稳态的偏移量。</p>
+<p><strong>三层叠加的工程后果是：不能用“跑了多少回合”判断博弈算法是否收敛。</strong> 可靠的判据是三条同时满足——联合动作分布稳定、<span class="math inline">Q</span> 值的滑动均值稳定、以及<strong>换种子重跑得到同一结局</strong>。<strong>前两条只看一条曲线就能骗过自己，第三条骗不过。</strong></p>
+<h3 id="帕累托福利与改规则这条路">35.3.14 帕累托、福利与“改规则”这条路</h3>
+<p>纳什均衡回答“会停在哪”，还有一个问题它不回答：“这个结果还能不能一起变好”。<strong>这就是帕累托最优：如果不存在另一个结果让所有人都至少不差、且至少一人更好，则称该结果帕累托最优。</strong></p>
+<p>囚徒困境的关键事实是：<strong>唯一的纳什均衡 <span class="math inline">(D,D)</span> 不是帕累托最优</strong>，因为 <span class="math inline">(C,C)</span> 让两个人都从 1 涨到 3。<strong>“均衡”与“好”是两套完全独立的判据，这句话说了很多遍，帕累托就是它的严格版本。</strong></p>
+<p>评价福利需要一个标量：</p>
+<p><span class="math display">
+W=\sum_{i=1}^{n}w_iJ_i ,
+</span></p>
+<p>权重 <span class="math inline">w_i</span> 是价值判断，不是客观量。<strong>工程上必须把 <span class="math inline">w_i</span> 写进文档并由业务方确认</strong>（§35.5.8 的第一条）；否则“总福利提高了”这句话在不同权重下可以是完全相反的结论。</p>
+<p><strong>更值得强调的是第三条路：机制设计。</strong> 前面所有方法都在“给定规则下找策略”，而机制设计反过来——<strong>改规则，让自利行为自然导向好结果。</strong> 三个典型手段：</p>
+<ul>
+<li><strong>定价</strong>：给拥挤资源设动态价格，把“抢”变成“付”。拥塞博弈的势函数会随价格改变，最优负载分布也随之改变。</li>
+<li><strong>拍卖</strong>：让需要资源的人报出估值，按规则分配。<strong>好的拍卖规则能让“说真话”成为占优策略</strong>，于是不需要假设对手理性，只需要假设对手不傻。</li>
+<li><strong>路权/令牌</strong>：直接规定“谁先走”，把博弈变成规则执行。<strong>这是最粗暴也最可靠的一种，代价是灵活性差。</strong></li>
+</ul>
+<p><strong>工程顺序应当是：先问规则能不能改，再问策略能不能学。</strong> 改规则通常只需几行代码与一次会议，改算法要几周训练与一轮验证。<strong>而 MARL 领域最常见的过度工程，就是在一条本可以改的规则上，硬训一个策略来适应它。</strong></p>
+<h2 id="离散对应与数值实现">35.4 离散对应与数值实现</h2>
+<p>本节只回答一个工程问题：把前三节写在纸上的连续时间结论搬进代码，哪些地方会悄悄变味。<strong>结论先说：变味的不是公式，是时间基准、样本分布和参数共享这三件事。</strong></p>
+<h3 id="回合步与一次决策">35.4.1 回合、步与“一次决策”</h3>
+<p>最佳响应流 <span class="math inline">\dot p_i=\mathrm{BR}_i(p_{-i})-p_i</span> 在代码里只能写成差分。最直接的离散化是</p>
+<p><span class="math display">
+p_i^{(k+1)}=p_i^{(k)}+\alpha\big(\mathrm{BR}_i(p_{-i}^{(k)})-p_i^{(k)}\big),
+</span></p>
+<p>它就是第 34 章那条一致性迭代的同构形式：<strong><span class="math inline">\alpha</span> 既是步长，也是“信念的遗忘率”</strong>。<span class="math inline">\alpha=1</span> 是“一步到位、完全相信当前最优反应”，<span class="math inline">\alpha=0.02</span> 是“每回合只挪一小步”。E2 用的正是后者，21 个初值跑 2000 回合上限，中位收敛回合 616——<strong>这个 616 不是物理时间，是“迭代次数”，换成秒要乘以决策周期。</strong></p>
+<p>这里有三条纪律，违反任何一条，仿真里漂亮的收敛曲线在现场都不成立。</p>
+<p><strong>其一，决策周期必须与对象的时间常数匹配。</strong> 若 AGV 的决策周期是 1 s，而充电过程的电量变化时间常数是 300 s，那么“一次充电事件”横跨约 300 个决策回合。此时若每回合都给一次“任务完成”奖励，等于把一次性收益摊成了 300 份，<strong>信用分配的时间尺度就被拉长了 300 倍</strong>（§35.3.7 的滞后公式要按这个尺度重算）。</p>
+<p><strong>其二，“同时决策”是一个需要验证的假设。</strong> 独立 Q 学习默认所有人在同一时刻基于同一份信息选动作。现场若是“谁先算完谁先动”，实际是异步更新——<strong>在势博弈里这是好事（§35.3.4），在一致性里这只是慢一点，但在混合博弈里它会改变收敛到的均衡。</strong> 所以建模时必须写清：本系统是同步还是异步。</p>
+<p><strong>其三，回合边界要能被外部事件切断。</strong> 一次充电被人工取消、一次搬运被急停打断，这类事件不能当作“一个正常回合结束”，否则回报的尾部会被截断，学出来的 <span class="math inline">Q</span> 系统性偏低。工程做法是<strong>给截断回合单独打标记，不参与自举</strong>。</p>
+<h3 id="varepsilon-的衰减曲线探索预算怎么花">35.4.2 <span class="math inline">\varepsilon</span> 的衰减曲线：探索预算怎么花</h3>
+<p><span class="math inline">\varepsilon</span>-贪心的两条常用曲线是几何衰减与反比衰减：</p>
+<p><span class="math display">
+\varepsilon_k=\varepsilon_0\rho^k
+\qquad\text{与}\qquad
+\varepsilon_k=\min\Big(1,\frac{c}{k}\Big).
+</span></p>
+<p>几何衰减的<strong>总探索预算</strong>是 <span class="math inline">\sum_k\varepsilon_k=\varepsilon_0/(1-\rho)</span>，这个数才是真正该整定的量。<span class="math inline">\varepsilon_0=1</span>、<span class="math inline">\rho=0.999</span> 意味着总共约 1000 次随机动作；<span class="math inline">\rho=0.99</span> 只有 100 次。<strong>100 次随机动作在 <span class="math inline">|A|^n=16</span> 的联合动作空间里平均每格 6 次，根本不足以让每个人看清别人的策略。</strong></p>
+<p>E4 给出了这条曲线最尖锐的教训：把首回合的联合动作固定成 <span class="math inline">(S,S)</span>，其余回合 <span class="math inline">\varepsilon</span> 取 0.02，800 回合后仍锁在猎鹿均衡；固定成 <span class="math inline">(H,H)</span> 则锁在兔子均衡。<strong>换句话说，第一个回合的那一次随机，其权重超过后面 799 次的全部探索。</strong> 这不是算法缺陷，是“多个均衡 + 贪心更新”的结构性后果——早期的小样本估计一旦分出了胜负，贪心就再也不去检验落后的那个动作。</p>
+<p>由此得到两条可直接落地的规则：</p>
+<ul>
+<li><strong><span class="math inline">\varepsilon</span> 不能降到 0。</strong> 留一个下限 <span class="math inline">\varepsilon_\infty</span>，其量级应与“对手改变策略的频率”可比。对手一个月换一次排班，<span class="math inline">\varepsilon_\infty</span> 取 <span class="math inline">10^{-3}</span> 量级即可；对手每十分钟变一次，取 <span class="math inline">10^{-1}</span>。</li>
+<li><strong>探索要“成组”而不是“逐个体”。</strong> 若四个智能体各自独立地以 <span class="math inline">\varepsilon</span> 随机，联合动作落到“全体同时尝试新策略”的概率是 <span class="math inline">\varepsilon^4</span>，几乎为零；而<strong>协同探索需要的恰恰是这种同步偏离</strong>。工程做法是设一个“探索回合”标志，由调度器统一置位，让所有人在同一回合一起随机。</li>
+</ul>
+<h3 id="经验回放池在非平稳环境里的失效">35.4.3 经验回放池在非平稳环境里的失效</h3>
+<p>单智能体 RL 里，回放池的依据是“样本独立同分布”。多智能体里这个前提直接不成立：<strong>池子里 1000 回合前的样本，对应的是 1000 回合前的对手策略，而那个策略已经不存在了。</strong> 从中均匀采样，等于让评论家去拟合一个“历史对手的混合体”，它既不是当前对手，也不是任何真实对手。</p>
+<p>三种处理，按代价从低到高：</p>
+<p><strong>其一，限制池深。</strong> 取 <span class="math inline">L\lesssim 1/\alpha</span>，<span class="math inline">\alpha</span> 是学习率。<span class="math inline">\alpha=0.1</span> 时池深约 10 回合，<span class="math inline">\alpha=0.001</span> 时约 1000 回合。<strong>这条规则的本质是“样本的有效年龄不能超过参数的有效记忆”</strong>，两者是同一个时间常数。</p>
+<p><strong>其二，按对手版本号分桶。</strong> 每次对手策略更新就打一个版本戳，采样时优先取最近 <span class="math inline">m</span> 个版本。代价是要维护版本元数据，好处是能把“旧数据”显式降权而不是隐式污染。</p>
+<p><strong>其三，重要性重加权。</strong> 用当前策略与采样策略的概率比修正，理论上最干净，但<strong>在策略差异大时方差爆炸</strong>，且需要知道采样时的行为策略——现场往往拿不到。</p>
+<p><strong>实践中九成的情况用第一条就够了。</strong> 池深是最容易被忽视、也最容易改对的一个超参数。</p>
+<h3 id="参数共享与角色条件">35.4.4 参数共享与角色条件</h3>
+<p><span class="math inline">n</span> 个同构智能体各训一套网络，样本量就被摊薄了 <span class="math inline">n</span> 倍。标准做法是<strong>共享一套参数 <span class="math inline">Q_\theta</span>，把角色信息拼进输入</strong>：</p>
+<p><span class="math display">
+Q_\theta(o_i,\ \mathrm{onehot}(i),\ a_i).
+</span></p>
+<p>好处是样本量放大 <span class="math inline">n</span> 倍、且天然满足“同构个体应当有同构策略”这一先验。坏处是<strong>同构假设不成立时会把差异抹平</strong>：载重 200 kg 与 800 kg 的车、电量 90% 与 15% 的车，若只靠编号区分，网络学不到“电量低就该优先充电”这种连续量上的差异——因为编号是无序的。</p>
+<p>折中是<strong>共享主干 + 每体一个小输出头</strong>，并把真正有物理意义的连续量（电量、载重、任务紧急度）作为输入特征显式给进去。<strong>判别标准很简单：如果两个智能体的最优策略差异来自某个可测量的连续量，这个量就必须进输入，而不能指望网络从编号里猜出来。</strong></p>
+<h3 id="一个最小实现">35.4.5 一个最小实现</h3>
+<p>下面这段是 §35.3.5 那个 2×2 独立 Q 学习的最小可运行版本，<span class="math inline">\gamma=0</span>、<span class="math inline">\eta=0.1</span>、<span class="math inline">\varepsilon=0.1</span>、2000 回合。<strong>它的价值不在性能，而在于“全部机制都在十几行里看得见”</strong>——没有网络、没有回放池、没有目标网络，任何异常都只能来自博弈本身。</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 两个智能体、各两个动作的独立 Q 学习（无状态，gamma=0）</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>A <span class="op">=</span> np.array([[<span class="fl">3.0</span>, <span class="fl">0.0</span>], [<span class="fl">5.0</span>, <span class="fl">1.0</span>]])   <span class="co"># 行玩家收益矩阵，列玩家取转置</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>rng <span class="op">=</span> np.random.default_rng(<span class="dv">0</span>)</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>Q1 <span class="op">=</span> np.zeros(<span class="dv">2</span>)</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>Q2 <span class="op">=</span> np.zeros(<span class="dv">2</span>)</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>eta, eps <span class="op">=</span> <span class="fl">0.1</span>, <span class="fl">0.1</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> t <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">2000</span>):</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>    a1 <span class="op">=</span> <span class="bu">int</span>(rng.integers(<span class="dv">2</span>)) <span class="cf">if</span> rng.random() <span class="op">&lt;</span> eps <span class="cf">else</span> <span class="bu">int</span>(np.argmax(Q1))</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>    a2 <span class="op">=</span> <span class="bu">int</span>(rng.integers(<span class="dv">2</span>)) <span class="cf">if</span> rng.random() <span class="op">&lt;</span> eps <span class="cf">else</span> <span class="bu">int</span>(np.argmax(Q2))</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>    Q1[a1] <span class="op">+=</span> eta <span class="op">*</span> (A[a1, a2] <span class="op">-</span> Q1[a1])          <span class="co"># 各自的收益，不含对方的学习</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>    Q2[a2] <span class="op">+=</span> eta <span class="op">*</span> (A[a2, a1] <span class="op">-</span> Q2[a2])</span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(np.<span class="bu">round</span>(Q1, <span class="dv">3</span>), np.<span class="bu">round</span>(Q2, <span class="dv">3</span>))            <span class="co"># 实测 [0.086 1.939] [0.033 1.003]</span></span></code></pre></div>
+<p>跑出来两个人都选背叛（下标 1），与占优策略的解析结论一致。<strong>注意两件事：其一，<span class="math inline">Q_1</span> 与 <span class="math inline">Q_2</span> 的数值并不相等</strong>（1.939 对 1.003），因为二者看到的是不同动作序列上的样本，这正是“独立学习”与“共享评论家”的差别所在；<strong>其二，这段代码里没有任何一行处理“对方在学习”</strong>，非平稳性不是被解决了，而是被“占优策略恰好存在”这一特例绕过了。把收益矩阵换成猎鹿，同一段代码就会分裂成两种结局（§35.6.5）。</p>
+<h3 id="什么时候必须离开表格">35.4.6 什么时候必须离开表格</h3>
+<p>表格型的前提是“每个状态—动作对都能被访问足够多次”。规模估算是</p>
+<p><span class="math display">
+\underbrace{|\mathcal{S}|}_{\text{状态}}\times\underbrace{|\mathcal{A}|^{n}}_{\text{联合动作}},
+</span></p>
+<p>四台 AGV、每台三个动作，联合动作 81 个；若再给每台 20 档电量、20 档位置，状态数就到 <span class="math inline">400^4\approx2.6\times10^{10}</span>——<strong>表格型在这里不是“慢”，是“永远填不满”</strong>。</p>
+<p>经验阈值：<strong>总格数超过 <span class="math inline">10^5\sim10^6</span> 就必须上函数逼近。</strong> 而一旦上网络，会多出三个新问题：</p>
+<ul>
+<li><strong>输入里给不给别人的动作。</strong> 给了就是中心化评论家（§35.3.8），训练与执行不一致；不给就是纯局部，收敛性更弱。</li>
+<li><strong>输出维数随 <span class="math inline">n</span> 增长。</strong> 每体一个头是 <span class="math inline">n</span> 个头，共享头是一个头加角色输入，二者的样本效率差 <span class="math inline">n</span> 倍。</li>
+<li><strong>目标在漂移。</strong> 单智能体的自举目标只依赖自己的参数，多智能体还依赖别人的参数，<strong>目标网络的“固定若干步”在别人同时更新时并不能真正固定目标</strong>——这是 §35.3.6 那条滞后公式在深度版本里的对应物。</li>
+</ul>
+<h3 id="四个数值细节每一个都能让结论反过来">35.4.7 四个数值细节，每一个都能让结论反过来</h3>
+<p>这一段列的是“代码写错一个字、结论反一个方向”的地方。<strong>它们的共同点是：都不会报错，只会悄悄改变结果。</strong></p>
+<p><strong>其一，平局怎么破。</strong> <code>np.argmax</code> 在多个动作价值相等时返回下标最小的那一个，这是一个<strong>系统性偏置</strong>：所有智能体都偏好动作 0，于是系统会稳定在“大家都选 0”这个并非均衡的状态上。<strong>正确做法是随机破平局</strong>：</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>best <span class="op">=</span> np.flatnonzero(Q <span class="op">==</span> Q.<span class="bu">max</span>())</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>a <span class="op">=</span> <span class="bu">int</span>(rng.choice(best))</span></code></pre></div>
+<p>E6 的异步更新里，如果平局时随便动，势函数就会上升（本该“不动”）；代码里显式写了 <code>if load[cur] &gt; load.min()</code> 才搬迁，正是为了守住单调性。<strong>这条在势博弈里是定理级的要求，不是优化。</strong></p>
+<p><strong>其二，<span class="math inline">Q</span> 的初值。</strong> 全零初值在无状态博弈里足够，因为收益有正有负、零值不代表任何偏向。<strong>但在所有收益都为正的任务里，零初值是“悲观”的</strong>——没试过的动作看上去不如已试过的，探索会被压制。<strong>标准解法是乐观初值：把 <span class="math inline">Q</span> 初始化到一个高于任何真实收益的值，逼着智能体把每个动作都试一遍。</strong> 这条技巧在多智能体里更有效，因为它能同时打破“大家都不敢第一个尝试”的僵局。</p>
+<p><strong>其三，浮点比较的边界。</strong> E2 里初值恰好取 <span class="math inline">0.75</span> 时，<span class="math inline">4p=3</span> 与 <span class="math inline">3</span> 严格相等，代码写的是 <code>4.0*p &gt; 3.0</code>，于是判给了兔子。<strong>这一个等号决定了那 1 个初值的归属，也决定了“5 比 16”还是“6 比 15”。</strong> 工程上的纪律是：<strong>凡是拿浮点数跟阈值比，必须先把“边界归谁”写进文档</strong>，而不是让它由 <code>&gt;</code> 还是 <code>&gt;=</code> 决定。</p>
+<p><strong>其四，随机数流。</strong> 每个种子必须用独立的 <code>np.random.default_rng(SEED + k)</code>，不能共享一个全局随机状态。<strong>共享状态会让“第 37 个种子的结果”依赖于前面 36 个种子跑了多少步</strong>，于是“换种子重跑”这件事就失去了意义——而它恰恰是 §35.3.13 里唯一骗不过自己的收敛判据。</p>
+<h3 id="从仿真到现场的标定清单">35.4.8 从仿真到现场的标定清单</h3>
+<p>仿真里成立的结论，到现场要过三道关。<strong>这三道关都不是算法问题，但任何一道没过，算法都会显得“失效”。</strong></p>
+<p><strong>第一道，时间基准。</strong> 仿真的“一回合”对应现场的多少秒？控制周期抖动多大？<strong>检查方法：在现场日志里量一次“决策到执行”的延迟分布，把 95 分位填进模型。</strong> 若这个延迟超过决策周期的 30%，“同时决策”的假设就已经破了（§35.4.1）。</p>
+<p><strong>第二道，动作延迟与丢失。</strong> 下发的动作可能被上层安全逻辑拦截、可能因通信超时未执行。<strong>仿真里“动作一定被执行”是最不真实的假设。</strong> 检查方法：统计现场“下发 ≠ 执行”的比例；若超过 1%，必须在仿真里显式建模这个丢失过程，否则学出来的策略会系统性高估自己的控制力。</p>
+<p><strong>第三道，观测噪声与延迟。</strong> 局部观测（电量、占用、队列）都带噪声与滞后。<strong>检查方法：把仿真观测加上与现场同量级的噪声重跑一遍，看均衡分布是否改变。</strong> 若 9 比 91 变成了 50 比 50，说明策略对观测精度极度敏感，此时先修感知，而不是调算法。</p>
+<p><strong>三道关的顺序不能颠倒。</strong> 时间基准不对，后面所有比较都没有意义；动作丢失不建模，策略会学成“赌运气”；观测噪声不测，就不知道性能下降该归咎于谁。<strong>这三条也正是第 36 章 SIL 验证的输入。</strong></p>
+<h2 id="工程含义与适用边界">35.5 工程含义与适用边界</h2>
+<h3 id="例子的收口四台-agv-怎么真正落地">35.5.1 例子的收口：四台 AGV 怎么真正落地</h3>
+<p>回到 §35.1.6 那个贯穿全章的例子。把前面所有结论压成一份可实施的设计，它是这样的：</p>
+<p><strong>观测。</strong> 每台车看三样：自身电量 <span class="math inline">b_i</span>、各充电桩的占用状态 <span class="math inline">o</span>（0/1 向量）、当前排队长度 <span class="math inline">q</span>。<strong>不给别人的电量</strong>——现场也拿不到，硬给会造成训练执行不一致。</p>
+<p><strong>动作。</strong> 三个：去充电、继续任务、原地等待。</p>
+<p><strong>收益。</strong> 任务完成给正、等待给负、电量耗尽给一个大负。注意这已经把“安全”和“性能”混在了一个标量里；<strong>更稳妥的写法是 §35.3.9 的约束形式：电量耗尽写进约束，任务完成率写进收益。</strong></p>
+<p><strong>结构。</strong> 训练时用中心化评论家（能看全局电量与任务队列），执行时演员只看三样局部观测。<strong>这是 CTDE 的标准用法，也是它唯一的用法——评论家只在训练期存在。</strong></p>
+<p><strong>信号通道。</strong> 加一个由调度器广播的二值标志“本轮允许抢占”。有了它，四台车不必靠学习去自发形成排队秩序，§35.3.10 的相关均衡直接可用。<strong>这一条往往比换算法更能提升现场表现，且实现成本几乎为零。</strong></p>
+<p><strong>安全层。</strong> 电量低于 15% 时，动作屏蔽层直接把“继续任务”和“等待”置为不可选。<strong>这是硬约束，不交给学习去发现。</strong> 学习只负责在安全集合内部做取舍。</p>
+<p>这份设计里，<strong>博弈论提供的是“该建哪些量”（玩家、动作、收益、信息），MARL 提供的是“怎么在不知道别人策略时把这些量学好”，安全层提供的是“学错了也不会出事”。</strong> 三者缺一，系统都不能上线。</p>
+<h3 id="七种不该用博弈与-marl-的场合">35.5.2 七种不该用博弈与 MARL 的场合</h3>
+<p>这一节是“劝退清单”。<strong>本章的方法有明确的能力边界，越界使用比不用更糟。</strong></p>
+<p><strong>其一，目标完全一致且可分解。</strong> 若总收益就是各自收益之和、且彼此不耦合，直接分解成 <span class="math inline">n</span> 个单智能体问题，用第 32 章的方法即可。<strong>上 MARL 只会引入非平稳性这个新麻烦。</strong></p>
+<p><strong>其二，只有一个真正的决策者。</strong> 其他人按固定规则行事（比如按时刻表运行的产线设备），那它们是<strong>环境</strong>，不是玩家。把环境当玩家建模，会得到一个“对手永远不改变策略”的退化博弈，白算。</p>
+<p><strong>其三，对手策略静态且已知。</strong> 这时问题是<strong>优化</strong>而不是博弈：已知对手策略，最优反应就是一个标准的最优控制问题，用 MPC 更直接（见第 58、80 章）。</p>
+<p><strong>其四，通信可靠且能集中求解。</strong> 如果所有信息能实时汇总到一个中心，且计算量允许，集中式求解给的解严格不劣于任何分布式均衡。<strong>分布式 Nash 均衡的意义，恰恰在于“没人能集中算”这个前提。</strong></p>
+<p><strong>其五，硬实时且安全关键。</strong> 决策周期在 10 ms 量级、失败不可逆的场合（伺服、急停、联锁），用规则与屏蔽层，不要用学出来的策略。<strong>神经网络的推理时间可以确定，但它输出的动作不可以预期。</strong></p>
+<p><strong>其六，数据量不足以辨识收益。</strong> 收益函数 <span class="math inline">J_i</span> 是要设计的，不是天上掉的。若连“一次碰撞的代价相当于多少次正常搬运”都说不清，学出来的策略只是在拟合设计者的随意选择。</p>
+<p><strong>其七，失败代价不可逆且未做验证。</strong> 上现场前必须先做软件在环（SIL）与硬件在环（HIL），第 36 章会给完整流程。<strong>没有 SIL 记录的 MARL 系统不应该被允许接管任何执行机构。</strong></p>
+<h3 id="三个现场">35.5.3 三个现场</h3>
+<p><strong>仓储 AGV 集群。</strong> 几十台车共享若干充电桩与若干窄通道。典型的混合博弈：搬运任务上完全合作，通道与充电桩上竞争。<strong>主要难点是均衡选择</strong>——系统很容易稳定在“都挤在近端通道”这种低效均衡上。有效手段是加调度信号（§35.3.10）与通道级动作屏蔽，而不是加深网络。</p>
+<p><strong>微电网与用户侧响应。</strong> 每个用户根据自己的电价与负荷决定用电时段，电价由总负荷决定——<strong>这是一个典型的势博弈</strong>（§35.3.4），因为每个人的成本只通过“总负荷”这一条通道耦合。势博弈的好处是可预测：异步更新必然收敛，所以工程上应当<strong>主动设计成异步</strong>（分时公布价格、错峰决策），而不是让大家同时响应。</p>
+<p><strong>无信号路口。</strong> 每辆车是玩家，动作是“通过/等待”，收益包含通行时间与碰撞风险。这是<strong>完全竞争 + 安全硬约束</strong>的组合。实践中的做法几乎都不是纯学习：先用规则定义“路权”，学习只在路权模糊的地带（比如四车同时到达）做仲裁。</p>
+<h3 id="调试顺序先看联合动作直方图">35.5.4 调试顺序：先看联合动作直方图</h3>
+<p>多智能体系统出问题时，最常见的错误是<strong>直接去调网络超参数</strong>。正确的顺序是四步，前两步不需要改任何代码：</p>
+<p><strong>第一步，画联合动作直方图。</strong> <span class="math inline">|A|^n</span> 个格子，统计稳态下每个联合动作的频率。<strong>若频率集中在少数几格，说明系统已经落到某个均衡；若均匀铺开，说明根本没收敛；若在两个极端之间跳，说明在震荡。</strong> 这三种形态对应完全不同的病因。</p>
+<p><strong>第二步，看 <span class="math inline">Q</span> 值（或评论家输出）随回合的曲线。</strong> 单调抬升后走平是健康；持续抖动说明学习率相对非平稳性太快；两条曲线交叉反复说明在追一个会跑的靶（§35.3.6）。</p>
+<p><strong>第三步，扫种子与初值。</strong> 换 100 个随机种子重跑，统计落到各均衡的比例。<strong>若比例接近 50:50，说明系统处在“均衡选择由噪声决定”的状态，这时任何单次实验的结论都不可信。</strong></p>
+<p><strong>第四步，才是调超参数。</strong> 而且优先调 <span class="math inline">\varepsilon</span> 下限与池深，最后才动网络结构。</p>
+<h3 id="与相邻章的接口">35.5.5 与相邻章的接口</h3>
+<ul>
+<li><strong>与第 32 章</strong>：单智能体 RL 是多智能体的退化情形（<span class="math inline">n=1</span>）。本章所有“独立学习”的结论，在 <span class="math inline">n=1</span> 时都应退化为第 32 章的标准结论；若不退化，说明推导有问题。</li>
+<li><strong>与第 34 章</strong>：一致性是收益为 <span class="math inline">J_i=-\sum_j(x_i-x_j)^2</span> 的退化博弈（式 35-9）。<strong>一致性的强结论（<span class="math inline">\rho&lt;1</span> 的硬保证）来自线性结构，不能指望搬到一般博弈上。</strong></li>
+<li><strong>与第 36 章</strong>：本章只讲到“约束怎么进优化”（§35.3.9），完整的 SIL/HAZOP、失效模式与安全完整性等级在第 36 章。</li>
+<li><strong>与第 58、80 章</strong>：能集中求解时，MPC 比 MARL 更可靠；MARL 的用武之地是“模型未知 + 无法集中”。<strong>选型时先问“能不能集中算”，再问“要不要学”。</strong></li>
+</ul>
+<h3 id="收益设计的四条经验">35.5.6 收益设计的四条经验</h3>
+<p>博弈论的教科书把收益当作给定，工程上它恰恰是最需要设计的东西。<strong>四条经验，按重要性排序。</strong></p>
+<p><strong>其一，把所有收益折算到同一个可比的量上。</strong> 时间、钱、或者“等效任务数”。<strong>折算率本身就是一种价值判断，必须由业务方拍板并写进文档，不能由算法工程师在代码里随手定。</strong> 一台车等待 1 min 值多少、一次碰撞值多少，这两个数决定了整个系统的行为倾向。</p>
+<p><strong>其二，各玩家的收益尺度要相当。</strong> 若玩家 1 的收益在 <span class="math inline">[0,1000]</span>、玩家 2 的在 <span class="math inline">[0,1]</span>，共享评论家或共享网络会被大尺度那一方主导，小尺度那一方学不动。<strong>做法是归一化到同一量级，或者用各自的优势函数（advantage）而不是原始回报来更新。</strong></p>
+<p><strong>其三，稀疏奖励要加“势能塑形”，而不是随便加中间奖励。</strong> 事件型奖励（完成一次搬运）天然稀疏。塑形项若随便写，会改变最优策略——<strong>这是奖励塑形的经典陷阱。</strong> 安全的做法是用势函数差：</p>
+<p><span class="math display">
+r&#39;_t=r_t+\gamma\Phi(s_{t+1})-\Phi(s_t),
+</span></p>
+<p><strong>它在数学上保证最优策略不变，只改变学习速度。</strong> 直觉是“离目标越近给一点正号，但这份正号在到达目标时会被扣回去”。</p>
+<p><strong>其四，罚项不要用大数。</strong> 用 <span class="math inline">-10^6</span> 表示“禁止”，会让价值函数的尺度彻底失衡，学习率必须跟着改，且不同罚项之间无法比较。<strong>硬约束交给屏蔽层（§35.5.1），软约束用与收益同量级的罚项。</strong></p>
+<h3 id="规模上去以后分层与分组">35.5.7 规模上去以后：分层与分组</h3>
+<p>四个智能体的联合动作空间是 <span class="math inline">3^4=81</span>，四十个就是 <span class="math inline">3^{40}\approx1.2\times10^{19}</span>。<strong>规模一大，“所有人一起学”这条路线在样本量上先垮掉，而不是在算法上垮掉。</strong></p>
+<p>两条被验证过的降维路径：</p>
+<p><strong>其一，分层。</strong> 把系统拆成调度层与执行层。<strong>调度层是博弈</strong>（谁去做哪个任务、谁先充电），玩家是“组”而不是“个体”，规模从 40 降到 5；<strong>执行层是单智能体或规则</strong>（怎么走到目标点），用第 32 章的方法或直接 PID。<strong>关键是两层的决策周期差一个量级以上</strong>——调度 10 s 一次、执行 100 ms 一次，这样上层的结果对下层就是“缓慢变化的参数”，不会互相打架。</p>
+<p><strong>其二，分组。</strong> 按物理邻接或任务相关性把 <span class="math inline">n</span> 个智能体分成若干簇，<strong>簇内用一致性（第 34 章）或完全合作 MARL，簇间用博弈</strong>。这样每个子问题的规模都是可控的，代价是<strong>忽略了跨簇的耦合</strong>——所以分组必须保证“跨簇影响弱于簇内影响”，否则会把一个真问题拆成两个假问题。</p>
+<p><strong>两条路径的共同前提是“交互是稀疏的”。</strong> 若每个智能体真的都影响其他所有智能体（比如同一个电价下的所有用户），那就没有可分的结构，只能接受“规模换精度”——用平均场近似，把“别人”替换成“一个平均对手”。<strong>平均场在用户数量大、单个影响小时相当准；在只有几十个玩家时，它会抹掉正是问题核心的那些个体差异。</strong></p>
+<h3 id="与组织流程的接口">35.5.8 与组织流程的接口</h3>
+<p>技术方案之外，还有三件组织上的事必须一起落地，否则系统会在“上线之后”而不是“上线之前”失败。</p>
+<p><strong>其一，收益函数是“规格”，不是“参数”。</strong> 它由业务方定义、由工程方实现、需要版本管理。<strong>改一个系数（比如等待的每分钟值多少钱）等价于改需求，必须走变更评审。</strong> 把收益函数当成“调参”随手改，是这类系统最常见的失控方式。</p>
+<p><strong>其二，每一次决策都要留可审计的记录。</strong> 至少四样：观测、动作、价值估计、屏蔽标志。<strong>事后追责时，“模型当时看到了什么”比“模型是什么结构”重要得多。</strong> 这四样也是第 36 章做失效分析时的原始材料。</p>
+<p><strong>其三，交付时给“模型卡”，而不是只给权重。</strong> 模型卡至少写清：适用范围（什么仓库、什么车型、什么负载区间）、训练数据分布、已知失效模式、以及“超出适用范围时应当如何降级”。<strong>没有降级方案的模型不应该被交付。</strong></p>
+<h2 id="仿真与验证">35.6 仿真与验证</h2>
+<p>本节把前五节的每一条定量结论都落到一次可复现的运行上。<strong>规矩与前几章一致：正文里的每个数字都由 <code>code/ch035_sim.py</code> 一次运行给出，不另行取整，也不做“挑好看的种子”这种筛选。</strong></p>
+<h3 id="实验设置与复现约定">35.6.1 实验设置与复现约定</h3>
+<p>六组实验共用随机种子 <code>SEED = 20261135</code>，全部用纯 numpy 实现，不依赖任何 RL 框架。<strong>这样做的唯一理由是可控：一旦数字不对，能顺着代码一行行查，而不必怀疑某个库的内部实现。</strong> 六组实验在同一台机器上总耗时约 4 s（与机器负载有关），量级上相当于“改一次参数、几秒后就能看到结果”，这是本章所有结论能被反复验证的前提。</p>
+<p>六组实验的分工如下：</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">实验</th>
+<th style="text-align: left;">对象</th>
+<th style="text-align: left;">回答的问题</th>
+<th style="text-align: left;">对应小节</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">E1</td>
+<td style="text-align: left;">囚徒困境、猎鹿</td>
+<td style="text-align: left;">均衡有几个、福利损失多少</td>
+<td style="text-align: left;">§35.6.2</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">E2</td>
+<td style="text-align: left;">最佳响应流、复制者动力学</td>
+<td style="text-align: left;">初值如何决定结局、会不会循环</td>
+<td style="text-align: left;">§35.6.3</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">E3</td>
+<td style="text-align: left;">囚徒困境 + 独立 Q 学习</td>
+<td style="text-align: left;">有占优策略时是否必然收敛</td>
+<td style="text-align: left;">§35.6.4</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">E4</td>
+<td style="text-align: left;">猎鹿 + 独立 Q 学习</td>
+<td style="text-align: left;">多个均衡时到底停在哪</td>
+<td style="text-align: left;">§35.6.5</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">E5</td>
+<td style="text-align: left;">三人团队任务</td>
+<td style="text-align: left;">全局奖励能不能分出功劳</td>
+<td style="text-align: left;">§35.6.6</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">E6</td>
+<td style="text-align: left;">六智能体三资源的拥塞博弈</td>
+<td style="text-align: left;">同步与异步差多少</td>
+<td style="text-align: left;">§35.6.7</td>
+</tr>
+</tbody>
+</table>
+<p><strong>这六组不是随意挑的，它们构成一条“从解析到学习到落地”的链条：</strong> E1 给基准答案，E2 说明动力学能不能到达，E3/E4 说明学出来的和算出来的是否一致，E5/E6 说明工程上最容易出问题的两个环节（信用分配、更新时序）。</p>
+<h3 id="e1两个-22-博弈的均衡枚举">35.6.2 E1：两个 2×2 博弈的均衡枚举</h3>
+<p>E1 用穷举做两件事：对每个格子检查“行玩家是否愿意单方面改行、列玩家是否愿意单方面改列”，两者都不愿意的格子就是纯策略纳什均衡；再用 §35.2.3 的代数解求对称混合均衡。结果见表 35-3。</p>
+<p>表 35-3　两个 2×2 博弈的均衡与效率（E1 实测）</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">博弈</th>
+<th style="text-align: left;">纯均衡</th>
+<th style="text-align: left;">混合均衡（选动作 0 的概率）</th>
+<th style="text-align: left;">最优福利</th>
+<th style="text-align: left;">均衡福利</th>
+<th style="text-align: left;">无政府代价</th>
+<th style="text-align: left;">效率</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">囚徒困境</td>
+<td style="text-align: left;"><span class="math inline">(D,D)</span></td>
+<td style="text-align: left;">无（代数解 <span class="math inline">-1.000</span>，越界）</td>
+<td style="text-align: left;">6.0</td>
+<td style="text-align: left;">2.0</td>
+<td style="text-align: left;">3.000</td>
+<td style="text-align: left;">0.33</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">猎鹿</td>
+<td style="text-align: left;"><span class="math inline">(S,S)</span>、<span class="math inline">(H,H)</span></td>
+<td style="text-align: left;"><span class="math inline">0.750</span></td>
+<td style="text-align: left;">8.0</td>
+<td style="text-align: left;"><span class="math inline">6.0\sim8.0</span></td>
+<td style="text-align: left;">1.333</td>
+<td style="text-align: left;"><span class="math inline">0.75\sim1.00</span></td>
+</tr>
+</tbody>
+</table>
+<p>三行读数值得逐条说清。</p>
+<p><strong>第一，囚徒困境的混合均衡“不存在”本身就是一条结论。</strong> 代数解 <span class="math inline">q=(d-b)/(a-b-c+d)=-1.000</span> 落在单纯形之外，说明这个博弈没有任何内点均衡——<strong>唯一均衡就是 <span class="math inline">(D,D)</span>，且它是严格占优的。</strong> 代码里把“越界”显式返回成 <code>None</code> 并把原始代数解一并留下，就是为了让这条信息不被吞掉。</p>
+<p><strong>第二，猎鹿的无政府代价必须用最坏均衡算。</strong> 若只取 <span class="math inline">8.0</span>（即 <span class="math inline">(S,S)</span>），<span class="math inline">\mathrm{PoA}</span> 会算成 <span class="math inline">1.000</span>，看上去“没有效率损失”，这与“系统可能停在 <span class="math inline">(H,H)</span>”的事实完全矛盾。改用最坏的 <span class="math inline">6.0</span>，<span class="math inline">\mathrm{PoA}=1.333</span>、效率下限 <span class="math inline">0.75</span>——<strong>这个 0.25 的福利缺口，就是“均衡选择”这件事的全部代价。</strong></p>
+<p><strong>第三，风险占优的判据是偏离损失。</strong> 在 <span class="math inline">(S,S)</span> 处单方面改选兔子只损失 <span class="math inline">4-3=1</span>；在 <span class="math inline">(H,H)</span> 处单方面改选猎鹿要损失 <span class="math inline">3-0=3</span>。<strong>损失小的那个均衡更“稳”，所以 <span class="math inline">(H,H)</span> 风险占优。</strong> 这条判据与“收益高低”无关：<span class="math inline">(S,S)</span> 收益更高，却更脆弱。E4 里 100 个种子有 91 个落到 <span class="math inline">(H,H)</span>，正是这条判据的动力学版本。</p>
+<h3 id="e2最佳响应流与复制者动力学">35.6.3 E2：最佳响应流与复制者动力学</h3>
+<p>E2 分两半。E2a 在猎鹿上取 21 个初值（对手选猎鹿的概率从 0 到 1，步长 0.05），用 <span class="math inline">\alpha=0.02</span> 的最佳响应迭代跑，上限 2000 回合。结果见图 35-2(a)。</p>
+<figure>
+<img src="figs/ch035/fig_035_02_dynamics.svg" alt="图 35-2　最佳响应流的吸引域与石头剪刀布的复制者闭轨" /><figcaption aria-hidden="true">图 35-2　最佳响应流的吸引域与石头剪刀布的复制者闭轨</figcaption>
+</figure>
+<p><strong>5 个初值收敛到猎鹿、16 个收敛到兔子，分界正好是 <span class="math inline">0.75</span>。</strong> 这与 E1 算出的混合均衡 <span class="math inline">0.750</span> 完全一致——<strong>混合均衡在这里的作用不是“被玩到”，而是“把相空间切成两半”</strong>。初值取 <span class="math inline">0.70</span> 时终值 <span class="math inline">0</span>，取 <span class="math inline">0.75</span> 时终值仍是 <span class="math inline">0</span>（恰好落在分界上，被 <span class="math inline">4p=3</span> 的严格不等号判给了兔子），取 <span class="math inline">0.80</span> 时终值 <span class="math inline">1</span>。</p>
+<p><strong>16 比 5 这个比例不是巧合，它量化了“风险占优”的吸引力：</strong> 兔子均衡的吸引域占初值区间的 <span class="math inline">80\%</span>，猎鹿只占 <span class="math inline">25\%</span>（有 1 个点落在边界）。<strong>工程含义是：想让系统落到高效均衡，靠“随机初始化碰运气”的成功率只有四分之一，必须显式设计初值或加信号。</strong></p>
+<p>中位收敛回合 616 也值得记一笔。<span class="math inline">\alpha=0.02</span> 时，从 <span class="math inline">0.05</span> 挪到 <span class="math inline">0.95</span> 附近需要约 <span class="math inline">\ln(0.05)/\ln(0.98)\approx148</span> 回合，但最佳响应在早期会反复横跳（信念刚过 <span class="math inline">0.75</span>、最优反应翻到猎鹿、又拉回信念），<strong>实际回合数被这种“来回”放大了四倍</strong>。这条经验对调参有用：<strong>看到收敛慢，先分清是“步长小”还是“在分界附近来回”，两者的解法完全相反。</strong></p>
+<p>E2b 换成石头剪刀布，初值 <span class="math inline">(0.50,0.32,0.18)</span>，<span class="math inline">dt=0.002</span>、<span class="math inline">T=60</span>。轨迹是一条闭合曲线（图 35-2(b)），周期实测 <span class="math inline">11.512</span>。线性化理论值 <span class="math inline">2\pi/\sqrt{3}=2\pi\sqrt{3}/3</span>，即 <span class="math inline">2\pi\sqrt{3}\approx10.883</span>——<strong>实测比理论大 5.8%</strong>。偏差来自两处：<span class="math inline">dt=0.002</span> 的离散化误差，以及振幅并不小（前后段峰峰值 <span class="math inline">0.3628</span> 与 <span class="math inline">0.3771</span>），线性化本应只在均衡附近成立。</p>
+<p><strong>振幅从 <span class="math inline">0.3628</span> 漂到 <span class="math inline">0.3771</span>（增大 3.9%），这才是真正需要警惕的现象。</strong> 精确的复制者动力学在石头剪刀布上有一个守恒量 <span class="math inline">x_1x_2x_3</span>，闭轨应当严格不变；数值积分不守恒，于是轨道缓慢向外漂。<strong>工程含义：如果现场观测到“振荡幅度在缓慢增长”，先怀疑数值积分与执行器饱和，再怀疑博弈本身。</strong></p>
+<h3 id="e3囚徒困境上的独立-q-学习">35.6.4 E3：囚徒困境上的独立 Q 学习</h3>
+<p>E3 让两个智能体各自跑独立 Q 学习，<span class="math inline">\gamma=0</span>、<span class="math inline">\eta=0.1</span>、<span class="math inline">\varepsilon=0.1</span>、2000 回合，共 100 个种子。<strong>100/100 全部收敛到 <span class="math inline">(D,D)</span>。</strong></p>
+<p>这个结果不需要惊讶，它是 §35.3.5“情形一”的直接验证：<strong>当每个玩家都有严格占优策略时，独立 Q 学习必然收敛到占优策略组合，非平稳性无关紧要。</strong> 理由很直白——占优意味着“无论对方做什么，这个动作都更好”，于是对方的策略变化根本不影响排序。</p>
+<p>平均 <span class="math inline">Q</span> 值：<span class="math inline">Q(D)=1.220</span>、<span class="math inline">Q(C)=0.158</span>。理论值应当是 <span class="math inline">Q(D)=1</span>（对方也背叛时的收益）、<span class="math inline">Q(C)=0</span>（对方背叛时合作的收益）。<strong>两个都偏高，且 <span class="math inline">Q(C)</span> 偏高得更多（0.158 对 1.220 的相对偏差 15.8% 与 22%）。</strong> 原因是在 <span class="math inline">\varepsilon=0.1</span> 的探索下，样本里混入了少量“对方合作”的回合，把两个估计都往上拉；而 <span class="math inline">Q(C)</span> 的真实值本来就小，同样的绝对增量造成的相对偏差更大。</p>
+<p>图 35-3 画了种子 0 的收敛过程：<span class="math inline">Q(D)</span> 在约 200 回合内单调抬到 1 附近并走平，<span class="math inline">Q(C)</span> 在低位缓慢爬升且抖动明显。<strong>两条曲线的形态差别本身就是诊断信息：占优动作的价值曲线“干净”，非占优动作的曲线“毛糙”，因为后者的样本来自一个正在被淘汰的行为。</strong></p>
+<figure>
+<img src="figs/ch035/fig_035_03_iql_pd.svg" alt="图 35-3　囚徒困境上的独立 Q 学习：背叛的价值单调抬升，合作的价值在低位抖动" /><figcaption aria-hidden="true">图 35-3　囚徒困境上的独立 Q 学习：背叛的价值单调抬升，合作的价值在低位抖动</figcaption>
+</figure>
+<p><strong>这条实验的工程价值在于它给了“什么时候可以放心用独立学习”一个可操作的判据：先检查收益矩阵有没有占优策略（或占优策略组合）。有，就直接用；没有，就要准备面对均衡选择问题。</strong></p>
+<h3 id="e4猎鹿上的均衡选择">35.6.5 E4：猎鹿上的均衡选择</h3>
+<p>同样的算法、同样的超参数，只把收益矩阵换成猎鹿，结果立刻分裂：<strong>100 个种子里 9 个到 <span class="math inline">(S,S)</span>、91 个到 <span class="math inline">(H,H)</span>、未定型 0 个。</strong></p>
+<p>表 35-4　猎鹿上独立 Q 学习的均衡分布（E4，100 个种子）</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">结局</th>
+<th style="text-align: left;">种子数</th>
+<th style="text-align: left;">比例</th>
+<th style="text-align: left;">单回合收益</th>
+<th style="text-align: left;">是否风险占优</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">收敛到 <span class="math inline">(S,S)</span></td>
+<td style="text-align: left;">9</td>
+<td style="text-align: left;"><span class="math inline">9\%</span></td>
+<td style="text-align: left;">4</td>
+<td style="text-align: left;">否</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">收敛到 <span class="math inline">(H,H)</span></td>
+<td style="text-align: left;">91</td>
+<td style="text-align: left;"><span class="math inline">91\%</span></td>
+<td style="text-align: left;">3</td>
+<td style="text-align: left;">是</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">未定型</td>
+<td style="text-align: left;">0</td>
+<td style="text-align: left;"><span class="math inline">0\%</span></td>
+<td style="text-align: left;">—</td>
+<td style="text-align: left;">—</td>
+</tr>
+</tbody>
+</table>
+<p><strong>9 比 91 这个比例，与 E2 的 5 比 16（约 24% 比 76%）方向一致但更极端。</strong> 差别来自两点：E2 是确定性的最佳响应流，初值均匀铺开；E4 是带 <span class="math inline">\varepsilon=0.1</span> 的随机学习，早期的小样本噪声会进一步放大风险占优的吸引力。<strong>两条独立路径给出同一方向的结论，这比任何单条曲线的说服力都强。</strong></p>
+<p>图 35-4(b) 是更能说明问题的一张图：把首回合的联合动作人为固定，其余回合 <span class="math inline">\varepsilon</span> 降到 0.02，跑 800 回合。<strong>首回合 <span class="math inline">(S,S)</span> 的那条曲线，<span class="math inline">Q(S)</span> 一路抬到 4 附近；首回合 <span class="math inline">(H,H)</span> 的那条，<span class="math inline">Q(S)</span> 在 1.5 附近就停住并缓慢下滑。</strong> 两条曲线的分岔发生在最初的几十个回合，之后再也没有交汇。</p>
+<figure>
+<img src="figs/ch035/fig_035_04_iql_stag.svg" alt="图 35-4　猎鹿博弈的均衡选择：风险占优的兔子胜出，早期经历锁定结局" /><figcaption aria-hidden="true">图 35-4　猎鹿博弈的均衡选择：风险占优的兔子胜出，早期经历锁定结局</figcaption>
+</figure>
+<p><strong>这张图是本章最重要的一张工程图。</strong> 它说明：在多个均衡的博弈里，“最终学到哪个”主要由<strong>最初的几百个样本</strong>决定，而不是由算法的渐近性质决定。<strong>因此，任何“多跑一会儿总会收敛到好的那个”的期待都是错的——多跑只会让系统更牢固地停在它早期碰到的那个均衡上。</strong></p>
+<p>对应的工程手段只有三条：<strong>改初值</strong>（用领域知识把系统初始化到高效均衡附近）、<strong>改探索</strong>（早期强制成组探索，见 §35.4.2）、<strong>改机制</strong>（加信号通道，见 §35.3.10）。</p>
+<h3 id="e5信用分配的两种方案">35.6.6 E5：信用分配的两种方案</h3>
+<p>E5 构造一个三人团队任务：智能体 1 与 2 各自“出力”贡献 1，两者同时出力时额外贡献 2，智能体 3 完全无关。于是真实边际贡献是 <span class="math inline">(2,2,0)</span>——<strong>注意 1 与 2 的边际是 2 而不是 1，因为协同项只有在两者同时出力时才出现。</strong></p>
+<p>两种奖励方案各跑 20 个种子 × 4000 回合，用 <span class="math inline">Q(1)-Q(0)</span> 估计边际贡献：</p>
+<p>表 35-5　全局共享奖励与差分奖励的边际贡献估计（E5 实测）</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">方案</th>
+<th style="text-align: left;">智能体 1</th>
+<th style="text-align: left;">智能体 2</th>
+<th style="text-align: left;">智能体 3（无关）</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">真实边际</td>
+<td style="text-align: left;">2.000</td>
+<td style="text-align: left;">2.000</td>
+<td style="text-align: left;">0.000</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">全局共享：均值</td>
+<td style="text-align: left;">2.828</td>
+<td style="text-align: left;">2.807</td>
+<td style="text-align: left;"><span class="math inline">-0.051</span></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">全局共享：偏差</td>
+<td style="text-align: left;">0.828</td>
+<td style="text-align: left;">0.807</td>
+<td style="text-align: left;"><span class="math inline">-0.051</span></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">全局共享：标准差</td>
+<td style="text-align: left;">0.106</td>
+<td style="text-align: left;">0.085</td>
+<td style="text-align: left;">0.184</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">差分奖励：均值</td>
+<td style="text-align: left;">2.813</td>
+<td style="text-align: left;">2.798</td>
+<td style="text-align: left;">0.000</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">差分奖励：偏差</td>
+<td style="text-align: left;">0.813</td>
+<td style="text-align: left;">0.798</td>
+<td style="text-align: left;">0.000</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">差分奖励：标准差</td>
+<td style="text-align: left;">0.066</td>
+<td style="text-align: left;">0.060</td>
+<td style="text-align: left;">0.000</td>
+</tr>
+</tbody>
+</table>
+<p><strong>这张表有三条读数，一条比一条重要。</strong></p>
+<p><strong>第一，差分奖励把无关智能体的估计精确压到 0。</strong> 智能体 3 的偏差从 <span class="math inline">-0.051</span> 变成 <span class="math inline">0.000</span>，标准差从 <span class="math inline">0.184</span> 变成 <span class="math inline">0</span>。<strong>这不是调参调出来的，是结构性的：</strong> 差分奖励的定义是 <span class="math inline">r-\text{team\_reward}(a_{-i})</span>，智能体 3 动作被置零后团队奖励不变，所以它的目标恒等于 0，估计也就恒等于 0。<strong>只要一个智能体对奖励真的没有影响，差分奖励就一定给它零，而全局奖励永远会分给它一点噪声。</strong></p>
+<p><strong>第二，两个关键智能体的估计都偏高约 0.8，这个偏差两种方案都没消掉。</strong> 真实边际 2.0，实测 2.8。原因不是算法错，而是<strong>基准分布不同</strong>：正文 §35.3.7 算的“真实边际”用的是“其余人均匀随机”这一基准，而学习过程中的行为分布早已偏向“大家都出力”，于是边际是在一个更高的基准上测的。<strong>换句话说，<span class="math inline">0.8</span> 的差距不是误差，是“边际贡献依赖于基准”这件事本身。</strong> 这一点必须在写报告时讲清，否则会被误读成“算法有 40% 的偏差”。</p>
+<p><strong>第三，差分奖励的方差明显更小</strong>（<span class="math inline">0.066</span> 对 <span class="math inline">0.106</span>，约小 38%）。因为它的目标里剔除了团队奖励的公共波动，只留下“这个人的动作改变了多少”。<strong>方差小意味着可以用更小的批量、更少的数据达到同样的精度，这是差分奖励在工程上的第二个好处。</strong></p>
+<figure>
+<img src="figs/ch035/fig_035_05_credit.svg" alt="图 35-5　信用分配的两种方案：差分奖励把无关智能体的贡献精确压到零" /><figcaption aria-hidden="true">图 35-5　信用分配的两种方案：差分奖励把无关智能体的贡献精确压到零</figcaption>
+</figure>
+<p><strong>一个必须说清的边界：差分奖励需要“把某个人的动作置零再算一遍奖励”的能力。</strong> 这要求有一个可查询的奖励函数（仿真、或者现场的数字孪生）。<strong>若奖励只能从真实系统观测、无法反事实重算，差分奖励就用不了，只能退回全局奖励加人工设计的塑形项。</strong></p>
+<h3 id="e6势博弈中同步与异步的天壤之别">35.6.7 E6：势博弈中同步与异步的天壤之别</h3>
+<p>E6 构造一个六智能体、三资源的拥塞博弈，每个智能体选一个资源，收益是“负载越轻越好”。这个博弈的 Rosenthal 势函数是</p>
+<p><span class="math display">
+\Phi(\ell)=\sum_{r=1}^{3}\frac{\ell_r(\ell_r+1)}{2},
+</span></p>
+<p>其中 <span class="math inline">\ell_r</span> 是资源 <span class="math inline">r</span> 上的智能体数。<strong>全局最小势是负载尽量平均时取到：六个人分三个资源，均衡负载 <span class="math inline">(2,2,2)</span>，<span class="math inline">\Phi_{\min}=3\times3=9</span>。</strong></p>
+<p>100 个种子、200 回合，两种更新方式的结果截然不同：</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">更新方式</th>
+<th style="text-align: left;">末值均值</th>
+<th style="text-align: left;">到达最小势</th>
+<th style="text-align: left;">全程单调</th>
+<th style="text-align: left;">末段振幅</th>
+<th style="text-align: left;">首达最小的中位回合</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">同步（全体同时改）</td>
+<td style="text-align: left;">18.320</td>
+<td style="text-align: left;">0/100</td>
+<td style="text-align: left;">0/100</td>
+<td style="text-align: left;">9.000</td>
+<td style="text-align: left;">从未到达</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">异步（每回合一个）</td>
+<td style="text-align: left;">9.000</td>
+<td style="text-align: left;">100/100</td>
+<td style="text-align: left;">100/100</td>
+<td style="text-align: left;">0.000</td>
+<td style="text-align: left;">2.0</td>
+</tr>
+</tbody>
+</table>
+<p><strong>异步那边是教科书式的完美结果：100 个种子全部单调下降、全部到达全局最小、中位 2 个回合就到。</strong> 这验证了 §35.3.4 的结论——<strong>势博弈里的异步最佳响应是“改进即上升势函数”，而势函数有下界，所以必然停在局部最优；在拥塞博弈里局部最优就是全局最优。</strong></p>
+<p><strong>同步那边则完全没有收敛：末值均值 18.320，末段振幅 9.000，100 个种子没有一个单调。</strong> 原因在机制上很清楚：所有人都看到“资源 3 最空”，于是一起搬到资源 3，搬完变成“资源 3 最挤”；下一回合又一起搬走。<strong>这不是学习失败，是“同时基于同一份快照决策”这一信息结构必然导致的振荡。</strong></p>
+<figure>
+<img src="figs/ch035/fig_035_06_potential.svg" alt="图 35-6　势博弈中同步更新持续振荡，异步更新单调收敛到全局最小" /><figcaption aria-hidden="true">图 35-6　势博弈中同步更新持续振荡，异步更新单调收敛到全局最小</figcaption>
+</figure>
+<p><strong>这一条是本章与第 34 章最尖锐的对照。</strong> 第 34 章的一致性算法也是同步迭代，却有 <span class="math inline">\rho&lt;1</span> 的硬收敛保证；本章的势博弈也是同步迭代，却可以永远不收敛。<strong>差别在系统的线性与否：线性系统的同步更新只是“换了个矩阵”，非线性（分段常值）的最佳响应则会把“同时”这件事本身的缺陷放大成持续振荡。</strong> 因此“同步还是异步”不能凭习惯选，必须看系统结构（§35.4.1 的第二条纪律）。</p>
+<h3 id="交叉核对六组实验之间应当自洽">35.6.8 交叉核对：六组实验之间应当自洽</h3>
+<p>单独看每组实验都能自圆其说，但真正的验证在于<strong>它们之间是否互相印证</strong>。本章有四处可以对照：</p>
+<p><strong>其一，分界与混合均衡。</strong> E1 算出猎鹿的混合均衡是 <span class="math inline">0.750</span>，E2 的吸引域分界实测也正是 <span class="math inline">0.75</span>。<strong>两条完全独立的代码路径（代数求解 vs 迭代动力学）给出同一个数，这才叫“算对了”。</strong></p>
+<p><strong>其二，风险占优与均衡分布。</strong> E1 判定 <span class="math inline">(H,H)</span> 风险占优（偏离损失 <span class="math inline">3&gt;1</span>），E4 的 100 个种子里 91 个落到 <span class="math inline">(H,H)</span>。<strong>定性判据与定量分布方向一致。</strong></p>
+<p><strong>其三，占优策略与必然收敛。</strong> E1 判定囚徒困境中 <span class="math inline">D</span> 严格占优，E3 的 100 个种子 100 个收敛到 <span class="math inline">(D,D)</span>。<strong>若 E3 出现哪怕一个种子落到 <span class="math inline">(C,C)</span>，就说明代码里“同时更新”或“收益取转置”写错了。</strong></p>
+<p><strong>其四，理论周期与实测周期。</strong> 石头剪刀布的线性化周期 <span class="math inline">2\pi\sqrt{3}\approx10.883</span>，实测 <span class="math inline">11.512</span>，偏 <span class="math inline">5.8\%</span>。<strong>这个偏差的量级与 <span class="math inline">dt</span> 的一阶离散误差、以及有限振幅下的非线性修正相符；若偏差到 <span class="math inline">50\%</span>，就要怀疑积分器或守恒量算错了。</strong></p>
+<p><strong>四处都对上了，才有资格说“这六组实验是同一套代码、同一个模型”。</strong> 这也是本书对“可复现”的最低要求：不是“跑出个数”，而是“数之间能互相对上”。</p>
+<h3 id="没有做的实验以及为什么">35.6.9 没有做的实验，以及为什么</h3>
+<p>有三件事本章刻意没做，写在这里以免被误读成遗漏。</p>
+<p><strong>其一，没有做深度 MARL（MADDPG、QMIX 之类）。</strong> 理由是本章要验证的是“结构性结论”（占优、风险占优、势函数、信用分配），这些结论在表格型里就能完整复现，加网络只会引入优化误差这个混淆因素。<strong>深度版本的工程问题（目标漂移、参数共享、回放池）已在 §35.4 定性说明，定量验证留到具体工程案例。</strong></p>
+<p><strong>其二，没有做连续动作空间。</strong> 连续动作下的纳什均衡求解需要变分不等式或双层优化，属于另一套工具（见第 58 章的 MPC 与博弈耦合）。<strong>本章的结论在连续动作下大多仍成立，但“穷举”这个最可靠的验证手段没有了，所以不适合放在入门章。</strong></p>
+<p><strong>其三，没有做“对手也在学习”的对称对抗实验。</strong> 那需要引入策略池与自博弈，属于 AlphaGo 那条技术路线。<strong>本章只到“非平稳性有多严重”这一层（§35.3.6），不再往前。</strong></p>
+<h3 id="复现性靠什么保证">35.6.10 复现性靠什么保证</h3>
+<p>“可复现”不是一句口号，它由四个具体动作构成。<strong>这四个动作都不难，但漏掉任何一个，别人（或三个月后的自己）就复现不出来。</strong></p>
+<p><strong>其一，种子写成常量，并显式派生。</strong> 本章只声明一个 <code>SEED = 20261135</code>，各组实验用它加固定偏移（E4 加 1000、E5 加 3000、E6 加 5000）。<strong>偏移量写死在代码里，而不是“按调用顺序自动递增”</strong>——后者一旦调整了实验顺序，所有结果都会变，而代码看不出任何区别。</p>
+<p><strong>其二，不共享全局随机状态。</strong> 每个种子构造独立的生成器（§35.4.7 的第四条）。<strong>这一条的直接好处是：可以只重跑 E5 而不影响 E3 的结果。</strong></p>
+<p><strong>其三，打印原始值，不打印“整理过”的值。</strong> 本章所有输出都是 <code>%.3f</code> 或 numpy 的默认格式，<strong>没有一处是“四舍五入到好看的数字”</strong>。看似小事，但它决定了“正文数字与代码输出能否逐位对上”。</p>
+<p><strong>其四，记录运行时长与环境。</strong> 约 4 s 这个数字不只是给读者一个性能印象，<strong>它还是一个回归测试的基线：若某次改动后变成 40 s，说明某处从 <span class="math inline">O(n)</span> 退化成了 <span class="math inline">O(n^2)</span>。</strong></p>
+<p><strong>这四条合起来的效果是：任何人拿到这两个文件、在同样的环境下运行，都能得到与表 35-3 至表 35-5 逐位一致的数。</strong> 这就是本章敢把“正文不另行取整”写进开头的底气。</p>
+<h3 id="把这六组实验扩到现场规模要改什么">35.6.11 把这六组实验扩到现场规模，要改什么</h3>
+<p>这六组实验都是玩具规模。<strong>从玩具到现场，需要改的不是算法，而是三样东西的表示方式。</strong></p>
+<p><strong>其一，收益从矩阵变成函数。</strong> 2×2 的矩阵可以写死，现场的收益依赖状态（电量、任务紧急度、时段电价）。<strong>改动是把 <span class="math inline">A[a_1,a_2]</span> 换成 <span class="math inline">R_i(s,a_1,\dots,a_n)</span>，并保证它对每个玩家都可查询。</strong> 这一步决定了能不能用差分奖励（§35.6.6）。</p>
+<p><strong>其二，状态从“无”变成“有”。</strong> 本章所有实验都是无状态的（<span class="math inline">\gamma=0</span> 或单步），现场必然是多步的。<strong>改动是引入 <span class="math inline">\gamma</span>、自举与目标网络，同时接受 §35.3.6 的滞后代价。</strong> 这一步会让“收敛”从“参数不动”变成“进入统计稳态”，评价指标也要跟着换。</p>
+<p><strong>其三，对手从“另一个同样的学习者”变成“混合人群”。</strong> 现场往往是一部分智能体、一部分固定规则的设备、一部分人。<strong>改动是给每类对手建一个行为模型（固定策略、学习策略、带噪声的最优反应），并在训练时轮换。</strong> 这一步最容易被忽略，也最容易导致“实验室很好、现场很差”。</p>
+<p><strong>三样都改完之后，本章的定性结论仍然成立</strong>（占优必收敛、多均衡看风险占优、势博弈异步收敛、差分奖励压零），<strong>但所有定量数字都会变，必须重新测。</strong> 这是本书反复强调的一条：<strong>结论可以迁移，数字不能迁移。</strong></p>
+<h3 id="实验日志记什么">35.6.12 实验日志记什么</h3>
+<p>六组实验跑完会产生几十个数。<strong>若只记“最后那个准确率”，三个月后无法回答“当时为什么这么调”。</strong> 本章的日志格式要求五个字段，缺一不可。</p>
+<p><strong>其一，种子与派生规则。</strong> 记 <code>SEED</code> 与各组偏移，不记“随机跑了 100 次”。<strong>没有种子，就没有“重跑”这件事。</strong></p>
+<p><strong>其二，全部超参数。</strong> 学习率、<span class="math inline">\varepsilon</span> 初值与下限、回合数、网络宽度（若有）。<strong>不要写“默认值”——默认值是会随库版本变的。</strong></p>
+<p><strong>其三，结局分布而不是单点。</strong> 本章每处结论都是“100 个种子里 91 个如何”这种形式。<strong>分布能同时暴露均值与风险，单点只能暴露运气。</strong></p>
+<p><strong>其四，关键中间量。</strong> 比如 <span class="math inline">Q(D)</span> 与 <span class="math inline">Q(C)</span> 的终值、吸引域分界、势函数的末段振幅。<strong>这些量是“结论对不对”的旁证，比最终指标更早报警。</strong></p>
+<p><strong>其五，运行时长与代码版本。</strong> 约 4 s 这个基线配合代码哈希，才能判断“某次变慢”是算法问题还是环境问题。</p>
+<p><strong>五个字段之外，还有一条纪律：日志必须是代码直接打印的，不能手抄。</strong> 手抄是“数字与代码对不上”的头号来源，而本章开头承诺的正是“逐位对上”。</p>
+<h2 id="小结与常见错误">35.7 小结与常见错误</h2>
+<h3 id="十条要点">35.7.1 十条要点</h3>
+<p><strong>第一，博弈的四要素是玩家、动作、收益、信息。</strong> 建模时把这四项写清，比选算法重要得多；<strong>类别定错（合作/竞争/混合），后面所有工作都会白做。</strong></p>
+<p><strong>第二，纳什均衡是最优反应的不动点。</strong> 它不是“最优”，只是“没人愿意单方面改变”。<strong>把均衡当成“好结果”是最常见的概念错误。</strong></p>
+<p><strong>第三，混合策略不是犹豫，是必需。</strong> 在匹配 pennies、石头剪刀布这类博弈里，任何确定性策略都会被利用；<strong>随机化的概率本身由“让对方无差异”这个条件唯一确定。</strong></p>
+<p><strong>第四，均衡可能不唯一，也可能很低效。</strong> 囚徒困境的无政府代价是 <span class="math inline">3</span>，猎鹿是 <span class="math inline">1.333</span>。<strong>所以建模时必须同时报“最优福利”与“最坏均衡福利”，只报前者等于掩盖风险。</strong></p>
+<p><strong>第五，多个均衡时，风险占优往往比收益占优更有预测力。</strong> 猎鹿的 <span class="math inline">(S,S)</span> 收益更高，但 <span class="math inline">(H,H)</span> 偏离损失更小，于是 91% 的种子落到后者。<strong>“应该选哪个”与“实际会选哪个”是两个问题。</strong></p>
+<p><strong>第六，独立 Q 学习只在特定结构下可靠。</strong> 有严格占优策略时必收敛（E3 的 100/100）；多个纯均衡时锁在早期探索碰到的那个（E4 的 9:91）；一般和无保证。<strong>用之前先检查收益矩阵的结构。</strong></p>
+<p><strong>第七，非平稳性的代价可以量化。</strong> 滞后约 <span class="math inline">\Delta/[\alpha(1-\gamma)]</span>，<span class="math inline">\gamma=0.99</span> 把代价放大 100 倍。<strong>这是“折扣因子不能乱取”的定量理由。</strong></p>
+<p><strong>第八，信用分配的关键是“反事实”。</strong> 全局奖励对无关智能体给非零偏差，差分奖励在结构上给零。<strong>能反事实重算奖励时，优先用差分奖励。</strong></p>
+<p><strong>第九，同步与异步在非线性系统里性质完全不同。</strong> 势博弈的异步更新必然收敛（100/100），同步更新可能永远振荡（0/100）。<strong>这条与第 34 章的线性一致性结论正好相反，不能互推。</strong></p>
+<p><strong>第十，安全写进约束或屏蔽层，性能写进收益。</strong> 罚函数把两者混在一个标量里，<strong>调 <span class="math inline">\mu</span> 就是在“性能”与“安全”之间试凑，而且不同工况下同一个 <span class="math inline">\mu</span> 的行为不一致。</strong></p>
+<h3 id="一页验收清单">35.7.2 一页验收清单</h3>
+<p>表 35-6 是本章的验收清单。<strong>它的用法是：设计阶段逐行填，填不出来的那一行就是还没想清楚的地方。</strong></p>
+<p>表 35-6　多智能体系统的设计验收清单</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">序号</th>
+<th style="text-align: left;">检查项</th>
+<th style="text-align: left;">合格判据</th>
+<th style="text-align: left;">不通过的典型症状</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">1</td>
+<td style="text-align: left;">玩家界定</td>
+<td style="text-align: left;">每个会改变系统状态且目标不同的实体都列为玩家</td>
+<td style="text-align: left;">把“会自适应”的设备当环境</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">2</td>
+<td style="text-align: left;">收益设计</td>
+<td style="text-align: left;">每个玩家的收益可测量、可解释、量纲明确</td>
+<td style="text-align: left;">收益只能靠人打分</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">3</td>
+<td style="text-align: left;">信息结构</td>
+<td style="text-align: left;">明确写出“谁知道什么”，且与现场可获取量一致</td>
+<td style="text-align: left;">训练用全局真值、执行只有局部估计</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">4</td>
+<td style="text-align: left;">均衡检查</td>
+<td style="text-align: left;">至少枚举出纯均衡，报出最坏均衡福利</td>
+<td style="text-align: left;">只报最优工况</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">5</td>
+<td style="text-align: left;">占优判定</td>
+<td style="text-align: left;">检查是否存在占优策略，据此决定算法</td>
+<td style="text-align: left;">有占优策略还在调网络</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">6</td>
+<td style="text-align: left;">同步/异步</td>
+<td style="text-align: left;">明确更新时序，并验证与现场一致</td>
+<td style="text-align: left;">仿真同步、现场异步</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">7</td>
+<td style="text-align: left;">探索预算</td>
+<td style="text-align: left;">给出 <span class="math inline">\sum\varepsilon_k</span> 与 <span class="math inline">\varepsilon_\infty</span></td>
+<td style="text-align: left;"><span class="math inline">\varepsilon</span> 一路降到 0</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">8</td>
+<td style="text-align: left;">信用分配</td>
+<td style="text-align: left;">无关智能体的估计应接近 0（若可反事实）</td>
+<td style="text-align: left;">无关智能体也分到正收益</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">9</td>
+<td style="text-align: left;">安全约束</td>
+<td style="text-align: left;">硬约束由屏蔽层实现，不依赖学习</td>
+<td style="text-align: left;">靠大罚项“学会”不撞</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">10</td>
+<td style="text-align: left;">种子敏感度</td>
+<td style="text-align: left;">100 个种子的结局分布已统计</td>
+<td style="text-align: left;">只跑一个种子就下结论</td>
+</tr>
+</tbody>
+</table>
+<p><strong>这份清单里最容易被跳过的是第 6 行和第 10 行。</strong> 前者不写进文档、只在代码里隐含，后者“跑一次看着挺好”就交差。<strong>而 E6 与 E4 恰好说明：这两行没做，结论可能完全反掉。</strong></p>
+<h3 id="选型三条路线怎么挑">35.7.3 选型：三条路线怎么挑</h3>
+<p>表 35-7 把三条路线（学习、动力学、优化）与工程条件对齐。<strong>注意它是“决策表”而不是“性能排序表”——没有哪条路线普遍更好，只有哪条更匹配当前条件。</strong></p>
+<p>表 35-7　三条求解路线的适用条件</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">路线</th>
+<th style="text-align: left;">需要的条件</th>
+<th style="text-align: left;">能给的保证</th>
+<th style="text-align: left;">不适合的场合</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">学习（独立 Q / CTDE）</td>
+<td style="text-align: left;">可交互采样、收益可观测</td>
+<td style="text-align: left;">特定结构下收敛，一般无保证</td>
+<td style="text-align: left;">样本昂贵、安全不可逆</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">动力学（最佳响应 / 复制者）</td>
+<td style="text-align: left;">已知收益矩阵、可迭代</td>
+<td style="text-align: left;">势博弈必收敛；一般博弈可能循环</td>
+<td style="text-align: left;">状态空间大、收益未知</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">优化（集中求解 / 变分不等式）</td>
+<td style="text-align: left;">模型已知、可集中计算</td>
+<td style="text-align: left;">可给最优性或均衡存在性</td>
+<td style="text-align: left;">无法集中、模型时变</td>
+</tr>
+</tbody>
+</table>
+<p><strong>实践中的顺序建议是：先问“模型知不知道”，再问“能不能集中算”，最后才问“要不要学”。</strong> 三者都指向学习时，再按 §35.3 的结构判据挑具体算法。<strong>反过来（先选算法再找场景）是这一领域最常见的失败模式。</strong></p>
+<h3 id="十条常见错误">35.7.4 十条常见错误</h3>
+<p><strong>错误一：把“均衡”当成“最优”。</strong> 均衡只保证“没人想单方面改变”，不保证福利高。<strong>囚徒困境里唯一的均衡就是最差的结果。</strong></p>
+<p><strong>错误二：只报一个均衡的福利。</strong> 多个均衡时必须报区间。<strong>只报 <span class="math inline">(S,S)</span> 的 8.0，等于把 25% 的风险藏起来了。</strong></p>
+<p><strong>错误三：用“多跑一会儿”来解决均衡选择。</strong> E4 说明早期几百个样本就锁定了结局，<strong>多跑只会让系统更牢固地停在原地。</strong></p>
+<p><strong>错误四：<span class="math inline">\varepsilon</span> 一路衰减到零。</strong> 对手会变，探索停了就再也跟不上。<strong>留一个与对手变化率可比的下限。</strong></p>
+<p><strong>错误五：回放池开得很大。</strong> 旧样本对应旧对手，池子越大污染越重。<strong>池深应满足 <span class="math inline">L\lesssim1/\alpha</span>。</strong></p>
+<p><strong>错误六：训练给全局观测、执行给局部观测，却不做一致性检查。</strong> 这是 CTDE 最常见的翻车点。<strong>上线前必须用“只给局部观测”重跑一遍，看性能掉多少。</strong></p>
+<p><strong>错误七：用全局共享奖励做完全合作任务，还指望无关智能体学到零贡献。</strong> E5 显示它会分到 <span class="math inline">-0.051</span> 的偏差与 <span class="math inline">0.184</span> 的标准差。<strong>能反事实就用差分奖励。</strong></p>
+<p><strong>错误八：把同步更新当成默认。</strong> 势博弈里同步会永远振荡（E6 的 0/100）。<strong>更新时序是设计变量，不是实现细节。</strong></p>
+<p><strong>错误九：用大罚项代替安全约束。</strong> 罚项与违反量的关系不透明，<strong>换个工况同一个系数就不管用了。</strong> 硬约束交给屏蔽层。</p>
+<p><strong>错误十：不做种子扫描就宣布成功。</strong> 单个种子跑出好结果，可能只是落在了 9% 那一侧。<strong>至少 100 个种子，报分布不报单点。</strong></p>
+<h3 id="与后续章节的衔接">35.7.5 与后续章节的衔接</h3>
+<p>本章停在“多方各自优化、如何达到均衡”这一层。<strong>再往前一步是两个方向：一是“学错了会不会出事”，这是第 36 章的功能安全与可靠性；二是“算得太慢怎么办”，这是后面 MPC 与实时优化章节的内容。</strong></p>
+<p><strong>如果只记住一句话：多智能体系统的难点不在“怎么学”，而在“该建哪些量、会停在哪个均衡、学错了谁兜底”。</strong> 前两件本章给了判据，第三件是第 36 章的主题。</p>
+<p><strong>下一章的门槛很低，只需要带着三个问题过去：</strong> 我的系统里，谁的安全是最薄弱的？它失效时最先表现出来的信号是什么？在信号出现到事故之间，还有多少时间可以用来兜底？<strong>这三个问题答不上来，第 36 章的任何方法都无法落地。</strong></p>
+<h3 id="术语对照">35.7.6 术语对照</h3>
+<p>表 35-8 把本章反复出现的术语集中列一次。<strong>它的用途是查“我用的词是不是这个意思”，而不是背定义。</strong></p>
+<p>表 35-8　本章术语对照</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">中文</th>
+<th style="text-align: left;">英文</th>
+<th style="text-align: left;">一句话含义</th>
+<th style="text-align: left;">常见误用</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">纳什均衡</td>
+<td style="text-align: left;">Nash equilibrium</td>
+<td style="text-align: left;">给定别人不动，没人愿意单方面改</td>
+<td style="text-align: left;">当成“最优结果”</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">占优策略</td>
+<td style="text-align: left;">dominant strategy</td>
+<td style="text-align: left;">无论别人做什么，它都不差</td>
+<td style="text-align: left;">与“最优反应”混为一谈</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">混合策略</td>
+<td style="text-align: left;">mixed strategy</td>
+<td style="text-align: left;">按概率随机选动作</td>
+<td style="text-align: left;">当成“不确定时的权宜”</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">最佳响应</td>
+<td style="text-align: left;">best response</td>
+<td style="text-align: left;">给定对方策略下的最优动作</td>
+<td style="text-align: left;">以为它一定唯一</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">无政府代价</td>
+<td style="text-align: left;">price of anarchy</td>
+<td style="text-align: left;">最优福利 ÷ 最坏均衡福利</td>
+<td style="text-align: left;">只用最好均衡算</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">风险占优</td>
+<td style="text-align: left;">risk dominance</td>
+<td style="text-align: left;">偏离损失更小的那个均衡</td>
+<td style="text-align: left;">与“收益占优”混同</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">复制者动力学</td>
+<td style="text-align: left;">replicator dynamics</td>
+<td style="text-align: left;">收益高于平均的策略占比增长</td>
+<td style="text-align: left;">以为它一定收敛</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">势博弈</td>
+<td style="text-align: left;">potential game</td>
+<td style="text-align: left;">存在一个共同账本，个体改进即它上升</td>
+<td style="text-align: left;">以为所有拥塞博弈都是</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">相关均衡</td>
+<td style="text-align: left;">correlated equilibrium</td>
+<td style="text-align: left;">听第三方信号后无人想偏离</td>
+<td style="text-align: left;">以为要额外的强制力</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">信用分配</td>
+<td style="text-align: left;">credit assignment</td>
+<td style="text-align: left;">把团队奖励分到个人头上</td>
+<td style="text-align: left;">以为平均分就行</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">集中训练分散执行</td>
+<td style="text-align: left;">CTDE</td>
+<td style="text-align: left;">训练看全局、执行只看局部</td>
+<td style="text-align: left;">训练/执行观测不一致</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">非平稳性</td>
+<td style="text-align: left;">non-stationarity</td>
+<td style="text-align: left;">别人的策略在变，目标跟着变</td>
+<td style="text-align: left;">当成“环境噪声”</td>
+</tr>
+</tbody>
+</table>
+<p><strong>这张表里最容易混的是“占优”与“最优反应”、以及“风险占优”与“收益占优”。</strong> 前一对是“全局性质 vs 局部性质”（占优不需要知道对方策略，最佳响应必须知道）；后一对是“稳定性 vs 收益高低”（猎鹿里收益高的那个反而不是风险占优的）。<strong>把这两对分清楚，读本章后续文献、以及和现场工程师讨论时，就不会被术语带偏。</strong></p>
+<h3 id="三个自测题">35.7.7 三个自测题</h3>
+<p><strong>题一。</strong> 两个智能体、两个动作，收益矩阵为 <span class="math inline">A=\begin{bmatrix}4&amp;0\\3&amp;3\end{bmatrix}</span>（行玩家收益，列玩家取转置）。问：纯均衡有几个？混合均衡是多少？哪个均衡风险占优？如果跑 100 个种子的独立 Q 学习，你预计分布如何？</p>
+<p><strong>参考答案：</strong> 纯均衡两个，<span class="math inline">(S,S)</span> 与 <span class="math inline">(H,H)</span>；混合均衡 <span class="math inline">q=(d-b)/(a-b-c+d)=(3-0)/(4-0-3+3)=0.75</span>；偏离损失 <span class="math inline">(S,S)</span> 处为 <span class="math inline">4-3=1</span>、<span class="math inline">(H,H)</span> 处为 <span class="math inline">3-0=3</span>，故 <span class="math inline">(H,H)</span> 风险占优；独立 Q 学习应大部分落到 <span class="math inline">(H,H)</span>，本章实测 91 比 9。<strong>这道题的价值在于四个答案互相印证——若你算出混合均衡不是 <span class="math inline">0.75</span>，那风险占优的结论也就不必看了。</strong></p>
+<p><strong>题二。</strong> 六个人分三个资源，用同步最佳响应更新。问：会不会收敛？如果把更新改成异步呢？如果把收益改成“每个人独占一个资源才得分”呢？</p>
+<p><strong>参考答案：</strong> 同步不收敛，因为所有人基于同一份负载快照一起搬，会持续振荡（本章实测末段振幅 9.000、0/100 到达最小势）；异步必然收敛，因为它是势博弈且每次只让一个人改进（100/100 单调到达）。<strong>第三问是陷阱：改成“独占才得分”之后，势函数不再存在（一个人的收益取决于别人是否也选同一个资源，且不是对称可积的），异步更新也就失去了“必然收敛”的保证。</strong> 这说明势结构是条件，不是普适性质。</p>
+<p><strong>题三。</strong> 一个三人团队任务，真实边际贡献是 <span class="math inline">(2,2,0)</span>，你用全局共享奖励学出 <span class="math inline">(2.8,2.8,-0.05)</span>。问：这是算法错了吗？该换什么方案？换了之后能消掉那 0.8 的偏差吗？</p>
+<p><strong>参考答案：</strong> 不是算法错。<span class="math inline">-0.05</span> 是全局奖励给无关智能体的结构性噪声，换差分奖励可把它精确压到 0；但 0.8 的偏差两种方案都消不掉，因为它是“边际贡献依赖于基准分布”造成的，不是估计误差。<strong>要消掉它，只能改基准（用均匀随机基准重算），而那是评价口径的改动，不是算法的改动。</strong> 这道题考的是“分清误差与定义差异”。</p>
+
+<nav class="footnav"><a href="ch034.html">← 上一章</a><a href="index.html">返回目录</a><a href="ch036.html">下一章 →</a></nav>
+</body>
+</html>

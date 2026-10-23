@@ -1,0 +1,1583 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="zh-CN" xml:lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>第 53 章　先进稳定性分析 · 控制大综合</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    span.underline{text-decoration: underline;}
+    div.column{display: inline-block; vertical-align: top; width: 50%;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    ul.task-list{list-style: none;}
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+  <link rel="stylesheet" href="assets/book.css" />
+  <script src="assets/katex/katex.min.js"></script>
+  <script>document.addEventListener("DOMContentLoaded", function () {
+   var mathElements = document.getElementsByClassName("math");
+   var macros = [];
+   for (var i = 0; i < mathElements.length; i++) {
+    var texText = mathElements[i].firstChild;
+    if (mathElements[i].tagName == "SPAN") {
+     katex.render(texText.data, mathElements[i], {
+      displayMode: mathElements[i].classList.contains('display'),
+      throwOnError: false,
+      macros: macros,
+      fleqn: false
+     });
+  }}});
+  </script>
+  <link rel="stylesheet" href="assets/katex/katex.min.css" />
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+  <link rel="stylesheet" href="assets/site.css" />
+</head>
+<body>
+<nav class="topnav"><a class="home" href="index.html">目录</a><span class="pos">053 / 115</span><span class="pager"><a href="ch052.html">上一章</a><a href="ch054.html">下一章</a></span></nav>
+
+<nav id="TOC" role="doc-toc">
+<ul>
+<li><a href="#第53章-先进稳定性分析">第53章 先进稳定性分析</a>
+<ul>
+<li><a href="#动机与直观理解">53.1 动机与直观理解</a></li>
+<li><a href="#数学原理">53.2 数学原理</a></li>
+<li><a href="#设计步骤">53.3 设计步骤</a></li>
+<li><a href="#连续情形">53.4 连续情形</a></li>
+<li><a href="#离散情形">53.5 离散情形</a></li>
+<li><a href="#稳定性与性能">53.6 稳定性与性能</a></li>
+<li><a href="#参数意义与作用">53.7 参数意义与作用</a></li>
+<li><a href="#调参方法与经验">53.8 调参方法与经验</a></li>
+<li><a href="#优化与改进">53.9 优化与改进</a></li>
+<li><a href="#工程落地">53.10 工程落地</a></li>
+<li><a href="#优缺点与适用边界">53.11 优缺点与适用边界</a></li>
+<li><a href="#python-仿真代码">53.12 Python 仿真代码</a></li>
+</ul></li>
+</ul>
+</nav>
+<h1 id="第53章-先进稳定性分析">第53章 先进稳定性分析</h1>
+<h2 id="动机与直观理解">53.1 动机与直观理解</h2>
+<h3 id="二次型证书的天花板">53.1.1 二次型证书的天花板</h3>
+<p>第 52 章把稳定性问题化成了“找一个正定函数 <span class="math inline">V</span>，使 <span class="math inline">\dot V</span> 负定”。对线性系统，取 <span class="math inline">V=x^{\mathsf T}Px</span>，条件变成解一个 Lyapunov 方程，干净利落。可是一旦系统带非线性项，这条路会突然卡住，而且卡住的原因不是技巧不够，而是结构性的。</p>
+<p>考虑一个硬化弹簧加线性阻尼的对象：</p>
+<p><span class="math display">
+\dot x_1=x_2,\qquad \dot x_2=-x_1-x_1^{3}-x_2
+\tag{53-1}
+</span></p>
+<p>原点仍是唯一平衡点，物理上它必然收敛——弹簧把质量拉回原位，阻尼把能量耗掉。取二次型 <span class="math inline">V=x^{\mathsf T}Px</span>，沿 (53-1) 求导，得到的是一个四次多项式：二次的 <span class="math inline">P</span> 乘上一次的 <span class="math inline">f</span>，次数相加。要让 <span class="math inline">\dot V</span> 负定，就得判定一个四次多项式在全局负定。这件事线性矩阵不等式做不到——LMI 只能表达“某个矩阵正定”，而四次多项式的正定性不是矩阵正定性。</p>
+<p>于是出现一个尴尬的局面：<span class="math inline">V</span> 是二次的，<span class="math inline">\dot V</span> 是四次的，证书的“次”对不上。工程师的本能反应是换一个更复杂的 <span class="math inline">V</span>，但换完之后 <span class="math inline">\dot V</span> 的次数更高，问题不但没解决，反而更难。真正的出路是换一种表达方式：<strong>不去直接判定多项式负定，而是要求它能写成一个平方和。</strong> 平方和天然对应半定规划，而半定规划有成熟的求解器。</p>
+<p>这条路的效果可以用一组实测数字说明。对 (53-1)，脚本先尝试只用二次型 <span class="math inline">V=x^{\mathsf T}Px</span>：求解状态是 <code>infeasible</code>，耗时 <span class="math inline">0.033</span> s——不是求解器不行，是这种形式的证书根本不存在。改成二次加四次：</p>
+<p><span class="math display">
+V(x)=x^{\mathsf T}Px+\begin{bmatrix}x_1^{2}\\x_1x_2\\x_2^{2}\end{bmatrix}^{\mathsf T}Q_4\begin{bmatrix}x_1^{2}\\x_1x_2\\x_2^{2}\end{bmatrix}
+\tag{53-2}
+</span></p>
+<p>求解状态变成 <code>optimal</code>，耗时 <span class="math inline">0.044</span> s，解出</p>
+<p><span class="math display">
+P=\begin{bmatrix}1.350696&amp;0.373768\\0.373768&amp;1.737740\end{bmatrix},\qquad \lambda(P)=\{1.123322,\;1.965114\}
+\tag{53-3}
+</span></p>
+<p>把解代回，<span class="math inline">V</span> 的八个系数是：<span class="math inline">x_2^{2}</span> 项 <span class="math inline">1.737740</span>、<span class="math inline">x_1x_2</span> 项 <span class="math inline">0.747537</span>、<span class="math inline">x_1^{2}</span> 项 <span class="math inline">1.350696</span>，四次项 <span class="math inline">x_1^{4}</span> 为 <span class="math inline">0.879555</span>、<span class="math inline">x_1^{3}x_2</span> 为 <span class="math inline">0.006842</span>、<span class="math inline">x_1^{2}x_2^{2}</span> 为 <span class="math inline">0.001245</span>、<span class="math inline">x_1x_2^{3}</span> 为 <span class="math inline">0.000248</span>、<span class="math inline">x_2^{4}</span> 为 <span class="math inline">0.000011</span>。四次部分很小，几乎是一个二次型加一点点修正，但就是这一点修正让证书从不存在变成存在。</p>
+<p>图 53-2 画出了这个 <span class="math inline">V</span> 的水平集。黑实线是四次型的等值线，红虚线是同一个 <span class="math inline">P</span> 对应的二次型椭圆。在原点附近两条线几乎重合，越往外差别越大：四次型在 <span class="math inline">x_1</span> 方向被“压扁”，因为硬化弹簧在位移大时提供的恢复力更强，等能量的轨迹自然更靠内。这个形状不是人为设计的，是求解器根据 <span class="math inline">\dot V</span> 的要求自动调出来的。</p>
+<figure>
+<img src="figs/ch053/fig_053_02_levelset.svg" alt="图 53-2　四次型水平集与二次型椭圆" /><figcaption aria-hidden="true">图 53-2　四次型水平集与二次型椭圆</figcaption>
+</figure>
+<p>为什么二次型一定失败？可以给一个不依赖求解器的说明。假设存在正定二次型 <span class="math inline">V=x^{\mathsf T}Px</span> 使 <span class="math inline">\dot V&lt;0</span> 全局成立。沿 <span class="math inline">x_2=0</span> 这条线，<span class="math inline">\dot V=-2P_{12}x_1^{2}-2P_{22}x_1^{3}</span>（把 <span class="math inline">x_2=0</span> 代入后只剩这两项）。当 <span class="math inline">x_1\to-\infty</span> 时，<span class="math inline">-2P_{22}x_1^{3}\to+\infty</span>，符号由三次项决定，与 <span class="math inline">P</span> 的取值无关。也就是说，只要 <span class="math inline">P_{22}&gt;0</span>，<span class="math inline">x_1</span> 取足够大的负值时 <span class="math inline">\dot V</span> 必然为正。二次型在这个对象上不是“没找到”，而是“不可能找到”。</p>
+<h3 id="非负不等于平方和">53.1.2 非负不等于平方和</h3>
+<p>既然要把多项式写成平方和，就得先问：是不是所有非负多项式都能写成平方和？答案是否定的，而且反例很早就有。</p>
+<p>Motzkin 在 1967 年给出的多项式</p>
+<p><span class="math display">
+M(x)=x_1^{4}x_2^{2}+x_1^{2}x_2^{4}+1-3x_1^{2}x_2^{2}
+\tag{53-4}
+</span></p>
+<p>在平面上处处非负，等号只在三个点上成立：原点、<span class="math inline">(\pm1,\pm1)</span> 中满足 <span class="math inline">x_1^{2}=x_2^{2}=1</span> 的两点。但它不能写成任何多项式的平方和。这个结论可以用初等代数验证：若 <span class="math inline">M=\sum p_i^{2}</span>，则每个 <span class="math inline">p_i</span> 的次数不超过 <span class="math inline">3</span>，比较 <span class="math inline">x_1^{4}x_2^{2}</span> 与 <span class="math inline">x_1^{2}x_2^{4}</span> 的系数会逼出矛盾。</p>
+<p>这个反例的意义在于划清了界限：<strong>平方和是充分条件，不是必要条件。</strong> 用 SOS 求稳定性，可能在一个其实稳定的系统上返回 <code>infeasible</code>。工程上必须接受这个代价，同时也要知道代价有多大。</p>
+<p>代价的大小取决于问题结构。对 Lyapunov 证书而言，常见的 <span class="math inline">V</span> 往往是“能量型”的，本身就是平方和（动能是速度的平方，势能在平衡点附近可以展开成平方和）。真正卡住的情况是势能函数有多个极小、或者约束导致有理函数。这时可以用 S-procedure 把约束乘进去，或者先做变量替换把非多项式化成多项式。</p>
+<p>还有一个更细的界限：即使 <span class="math inline">M</span> 非负，<span class="math inline">M</span> 加一个很小的常数倍 <span class="math inline">\|x\|^{2}</span> 之后往往就能写成平方和。这说明 SOS 的“失败”常常只是裕度不够，而不是结构不对。本章后面调参时会反复用到这一点：先给一个小正裕度，解不出来再放大次数，而不是一上来就上高次。</p>
+<h3 id="三条绕开平衡点的路">53.1.3 三条绕开平衡点的路</h3>
+<p>SOS 解决的是“二次型不够用”，但它仍然继承了第 52 章的一个前提：必须知道平衡点在哪，而且 <span class="math inline">V</span> 要在这个点上取极小。工程上还有两类问题不满足这个前提。</p>
+<p>第一类是<strong>平衡点随工况移动</strong>。机械臂抓取不同负载、飞行器在不同高度配平、电机在转矩模式下带着一个缓慢变化的负载，工作点一直在动。这时“在某个点上做 Lyapunov 分析”变成了一件没有意义的事——分析完这个点，工况已经走了。需要的是一种“不管平衡点在哪，任意两条轨迹都互相靠拢”的性质。</p>
+<p><strong>收缩分析</strong>就是干这个的。它不看 <span class="math inline">V</span>，而看两条相邻轨迹的差 <span class="math inline">\delta=x_a-x_b</span>，其演化近似为</p>
+<p><span class="math display">
+\dot\delta=J(x)\,\delta,\qquad J(x)=\frac{\partial f}{\partial x}
+\tag{53-5}
+</span></p>
+<p>若存在 <span class="math inline">\rho&gt;0</span> 使 <span class="math inline">J</span> 的对称部分处处满足 <span class="math inline">\lambda_{\max}\big((J+J^{\mathsf T})/2\big)\le-\rho</span>，则任意两条轨迹的距离按 <span class="math inline">e^{-\rho t}</span> 衰减——注意这里完全没有出现平衡点。用本章的对象</p>
+<p><span class="math display">
+\dot x_1=-x_1+x_2,\qquad \dot x_2=-x_1-x_2-0.1x_2^{3}
+\tag{53-6}
+</span></p>
+<p>算一下：雅可比是</p>
+<p><span class="math display">
+J(x)=\begin{bmatrix}-1&amp;1\\-1&amp;-1-0.3x_2^{2}\end{bmatrix},\qquad \frac{J+J^{\mathsf T}}{2}=\begin{bmatrix}-1&amp;0\\0&amp;-1-0.3x_2^{2}\end{bmatrix}
+\tag{53-7}
+</span></p>
+<p>对称部分居然是对角的。它的最大特征值是 <span class="math inline">\max(-1,\;-1-0.3x_2^{2})=-1</span>，与 <span class="math inline">x_2</span> 无关。于是 <span class="math inline">\rho=1</span>，全局成立，不需要任何关于初值范围的假设。脚本实测两条轨迹的对数斜率为 <span class="math inline">-1.006814</span>，与理论下界 <span class="math inline">1</span> 的比值是 <span class="math inline">1.006814</span>——实测比下界还略快一点，因为 <span class="math inline">\mu</span> 是在整条状态空间上取的最坏值，而实际轨迹大部分时间待在 <span class="math inline">\mu</span> 更负的区域。</p>
+<p>第二类是<strong>需要把多个子系统拼起来</strong>。一个机器人有六个关节，每个关节的控制器单独验证过，整机是否稳定？如果每个关节都是“无源”的，那么串联、并联、负反馈互联之后仍然无源，整机稳定性自动成立。这是<strong>无源性</strong>的独特价值：它给的不是一个数，而是一张可以组合的证书。</p>
+<p>第三类是<strong>平衡点未知但能量关系清楚</strong>。比如带摩擦的机械臂，摩擦力模型很难写准，但“摩擦力总是做负功”这一点是确定的。无源性只需要这个定性事实，不需要摩擦的具体形式。</p>
+<h3 id="四种工具的分工">53.1.4 四种工具的分工</h3>
+<p>图 53-1 把本章与上一章的工具摆在一起。判断的入口不是“系统难不难”，而是“你手里有什么、想要什么”。</p>
+<figure>
+<img src="figs/ch053/fig_053_01_tools.svg" alt="图 53-1　四种稳定性工具的分工" /><figcaption aria-hidden="true">图 53-1　四种稳定性工具的分工</figcaption>
+</figure>
+<p>如果对象有明确的平衡点、模型是多项式或可多项式化，而且你需要一个<strong>全局证书</strong>，那么走 SOS。它的输出是一组系数，任何人代回去都能验证，这是它相对于数值仿真的最大优势。</p>
+<p>如果平衡点在动，或者你关心的是“两条轨迹会不会分开”而不是“会不会回到原点”，走收缩分析。它只需要雅可比矩阵的对称部分，计算量极小，代价是保守——<span class="math inline">\mu</span> 取的是全空间最坏值。</p>
+<p>如果你要把若干部件组合起来，或者模型里有一些“只知道符号”的环节，走无源性。它不给收敛速率，但给组合规则。</p>
+<p>如果对象是线性的、或者工作点附近的线性化足够用，回到第 52 章。二次型 Lyapunov 方程的解是解析的、计算是毫秒级的，没有任何理由用 SOS 去解一个本来就有闭式解的问题。</p>
+<p>四种工具不是替代关系。一个典型的工程做法是：先用无源性把整体架构搭起来，保证互联不会自激；再用收缩分析给出跟踪误差的收敛速率；最后在关键工况点上用 SOS 或 Lyapunov 做一次定量核对。三者回答的是不同的问题，结论可以互相印证。</p>
+<h3 id="本章路线">53.1.5 本章路线</h3>
+<p>本章的十二节按“为什么—是什么—怎么做—做得怎么样”展开，读的时候可以按三条线走。</p>
+<p><strong>第一条线是概念线</strong>，对应 53.1 与 53.2。53.1 用一个具体对象说明“二次型证书为什么不够用”，引出平方和、收缩、无源三种思路；53.2 把三种思路的数学写清楚，包括 Motzkin 反例、矩阵测度、KYP 引理，最后用一张表把三种工具与第 52 章的二次型方法放在一起对照。这条线不涉及代码，读的时候关注“每种工具需要的输入是什么、给出的输出是什么”。</p>
+<p><strong>第二条线是操作线</strong>，对应 53.3 到 53.5。53.3 给三条流程的步骤，53.4 在三个连续对象上各跑一遍，53.5 讨论离散化带来的新问题。这条线的每个数字都来自脚本，读的时候可以对照 §53.12 的报告编号，也可以自己跑一遍核对。三个连续对象不是随便挑的：硬化弹簧对应 SOS，旋转加三次阻尼对应收缩，机械臂对应无源，各自展示一种工具的典型用法与典型困难。</p>
+<p><strong>第三条线是判断线</strong>，对应 53.6 到 53.11。53.6 讨论“证出来之后这些数怎么读”，53.7 逐个说明五个参数的作用，53.8 给排查经验，53.9 给改进方向，53.10 讲工程落地，53.11 划适用边界。这条线不产生新结论，但决定你会不会用错工具——工程上出问题，多半不是算不出来，而是把结论用在了不适用的地方。</p>
+<p>53.12 是附录性质的一节，讲代码怎么组织、怎么改成自己的对象。它可以最后读，也可以在读 53.3 时就跳过去看对应的实现。</p>
+<p>三条线的读法不同：第一条线要慢读，概念错了后面全错；第二条线要动手，光看数字没有体感；第三条线要结合自己的对象读，看到某条经验时想一想“我的系统是不是也这样”。若时间只够读一遍，建议按 53.1、53.3、53.6、53.11 的顺序读这四节，它们分别是“为什么”“怎么做”“怎么读结果”“什么时候别用”，构成一个最小闭环。</p>
+<h2 id="数学原理">53.2 数学原理</h2>
+<h3 id="平方和与半定规划">53.2.1 平方和与半定规划</h3>
+<p>先把“平方和”写成可计算的形式。一个多项式 <span class="math inline">p(x)</span> 称为平方和，是指存在多项式 <span class="math inline">q_1,\dots,q_m</span> 使</p>
+<p><span class="math display">
+p(x)=\sum_{i=1}^{m}q_i(x)^{2}
+\tag{53-8}
+</span></p>
+<p>直接按这个定义搜索 <span class="math inline">q_i</span> 的系数是双线性的（<span class="math inline">q_i</span> 乘 <span class="math inline">q_i</span>），不是凸问题。关键的改写是引入单项式向量：设 <span class="math inline">z(x)</span> 收集了所有次数不超过 <span class="math inline">d</span> 的单项式，则 <span class="math inline">p</span> 是平方和等价于存在半正定矩阵 <span class="math inline">Q</span> 使</p>
+<p><span class="math display">
+p(x)=z(x)^{\mathsf T}Q\,z(x),\qquad Q\succeq0
+\tag{53-9}
+</span></p>
+<p>这一步把“找多项式”变成了“找矩阵”，而 <span class="math inline">Q\succeq0</span> 是标准的半定锥约束。<span class="math inline">Q</span> 通常称为 Gram 矩阵，它不唯一——<span class="math inline">Q</span> 与 <span class="math inline">Q+Q_0</span>（<span class="math inline">Q_0</span> 落在 <span class="math inline">z^{\mathsf T}Q_0z\equiv0</span> 的零空间里）给出同一个 <span class="math inline">p</span>，这个不唯一性在数值上会表现为求解器返回的解“看起来不对称”，但不影响证书的有效性。</p>
+<p>对 (53-1) 用四次型 (53-2)，<span class="math inline">\dot V</span> 的次数是 <span class="math inline">6</span>，所以 <span class="math inline">z</span> 要取到次数 <span class="math inline">3</span>。二元三次以内的单项式有多少个？答案是 <span class="math inline">10</span> 个：<span class="math inline">1,x_1,x_2,x_1^{2},x_1x_2,x_2^{2},x_1^{3},x_1^{2}x_2,x_1x_2^{2},x_2^{3}</span>。于是 <span class="math inline">Q</span> 是 <span class="math inline">10\times10</span> 的对称矩阵，含 <span class="math inline">55</span> 个独立元素。约束是：<span class="math inline">-V&#39;-\varepsilon\|x\|^{2}=z^{\mathsf T}Qz\succeq0</span> 且 <span class="math inline">Q\succeq0</span>。</p>
+<p>“等式”怎么落成约束？按单项式逐项匹配系数。左边是一个已知系数的六次多项式（系数是 <span class="math inline">P</span>、<span class="math inline">Q_4</span> 的线性函数），右边是 <span class="math inline">z^{\mathsf T}Qz</span> 展开后同样按单项式归并。两边同次项的系数必须相等，于是得到一组线性等式。整个问题因此是</p>
+<p><span class="math display">
+\text{找 }P\succeq\varepsilon I,\;Q_4\succeq0,\;Q\succeq0\quad\text{使}\quad -V&#39;(x)-\varepsilon\|x\|^{2}\equiv z^{\mathsf T}Qz
+\tag{53-10}
+</span></p>
+<p>这是一个半定规划的可行性问题，没有目标函数（或目标取常数）。脚本用 CLARABEL 求解，失败时用 SCS 兜底。</p>
+<p>解出来的两个矩阵有一个值得注意的特征：<span class="math inline">Q_4</span> 的最小特征值是 <span class="math inline">4.151498\times10^{-6}</span>，<span class="math inline">Q</span> 的最小特征值是 <span class="math inline">-8.877058\times10^{-9}</span>。前者是正的小量，后者是负的小量——<strong>负的</strong>。理论上 <span class="math inline">Q\succeq0</span>，数值上却出现了 <span class="math inline">-10^{-9}</span> 量级的负特征值。这不是求解器出错，而是内点法在锥边界上的典型行为：最优解就落在边界上（<span class="math inline">Q</span> 奇异），数值误差会把特征值推到零的两侧。工程上的处理方式是设一个容差（例如 <span class="math inline">-10^{-7}</span>），并对解做回代验证，而不是要求特征值严格非负。</p>
+<p>回代验证的结果是：在 <span class="math inline">[-2,2]^{2}</span> 的 <span class="math inline">161\times161</span> 网格上，去掉原点附近半径 <span class="math inline">0.5</span> 的圆之后，<span class="math inline">\dot V</span> 的最大值是 <span class="math inline">-1.647044\times10^{-1}</span>，全局为负；而 <span class="math inline">\min\big[-\dot V-\varepsilon\|x\|^{2}\big]</span> 在整张网格上是 <span class="math inline">-0.000000\times10^{0}</span>，即证书在数值精度内成立。作为对照，等权二次型 <span class="math inline">V=\tfrac12(x_1^{2}+x_2^{2})</span> 在同一张网格上的 <span class="math inline">\dot V</span> 最大值是 <span class="math inline">+12</span>——不但不正，而且大得离谱。图 53-3 把这个正区画了出来，图 53-4 则画出了四次型对应的 <span class="math inline">\dot V</span> 分布。</p>
+<figure>
+<img src="figs/ch053/fig_053_03_bad_quadratic.svg" alt="图 53-3　等权二次型的导数正区" /><figcaption aria-hidden="true">图 53-3　等权二次型的导数正区</figcaption>
+</figure>
+<figure>
+<img src="figs/ch053/fig_053_04_good_vdot.svg" alt="图 53-4　四次型的导数分布" /><figcaption aria-hidden="true">图 53-4　四次型的导数分布</figcaption>
+</figure>
+<p>图 53-3 里有一条黑色的零等值线，它把平面分成两部分。线外的浅色区域 <span class="math inline">\dot V&gt;0</span>，也就是说用等权二次型做证书，轨迹在那些区域里“能量”反而在增加。图 53-4 是同一个对象的四次型证书，颜色越深表示 <span class="math inline">-\dot V</span> 越大，白色虚线圆是证书不覆盖的小邻域（<span class="math inline">|x|&lt;0.5</span>）。两张图摆在一起，就能看出“换个 <span class="math inline">V</span>”到底改变了什么。</p>
+<h3 id="收缩分析的数学">53.2.2 收缩分析的数学</h3>
+<p>先给矩阵测度一个精确的定义。对矩阵 <span class="math inline">A\in\mathbb{R}^{n\times n}</span>，</p>
+<p><span class="math display">
+\mu(A)=\lambda_{\max}\!\left(\frac{A+A^{\mathsf T}}{2}\right)
+\tag{53-11}
+</span></p>
+<p>它是 <span class="math inline">A</span> 的对称部分的最大特征值。这个名字来自它的一个等价刻画：<span class="math inline">\mu(A)=\lim_{h\to0^{+}}\big(\|I+hA\|-1\big)/h</span>，即“沿 <span class="math inline">A</span> 的方向走一小步，范数最多长多快”。若 <span class="math inline">A</span> 的特征值都在左半平面，<span class="math inline">\mu(A)</span> 一定是负的；反过来不成立（<span class="math inline">\mu(A)&lt;0</span> 比“特征值在左半平面”更强，它排除了非正规矩阵的瞬态增长）。</p>
+<p>有了 <span class="math inline">\mu</span>，两条轨迹距离的演化可以一行推出。设 <span class="math inline">\delta=x_a-x_b</span>，由中值定理</p>
+<p><span class="math display">
+\dot\delta=f(x_a)-f(x_b)=J(\xi)\,\delta
+\tag{53-12}
+</span></p>
+<p>其中 <span class="math inline">\xi</span> 是两点连线上的某点。对 <span class="math inline">\|\delta\|^{2}</span> 求导：</p>
+<p><span class="math display">
+\frac{\mathrm{d}}{\mathrm{d}t}\|\delta\|^{2}=2\delta^{\mathsf T}J(\xi)\delta=\delta^{\mathsf T}\big(J+J^{\mathsf T}\big)\delta\le2\mu\big(J(\xi)\big)\|\delta\|^{2}
+\tag{53-13}
+</span></p>
+<p>于是只要 <span class="math inline">\mu(J(x))\le-\rho</span> 在状态空间的一个凸集上处处成立，就有</p>
+<p><span class="math display">
+\|\delta(t)\|\le e^{-\rho t}\|\delta(0)\|
+\tag{53-14}
+</span></p>
+<p>这个结论有多强？它不要求这个凸集里存在平衡点，不要求 <span class="math inline">f</span> 可积，也不要求 <span class="math inline">\rho</span> 与初值有关。只要两条轨迹始终待在这个凸集里，“互相靠拢”就是必然的。反过来，如果轨迹跑出了凸集，结论就失效——这是收缩分析最容易被误用的地方：<strong>它给的是条件性的全局结论，条件的验证往往比结论本身更难。</strong></p>
+<p>工程上常用的做法是先用仿真确认轨迹的活动范围，再在这个范围内验证 <span class="math inline">\mu\le-\rho</span>。这不是严格证明，但比“在工作点线性化”要可靠得多，因为它覆盖了一整片区域而不是一个点。</p>
+<p>加权形式值得单独说。取正定矩阵 <span class="math inline">\Theta</span>，定义加权范数 <span class="math inline">\|\delta\|_{\Theta}=\|\Theta\delta\|</span>，则</p>
+<p><span class="math display">
+\mu_{\Theta}(J)=\mu\big(\Theta J\Theta^{-1}\big)
+\tag{53-15}
+</span></p>
+<p>换 <span class="math inline">\Theta</span> 相当于换一把尺子。对 (53-6)，未加权时 <span class="math inline">\mu=-1</span>；取 <span class="math inline">\Theta=\mathrm{diag}(2,1)</span> 后，脚本算出 <span class="math inline">\max\mu_{\Theta}=-0.25</span>，收缩率反而从 <span class="math inline">1</span> 降到 <span class="math inline">0.25</span>。这说明加权不是“总能改进”的魔法——尺子选错了会更保守。为什么会这样？因为 <span class="math inline">\Theta</span> 把 <span class="math inline">x_1</span> 方向的度量放大了一倍，而 <span class="math inline">J</span> 的耦合项正好把 <span class="math inline">x_2</span> 的信息送到 <span class="math inline">x_1</span>，放大之后就掩盖了原本的收缩。</p>
+<p>受迫情形只需要在 (53-13) 右边加一项。若 <span class="math inline">\dot\delta=J\delta+d(t)</span>，则</p>
+<p><span class="math display">
+\frac{\mathrm{d}}{\mathrm{d}t}\|\delta\|\le-\rho\|\delta\|+\|d(t)\|
+\tag{53-16}
+</span></p>
+<p>用比较引理解得</p>
+<p><span class="math display">
+\|\delta(t)\|\le e^{-\rho t}\|\delta(0)\|+\frac{1-e^{-\rho t}}{\rho}\sup_{\tau\le t}\|d(\tau)\|
+\tag{53-17}
+</span></p>
+<p>这个式子的工程含义很直接：初始差异被忘掉，剩下的误差上界是扰动幅度除以收缩率。<strong>收缩率越大，系统对扰动的“记忆”越短。</strong> 这就是为什么收缩分析在跟踪问题里比在调节问题里更有用——跟踪误差的稳态界可以直接由 (53-17) 读出。</p>
+<h3 id="无源性的数学">53.2.3 无源性的数学</h3>
+<p>无源性的出发点是能量而不是距离。一个系统称为无源，是指存在非负的存储函数 <span class="math inline">V(x)</span> 使</p>
+<p><span class="math display">
+\dot V\le u^{\mathsf T}y
+\tag{53-18}
+</span></p>
+<p>对任意输入 <span class="math inline">u</span> 成立。积分起来就是“输出做的功不少于存储的增加”：</p>
+<p><span class="math display">
+\int_0^{T}u^{\mathsf T}y\,\mathrm{d}t\ge V(x(T))-V(x(0))\ge-V(x(0))
+\tag{53-19}
+</span></p>
+<p>也就是说，无源系统不能凭空产生能量。这个性质看起来弱，但它对互联极其友好。</p>
+<p>线性系统的无源性有一个漂亮的频域等价。对 <span class="math inline">G(s)=C(sI-A)^{-1}B+D</span>，无源性等价于 <span class="math inline">\mathrm{Re}\,G(\mathrm{j}\omega)\ge0</span> 对所有 <span class="math inline">\omega</span> 成立，也等价于存在 <span class="math inline">P\succ0</span> 使 KYP 不等式</p>
+<p><span class="math display">
+\begin{bmatrix}A^{\mathsf T}P+PA&amp;PB-C^{\mathsf T}\\B^{\mathsf T}P-C&amp;-D-D^{\mathsf T}\end{bmatrix}\preceq0
+\tag{53-20}
+</span></p>
+<p>成立。左边是一个分块矩阵，条件是关于 <span class="math inline">P</span> 线性的——又是一个半定规划。脚本对单自由度机械臂 <span class="math inline">M\ddot q+b\dot q+k\sin q=\tau</span>，取速度 <span class="math inline">y=\dot q</span>、输入 <span class="math inline">\tau</span>，在平衡点附近线性化后求 (53-20)，得到</p>
+<p><span class="math display">
+P=\begin{bmatrix}4.905003&amp;0\\0&amp;0.5\end{bmatrix},\qquad \lambda(P)=\{0.5,\;4.905003\}
+\tag{53-21}
+</span></p>
+<p>分块矩阵的最大特征值是 <span class="math inline">+4.160\times10^{-10}</span>，数值上等于零——解正好落在可行域的边界上。这个 <span class="math inline">P</span> 的物理意义很清楚：对角元 <span class="math inline">4.905003</span> 就是 <span class="math inline">k=Mg/l</span> 那个刚度系数，<span class="math inline">0.5</span> 就是质量 <span class="math inline">M</span>。存储函数 <span class="math inline">V=\tfrac12M\dot q^{2}+k(1-\cos q)</span> 正是机械能，求解器把物理直觉重新发现了一遍。</p>
+<p>频域核对给出同样的结论：<span class="math inline">G(\mathrm{j}\omega)</span> 的实部在整条频率轴上非负，最小值 <span class="math inline">+3.325\times10^{-6}</span>（在 <span class="math inline">\omega=10^{-2}</span> rad/s 处），最大值 <span class="math inline">4.999955</span>（在 <span class="math inline">\omega=3.133</span> rad/s 处），幅值最大 <span class="math inline">4.999978</span>。实部可以写成闭式</p>
+<p><span class="math display">
+\mathrm{Re}\,G(\mathrm{j}\omega)=\frac{2b\omega^{2}}{(k-M\omega^{2})^{2}+(b\omega)^{2}}\ge0
+\tag{53-22}
+</span></p>
+<p>分子分母都非负，所以无源性是结构性的，不依赖参数取值。这一点很重要：改变 <span class="math inline">M</span>、<span class="math inline">b</span>、<span class="math inline">k</span> 只会改变曲线形状，不会破坏无源性。工程上这类“由物理结构保证”的性质，比“由参数整定保证”的性质可靠得多。</p>
+<p>无源性的组合规则有两条。第一条是<strong>并联</strong>：两个无源系统并联，存储函数取和，输入输出相加，仍无源。第二条是<strong>负反馈互联</strong>：若 <span class="math inline">u_1=e_1-y_2</span>、<span class="math inline">u_2=y_1+e_2</span>，则</p>
+<p><span class="math display">
+\dot V_1+\dot V_2\le u_1^{\mathsf T}y_1+u_2^{\mathsf T}y_2=e_1^{\mathsf T}y_1+e_2^{\mathsf T}y_2
+\tag{53-23}
+</span></p>
+<p>交叉项 <span class="math inline">y_1^{\mathsf T}y_2</span> 正好抵消。这条规则是无源性在机器人领域流行的根本原因：关节控制器、机械臂本体、环境接触各自无源，互联之后整机自动无源，不需要重新做一次整体稳定性分析。</p>
+<h3 id="与-lyapunov-方法的关系">53.2.4 与 Lyapunov 方法的关系</h3>
+<p>四种工具的关系可以用一张表说清。它们证的都是“稳定性”，但需要的输入、给出的输出、能做的运算完全不同。</p>
+<p>表 53-1　四种稳定性工具的口径对照</p>
+<table style="width:100%;">
+<colgroup>
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>工具</th>
+<th>需要的信息</th>
+<th>证书形式</th>
+<th>是否给速率</th>
+<th>可否组合</th>
+<th>主要保守性来源</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>二次型 Lyapunov</td>
+<td>平衡点、线性化或二次型 <span class="math inline">f</span></td>
+<td>矩阵 <span class="math inline">P</span></td>
+<td>给（<span class="math inline">\lambda_{\min}(Q)/\lambda_{\max}(P)</span>）</td>
+<td>弱</td>
+<td><span class="math inline">V</span> 限定为二次</td>
+</tr>
+<tr class="even">
+<td>平方和</td>
+<td>多项式模型、平衡点</td>
+<td>系数矩阵 <span class="math inline">P,Q_4,Q</span></td>
+<td>只给裕度 <span class="math inline">\varepsilon</span></td>
+<td>弱</td>
+<td>SOS 是充分条件</td>
+</tr>
+<tr class="odd">
+<td>收缩分析</td>
+<td>雅可比矩阵、凸集</td>
+<td>一个数 <span class="math inline">\rho</span></td>
+<td>给（指数）</td>
+<td>中（可串联）</td>
+<td><span class="math inline">\mu</span> 取全空间最坏值</td>
+</tr>
+<tr class="even">
+<td>无源性</td>
+<td>输入输出、能量函数</td>
+<td>存储函数 <span class="math inline">V</span></td>
+<td>不给</td>
+<td>强</td>
+<td>要求 <span class="math inline">\mathrm{Re}\,G\ge0</span></td>
+</tr>
+</tbody>
+</table>
+<p>表里“可否组合”这一列最容易被低估。Lyapunov 方法在组合时会遇到麻烦：两个子系统各自的 <span class="math inline">V_1</span>、<span class="math inline">V_2</span> 加起来，交叉项不一定负；SOS 也有同样的问题，除非把互联项一起写进多项式。无源性没有这个问题，因为交叉项在 (53-23) 里被结构性地消掉了。收缩分析介于两者之间：串联的收缩系统仍收缩（收缩率相加），但反馈互联不一定。</p>
+<p>“是否给速率”这一列也需要解释。SOS 本身是一个可行性问题，求解器不优化收敛速率，所以它只告诉你“稳定”，不告诉你“多快”。要加速度，得把 <span class="math inline">\varepsilon</span> 作为决策变量做大化，或者在外层做二分——这就变成了一个优化问题，规模更大、更容易数值失败。工程上的折中做法是：用固定的 <span class="math inline">\varepsilon</span> 求可行性，再用仿真估速率，两者互相核对。</p>
+<p>最后要强调一点：<strong>这四种方法证的是同一件事的不同侧面，不是四个竞争方案。</strong> 一个系统可以同时是二次型稳定的、收缩的、无源的，四个结论都成立，只是每个结论覆盖的范围和给出的信息不同。真正危险的情况是四个方法都失败——这往往说明对象本身有问题，而不是工具不够好。</p>
+<h3 id="三条证明的骨架对照">53.2.5 三条证明的骨架对照</h3>
+<p>同一件事用三种语言说，骨架其实相同：都是“找一个量，证明它单调”。差别在于这个量是什么、单调性怎么证、结论覆盖多大范围。把三条骨架并排写出来，比分别看三段推导更容易记住。</p>
+<p><strong>平方和的骨架。</strong> 待证命题是“存在 <span class="math inline">V&gt;0</span> 使 <span class="math inline">\dot V&lt;0</span>”。证明分四步：设 <span class="math inline">V</span> 为偶次多项式，待定系数；把 <span class="math inline">\dot V+\varepsilon\|x\|^{2}</span> 写成 <span class="math inline">z^{\mathsf T}Qz</span>；要求 <span class="math inline">Q\succeq0</span> 且 <span class="math inline">V</span> 的系数矩阵正定；解半定规划，取到一个可行解即为证书。整个证明是<strong>构造性的</strong>：解出来的矩阵就是证书，不需要再做任何推理。</p>
+<p><strong>收缩分析的骨架。</strong> 待证命题是“任意两条轨迹的距离按 <span class="math inline">e^{-\rho t}</span> 衰减”。证明分三步：写出距离的微分不等式 <span class="math inline">\dot d\le\mu(J)d</span>；在状态集合上取 <span class="math inline">\mu</span> 的上界，得 <span class="math inline">\dot d\le-\rho d</span>；积分得 <span class="math inline">d(t)\le d(0)e^{-\rho t}</span>。整个证明是<strong>估计性的</strong>：不需要构造任何函数，只需要算一个上界。</p>
+<p><strong>无源性的骨架。</strong> 待证命题是“存储函数的变化不超过外部注入”。证明分三步：取能量函数 <span class="math inline">V</span>；沿系统求导；证明 <span class="math inline">\dot V\le u^{\mathsf T}y</span>。线性情形下这一步等价于一个 LMI（KYP）。整个证明是<strong>验证性的</strong>：<span class="math inline">V</span> 通常由物理直觉直接给出，不需要搜索。</p>
+<p>三条骨架的差别可以用三个词概括：构造、估计、验证。这也决定了它们的失败模式：构造失败是“解不出来”（不可行）；估计失败是“界是正的”（<span class="math inline">\mu\ge0</span>）；验证失败是“不等式不成立”（有源）。三种失败的含义完全不同，排查方向也完全不同——这是 §53.8 那张排查表的理论基础。</p>
+<p>还有一处细节值得对照：三条骨架对“区域”的处理方式不同。平方和证明的是“整个 <span class="math inline">\mathbb{R}^{n}</span>”，除非用 S-procedure 限定区域；收缩分析证明的是“<span class="math inline">\mu</span> 上界所在的那个集合”，集合变了结论就变；无源性证明的是“所有允许的输入”，不涉及状态区域。这三种“区域”概念经常被混淆，尤其是把无源性的“全输入”误当成“全状态”——前者说的是输入信号的集合，后者说的是初始条件的集合，两者不是一回事。</p>
+<h2 id="设计步骤">53.3 设计步骤</h2>
+<h3 id="平方和证书的五步流程">53.3.1 平方和证书的五步流程</h3>
+<p>图 53-11 给出 SOS 证书的标准流程。五步的顺序不能颠倒，因为每一步都在为下一步准备输入。</p>
+<figure>
+<img src="figs/ch053/fig_053_11_workflow.svg" alt="图 53-11　平方和证书的求解流程" /><figcaption aria-hidden="true">图 53-11　平方和证书的求解流程</figcaption>
+</figure>
+<p>第一步，<strong>把对象写成多项式</strong>。状态方程里出现 <span class="math inline">\sin</span>、<span class="math inline">\mathrm{sign}</span>、饱和、绝对值，都不能直接进 SOS 求解器。常用处理有三种：在工作点附近做泰勒展开并声明适用范围；用辅助变量把非多项式项换掉（例如令 <span class="math inline">s=\sin q</span>、<span class="math inline">c=\cos q</span>，补上 <span class="math inline">s^{2}+c^{2}=1</span> 的约束）；或者对分段系统分段求解。</p>
+<p>第二步，<strong>选 <span class="math inline">V</span> 的次数与结构</strong>。这一选择决定了问题的规模。二元二次 <span class="math inline">V</span> 对应 <span class="math inline">Q</span> 为 <span class="math inline">6\times6</span>；二元四次 <span class="math inline">V</span> 对应 <span class="math inline">Q</span> 为 <span class="math inline">10\times10</span>。表 53-2 给出了不同维数与次数下的单项式个数，可以看到增长很快：<span class="math inline">n=6</span>、次数 <span class="math inline">3</span> 时已经是 <span class="math inline">84</span> 个单项式，<span class="math inline">Q</span> 是 <span class="math inline">84\times84</span>，含 <span class="math inline">3570</span> 个独立元素。</p>
+<p>表 53-2　单项式个数随维数与次数的增长</p>
+<table>
+<thead>
+<tr class="header">
+<th>维数 <span class="math inline">n</span></th>
+<th>次数 <span class="math inline">d=2</span></th>
+<th>次数 <span class="math inline">d=3</span></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>2</td>
+<td>6</td>
+<td>10</td>
+</tr>
+<tr class="even">
+<td>3</td>
+<td>10</td>
+<td>20</td>
+</tr>
+<tr class="odd">
+<td>4</td>
+<td>15</td>
+<td>35</td>
+</tr>
+<tr class="even">
+<td>5</td>
+<td>21</td>
+<td>56</td>
+</tr>
+<tr class="odd">
+<td>6</td>
+<td>28</td>
+<td>84</td>
+</tr>
+</tbody>
+</table>
+<p>第三步，<strong>写出等式约束</strong>。把 <span class="math inline">-V&#39;-\varepsilon\|x\|^{2}</span> 展开，按单项式归并系数，令其等于 <span class="math inline">z^{\mathsf T}Qz</span> 的同次项系数。这一步最容易出错的地方是漏项：<span class="math inline">V</span> 里没有出现的单项式，在 <span class="math inline">\dot V</span> 里可能出现，而对应的等式约束必须写出来，否则求解器会给出一个“看起来可行”但实际不满足恒等式的解。</p>
+<p>第四步，<strong>求解并检查状态</strong>。<code>optimal</code> 表示找到证书；<code>infeasible</code> 表示在这个次数下不存在证书；<code>optimal_inaccurate</code> 表示找到了但数值精度不足，需要换求解器或缩放变量。脚本的选择顺序是 CLARABEL 优先、SCS 兜底，两者都失败才判定不可行。</p>
+<p>第五步，<strong>回代验证</strong>。这一点在本章被反复强调，因为 SOS 的数值解经常落在锥边界上，特征值会出现 <span class="math inline">-10^{-9}</span> 量级的负值。验证方法是在一个足够密的网格上直接计算 <span class="math inline">\dot V</span> 的最大值，确认它为负；同时确认 <span class="math inline">\min[-\dot V-\varepsilon\|x\|^{2}]</span> 不为负。网格验证不是证明，但它能抓住绝大多数实现错误。</p>
+<h3 id="收缩分析的三个步骤">53.3.2 收缩分析的三个步骤</h3>
+<p>收缩分析的流程比 SOS 短得多，但有一个隐藏的难点。</p>
+<p>第一步，<strong>算雅可比并取对称部分</strong>。对 (53-6)，脚本在 <span class="math inline">x_2\in[-4,4]</span> 上采样 <span class="math inline">161</span> 个点，逐点求 <span class="math inline">\lambda_{\max}\big((J+J^{\mathsf T})/2\big)</span>。结果是常数 <span class="math inline">-1</span>，与 <span class="math inline">x_2</span> 完全无关。这个“常数”不是巧合：对称部分是对角阵 <span class="math inline">\mathrm{diag}(-1,-1-0.3x_2^{2})</span>，第一个对角元恒为 <span class="math inline">-1</span>，第二个恒不大于 <span class="math inline">-1</span>，取最大值当然还是 <span class="math inline">-1</span>。</p>
+<p>第二步，<strong>确定 <span class="math inline">\rho</span> 并检查正不变集</strong>。这一步是真正的难点。由 (53-14) 得到的收敛结论有一个前提：两条轨迹始终待在验证过 <span class="math inline">\mu\le-\rho</span> 的那个集合里。如果集合选得太小，轨迹一出去结论就失效；选得太大，<span class="math inline">\mu</span> 可能不满足。工程上的做法是先仿真、看轨迹包络，再用包络做一个箱体或椭球，最后在这个集合上验证 <span class="math inline">\mu</span>。严格的数学做法需要证明集合是正向不变的（从集合内出发永远不出去），这通常要额外构造一个障碍函数，工作量不小。</p>
+<p>第三步，<strong>受迫情形套用 (53-17)</strong>。若已知扰动幅度 <span class="math inline">\sup\|d\|</span>，稳态误差上界是 <span class="math inline">\sup\|d\|/\rho</span>。本章的受迫算例里，两条轨迹的初始距离 <span class="math inline">1.802776</span>，<span class="math inline">5</span> s 后降到 <span class="math inline">1.104\times10^{-1}</span>，<span class="math inline">10</span> s 后降到 <span class="math inline">4.661\times10^{-5}</span>，末时刻与初值的比值是 <span class="math inline">2.585\times10^{-5}</span>。扰动是 <span class="math inline">1.5\sin 2t</span>，按 (53-17) 估算的稳态界是 <span class="math inline">1.5/1=1.5</span>——实际距离远小于这个界，因为两条轨迹受的是同一个扰动，扰动项在差值方程里几乎抵消了。</p>
+<p>这个差异点出了一个使用要点：<strong>（53-17）里的 <span class="math inline">d</span> 是两条轨迹所受扰动的差，不是扰动本身。</strong> 如果两条轨迹受同一个输入，差值方程里的扰动项为零，收敛仍然是纯指数的。本章算例正是这种情况——同一个 <span class="math inline">u(t)</span> 加在两条轨迹上，所以距离一路降到 <span class="math inline">10^{-5}</span> 量级。若两条轨迹受不同扰动（比如一个受扰、一个不受），界才需要用 <span class="math inline">1.5/1</span>。</p>
+<h3 id="无源性验证的三个步骤">53.3.3 无源性验证的三个步骤</h3>
+<p>无源性的流程只有三步，但第一步选错，后面全白做。</p>
+<p>第一步，<strong>选端口</strong>。端口就是输入输出对 <span class="math inline">(u,y)</span>。同一个对象，换一对端口，无源性可能成立也可能不成立。机械臂取 <span class="math inline">(\tau,\dot q)</span> 是无源的，因为 <span class="math inline">\tau\dot q</span> 就是功率；换成 <span class="math inline">(\tau,q)</span> 就不无源，因为对应的传递函数是</p>
+<p><span class="math display">
+G_q(s)=\frac{1}{Ms^{2}+bs+k},\qquad \mathrm{Re}\,G_q(\mathrm{j}\omega)=\frac{k-M\omega^{2}}{(k-M\omega^{2})^{2}+(b\omega)^{2}}
+\tag{53-24}
+</span></p>
+<p>当 <span class="math inline">\omega&gt;\sqrt{k/M}=\sqrt{9.81}\approx3.13</span> rad/s 时分子为负，实部为负。这不是模型的问题，是端口选错了：位置和力矩之间隔着一个二阶系统，相位可以超过 <span class="math inline">90°</span>，能量关系不再单向。</p>
+<p>端口选择的经验规则是：<strong>端口变量之积必须是功率。</strong> 力学系统取（力，速度），电路取（电压，电流），热系统取（温差，热流）。凡是乘积不是功率的组合，无源性一般都不成立。</p>
+<p>第二步，<strong>找存储函数</strong>。优先用物理能量，因为它天然非负、天然满足耗散不等式；物理能量不好写时（例如含非线性摩擦），再解 KYP 的 LMI (53-20)。脚本对机械臂两条路都走了：物理能量给出 <span class="math inline">V=\tfrac12M\dot q^{2}+k(1-\cos q)</span>，KYP 给出 <span class="math inline">P=\mathrm{diag}(4.905003,0.5)</span>，两者在平衡点附近一致。</p>
+<p>第三步，<strong>用组合规则搭整体并检查符号</strong>。这一步只需要代数运算：把各子系统的存储函数相加，把互联关系代入，看交叉项是否抵消。若交叉项没有抵消，说明互联方式不是“负反馈”意义上的功率守恒连接，需要加阻尼注入或者改成另一种拓扑。</p>
+<p>时域核对是最后一道关。脚本对 <span class="math inline">M=0.5</span>、<span class="math inline">b=0.4</span>、<span class="math inline">k=4.905</span> 的机械臂施加 <span class="math inline">\tau=2\sin3t</span>，从 <span class="math inline">q=0.5</span>、<span class="math inline">\dot q=0</span> 出发积分 <span class="math inline">12</span> s，算出储能变化 <span class="math inline">+3.913069</span> J、输入功 <span class="math inline">+36.474922</span> J、阻尼耗散 <span class="math inline">+32.561853</span> J。按 (53-19)，输入功应该等于储能变化加耗散：<span class="math inline">3.913069+32.561853=36.474922</span>，两边完全对上，残差 <span class="math inline">+2.486\times10^{-7}</span>——这个残差是梯形积分的截断误差，不是模型误差。图 53-9 把三条曲线画在一起：输入功一路爬升到 <span class="math inline">36.5</span>，耗散紧随其后，两者之差就是那条几乎贴着零的储能变化。</p>
+<figure>
+<img src="figs/ch053/fig_053_09_energy.svg" alt="图 53-9　机械臂的能量平衡" /><figcaption aria-hidden="true">图 53-9　机械臂的能量平衡</figcaption>
+</figure>
+<h3 id="三条流程的共同点">53.3.4 三条流程的共同点</h3>
+<p>三条流程看起来差别很大，骨架其实一样：<strong>先把“稳定性”翻译成一个不等式，再把这个不等式翻译成一个可计算的凸问题，最后回代验证。</strong></p>
+<p>SOS 翻译出的不等式是 <span class="math inline">-V&#39;-\varepsilon\|x\|^{2}\ge0</span>，用平方和把它变成半定规划。收缩分析翻译出的不等式是 <span class="math inline">\mu(J)\le-\rho</span>，它本身就是一组特征值不等式，不需要再转。无源性翻译出的不等式是 <span class="math inline">\dot V\le u^{\mathsf T}y</span>，线性情形下用 KYP 变成半定规划。</p>
+<p>三条流程的验证环节也一致：都要回到原始的非线性方程上核对。SOS 用网格，收缩用仿真轨迹，无源用能量平衡。这一步不能省，因为三种方法都在某处引入了松弛——SOS 松弛了“非负”到“平方和”，收缩松弛了“每条轨迹”到“最坏雅可比”，无源松弛了“具体轨迹”到“能量不等式”。</p>
+<p>选择哪条流程，取决于三件事：模型是不是多项式、平衡点是否固定、是否需要组合。表 53-3 把这个选择写成了一张判定表。</p>
+<p>表 53-3　流程选择的判定表</p>
+<table>
+<thead>
+<tr class="header">
+<th>情形</th>
+<th>首选</th>
+<th>备选</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>多项式模型、平衡点固定、要全局结论</td>
+<td>SOS</td>
+<td>二次型 Lyapunov</td>
+<td>先试二次，失败再加四次</td>
+</tr>
+<tr class="even">
+<td>平衡点随工况移动、要跟踪误差界</td>
+<td>收缩分析</td>
+<td>增益调度</td>
+<td>检查正不变集</td>
+</tr>
+<tr class="odd">
+<td>多部件互联、含未建模环节</td>
+<td>无源性</td>
+<td>小增益定理</td>
+<td>端口必须选功率对</td>
+</tr>
+<tr class="even">
+<td>单工作点、线性化够用</td>
+<td>二次型 Lyapunov</td>
+<td>极点判据</td>
+<td>不要过度设计</td>
+</tr>
+</tbody>
+</table>
+<h3 id="五步走一遍从方程到证书">53.3.5 五步走一遍：从方程到证书</h3>
+<p>把 53.3.1 的五步在 (53-1) 上完整走一遍，能看到每一步的具体产物。这一步很重要，因为教材常把流程写得像“填空题”，实际做起来每一步都有判断。</p>
+<p><strong>第一步的产物是一组单项式。</strong> 取 <span class="math inline">V</span> 为四次，<span class="math inline">\dot V</span> 就是六次（四次 <span class="math inline">V</span> 乘一次 <span class="math inline">f</span>，但 <span class="math inline">f</span> 里有三次项，所以 <span class="math inline">\dot V</span> 最高到七次；实际求解时按最高次配 <span class="math inline">z</span>）。二元、三次以内的单项式共 10 个：<span class="math inline">1,x_1,x_2,x_1^{2},x_1x_2,x_2^{2},x_1^{3},x_1^{2}x_2,x_1x_2^{2},x_2^{3}</span>。<span class="math inline">P</span> 占 3 个自由度，<span class="math inline">Q_4</span> 占 6 个，乘子 <span class="math inline">Q_2</span> 占 15 个（<span class="math inline">3\times3</span> 对称阵去掉冗余后是 6 个），总决策变量不到 20 个。</p>
+<p><strong>第二步的产物是约束集合。</strong> 包括 <span class="math inline">P\succeq\varepsilon I</span>、<span class="math inline">Q_4\succeq0</span>、<span class="math inline">Q_2\succeq0</span>，以及 <span class="math inline">\dot V</span> 与 <span class="math inline">z^{\mathsf T}Q_2z</span> 逐项相等的那一组线性等式。等式约束的个数等于所有可能出现的单项式个数，本章对象是 15 个左右。</p>
+<p><strong>第三步的产物是一次求解。</strong> 二次型先试：<code>infeasible</code>，<span class="math inline">0.033</span> s。这个结果不是失败，而是信息——它说明“只用二次型无法证明全局稳定”，必须加四次项。改成四次型后 <code>optimal</code>，<span class="math inline">0.044</span> s。两次求解加起来不到 <span class="math inline">0.1</span> s，这就是 SOS 在低维问题上的实际成本。</p>
+<p><strong>第四步的产物是具体的 <span class="math inline">V</span>。</strong> 求解器返回</p>
+<p><span class="math display">
+\begin{aligned}
+V(x)=&amp;1.350696\,x_1^{2}+0.747537\,x_1x_2+1.737740\,x_2^{2}\\
+&amp;+0.879555\,x_1^{4}+0.006842\,x_1^{3}x_2+0.001245\,x_1^{2}x_2^{2}\\
+&amp;+0.000248\,x_1x_2^{3}+0.000011\,x_2^{4}
+\end{aligned}
+</span></p>
+<p>读这个式子能看出三件事。第一，二次部分的主对角元接近 <span class="math inline">1.35</span> 与 <span class="math inline">1.74</span>，与“刚度 1、阻尼 1”的量级一致——<span class="math inline">V</span> 大致是“能量”的某个正定倍数。第二，四次部分的系数极不均匀：<span class="math inline">x_1^{4}</span> 的系数 <span class="math inline">0.879555</span> 比 <span class="math inline">x_2^{4}</span> 的 <span class="math inline">0.000011</span> 大五个数量级。这不是数值噪声，而是结构性的：非线性只出现在 <span class="math inline">x_1</span> 方向（<span class="math inline">-x_1^{3}</span>），所以证书只需要在 <span class="math inline">x_1</span> 方向加高次修正，<span class="math inline">x_2</span> 方向保持二次就够了。第三，交叉项 <span class="math inline">x_1^{3}x_2</span>、<span class="math inline">x_1^{2}x_2^{2}</span>、<span class="math inline">x_1x_2^{3}</span> 的系数都在 <span class="math inline">10^{-4}</span> 到 <span class="math inline">10^{-2}</span> 之间，是小量，说明两个方向的耦合不强。</p>
+<p><strong>第五步的产物是一组可复核的数字。</strong> <span class="math inline">Q_4</span> 的最小特征值是 <span class="math inline">4.151498\times10^{-6}</span>，正值，说明四次块确实是半正定的（贴零是内点法的正常行为）。在 <span class="math inline">\|x\|\ge0.5</span> 的环带上，网格最大值 <span class="math inline">\max\dot V=-1.647044\times10^{-1}</span>；验证残差 <span class="math inline">\min[-\dot V-\varepsilon\|x\|^{2}]=-0.000000\times10^{0}</span>，说明约束取等号。</p>
+<p>把这五步的产物串起来，就是一份完整的证书：一组单项式（说明搜索空间）、一次求解（说明可行）、一个显式 <span class="math inline">V</span>（说明结论）、一组验证数字（说明可信）。缺任何一环，结论都会被打折。</p>
+<p>值得对照的是“等权二次型”的失败。如果不用求解器，直接取 <span class="math inline">V=\tfrac12(x_1^{2}+x_2^{2})</span>，沿 (53-1) 求导得到</p>
+<p><span class="math display">
+\dot V=x_1x_2+x_2(-x_1-x_1^{3}-x_2)=-x_1^{3}x_2-x_2^{2}
+</span></p>
+<p>这个式子在 <span class="math inline">x_1=2</span>、<span class="math inline">x_2=-1</span> 处取 <span class="math inline">+8-1=+7</span>，是正的大数。等权二次型在网格上的最大值实测是 <span class="math inline">+1.200000\times10^{1}</span>，比零大一个数量级。这个对照说明：<strong>二次型不是“随便取一个就能用”，<span class="math inline">P</span> 的选择直接决定成败。</strong> 求解器的作用正是把“选 <span class="math inline">P</span>”变成一个可以系统完成的任务。</p>
+<h2 id="连续情形">53.4 连续情形</h2>
+<p>本节把三条路线在三个对象上各跑一遍。所有数字来自 <code>code/ch053_sim.py</code>，可以直接复现。</p>
+<h3 id="对象一硬化弹簧sos">53.4.1 对象一：硬化弹簧（SOS）</h3>
+<p>对象是 (53-1)。求解结果已经在 53.2.1 里给过，这里补充两个容易忽略的细节。</p>
+<p>第一个细节是<strong>二次型失败的必然性</strong>。53.1.1 里用 <span class="math inline">x_2=0</span> 这条线给出了论证：只要 <span class="math inline">P_{22}&gt;0</span>，沿 <span class="math inline">x_1\to-\infty</span> 时 <span class="math inline">\dot V\to+\infty</span>。这个论证只用了 <span class="math inline">\dot V</span> 的三次项，与 <span class="math inline">P</span> 的具体数值无关。所以求解器返回 <code>infeasible</code> 是正确行为，不是在 report 一个数值问题。工程上遇到 <code>infeasible</code>，第一件事应该是问“是不是这个函数类里根本不存在”，而不是“是不是求解器没调好”。</p>
+<p>第二个细节是<strong>四次项的量级</strong>。解出的 <span class="math inline">V</span> 里，二次部分占绝对主导（<span class="math inline">x_1^{2}</span> 系数 <span class="math inline">1.35</span>、<span class="math inline">x_2^{2}</span> 系数 <span class="math inline">1.74</span>），四次部分最大的是 <span class="math inline">x_1^{4}</span> 的 <span class="math inline">0.879555</span>，其余三个四次项都在 <span class="math inline">10^{-3}</span> 以下。为什么 <span class="math inline">x_1^{3}x_2</span>、<span class="math inline">x_1x_2^{3}</span>、<span class="math inline">x_2^{4}</span> 这么小？因为 <span class="math inline">\dot V</span> 里最难消的是 <span class="math inline">x_1^{3}x_2</span> 这一项（它来自 <span class="math inline">-x_1^{3}</span> 乘 <span class="math inline">x_2</span>），要让它变负，最经济的方式是在 <span class="math inline">V</span> 里放一个 <span class="math inline">x_1^{4}</span>。其余四次项对消项贡献不大，求解器就把它们压到接近零。这个“稀疏”结构不是人为约束出来的，是可行性问题的自然解。</p>
+<p>图 53-2 已经画过水平集。这里补充一个数值观察。二次部分的两个特征值是 <span class="math inline">1.123322</span> 与 <span class="math inline">1.965114</span>，比值 <span class="math inline">1.75</span>，说明二次型本身已经是一个明显拉长的椭圆，长轴沿特征值较小的那个方向。四次部分的贡献主要在 <span class="math inline">x_1^{4}</span>，它让等值线在大位移处向 <span class="math inline">x_1</span> 轴收拢。所以在这个对象上，四次修正的作用不是“把椭圆变成别的形状”，而是让 <span class="math inline">\dot V</span> 在大位移处仍然为负。这一点常被误解：很多人以为 SOS 会给出一个“更贴合轨迹”的水平集，实际上它只保证可行性，不保证形状最优。要形状最优，得在外层加目标函数，例如最大化 <span class="math inline">\{x:V(x)\le1\}</span> 的体积，那是另一个（更难解的）问题。</p>
+<h3 id="对象二旋转加三次阻尼收缩">53.4.2 对象二：旋转加三次阻尼（收缩）</h3>
+<p>对象是 (53-6)。这个系统的线性部分是 <span class="math inline">\begin{bmatrix}-1&amp;1\\-1&amp;-1\end{bmatrix}</span>，特征值 <span class="math inline">-1\pm\mathrm{j}</span>，是一个带旋转的稳定焦点；三次项 <span class="math inline">-0.1x_2^{3}</span> 只在大速度时起作用。</p>
+<p>矩阵测度在 <span class="math inline">x_2\in[-4,4]</span> 上的最大值是 <span class="math inline">-1.000000</span>，因此 <span class="math inline">\rho=1</span>。两条轨迹从 <span class="math inline">(1,1)</span> 与 <span class="math inline">(-0.5,2)</span> 出发，初始距离 <span class="math inline">1.802776</span>。图 53-5 画出它们在相平面上的走向：两条曲线螺旋着靠近原点，等时刻的连线（点线）越来越短。</p>
+<figure>
+<img src="figs/ch053/fig_053_05_contraction.svg" alt="图 53-5　两条轨迹相互靠拢" /><figcaption aria-hidden="true">图 53-5　两条轨迹相互靠拢</figcaption>
+</figure>
+<p>实测的对数斜率是 <span class="math inline">-1.006814</span>。取 <span class="math inline">t\in[0.5,3]</span> 这一段做最小二乘拟合，得到的就是这个数。与理论下界比较：<span class="math inline">-1.006814/(-1)=1.006814</span>，实测比下界快 <span class="math inline">0.68\%</span>。<span class="math inline">6</span> s 后距离降到 <span class="math inline">3.986\times10^{-3}</span>，与初始值之比 <span class="math inline">2.211\times10^{-3}</span>，而 <span class="math inline">e^{-6}=2.479\times10^{-3}</span>——实测值比理论界小约 <span class="math inline">11\%</span>。这个差别来自 <span class="math inline">\mu</span> 的取法：<span class="math inline">\mu=-1</span> 是整条线上的最坏值，实际轨迹的速度一旦离开零，第二个对角元就比 <span class="math inline">-1</span> 更负，收缩更快。</p>
+<p>图 53-6 画出矩阵测度随 <span class="math inline">x_2</span> 的变化。未加权那条是一条水平线（恒为 <span class="math inline">-1</span>），加权那条是开口向下的抛物线（在 <span class="math inline">x_2=0</span> 处取 <span class="math inline">-0.25</span>，随 <span class="math inline">|x_2|</span> 增大而更负）。两条线都在零以下，这是收缩性的直接证据。</p>
+<figure>
+<img src="figs/ch053/fig_053_06_measure.svg" alt="图 53-6　矩阵测度随状态的变化" /><figcaption aria-hidden="true">图 53-6　矩阵测度随状态的变化</figcaption>
+</figure>
+<p>受迫情形见图 53-7。同一个 <span class="math inline">u=1.5\sin2t</span> 加在两条轨迹上，距离从 <span class="math inline">1.802776</span> 一路降到 <span class="math inline">10</span> s 时的 <span class="math inline">4.661\times10^{-5}</span>。注意纵轴是对数坐标，曲线在中段几乎是一条直线，斜率与 <span class="math inline">\rho=1</span> 的参考线平行。末段出现轻微的下弯，是因为距离已经接近数值精度，浮点误差开始主导。</p>
+<figure>
+<img src="figs/ch053/fig_053_07_forced.svg" alt="图 53-7　受迫情形下距离仍单调下降" /><figcaption aria-hidden="true">图 53-7　受迫情形下距离仍单调下降</figcaption>
+</figure>
+<p>把三个数字放在一起看：<span class="math inline">\rho=1</span>、实测斜率 <span class="math inline">1.0068</span>、<span class="math inline">10</span> s 后距离与初值之比 <span class="math inline">2.6\times10^{-5}</span>。它们互相印证，说明这个对象的收缩性是“结构性”的，不是参数凑出来的。改变三次项系数会改变 <span class="math inline">\mu</span> 吗？不会——对称部分的第二个对角元是 <span class="math inline">-1-0.3x_2^{2}</span>，系数从 <span class="math inline">0.3</span> 改成 <span class="math inline">3</span> 只会让它更负，<span class="math inline">\mu</span> 仍然是 <span class="math inline">-1</span>。这就是收缩分析在这种结构上的好处：结论对参数不敏感。</p>
+<h3 id="对象三单自由度机械臂无源性">53.4.3 对象三：单自由度机械臂（无源性）</h3>
+<p>机械臂方程是 <span class="math inline">M\ddot q+b\dot q+k\sin q=\tau</span>，参数 <span class="math inline">M=0.5</span>、<span class="math inline">b=0.4</span>、<span class="math inline">k=4.905</span>。取端口 <span class="math inline">(\tau,\dot q)</span>，传递函数是 <span class="math inline">G(s)=2s/(Ms^{2}+bs+k)</span>，分子上的 <span class="math inline">2</span> 就是 <span class="math inline">1/M</span>，来自加速度方程里力矩的系数。</p>
+<p>图 53-8 画出实部与幅值。实部曲线在整个频段上贴着零线的上方，最小值 <span class="math inline">+3.325\times10^{-6}</span> 出现在最低频点 <span class="math inline">\omega=10^{-2}</span> rad/s——严格来说这不是“零”，是数值上非常接近零的正数。这个量级有物理原因：低频时刚度主导，力矩主要用来产生静位移而不是速度，<span class="math inline">\dot q</span> 与 <span class="math inline">\tau</span> 近似差一个 <span class="math inline">90°</span> 相位、幅值成正比于 <span class="math inline">\omega</span>，所以实部按 <span class="math inline">\omega^{2}</span> 趋零。幅值在 <span class="math inline">\omega=3.133</span> rad/s 处达到 <span class="math inline">4.999978</span>，正好是共振点 <span class="math inline">\sqrt{k/M}=3.132</span>。</p>
+<figure>
+<img src="figs/ch053/fig_053_08_passivity.svg" alt="图 53-8　机械臂速度输出的频域无源性" /><figcaption aria-hidden="true">图 53-8　机械臂速度输出的频域无源性</figcaption>
+</figure>
+<p>时域的能量平衡已经在 53.3.3 里给过：储能变化 <span class="math inline">+3.913069</span> J、输入功 <span class="math inline">+36.474922</span> J、耗散 <span class="math inline">+32.561853</span> J、残差 <span class="math inline">+2.486\times10^{-7}</span>。这三个数的比例值得注意：输入功的 <span class="math inline">89\%</span> 被阻尼耗散掉了，只有 <span class="math inline">11\%</span> 变成储能。对一个 <span class="math inline">12</span> s、幅度 <span class="math inline">2</span> N·m 的正弦激励来说，这个比例说明系统工作在“阻尼主导”的状态，而不是“惯性主导”。</p>
+<p>KYP 解出的 <span class="math inline">P=\mathrm{diag}(4.905003,0.5)</span> 与物理能量完全对应：<span class="math inline">0.5</span> 是质量，<span class="math inline">4.905003</span> 是 <span class="math inline">k=Mg/l</span>。这个对应不是巧合，而是 <span class="math inline">V=\tfrac12M\dot q^{2}+k(1-\cos q)</span> 在原点附近展开成 <span class="math inline">\tfrac12M\dot q^{2}+\tfrac12kq^{2}</span> 的结果。求解器不知道物理，它只是解 LMI，但 LMI 的唯一解（在归一化意义下）就是这个物理能量。</p>
+<h3 id="反例非无源对象加积分器">53.4.4 反例：非无源对象加积分器</h3>
+<p>无源性不是万能的，但“不无源”的后果很具体。取一个一阶对象</p>
+<p><span class="math display">
+G(s)=\frac{s-1}{s+2}
+\tag{53-25}
+</span></p>
+<p>它的极点在 <span class="math inline">-2</span>，本身稳定；零点在 <span class="math inline">+1</span>，是非最小相位的。频域实部是</p>
+<p><span class="math display">
+\mathrm{Re}\,G(\mathrm{j}\omega)=\frac{\omega^{2}-2}{\omega^{2}+4}
+\tag{53-26}
+</span></p>
+<p>当 <span class="math inline">\omega&lt;\sqrt2=1.414214</span> 时为负，最小值趋近 <span class="math inline">-0.499963</span>。图 53-10 左图画出这条曲线，负实部的频段一目了然。</p>
+<figure>
+<img src="figs/ch053/fig_053_10_counterexample.svg" alt="图 53-10　非无源对象与积分器反馈" /><figcaption aria-hidden="true">图 53-10　非无源对象与积分器反馈</figcaption>
+</figure>
+<p>现在把它和一个积分器 <span class="math inline">1/s</span> 用负反馈接起来。两者单独看都“没问题”：<span class="math inline">G</span> 稳定，积分器临界稳定（在虚轴上有一个极点，工程上常当作可用）。但闭环特征多项式是</p>
+<p><span class="math display">
+s(s+2)+(s-1)=s^{2}+3s-1
+\tag{53-27}
+</span></p>
+<p>根为 <span class="math inline">-3.302776</span> 与 <span class="math inline">+0.302776</span>。一个正根，闭环不稳定。图 53-10 右图是从初值 <span class="math inline">0.01</span> 出发的仿真，两条状态曲线在半对数坐标上是直线上升的，斜率就是 <span class="math inline">0.302776</span>：按这个速率，<span class="math inline">6</span> s 内幅值放大约 <span class="math inline">6</span> 倍，<span class="math inline">23</span> s 放大约一千倍。看起来不快，但这是没有任何饱和与限幅的理想情形，实际系统会在几分钟内撞到物理限位。</p>
+<p>这个反例说明三件事。第一，<strong>“每个部件都稳定”不等于“互联后稳定”</strong>，这正是无源性要解决的问题。第二，<strong>无源性的条件是充分不必要的</strong>：<span class="math inline">G</span> 不无源，但它与积分器的互联确实不稳定，所以这个例子里无源性给出的否定判断是对的。第三，<strong>积分器是最危险的互联伙伴</strong>，因为它把低频增益拉到无穷，任何在低频有负实部的对象都会被它放大成不稳定。工程上“给积分器加抗饱和”、“给积分环节串一个低通”，本质上都是在破坏这个危险的低频共振。</p>
+<h3 id="三个对象的横向对照">53.4.5 三个对象的横向对照</h3>
+<p>本节用了三个对象：硬化弹簧 (53-1)、旋转加三次阻尼 (53-6)、单自由度机械臂。它们各自适合展示一种工具，放在一起对照能看清工具的“分工”是怎么来的。</p>
+<p><strong>硬化弹簧适合 SOS。</strong> 它的非线性项是 <span class="math inline">x_1^{3}</span>，是多项式，平衡点在原点，状态只有两维。三个条件全中，SOS 一次求解就出证书。若换成机械臂的 <span class="math inline">\sin q</span>，这个优势立刻消失——三角函数必须先截断，截断就引入了“只在局部有效”的限制。</p>
+<p><strong>旋转加三次阻尼适合收缩分析。</strong> 它的雅可比是</p>
+<p><span class="math display">
+J(x)=\begin{bmatrix}-1&amp;1\\-1&amp;-1-0.3x_2^{2}\end{bmatrix}
+</span></p>
+<p>对称部分是 <span class="math inline">\mathrm{diag}\big(-1,\;-1-0.3x_2^{2}\big)</span>，最大特征值恒等于 <span class="math inline">-1</span>，所以 <span class="math inline">\rho=1.0</span>。报告里打印的位置是 <span class="math inline">x_2=-4.000</span>，那只是扫描的起点——整段 <span class="math inline">x_2</span> 上这个值都一样，<code>argmax</code> 返回了第一个。这个小细节说明：<strong>对称部分为对角阵时，收缩速率与状态无关</strong>，这是最好的情形；一旦雅可比有非对角耦合，<span class="math inline">\mu</span> 就会随状态变化，必须扫描。</p>
+<p>这个结论不依赖初值、不依赖平衡点位置，甚至不依赖 <span class="math inline">x_1</span>——只要 <span class="math inline">x_2</span> 有界，收缩就成立。SOS 在这个对象上也能做（毕竟是多项式），但它给出的只是一个“存在 <span class="math inline">V</span>”，而收缩分析直接给出了速率，信息量更大。这就是 53.2.2 说的“收缩不要求知道平衡点”的实际价值：这个对象的非线性只影响阻尼强度，不影响平衡点位置，用收缩一句话就说清了。</p>
+<p><strong>机械臂适合无源性。</strong> 它的动力学 <span class="math inline">M\ddot q+b\dot q+k\sin q=\tau</span> 里，<span class="math inline">M\ddot q</span> 是惯性、<span class="math inline">b\dot q</span> 是耗散、<span class="math inline">k\sin q</span> 是保守力。三部分的物理意义清楚，天然对应“动能 + 势能”的能量函数，无源性几乎是免费的。反过来，用 SOS 处理 <span class="math inline">\sin q</span> 要先截断，用收缩分析要算雅可比（也不难，但得到的 <span class="math inline">\rho</span> 会随摆角变化，不如无源性结论干净）。</p>
+<p>三个对象的对照可以压成一句判据：<strong>非线性是多项式、要全局结论——SOS；非线性只影响耗散、要速率——收缩；非线性来自保守力、要组合——无源。</strong> 这句话不是定理，但它解释了为什么本章的三个算例恰好对应三种工具，而不是随便挑的。</p>
+<p>还有一个交叉验证值得记：机械臂在频域上算出 <span class="math inline">\min\mathrm{Re}\,G=+3.325\times10^{-6}</span>，在 LMI 上算出 KYP 约束的最大特征值 <span class="math inline">+4.160\times10^{-10}</span>，两个判据都指向“临界无源”。这种“两条完全不同的路给出同一个结论”的情形，是判断数值结果可信度的最好证据。相比之下，硬化弹簧只有一个 SOS 证书，没有第二条路可交叉——这时就要靠网格回代来补，这也是 §53.10.3 强调“证书要带验证残差”的原因。</p>
+<h2 id="离散情形">53.5 离散情形</h2>
+<h3 id="连续证书为什么不等于离散证书">53.5.1 连续证书为什么不等于离散证书</h3>
+<p>真实的控制器都是离散的：传感器采样、处理器计算、执行器保持。被控对象连续，控制器离散，两者之间的接口是一个采样周期 <span class="math inline">T_s</span>。连续域证出来的稳定性，在这个接口上可能失效。</p>
+<p>失效的机制有三种。第一种是<strong>采样引入的相位滞后</strong>，零阶保持器的等效延迟约 <span class="math inline">T_s/2</span>，在穿越频率附近吃掉相位裕度。第二种是<strong>离散化改变了映射</strong>，前向欧拉把 <span class="math inline">\dot x=f(x)</span> 换成 <span class="math inline">x_{k+1}=x_k+T_sf(x_k)</span>，这个映射的稳定性与 <span class="math inline">f</span> 的连续稳定性不是一回事。第三种是<strong>采样间的行为不可见</strong>，离散时刻都稳定，采样之间可能已经跑远——这在非线性系统里尤其常见。</p>
+<p>本节只讨论第二种，因为它是唯一可以用本章工具定量分析的。前两种属于采样系统理论，需要另开一节，本书在第 62 章讨论。</p>
+<h3 id="离散收缩因子">53.5.2 离散收缩因子</h3>
+<p>把 (53-6) 用前向欧拉离散化，得到</p>
+<p><span class="math display">
+x_{k+1}=x_k+T_s\,f(x_k)
+\tag{53-28}
+</span></p>
+<p>两条轨迹的差满足</p>
+<p><span class="math display">
+\delta_{k+1}=\big(I+T_sJ(\xi_k)\big)\delta_k
+\tag{53-29}
+</span></p>
+<p>于是</p>
+<p><span class="math display">
+\|\delta_{k+1}\|\le\sigma_{\max}\big(I+T_sJ(\xi_k)\big)\|\delta_k\|
+\tag{53-30}
+</span></p>
+<p><span class="math inline">\sigma_{\max}</span> 是最大奇异值。这一步与连续情形有一个重要区别：连续情形用的是<strong>对称部分的最大特征值</strong>，离散情形用的是<strong>最大奇异值</strong>。因为 <span class="math inline">I+T_sJ</span> 不是对称的，它的特征值模长不足以界定范数增长——非正规矩阵可以在特征值都小于 <span class="math inline">1</span> 的情况下放大向量。用奇异值是保守但正确的选择。</p>
+<p>脚本取 <span class="math inline">T_s=0.05</span> s，在 <span class="math inline">x_2\in[-4,4]</span> 上采样 <span class="math inline">161</span> 个点，算出</p>
+<p><span class="math display">
+\max\sigma_{\max}\big(I+T_sJ\big)=0.951505
+\tag{53-31}
+</span></p>
+<p>作为对照，连续域的理论值是 <span class="math inline">e^{-\rho T_s}=e^{-0.05}=0.951229</span>。两者相差 <span class="math inline">0.000276</span>，非常接近。这个接近不是巧合：当 <span class="math inline">T_s</span> 很小时，<span class="math inline">I+T_sJ</span> 的奇异值与 <span class="math inline">e^{T_sJ}</span> 的奇异值只差 <span class="math inline">O(T_s^{2})</span> 项，而 <span class="math inline">e^{T_sJ}</span> 的范数界正是 <span class="math inline">e^{-\rho T_s}</span>。</p>
+<p>还可以用一个更粗的界核对：<span class="math inline">\sigma_{\max}(I+T_sJ)\le1+T_s\mu(J)=1-0.05=0.95</span>。实测 <span class="math inline">0.951505</span> 比这个界大 <span class="math inline">0.0015</span>，说明非正规性确实带来了一点额外的放大。这一点放大在 <span class="math inline">T_s</span> 增大时会迅速变大，是离散化必须小心的原因。</p>
+<h3 id="逐步比值说明了什么">53.5.3 逐步比值说明了什么</h3>
+<p>奇异值界是“最坏方向”的界，实际轨迹的收缩往往更快。脚本从两个相距 <span class="math inline">0.02</span> 的初值出发，迭代 <span class="math inline">40</span> 步，记录每一步的距离比：</p>
+<p><span class="math display">
+\frac{\|\delta_{k+1}\|}{\|\delta_k\|}\in[0.943379,\;0.951314],\qquad\text{平均 }0.950115
+\tag{53-32}
+</span></p>
+<p>逐步比值的区间是 <span class="math inline">[0.943379,0.951314]</span>，只有 <span class="math inline">0.008</span> 宽，说明收缩沿轨迹相当均匀，没有出现“某些步几乎不收缩”的情况。最大值 <span class="math inline">0.951314</span> 略大于 <span class="math inline">e^{-0.05}=0.951229</span>，说明在最坏方向上离散映射的收缩比连续系统稍慢；平均值 <span class="math inline">0.950115</span> 略小，整体上比连续界快一点。</p>
+<p>这三个数与连续情形的对应关系很清楚：连续实测斜率 <span class="math inline">1.006814</span> 对应离散平均比值 <span class="math inline">e^{-1.006814\times0.05}=0.950912</span>，与实测平均 <span class="math inline">0.950115</span> 相差 <span class="math inline">0.0008</span>。两个独立的数值实验（连续积分与离散迭代）给出一致的收缩率，这种交叉验证比单一实验可靠得多。</p>
+<h3 id="采样周期的选择">53.5.4 采样周期的选择</h3>
+<p>离散收缩条件 <span class="math inline">\sigma_{\max}(I+T_sJ)&lt;1</span> 对 <span class="math inline">T_s</span> 提出了上限。对本章对象，粗略的界是</p>
+<p><span class="math display">
+T_s&lt;\frac{2}{|\mu(J)|}=2\ \text{s}
+\tag{53-33}
+</span></p>
+<p>这个界宽得离谱——<span class="math inline">2</span> s 的采样周期对任何机械系统都不可接受。它说明“稳定性”这个要求对采样周期几乎没有约束，真正约束 <span class="math inline">T_s</span> 的是<strong>性能</strong>与<strong>采样间行为</strong>。</p>
+<p>性能约束来自收敛速率。若要求每个采样周期至少衰减到原来的 <span class="math inline">\alpha</span> 倍，则 <span class="math inline">T_s</span> 与 <span class="math inline">\rho</span> 必须满足 <span class="math inline">e^{-\rho T_s}\le\alpha</span>，即 <span class="math inline">T_s\ge\ln(1/\alpha)/\rho</span>。这不是对采样周期的硬性限制，而是一条自洽关系：它说明“每步衰减多少”与“连续域速率多少”不能独立指定。工程上常用它做交叉核对——若仿真测出的逐步比值比 <span class="math inline">e^{-\rho T_s}</span> 大很多，说明离散化已经偏离连续模型。</p>
+<p>采样间行为的约束最难量化。一个实用的经验是：把 <span class="math inline">T_s</span> 取到系统最快时间常数的 <span class="math inline">1/10</span> 到 <span class="math inline">1/20</span>。对本章对象，最快的模态是 <span class="math inline">-1\pm\mathrm{j}</span>，时间常数 <span class="math inline">1</span> s，所以 <span class="math inline">T_s</span> 取 <span class="math inline">0.05</span> 到 <span class="math inline">0.1</span> s 是合理的——脚本选的 <span class="math inline">0.05</span> 正好在这个区间内。</p>
+<p>把三个约束放在一起看，会发现它们回答的是不同的问题：稳定性约束说“<span class="math inline">T_s</span> 不能太大”，自洽关系给出“每步衰减比”的预期值，采样间约束说“<span class="math inline">T_s</span> 要远小于最快模态”。实际工程中第三条几乎总是最紧的，前两条只在极端情况下起作用。</p>
+<p>这也解释了一个常见现象：同一个控制器，仿真时用 <span class="math inline">T_s=1</span> ms 跑得很好，装到实际系统上改成 <span class="math inline">10</span> ms 就抖。不是稳定性出了问题（按 (53-33)，<span class="math inline">10</span> ms 离上限远得很），而是采样间行为变了：如果对象里含时间常数 <span class="math inline">5</span> ms 的未建模模态（例如减速器的扭转刚度、电流环的滤波），<span class="math inline">10</span> ms 的采样根本“看不见”它，离散模型给出的稳定结论对这个模态无效。</p>
+<h3 id="离散证书的三种写法">53.5.5 离散证书的三种写法</h3>
+<p>连续域的证书拿到离散域，写法有三种，各有适用范围。</p>
+<p><strong>第一种，先离散后证。</strong> 把 <span class="math inline">f</span> 用前向欧拉换成 <span class="math inline">x_{k+1}=F(x_k)</span>，直接找离散 Lyapunov 函数 <span class="math inline">V</span> 使 <span class="math inline">V(F(x))-V(x)\le-\varepsilon\|x\|^{2}</span>。优点是不涉及采样间行为，结论对离散轨迹严格成立。缺点是 <span class="math inline">F</span> 的次比 <span class="math inline">f</span> 高一次（欧拉映射把 <span class="math inline">\dot x</span> 的次数加一），SOS 的规模随之上升；而且这个证书对采样周期 <span class="math inline">T_s</span> 敏感，改 <span class="math inline">T_s</span> 就要重解。</p>
+<p><strong>第二种，先证后离散。</strong> 在连续域解出 <span class="math inline">V</span>，再验证离散映射下 <span class="math inline">V(F(x))-V(x)</span> 仍为负。优点是 <span class="math inline">V</span> 只需解一次，可以扫不同的 <span class="math inline">T_s</span>。缺点是结论弱：连续域的 <span class="math inline">\dot V&lt;0</span> 不保证离散域的 <span class="math inline">V(F(x))-V(x)&lt;0</span>，必须逐个 <span class="math inline">T_s</span> 验。工程上的做法是把这个验证做成一个 <span class="math inline">T_s</span> 的扫描，找出“仍成立”的最大 <span class="math inline">T_s</span>，作为一个保守的采样周期上限。</p>
+<p><strong>第三种，用矩阵测度。</strong> 本章用的就是这一种：不构造 <span class="math inline">V</span>，直接估 <span class="math inline">\sigma_{\max}(I+T_sJ)</span>。优点是计算量极小，只需要雅可比；缺点是结论是“距离收缩”，不是“能量下降”，两者不是一回事——距离收缩保证轨迹互相靠拢，但不保证 <span class="math inline">V</span> 单调下降。</p>
+<p>三种写法的选择判据是：要严格的离散证书、且模型简单——第一种；要在固定 <span class="math inline">V</span> 下扫采样周期——第二种；只想要一个快速的采样周期估计——第三种。三者的保守程度依次递减，计算量也依次递减。</p>
+<p>一个容易忽略的细节是：本章的 <span class="math inline">\sigma_{\max}</span> 界是在 <span class="math inline">x_2\in[-4,4]</span> 上取的，超出这个区间结论不成立。而离散映射可能把状态推出这个区间——比如初值在 <span class="math inline">x_2=4</span> 附近、<span class="math inline">T_s</span> 又偏大时，一步就可能跳到 <span class="math inline">|x_2|&gt;4</span>。严格的做法是同时验证“区域正不变”，即 <span class="math inline">x</span> 在区域内时 <span class="math inline">F(x)</span> 仍在区域内。本章对象满足这个条件（阻尼项把 <span class="math inline">x_2</span> 往回拉），但这一步在脚本里没有单独验证，属于可以补强的地方。</p>
+<h2 id="稳定性与性能">53.6 稳定性与性能</h2>
+<h3 id="四种稳定性结论的量纲不一样">53.6.1 四种“稳定性结论”的量纲不一样</h3>
+<p>工程上说“这个系统稳定”，实际可能指四件不同的事：存在一个证书、系统有一定的裕度、误差按某个速率收敛、稳态误差不超过某个界。这四件事的量纲完全不同，混在一起讨论就会出问题。</p>
+<p><strong>证书</strong>是一个存在性陈述，没有量纲。SOS 返回的系数矩阵、KYP 返回的 <span class="math inline">P</span>、收缩分析返回的 <span class="math inline">\rho</span>，都属于这一类。证书的价值在于可验证，不在于可比较——两个系统的证书没法直接比大小。</p>
+<p><strong>裕度</strong>有量纲，但量纲取决于方法。SOS 里的 <span class="math inline">\varepsilon</span> 出现在 <span class="math inline">-\dot V\ge\varepsilon\|x\|^{2}</span> 中，单位是“每秒每单位状态平方的能量”，即 <span class="math inline">1/\text{s}</span> 乘以能量的单位。<span class="math inline">P</span> 的最小特征值有能量单位。这两个数不能直接比较。</p>
+<p><strong>速率</strong>的量纲是 <span class="math inline">1/\text{s}</span>，可以直接比较。二次型 Lyapunov 的速率是 <span class="math inline">\lambda_{\min}(Q)/\lambda_{\max}(P)</span>，收缩分析的速率是 <span class="math inline">\rho=-\max\mu(J)</span>，两者都是 <span class="math inline">1/\text{s}</span>。但它们证的不是同一件事：前者证“到平衡点的距离”，后者证“两条轨迹之间的距离”。</p>
+<p><strong>误差界</strong>有状态量的量纲。受迫收缩给出的是 <span class="math inline">\sup\|d\|/\rho</span>，KYP 给出的是 <span class="math inline">L_2</span> 增益，两者的量纲也不同。</p>
+<h3 id="sos-的-varepsilon-不是速率">53.6.2 SOS 的 <span class="math inline">\varepsilon</span> 不是速率</h3>
+<p>这一点最容易搞错。看本章的数值：<span class="math inline">\varepsilon=10^{-3}</span>，<span class="math inline">P</span> 的最大特征值 <span class="math inline">1.965114</span>，若按二次型的标准公式估算速率，会得到</p>
+<p><span class="math display">
+\alpha_{\text{名义}}=\frac{\varepsilon}{\lambda_{\max}(P)}=\frac{10^{-3}}{1.965114}=5.089\times10^{-4}\ \text{s}^{-1}
+\tag{53-34}
+</span></p>
+<p>对应的时间常数 <span class="math inline">1965</span> s，比实际收敛慢三个数量级。为什么？因为 <span class="math inline">\varepsilon</span> 是<strong>人为设定的可行性裕度</strong>，不是求解器优化出来的速率。求解器只要求“存在一个正的 <span class="math inline">\varepsilon</span>”，本章取 <span class="math inline">10^{-3}</span> 是为了数值稳定，与真实收敛速度无关。</p>
+<p>真实的收敛速度要看 <span class="math inline">\dot V</span> 的实际大小。网格上 <span class="math inline">\dot V</span> 的最大值是 <span class="math inline">-1.647044\times10^{-1}</span>（在 <span class="math inline">|x|\ge0.5</span> 的区域），这个数比 <span class="math inline">\varepsilon</span> 大两个数量级。用它估算速率：</p>
+<p><span class="math display">
+\alpha_{\text{回代}}\approx\frac{1.647\times10^{-1}}{1.965114}=8.38\times10^{-2}\ \text{s}^{-1}
+\tag{53-35}
+</span></p>
+<p>时间常数约 <span class="math inline">12</span> s。这个数比 (53-34) 靠谱，但相图 53-2 里那条轨迹在十几秒内振幅已经小到看不清，实际速率明显快于 <span class="math inline">0.08</span> /s。原因有两层：一是 <span class="math inline">\max\dot V</span> 出现在离原点较远的地方，而那里的 <span class="math inline">V</span> 也更大；二是 <span class="math inline">V</span> 含四次项，用 <span class="math inline">\lambda_{\max}(P)</span> 归一化忽略了四次部分的贡献。</p>
+<p>所以结论要说得更准确：<strong>SOS 的证书可以给出速率的下界，但这个下界很松，松到只能用来判断“是否收敛”，不能用来估调节时间。</strong> 本章两个估算值 <span class="math inline">5.09\times10^{-4}</span> 与 <span class="math inline">8.38\times10^{-2}</span> 相差两个数量级，而真实速率还在这两者之上——同一个证书，换个折算方式就差这么多，说明这个换算本身不该被当作定量工具。想直接优化速率，得把 <span class="math inline">\varepsilon</span> 提为决策变量做最大化，那是一个更难的优化问题，规模大、数值脆，工程上不如“求可行性 + 回代估速率 + 仿真核对”这套组合。</p>
+<h3 id="收缩速率与调节时间">53.6.3 收缩速率与调节时间</h3>
+<p>收缩分析给的 <span class="math inline">\rho</span> 是货真价实的速率。本章 <span class="math inline">\rho=1</span>，实测斜率 <span class="math inline">1.006814</span>，两者差 <span class="math inline">0.68\%</span>。按 <span class="math inline">2\%</span> 准则估调节时间：</p>
+<p><span class="math display">
+t_{2\%}=\frac{\ln(1/0.02)}{\rho}=\frac{3.912}{1}=3.912\ \text{s}
+\tag{53-36}
+</span></p>
+<p>用实测斜率算是 <span class="math inline">3.912/1.006814=3.885</span> s。仿真结果是 <span class="math inline">6</span> s 时距离已降到初值的 <span class="math inline">2.211\times10^{-3}</span>，远小于 <span class="math inline">2\%</span>，与估算一致（<span class="math inline">3.885</span> s 时应该在 <span class="math inline">2\%</span>，<span class="math inline">6</span> s 时应该更小）。三个数——理论 <span class="math inline">3.912</span> s、实测折算 <span class="math inline">3.885</span> s、仿真校验——互相咬合。</p>
+<p>这个例子说明收缩分析在性能估算上的优势：<span class="math inline">\rho</span> 直接就是速率的倒数，不需要任何额外的换算。代价是保守——<span class="math inline">\rho</span> 取的是全空间最坏值，实际收敛往往更快。本章实际快 <span class="math inline">0.68\%</span>，不算多；有些系统会快几倍，因为最坏 <span class="math inline">\mu</span> 出现在轨迹从不经过的区域。</p>
+<h3 id="无源性为什么不给速率">53.6.4 无源性为什么不给速率</h3>
+<p>无源性的不等式是 <span class="math inline">\dot V\le u^{\mathsf T}y</span>，右边不是负的。当 <span class="math inline">u=0</span> 时有 <span class="math inline">\dot V\le0</span>，只保证能量不增，不保证收敛到零——无阻尼振子就是 <span class="math inline">\dot V=0</span>，能量守恒，永远在转。要得到收敛，必须额外假设“严格无源”：存在 <span class="math inline">\delta&gt;0</span> 使 <span class="math inline">\dot V\le u^{\mathsf T}y-\delta\|y\|^{2}</span>。这时收敛速率取决于 <span class="math inline">\delta</span> 与 <span class="math inline">\|y\|</span> 和 <span class="math inline">\|x\|</span> 的关系，而这个关系通常是非线性的（例如 <span class="math inline">y=\dot q</span> 与 <span class="math inline">x=(q,\dot q)</span> 之间差一个积分），所以速率只能局部分析。</p>
+<p>工程上的处理是把无源性当作<strong>结构性质</strong>用，速率另外算。先用无源性确认互联不会自激，再用收缩或 Lyapunov 在具体工况上算速率。两者分工明确，不互相替代。</p>
+<p>表 53-4 把四种性能指标与证书参数的对应关系列出来。</p>
+<p>表 53-4　性能指标与证书参数的对应</p>
+<table>
+<thead>
+<tr class="header">
+<th>性能指标</th>
+<th>需要的信息</th>
+<th>对应参数</th>
+<th>本章数值</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>调节时间（<span class="math inline">2\%</span>）</td>
+<td>指数速率</td>
+<td><span class="math inline">\rho</span> 或 <span class="math inline">\lambda_{\min}(Q)/\lambda_{\max}(P)</span></td>
+<td><span class="math inline">3.9</span> s</td>
+</tr>
+<tr class="even">
+<td>稳态误差</td>
+<td>扰动幅度与速率</td>
+<td><span class="math inline">\sup\|d\|/\rho</span></td>
+<td>同扰动下为 <span class="math inline">0</span></td>
+</tr>
+<tr class="odd">
+<td>超调</td>
+<td>吸引域形状</td>
+<td><span class="math inline">V</span> 的水平集</td>
+<td>见图 53-2</td>
+</tr>
+<tr class="even">
+<td>鲁棒性</td>
+<td>端口性质</td>
+<td><span class="math inline">\mathrm{Re}\,G\ge0</span></td>
+<td>最小值 <span class="math inline">3.3\times10^{-6}</span></td>
+</tr>
+</tbody>
+</table>
+<p>表里“稳态误差”那一行需要解释。本章受迫算例的稳态误差几乎为零，原因是两条轨迹受同一个扰动，扰动在差值方程里抵消了。如果是一个受扰、一个不受，稳态界就是 <span class="math inline">\sup\|d\|/\rho=1.5/1=1.5</span>，这个数大得没有工程意义。所以在用 (53-17) 之前，必须先确认 <span class="math inline">d</span> 到底是什么——这是本章反复强调的一个点。</p>
+<h3 id="保守性从哪来">53.6.5 保守性从哪来</h3>
+<p>三种方法的保守性来源不同，处理方式也不同。</p>
+<p>SOS 的保守性来自“非负→平方和”的松弛。Motzkin 多项式说明这个松弛不是等价的。实际影响有多大？对 Lyapunov 证书，多数情况下四次型已经足够，因为 <span class="math inline">\dot V</span> 的负定性通常由一两个主导项决定，其余项可以吸收进平方和。真正卡住的是高维、强耦合、或者势能多峰的对象。</p>
+<p>收缩分析的保守性来自“最坏雅可比”。<span class="math inline">\mu</span> 在整条轨迹上取上界，而实际轨迹只经过其中一小部分。本章的 <span class="math inline">0.68\%</span> 差异就是这个来源。改进办法是用时变度量 <span class="math inline">\Theta(x)</span>，让尺子跟着状态走，代价是要解一个偏微分不等式，通常没有闭式解。</p>
+<p>无源性的保守性来自“对所有输入成立”。它要求 <span class="math inline">\mathrm{Re}\,G(\mathrm{j}\omega)\ge0</span> 在全频段成立，而实际输入可能只占一个窄频带。宽带要求换来了组合性，这是一笔明确的交易。</p>
+<p>三种保守性叠在一起，会让结论比实际“差很多”。工程上的应对不是去消除保守性，而是<strong>用仿真确认保守的方向</strong>：如果证书说稳定而仿真发散，那是证书错了（实现错误或模型错误）；如果证书说稳定而仿真收敛得更好，那是保守，可以接受。这个不对称的判断标准，比追求“证书与仿真完全一致”现实得多。</p>
+<h3 id="把三种数换算成工程指标">53.6.6 把三种数换算成工程指标</h3>
+<p>工程报告里没人看 <span class="math inline">\max\dot V</span>，大家看的是“几秒收敛”“超调多少”。三种工具给出的数要换成这些指标才能用。</p>
+<p><strong>SOS 的换算。</strong> 已知 <span class="math inline">V\le\lambda_{\max}(P)\|x\|^{2}</span>，<span class="math inline">\dot V\le-c</span>（<span class="math inline">c&gt;0</span> 是网格最大值），于是</p>
+<p><span class="math display">
+\frac{\mathrm{d}}{\mathrm{d}t}\|x\|^{2}\le\frac{\dot V}{\lambda_{\max}(P)}\le-\frac{c}{\lambda_{\max}(P)}
+</span></p>
+<p>本章的 <span class="math inline">c=0.164704</span>、<span class="math inline">\lambda_{\max}(P)=1.965114</span>，代入得速率下界 <span class="math inline">0.08397</span> /s，时间常数约 <span class="math inline">11.9</span> s，<span class="math inline">2\%</span> 调节时间约 <span class="math inline">4.6/0.08397=54.8</span> s。这个数看起来很差——仿真里同样的对象两秒就收敛了。差在哪里？差在上式用的是<strong>整个环带上的最坏 <span class="math inline">\dot V</span></strong>，而实际轨迹大部分时间在原点附近，那里的 <span class="math inline">\dot V</span> 比最坏值小得多。所以这个换算是“最坏情况下的最慢速度”，只能当保底，不能当预期。这也解释了 53.6.2 的结论：SOS 的 <span class="math inline">\varepsilon</span> 与 <span class="math inline">c</span> 都不是速率，硬换算出来的数会系统性偏悲观。</p>
+<p><strong>收缩分析的换算。</strong> 这个换算干净得多，因为 <span class="math inline">\rho</span> 本身就是按 <span class="math inline">e^{-\rho t}</span> 定义的：<span class="math inline">d(t)\le d(0)e^{-\rho t}</span>。<span class="math inline">\rho=1.0</span> 对应时间常数 <span class="math inline">1</span> s，<span class="math inline">2\%</span> 调节时间 <span class="math inline">4.6</span> s，十倍衰减 <span class="math inline">2.3</span> s。仿真实测斜率 <span class="math inline">-1.006814</span>，与理论值差 <span class="math inline">0.68\%</span>，说明这个换算是准的。收缩分析之所以能给出准的速率，是因为它的界是“沿轨迹成立”的，不是“最坏点成立”的。</p>
+<p><strong>无源性的换算。</strong> 没有速率可换。无源性只说“能量不增”，不说“多快减到零”。若一定要给个数，只能借助额外假设（比如能量函数满足 <span class="math inline">\dot V\le-\beta V</span>），而这一步已经跳出了无源性的框架，属于 Lyapunov 分析。工程上正确的做法是把无源性当作“稳定性证明”，把速率交给另外两种工具——这种“一个证稳定、一个给速率”的分工，比强行让一种工具包办要诚实。</p>
+<p>把三种换算并排看，会得到一个有点反直觉的结论：<strong>同一个对象，用不同工具换算出的收敛时间可以差一个数量级，而这并不矛盾。</strong> 它们回答的是不同的问题：SOS 回答“最坏能慢到什么程度”，收缩回答“任意两条轨迹以多快速率靠拢”，无源回答“能量会不会涨”。报告里写哪个数，取决于读者要拿它做什么决策。若是设计控制器带宽，用收缩的 <span class="math inline">\rho</span>；若是评估最坏情况下的安全裕度，用 SOS 的 <span class="math inline">c/\lambda_{\max}(P)</span>；若是判断能不能与其他模块互联，用无源性。</p>
+<h2 id="参数意义与作用">53.7 参数意义与作用</h2>
+<p>本章的方法里，真正需要工程师决定的参数只有五个：SOS 的裕度 <span class="math inline">\varepsilon</span>、<span class="math inline">V</span> 的次数与结构、收缩分析的度量 <span class="math inline">\Theta</span>、无源性的端口与阻尼、离散化的 <span class="math inline">T_s</span>。其余都是对象本身的物理参数，改不了。本节逐个说明这五个参数的作用方向。</p>
+<h3 id="裕度-varepsilon">53.7.1 裕度 <span class="math inline">\varepsilon</span></h3>
+<p><span class="math inline">\varepsilon</span> 出现在约束 <span class="math inline">-\dot V\ge\varepsilon\|x\|^{2}</span> 里，物理含义是“每个单位状态平方，能量至少以 <span class="math inline">\varepsilon</span> 的速率耗散”。它有两个作用：保证 <span class="math inline">V</span> 在原点附近严格下降（否则 <span class="math inline">\dot V</span> 可能在原点附近变成零，退化为 Lyapunov 稳定而非渐近稳定），以及给数值求解器一个“不贴在零上”的余量。</p>
+<p>理论上 <span class="math inline">\varepsilon</span> 越大越难可行。脚本做了一次扫描，把 <span class="math inline">\varepsilon</span> 从 <span class="math inline">10^{-1}</span> 一路降到 <span class="math inline">10^{-5}</span>，结果与直觉有出入：</p>
+<table>
+<thead>
+<tr class="header">
+<th><span class="math inline">\varepsilon</span></th>
+<th>状态</th>
+<th>耗时</th>
+<th><span class="math inline">Q</span> 最小特征值</th>
+<th>网格上 <span class="math inline">\max\dot V</span></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><span class="math inline">10^{-1}</span></td>
+<td><code>optimal</code></td>
+<td><span class="math inline">0.039</span> s</td>
+<td><span class="math inline">-1.028\times10^{-8}</span></td>
+<td><span class="math inline">-1.731233\times10^{-1}</span></td>
+</tr>
+<tr class="even">
+<td><span class="math inline">10^{-2}</span></td>
+<td><code>optimal</code></td>
+<td><span class="math inline">0.043</span> s</td>
+<td><span class="math inline">-8.509\times10^{-9}</span></td>
+<td><span class="math inline">-1.747318\times10^{-1}</span></td>
+</tr>
+<tr class="odd">
+<td><span class="math inline">10^{-3}</span></td>
+<td><code>optimal</code></td>
+<td><span class="math inline">0.037</span> s</td>
+<td><span class="math inline">-8.877\times10^{-9}</span></td>
+<td><span class="math inline">-1.647044\times10^{-1}</span></td>
+</tr>
+<tr class="even">
+<td><span class="math inline">10^{-4}</span></td>
+<td><code>optimal</code></td>
+<td><span class="math inline">0.072</span> s</td>
+<td><span class="math inline">-8.730\times10^{-9}</span></td>
+<td><span class="math inline">-1.645835\times10^{-1}</span></td>
+</tr>
+<tr class="odd">
+<td><span class="math inline">10^{-5}</span></td>
+<td><code>optimal</code></td>
+<td><span class="math inline">0.037</span> s</td>
+<td><span class="math inline">-8.716\times10^{-9}</span></td>
+<td><span class="math inline">-1.645752\times10^{-1}</span></td>
+</tr>
+</tbody>
+</table>
+<p>五个都可行。<span class="math inline">Q</span> 的最小特征值始终在 <span class="math inline">-10^{-8}</span> 量级，与 <span class="math inline">\varepsilon</span> 无关——这再一次说明它是求解器容差，不是证书质量的指标。网格上的 <span class="math inline">\max\dot V</span> 在 <span class="math inline">-0.1646</span> 到 <span class="math inline">-0.1747</span> 之间，差别只有 <span class="math inline">6\%</span>，也没有随 <span class="math inline">\varepsilon</span> 单调变化。</p>
+<p>这组数据修正了一个流行的说法：“<span class="math inline">\varepsilon</span> 调大容易不可行”。在<strong>归一化良好</strong>的问题上，<span class="math inline">\varepsilon</span> 在一两个数量级内变化几乎不影响可行性，因为可行域本身是开的，只要存在一个严格负定的 <span class="math inline">\dot V</span>，减小 <span class="math inline">\varepsilon</span> 总是可行的，而增大 <span class="math inline">\varepsilon</span> 只是在同一个证书上“多要一点裕度”。真正让 <span class="math inline">\varepsilon</span> 变成硬门槛的是<strong>量纲病态</strong>：若位移用米、速度用毫米每秒，<span class="math inline">\|x\|^{2}</span> 里两项差六个数量级，<span class="math inline">\varepsilon</span> 就变成了一个“只对其中一个状态有效”的数，这时稍大一点就会不可行。</p>
+<p>所以工程上的正确做法不是反复调 <span class="math inline">\varepsilon</span>，而是先做归一化。把每个状态除以它的典型幅值，使所有状态在数值上同量级，然后取 <span class="math inline">\varepsilon=10^{-3}</span>，一次到位。<span class="math inline">\varepsilon</span> 的角色是“数值稳定器”，不是“可行性旋钮”。</p>
+<h3 id="v-的次数与结构">53.7.2 <span class="math inline">V</span> 的次数与结构</h3>
+<p>次数的作用是扩大函数类。二次型证不了的对象，四次型可能证得了；四次型证不了的，六次型可能证得了。本章的对象正好卡在二次与四次之间：二次 <code>infeasible</code>，四次 <code>optimal</code>。这个“刚好够用”的情况在实践中很常见，因为多数机械系统的能量函数本身就是二次加四次。</p>
+<p>次数的代价是规模。二元四次对应 <span class="math inline">10\times10</span> 的 <span class="math inline">Q</span>，二元六次对应 <span class="math inline">15\times15</span>。三维情况下，四次对应 <span class="math inline">20\times20</span>，六次对应 <span class="math inline">35\times35</span>，八次已经到 <span class="math inline">56\times56</span>。规模增长是组合式的，不是线性的，这决定了 SOS 在 <span class="math inline">n\le6</span> 时还能用，再往上就要靠结构分解。</p>
+<p>提高次数到底带来什么？脚本把 <span class="math inline">V</span> 从四次提到六次，实测结果如下：状态仍是 <code>optimal</code>，耗时从约 <span class="math inline">0.04</span> s 增到 <span class="math inline">0.096</span> s，<span class="math inline">Q</span> 从 <span class="math inline">10\times10</span> 变成 <span class="math inline">15\times15</span>，<span class="math inline">Q_6</span> 的最小特征值 <span class="math inline">+9.652\times10^{-8}</span>，网格上 <span class="math inline">\max\dot V</span> 从 <span class="math inline">-1.647044\times10^{-1}</span> 变成 <span class="math inline">-2.554537\times10^{-1}</span>，系数大于 <span class="math inline">10^{-4}</span> 的项从 <span class="math inline">8</span> 个增到 <span class="math inline">12</span> 个。</p>
+<p>这组数字的解读要小心。稳定性结论没有变——四次型和六次型都证明了这个对象全局渐近稳定。变的是<strong>证书的负定性裕度</strong>：六次型的 <span class="math inline">\max\dot V</span> 比四次型负 <span class="math inline">55\%</span>，意味着它在同样的网格上“更严格地”满足要求。如果目标是“证稳定”，四次型已经够了，六次型是浪费；如果参数有不确定性、需要留更多余量，六次型值得。</p>
+<p>还有一个隐含的收益：六次型的解多出四个非零项，说明求解器在用高次项“贴合” <span class="math inline">\dot V</span> 的实际形状。这与 53.7.1 里 <span class="math inline">\varepsilon</span> 扫描的结论形成对照——<strong>同一个 <span class="math inline">\varepsilon</span> 下，提高次数能实质改善证书；而改变 <span class="math inline">\varepsilon</span> 几乎不改善。</strong> 想改善，应该动次数，不是动 <span class="math inline">\varepsilon</span>。</p>
+<p>结构的作用是注入先验。本章对象在变换 <span class="math inline">(x_1,x_2)\to(-x_1,-x_2)</span> 下保持不变，因此存在一个偶函数的 <span class="math inline">V</span> 作为证书——只含 <span class="math inline">x_1^{2}</span>、<span class="math inline">x_1x_2</span>、<span class="math inline">x_2^{2}</span>、<span class="math inline">x_1^{4}</span>、<span class="math inline">x_1^{2}x_2^{2}</span>、<span class="math inline">x_2^{4}</span> 这六项。但脚本没有把这个先验加进去，求解器返回的解里出现了 <span class="math inline">x_1^{3}x_2=0.006842</span> 与 <span class="math inline">x_1x_2^{3}=0.000248</span> 两个奇次项。它们比 <span class="math inline">x_1^{4}</span> 的 <span class="math inline">0.879555</span> 小两个数量级，说明求解器“想”给出的其实是一个偶函数，只是 Gram 参数化允许多余的自由度，数值解把这些自由度填成了小量。</p>
+<p>这个观察有实用价值：<strong>如果你的对象有对称性，就在参数化时把它加进去</strong>，既减少变量、加快求解，又让证书更干净、更易读。本章为了演示“求解器自动找到证书”，故意没有加这个约束。</p>
+<h3 id="度量-theta">53.7.3 度量 <span class="math inline">\Theta</span></h3>
+<p><span class="math inline">\Theta</span> 是收缩分析里的“尺子”。它的作用是让不同状态方向上的距离用不同的权重衡量。取 <span class="math inline">\Theta=I</span> 是欧氏距离；取 <span class="math inline">\Theta=\mathrm{diag}(2,1)</span> 是把 <span class="math inline">x_1</span> 方向的偏差看得更重。</p>
+<p>本章的结果说明 <span class="math inline">\Theta</span> 不是万能的：未加权 <span class="math inline">\mu=-1</span>，取 <span class="math inline">\mathrm{diag}(2,1)</span> 后 <span class="math inline">\mu=-0.25</span>，收缩率从 <span class="math inline">1</span> 掉到 <span class="math inline">0.25</span>。为什么加权反而变差？因为 <span class="math inline">\Theta J\Theta^{-1}</span> 把 <span class="math inline">J</span> 的耦合项放大了：原来 <span class="math inline">J_{12}=1</span>，加权后变成 <span class="math inline">2</span>；<span class="math inline">J_{21}=-1</span>，加权后变成 <span class="math inline">-0.5</span>。非对称性增强，对称部分的特征值就往正方向走。</p>
+<p>手试几个 <span class="math inline">\Theta</span> 不说明问题，得把“最优 <span class="math inline">\Theta</span>”算出来。这一步可以写成 LMI：找正定 <span class="math inline">\Theta</span> 与最大的 <span class="math inline">\rho</span> 使</p>
+<p><span class="math display">
+\Theta J(x)+J(x)^{\mathsf T}\Theta+2\rho\Theta\preceq0,\qquad \Theta\succeq I
+\tag{53-37}
+</span></p>
+<p>约束里 <span class="math inline">\rho\Theta</span> 是双线性的，不是凸的，所以外层用二分：给定 <span class="math inline">\rho</span> 检查可行性，可行就提高下界，不可行就降低上界。脚本跑了 <span class="math inline">30</span> 次二分，结果是</p>
+<p><span class="math display">
+\rho_{\text{opt}}=1.000000,\qquad \Theta_{\text{opt}}=4.059\,I
+\tag{53-38}
+</span></p>
+<p>也就是说，<strong>最优度量就是单位阵的缩放，收缩率一分也没提高。</strong> 这个结果比“<span class="math inline">\mathrm{diag}(2,1)</span> 变差”更有说服力：它排除了所有常数 <span class="math inline">\Theta</span>，证明 <span class="math inline">\rho=1</span> 已经是这个对象在常数度量下的上限。</p>
+<p>原因可以从结构看出来。<span class="math inline">J</span> 的对称部分已经是 <span class="math inline">\mathrm{diag}(-1,-1-0.3x_2^{2})</span>，两个对角元都不大于 <span class="math inline">-1</span>，而非对角元在对称部分里恰好抵消为零。任何非对角的 <span class="math inline">\Theta</span> 都会在 <span class="math inline">\Theta J\Theta^{-1}</span> 里重新引入耦合，把对称部分的非对角元变成非零，从而把最大特征值往正方向推。等比缩放不改变特征值，所以 <span class="math inline">\Theta_{\text{opt}}</span> 只能取 <span class="math inline">cI</span>。</p>
+<p>还有一个实现细节值得说。严格来说 (53-37) 要对所有 <span class="math inline">x_2</span> 成立，不可能逐点约束。但 <span class="math inline">J</span> 只通过 <span class="math inline">s=x_2^{2}</span> 依赖状态，且在 <span class="math inline">s</span> 上是仿射的；矩阵不等式对 <span class="math inline">s</span> 也是仿射的。仿射函数在区间上的最大值必在端点取到，所以只约束 <span class="math inline">s=0</span> 与 <span class="math inline">s=16</span>（对应 <span class="math inline">x_2=0</span> 与 <span class="math inline">x_2=4</span>）两个端点，就覆盖了整个区间。这个“仿射性 + 端点”的技巧在参数依赖的 LMI 里很常用，比在网格上密集采样严格得多。</p>
+<p>工程上的折中因此可以写得很明确：若 <span class="math inline">J</span> 的对称部分已经对角、对角元同号，<span class="math inline">\Theta=I</span> 通常就是最优，不必再花力气；只有当对称部分有明显非对角元（例如两个状态通过弹簧强耦合）时，优化 <span class="math inline">\Theta</span> 才可能带来数量级的改进。</p>
+<h3 id="端口与阻尼">53.7.4 端口与阻尼</h3>
+<p>无源性的两个“参数”不是数值，而是选择。</p>
+<p><strong>端口</strong>决定无源性成不成立。本章取 <span class="math inline">(\tau,\dot q)</span> 成立，取 <span class="math inline">(\tau,q)</span> 不成立。这个选择没有中间地带，要么对要么错，判断依据是端口变量的乘积是否为功率。</p>
+<p><strong>阻尼</strong>决定无源性的“严格程度”。本章 <span class="math inline">b=0.4</span>，实部最小值 <span class="math inline">+3.325\times10^{-6}</span>，非常接近零——这意味着系统是“勉强严格无源”的。若 <span class="math inline">b\to0</span>，最小值趋零，系统变成“临界无源”，此时与积分器互联就可能出问题（积分器本身是临界无源的，两个临界无源互联不保证稳定）。</p>
+<p>这个观察对控制器设计有直接意义：<strong>给对象加一点物理阻尼，比在控制器里加滤波更可靠。</strong> 物理阻尼在全频段提供正实部，滤波器只在某个频段起作用。本章的 <span class="math inline">b=0.4</span> 看起来很小，但它保证了实部严格为正，这就是“勉强够用”的典型案例。</p>
+<h3 id="采样周期-t_s">53.7.5 采样周期 <span class="math inline">T_s</span></h3>
+<p><span class="math inline">T_s=0.05</span> s 是在“稳定”与“性能”之间折中的结果。它对离散收缩因子的影响可以由 (53-30) 直接算出：<span class="math inline">T_s</span> 越小，<span class="math inline">\sigma_{\max}(I+T_sJ)</span> 越接近 <span class="math inline">1-T_s</span>，收缩越接近连续情形；<span class="math inline">T_s</span> 越大，非正规性带来的额外放大越明显。</p>
+<p>表 53-5 把五个参数的作用汇总。</p>
+<p>表 53-5　五个可调参数的作用方向</p>
+<table>
+<thead>
+<tr class="header">
+<th>参数</th>
+<th>作用</th>
+<th>本章取值</th>
+<th>调大的后果</th>
+<th>调小的后果</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><span class="math inline">\varepsilon</span></td>
+<td>证书裕度</td>
+<td><span class="math inline">10^{-3}</span></td>
+<td>本对象仍可行，裕度变化小于 <span class="math inline">6\%</span></td>
+<td>同样可行，无实质变化</td>
+</tr>
+<tr class="even">
+<td><span class="math inline">V</span> 次数</td>
+<td>扩大函数类</td>
+<td>二次 + 四次</td>
+<td>耗时与项数上升，裕度改善 <span class="math inline">55\%</span></td>
+<td>二次型不可行</td>
+</tr>
+<tr class="odd">
+<td><span class="math inline">\Theta</span></td>
+<td>距离度量</td>
+<td><span class="math inline">I</span>（最优解为 <span class="math inline">4.059I</span>）</td>
+<td>非等比时收缩率下降</td>
+<td>等比缩放不改变 <span class="math inline">\rho</span></td>
+</tr>
+<tr class="even">
+<td><span class="math inline">b</span></td>
+<td>物理阻尼</td>
+<td><span class="math inline">0.4</span></td>
+<td>无源裕度增大，响应变慢</td>
+<td>趋临界无源</td>
+</tr>
+<tr class="odd">
+<td><span class="math inline">T_s</span></td>
+<td>采样周期</td>
+<td><span class="math inline">0.05</span> s</td>
+<td>离散偏差增大</td>
+<td>计算负担增大</td>
+</tr>
+</tbody>
+</table>
+<p>表里 <span class="math inline">\Theta</span> 那一行没有“调小”的方向——<span class="math inline">\Theta</span> 只能整体缩放，等比缩放不改变 <span class="math inline">\mu_{\Theta}</span>，所以只有“换方向”而没有“调大小”。这也是为什么优化 <span class="math inline">\Theta</span> 时必须加 <span class="math inline">\Theta\succeq I</span> 的归一化，否则问题无界。</p>
+<h3 id="量纲为什么-varepsilon-必须先归一化">53.7.6 量纲：为什么 <span class="math inline">\varepsilon</span> 必须先归一化</h3>
+<p><span class="math inline">\varepsilon</span> 带着量纲，这一点常被忽略。约束是 <span class="math inline">\dot V\le-\varepsilon\|x\|^{2}</span>，左边 <span class="math inline">\dot V</span> 的单位是“<span class="math inline">V</span> 的单位每秒”，右边 <span class="math inline">\varepsilon\|x\|^{2}</span> 的单位是“<span class="math inline">\varepsilon</span> 乘状态的平方”。两边相等要求 <span class="math inline">\varepsilon</span> 的单位是“<span class="math inline">V</span> 的单位 /（状态平方·秒）”。若状态的两个分量单位不同（一个是角度、一个是角速度），<span class="math inline">\|x\|^{2}</span> 本身就是把不同量纲的东西相加——这在物理上没有意义。</p>
+<p>本章的对象能直接用 <span class="math inline">\varepsilon=10^{-3}</span>，是因为硬化弹簧的状态 <span class="math inline">x_1</span>（位移）与 <span class="math inline">x_2</span>（速度）在数值上量级接近、单位都取了无量纲形式。换成一个真实的机械系统（位移以米计、速度以米每秒计、角度以弧度计），<span class="math inline">\varepsilon</span> 的选择就变得含糊：调大一点可能让问题不可行，调小一点又起不到“严格负定”的作用。</p>
+<p>标准做法是先做状态归一化：给每个状态分量选一个特征尺度 <span class="math inline">s_i</span>，定义 <span class="math inline">\tilde x_i=x_i/s_i</span>，把状态换成无量纲量。归一化之后，<span class="math inline">\|x\|=1</span> 对应“各分量都达到特征尺度的状态”，<span class="math inline">\varepsilon</span> 就有了明确含义：它表示“在特征尺度上，能量衰减率至少是 <span class="math inline">\varepsilon</span> 倍”。工程上取 <span class="math inline">s_i</span> 为各分量的额定值或最大允许值，这样 <span class="math inline">\varepsilon</span> 直接对应“额定工况下的相对衰减率”。</p>
+<p>归一化还会改变 <span class="math inline">V</span> 的形状。原本 <span class="math inline">V</span> 的各项系数差异可能很大（本章 <span class="math inline">x_1^{4}</span> 与 <span class="math inline">x_2^{4}</span> 差五个数量级），归一化之后系数会拉平，数值条件变好，求解器更容易收敛。这一点在 §53.8.3 的“数值病”里还会提到——量纲不统一是数值病最常见的成因。</p>
+<p>有一个反直觉的现象可以作为佐证：本章的 <span class="math inline">\varepsilon</span> 扫描显示，<span class="math inline">\varepsilon</span> 从 <span class="math inline">10^{-1}</span> 到 <span class="math inline">10^{-5}</span> 全部可行，网格最大值只在 <span class="math inline">-1.645</span> 到 <span class="math inline">-1.747</span> 之间变化，差不到 <span class="math inline">6\%</span>。这个“怎么调都行”的宽松，恰恰是因为量纲已经统一、归一化已经做好。若换成量纲混乱的模型，同样的扫描很可能出现“<span class="math inline">10^{-1}</span> 不可行、<span class="math inline">10^{-3}</span> 可行、<span class="math inline">10^{-5}</span> 数值失败”的锯齿状结果。所以“<span class="math inline">\varepsilon</span> 不敏感”不是普遍规律，而是归一化良好的标志；把它当成通用经验去套，会在真实系统上碰壁。</p>
+<h2 id="调参方法与经验">53.8 调参方法与经验</h2>
+<h3 id="先分清解不出来与验不过去">53.8.1 先分清“解不出来”与“验不过去”</h3>
+<p>调参之前必须先确定问题出在哪一层。本章的方法有两层：求解层（SDP 是否返回 <code>optimal</code>）和验证层（回代后 <span class="math inline">\dot V</span> 是否真的为负）。两层失败的原因完全不同，处理方式也相反。</p>
+<p>求解层失败的表现是 <code>infeasible</code> 或 <code>optimal_inaccurate</code>。前者说明<strong>在当前参数化下不存在证书</strong>，后者说明<strong>存在但数值没算准</strong>。这两个状态必须分开处理：前者要改函数类（加次数、改结构、加约束），后者要改数值设置（缩放、换求解器、调容差）。把 <code>infeasible</code> 当成数值问题去调求解器，会浪费大量时间；把 <code>optimal_inaccurate</code> 当成函数类问题去加次数，只会让问题更大更病态。</p>
+<p>验证层失败的表现是回代后 <span class="math inline">\max\dot V&gt;0</span>，或者 <span class="math inline">Q</span> 的最小特征值负得超过容差。这一层失败通常是实现错误：系数归并漏项、指数构造写错、<span class="math inline">V</span> 的重构与求解时的系数不一致。本章脚本在调试阶段就踩过一个：重构 <span class="math inline">V</span> 时把交叉项系数写成了 <span class="math inline">P_{12}</span> 而不是 <span class="math inline">2P_{12}</span>，结果回代后 <span class="math inline">\max\dot V</span> 从 <span class="math inline">-1.647\times10^{-1}</span> 变成 <span class="math inline">-9.13\times10^{-2}</span>——仍然是负的，所以“看起来能过”，但证书与求解结果不是同一个函数。这类错误最危险，因为它不会报错，只会让数字悄悄变差。</p>
+<p>一个简单的自检能抓住这类问题：把求解时用的系数列表与重构后的 <span class="math inline">V</span> 逐项比较，确认每个单项式的系数完全一致。本章的 <code>quad</code> 列表里存的是 <span class="math inline">2P_{ij}</span>，重构时也必须用 <span class="math inline">2P_{ij}</span>；写成 <span class="math inline">P_{ij}</span> 就错了。这个检查只花几行代码，但比任何事后调试都有效。</p>
+<h3 id="infeasible-的四种原因">53.8.2 <code>infeasible</code> 的四种原因</h3>
+<p>按出现频率排，<code>infeasible</code> 有四种典型原因。</p>
+<p>第一种是<strong>函数类不够</strong>。本章的二次型就是例子：<span class="math inline">x_2=0</span> 上的三次项决定了 <span class="math inline">\dot V</span> 必然变正，与 <span class="math inline">P</span> 无关。判别方法是做一次“必要性分析”——像 53.1.1 那样，找一条特殊的线或一个方向，证明任何该类的 <span class="math inline">V</span> 都不行。如果找得到，直接加次数，不要浪费时间去调 <span class="math inline">\varepsilon</span>。</p>
+<p>第二种是<strong>平衡点不对</strong>。SOS 默认 <span class="math inline">V</span> 在原点取极小，若实际平衡点不在原点，必须先做坐标平移。这一步很容易漏：模型里的 <span class="math inline">x</span> 是绝对坐标，平衡点在 <span class="math inline">x^\ast\neq0</span>，直接套 SOS 会得到 <code>infeasible</code>，而且看不出原因。判别方法是检查 <span class="math inline">f(0)=0</span> 是否成立；不成立就先平移。</p>
+<p>第三种是<strong>非多项式项没有处理</strong>。<span class="math inline">\sin q</span>、<span class="math inline">|x|</span>、饱和这些项直接进不了多项式框架。有时程序不会报错（因为符号运算把它们当成符号常量），但约束会变得无解。判别方法是打印 <span class="math inline">f</span> 的系数表，看有没有非数值项。</p>
+<p>第四种是<strong>约束写重了</strong>。为了“加强”证书，有人会同时要求 <span class="math inline">V\succeq\varepsilon I</span>、<span class="math inline">V\succeq\varepsilon\|x\|^{2}</span>、<span class="math inline">-\dot V\succeq\varepsilon\|x\|^{2}</span>，三条约束里有一条冗余且可能互相冲突。判别方法是逐条删约束试，看哪一条导致不可行。</p>
+<p>这四种原因的排查顺序应该是：先查 <span class="math inline">f(0)=0</span>，再查非多项式项，再查约束冗余，最后才怀疑函数类。前三项都是五分钟能查完的，第四项要改代码结构，成本高得多。</p>
+<h3 id="数值病的三种表现">53.8.3 数值病的三种表现</h3>
+<p>数值问题比逻辑问题更难查，因为它不报错，只是让结果变差。三种典型表现值得记住。</p>
+<p><strong>表现一：<span class="math inline">Q</span> 的最小特征值负得离谱。</strong> 本章的正常值是 <span class="math inline">-8.877\times10^{-9}</span>，这是容差级别；如果看到 <span class="math inline">-10^{-3}</span> 甚至 <span class="math inline">-10^{-2}</span>，说明求解器根本没有收敛到可行点，<code>optimal</code> 状态不可信。这时应该检查约束的缩放：若某个约束的系数比其他约束大六个数量级，内点法的步长会被它主导，其余约束形同虚设。</p>
+<p><strong>表现二：<code>optimal_inaccurate</code> 反复出现。</strong> 这通常意味着问题接近不可行边界。本章 <span class="math inline">\varepsilon</span> 扫描时全部返回 <code>optimal</code>，说明问题离边界还有距离；如果换成 <span class="math inline">\varepsilon=1</span> 这种明显过大的值，很可能就是 <code>optimal_inaccurate</code> 或 <code>infeasible</code>。处理办法是把 <span class="math inline">\varepsilon</span> 降回去，而不是换求解器硬扛。</p>
+<p><strong>表现三：回代残差随网格加密而增大。</strong> 正常的证书，网格越密 <span class="math inline">\max\dot V</span> 越接近真实上界，但应该稳定在负值；如果加密后突然变正，说明证书在某个小区域失效，而粗网格没采到。本章用 <span class="math inline">161\times161</span> 网格，去掉半径 <span class="math inline">0.5</span> 的圆，正是为了避免原点附近 <span class="math inline">\dot V\to0</span> 造成的假象。原点附近必须排除，因为那里 <span class="math inline">\dot V</span> 本来就趋于零，任何数值误差都会让它变号。</p>
+<p>三种表现对应三种处理：第一种做缩放，第二种降参数，第三种加密网格并检查排除区域。三者都不能靠“多跑几次”解决——随机性不是原因，结构才是。</p>
+<h3 id="收缩分析的调参">53.8.4 收缩分析的调参</h3>
+<p>收缩分析只有两个可调项：验证区域与度量。两项的处理方式完全不同。</p>
+<p><strong>验证区域</strong>的选择决定了结论的强度。最保守的做法是在整个状态空间上验证 <span class="math inline">\mu\le-\rho</span>，本章恰好能做到，因为 <span class="math inline">\mu</span> 与 <span class="math inline">x_2</span> 无关。做不到时，必须退到某个有界集合上，而这个集合必须是正向不变的，否则结论只对“一直待在集合里”的轨迹成立。实践中常用的集合有两种：箱体（各状态独立给上下界）与椭球（由某个二次型定义）。箱体的验证简单，只需在各顶点检查（若 <span class="math inline">\mu</span> 对状态仿射）；椭球的验证要解一个 LMI，但更贴合轨迹形状。</p>
+<p><strong>度量</strong>的选择在 53.7.3 已经算过：本章的最优解就是单位阵的缩放，没有改进空间。一般情况下的操作顺序是：先算 <span class="math inline">\Theta=I</span> 的 <span class="math inline">\rho</span>，再算最优 <span class="math inline">\Theta</span> 的 <span class="math inline">\rho</span>。若两者差别不到 <span class="math inline">10\%</span>，直接用 <span class="math inline">\Theta=I</span>，省掉优化这一步；若差别很大，说明系统有强耦合，值得花时间解 LMI。</p>
+<p>还有一个常被忽略的检查：<span class="math inline">\rho</span> 是“瞬时最坏”的产物，它可能与实际轨迹的收敛速率差几倍。本章差 <span class="math inline">0.68\%</span>，属于很紧的情况；有些系统会差十倍以上，因为最坏 <span class="math inline">\mu</span> 出现在轨迹从不经过的区域。判断方法是跑两条轨迹，拟合距离的对数斜率，与 <span class="math inline">\rho</span> 比较。若实测远快于 <span class="math inline">\rho</span>，说明保守；若实测慢于 <span class="math inline">\rho</span>，说明轨迹跑出了验证区域，结论失效——后者是必须立刻查的严重问题。</p>
+<h3 id="无源性的调参">53.8.5 无源性的调参</h3>
+<p>无源性没有“调参”的空间，只有“改结构”的空间。这句话听起来消极，但它把问题指向了正确的地方。</p>
+<p><strong>端口选错</strong>是第一位的原因。本章的机械臂取 <span class="math inline">(\tau,\dot q)</span> 成立，取 <span class="math inline">(\tau,q)</span> 不成立，两者的差别只在于输出是速度还是位置。工程上遇到“算出来不无源”，第一件事应该是问“我选的端口是不是功率对”，而不是去改参数。判断规则很简单：把输入输出的乘积写出来，看量纲是不是功率（瓦特）。</p>
+<p><strong>阻尼不足</strong>是第二位的原因。本章 <span class="math inline">b=0.4</span> 时实部最小值 <span class="math inline">+3.325\times10^{-6}</span>，已经在零的边缘。若把 <span class="math inline">b</span> 减半，这个值大约减半，与零的距离更近；若 <span class="math inline">b\to0</span>，系统变成临界无源，与积分器互联就可能失稳。处理办法不是“在控制器里加一个低通滤波器”——滤波器会把相位往后推，破坏无源性；正确做法是加物理阻尼（例如在关节上加一点黏性摩擦）或者在控制器里做“阻尼注入”（把速度反馈的增益设计成无源的）。</p>
+<p><strong>互联检查</strong>是第三位的原因。两个无源系统负反馈互联仍然无源，前提是互联方式满足 (53-23)。如果中间插了一个非无源的环节（例如一个高增益的比例环节带延迟、或者一个带滤波的微分器），整个互联就不无源了。检查方法是把互联关系写成 <span class="math inline">u_1=e_1-y_2</span> 的形式，逐项核对符号；符号错了，交叉项就抵消不掉。</p>
+<h3 id="离散化的调参">53.8.6 离散化的调参</h3>
+<p>离散化只有一个参数 <span class="math inline">T_s</span>，但它的影响是三个方向的：稳定性、每步衰减比、采样间行为。本章的数值说明前两个方向都很宽松——稳定上限是 <span class="math inline">2</span> s，实际取 <span class="math inline">0.05</span> s，差四十倍；逐步比值 <span class="math inline">0.950115</span> 与连续界的 <span class="math inline">0.951229</span> 只差 <span class="math inline">0.1\%</span>。</p>
+<p>真正需要调的其实是第三个方向，而它没有闭式判据。工程上的做法是“降采样试验”：把 <span class="math inline">T_s</span> 逐步放大，看仿真在第几个值时开始出现高频抖动或数值发散。那个值的 <span class="math inline">1/5</span> 到 <span class="math inline">1/10</span> 就是可用的 <span class="math inline">T_s</span>。这个做法不严格，但它直接测的是“采样间行为”，比任何理论界都贴近实际。</p>
+<p>表 53-6 把调参过程中的典型现象与对策汇总，可以当作排查清单用。</p>
+<p>表 53-6　调参排查清单</p>
+<table>
+<thead>
+<tr class="header">
+<th>现象</th>
+<th>最可能的原因</th>
+<th>处理顺序</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>infeasible</code>（二次型）</td>
+<td>函数类不够</td>
+<td>必要性分析 → 加次数</td>
+</tr>
+<tr class="even">
+<td><code>infeasible</code>（高次型）</td>
+<td>平衡点未平移 / 非多项式项</td>
+<td>查 <span class="math inline">f(0)=0</span> → 查系数表</td>
+</tr>
+<tr class="odd">
+<td><code>optimal_inaccurate</code></td>
+<td>接近可行边界 / 量纲病态</td>
+<td>降 <span class="math inline">\varepsilon</span> → 归一化</td>
+</tr>
+<tr class="even">
+<td><span class="math inline">Q</span> 最小特征值 <span class="math inline">\ll-10^{-7}</span></td>
+<td>未收敛</td>
+<td>缩放约束 → 换求解器</td>
+</tr>
+<tr class="odd">
+<td>回代 <span class="math inline">\max\dot V&gt;0</span></td>
+<td>系数重构错误</td>
+<td>逐项比对系数</td>
+</tr>
+<tr class="even">
+<td>实测速率远快于 <span class="math inline">\rho</span></td>
+<td>保守（正常）</td>
+<td>无需处理</td>
+</tr>
+<tr class="odd">
+<td>实测速率慢于 <span class="math inline">\rho</span></td>
+<td>轨迹跑出验证区域</td>
+<td>扩大区域 → 重算 <span class="math inline">\mu</span></td>
+</tr>
+<tr class="even">
+<td>无源性算不过</td>
+<td>端口不是功率对</td>
+<td>换端口，不要调参数</td>
+</tr>
+<tr class="odd">
+<td>互联后失稳</td>
+<td>交叉项未抵消</td>
+<td>核对互联符号</td>
+</tr>
+</tbody>
+</table>
+<p>这张表的价值在于“处理顺序”这一列。绝大多数失败都能在前两步定位，真正需要动函数类的不到两成。把顺序写下来，能避免一上来就加次数、改求解器这类高成本操作。</p>
+<h3 id="两个真实-bug-的复盘">53.8.7 两个真实 bug 的复盘</h3>
+<p>本章代码在开发过程中遇到两个 bug，都不是语法错误，而是“能跑、结果看起来对、其实错了”的类型。把它们写出来，因为这类 bug 比报错更难发现。</p>
+<p><strong>第一个：交叉项少乘 2。</strong> 从 <span class="math inline">P</span> 重构 <span class="math inline">V</span> 时，代码写的是</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>V[e] <span class="op">=</span> V.get(e, <span class="fl">0.0</span>) <span class="op">+</span> Pv[i, j]</span></code></pre></div>
+<p>对 <span class="math inline">i\ne j</span> 的情形，<span class="math inline">V</span> 里 <span class="math inline">x_1x_2</span> 的系数应该是 <span class="math inline">2P_{12}</span>，而这里只取了 <span class="math inline">P_{12}</span>。代入本章数据，<span class="math inline">P_{12}=0.373768</span>，正确系数应是 <span class="math inline">0.747537</span>，代码给的是前者，差一半。</p>
+<p>这个 bug 之所以难发现，是因为它<strong>不改变定性结论</strong>。回代之后 <span class="math inline">\max\dot V=-9.13\times10^{-2}</span>，仍然是负的，求解器也报 <code>optimal</code>，所有检查都“通过”。只有把回代值与求解器内部的 <span class="math inline">\dot V</span> 逐项比对，才会发现两者不是同一个函数。修正之后 <span class="math inline">\max\dot V=-1.647\times10^{-1}</span>，量级差近一倍。</p>
+<p>发现的路径值得一提：先算网格最大值，觉得数值偏小（与 <span class="math inline">P</span> 的量级不匹配），于是把 <span class="math inline">\dot V</span> 的系数打印出来，逐项手算了一遍 <span class="math inline">x_1^{2}</span>、<span class="math inline">x_1x_2</span>、<span class="math inline">x_2^{2}</span> 的系数，才发现交叉项只有应有值的一半。<strong>“数值偏小但不为负”是这类 bug 的典型特征</strong>，它不会报警，只会让结论变弱。</p>
+<p><strong>第二个：乘子的基取得过大。</strong> 代码原本写的是</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>z <span class="op">=</span> exponents(nx, vdeg <span class="op">-</span> <span class="dv">1</span>)</span></code></pre></div>
+<p><code>vdeg=4</code> 时这行给出次数不超过 3 的单项式（10 个），恰好是 <span class="math inline">\dot V</span>（四次）所需的最小基，没有问题。<code>vdeg=6</code> 时就出问题了：<span class="math inline">\dot V</span> 是八次，乘子只需要到四次（15 个单项式），而 <code>vdeg-1=5</code> 给出 21 个。多出来的 6 个不是错，只是用不上——它们张成的都是高阶方向，等式约束会把对应系数压成零。</p>
+<p>这个 bug 不影响可行性。实测把乘子基取到五次，求解器仍返回 <code>optimal</code>，说明结论本身没错。它影响的是<strong>规模与数值稳定性</strong>：<span class="math inline">Q_2</span> 从 <span class="math inline">15\times15</span> 变成 <span class="math inline">21\times21</span>，决策变量从 120 个涨到 231 个，其中有一百多个方向在最优解处必然为零。这种大范围零空间会让内点法的迭代矩阵接近奇异，换一个求解器或换一组参数就可能掉到 <code>optimal_inaccurate</code>。</p>
+<p>正确的写法是 <code>vdeg // 2 + 1</code>，恰好给出 <span class="math inline">\dot V</span> 次数的一半，不多不少。判断“基取多大”的规则很简单：<strong>平方和乘子的次数等于目标多项式次数的一半</strong>。目标多项式是 <span class="math inline">\dot V+\varepsilon\|x\|^{2}</span>，次数是 <span class="math inline">\max(\deg\dot V,2)</span>，所以乘子次数就是它的一半。本章 <span class="math inline">V</span> 四次时 <span class="math inline">\dot V</span> 四次、乘子二次（基到三次），<span class="math inline">V</span> 六次时 <span class="math inline">\dot V</span> 八次、乘子四次（基到四次）。</p>
+<p>两个 bug 的共同点是：<strong>都在“系数装配”这一环，都不影响代码运行，都只在交叉验证时才暴露。</strong> 第一个改变了结论的强度——重构出的 <span class="math inline">V</span> 仍是合法的 Lyapunov 函数（网格上 <span class="math inline">\dot V</span> 全负），但它不是求解器返回的那个，正文引用的数与证书因此对不上；第二个只改变问题的规模。这也是 §53.10.2 强调“解的回代”和 §53.10.3 强调“验证残差”的原因——求解器的 <code>optimal</code> 只保证它理解的那个问题可行，不保证你理解的问题与它一致。</p>
+<h2 id="优化与改进">53.9 优化与改进</h2>
+<h3 id="提高成功率的三种手段">53.9.1 提高成功率的三种手段</h3>
+<p>基础的 SOS 流程有一个天花板：<span class="math inline">V</span> 的次数越高越容易成功，但规模也越大。突破这个天花板有三条路，分别针对不同的瓶颈。</p>
+<p><strong>第一条是结构化 <span class="math inline">V</span>。</strong> 不做全系数的 <span class="math inline">V</span>，而是按物理或对称性限定它的形式。本章 53.7.2 已经演示了对称性：对象在 <span class="math inline">(x_1,x_2)\to(-x_1,-x_2)</span> 下不变，<span class="math inline">V</span> 可以限定为偶函数，项数从 <span class="math inline">10</span> 减到 <span class="math inline">6</span>，规模降一半。物理先验也能用：机械系统的 <span class="math inline">V</span> 一般可以写成“动能 + 势能”，动能只含速度的偶次项，势能只含位置的函数。把这些写进参数化，等于把搜索空间从“所有四次多项式”缩到“所有物理上可能的能量函数”，成功率会明显提高。</p>
+<p><strong>第二条是 S-procedure。</strong> 当证书只需要在某个区域内成立（例如 <span class="math inline">|x_1|\le1</span> 的工作范围），不必要求 <span class="math inline">\dot V</span> 全局负定，只需在区域内负定。S-procedure 的做法是引入乘子 <span class="math inline">s(x)\ge0</span>，要求</p>
+<p><span class="math display">
+-\dot V-\varepsilon\|x\|^{2}-s(x)\,g(x)\ \text{是平方和}
+\tag{53-39}
+</span></p>
+<p>其中 <span class="math inline">g(x)\ge0</span> 定义了工作区域（例如 <span class="math inline">g=1-x_1^{2}</span>）。这样 <span class="math inline">\dot V</span> 在区域外可以变正，证书只在区域内有效。代价是引入了额外的乘子变量，规模增大；收益是很多“全局不可行”的问题在局部变得可行。</p>
+<p><strong>第三条是分层求解。</strong> 先解一个低次的、粗糙的证书，用它确定轨迹的活动范围，再在这个范围内解高次的、精细的证书。第一步不要求漂亮，只要求“证明有界”；第二步利用第一步给出的界，把 S-procedure 的区域收缩到实际需要的范围。这种“粗到细”的策略在处理高维问题时几乎是必需的，因为直接解高次全局问题往往规模爆炸。</p>
+<p>三条路的适用场景不同：结构化看有没有先验，S-procedure 看能不能限定区域，分层看问题规模。三者可以叠加，但通常按这个顺序试，因为成本依次上升。</p>
+<h3 id="从常数度量到时变度量">53.9.2 从常数度量到时变度量</h3>
+<p>53.7.3 的结论是常数 <span class="math inline">\Theta</span> 在本章对象上没有改进空间。这不是普遍结论——很多系统用常数度量会严重保守，必须让 <span class="math inline">\Theta</span> 随状态变化。</p>
+<p>时变度量的理论基础是 Lohmiller 与 Slotine 的收缩理论。定义度量 <span class="math inline">M(x)=\Theta(x)^{\mathsf T}\Theta(x)</span>，要求</p>
+<p><span class="math display">
+\dot M+M J+J^{\mathsf T}M\preceq-2\rho M
+\tag{53-40}
+</span></p>
+<p>其中 <span class="math inline">\dot M</span> 是沿轨迹的时间导数，等于 <span class="math inline">\sum_i \partial M/\partial x_i\,f_i(x)</span>。这个条件保证加权距离 <span class="math inline">\delta^{\mathsf T}M(x)\delta</span> 按 <span class="math inline">e^{-2\rho t}</span> 衰减。与常数情形相比，多出的项 <span class="math inline">\dot M</span> 让 <span class="math inline">M</span> 可以“跟着流走”——在流线方向放大、在垂直方向收缩，从而贴合系统的非正规结构。</p>
+<p>(53-40) 是一个多项式矩阵不等式，若 <span class="math inline">M</span> 取多项式矩阵、<span class="math inline">f</span> 是多项式，它可以转成 SOS 问题：要求</p>
+<p><span class="math display">
+-\dot M-MJ-J^{\mathsf T}M-2\rho M-\varepsilon\|x\|^{2}I\ \text{是平方和矩阵}
+\tag{53-41}
+</span></p>
+<p>代价是变量数量急剧增加：<span class="math inline">M</span> 有 <span class="math inline">n(n+1)/2</span> 个多项式，每个又有若干系数；约束是矩阵的平方和，规模是标量问题的 <span class="math inline">n</span> 倍。二元系统还能做，四元以上基本不可行。</p>
+<p>工程上的折中是用“分片常数度量”：把状态空间分成几块，每块用一个常数 <span class="math inline">\Theta_k</span>，块与块之间要求度量连续或满足一定的跳变条件。这样把时变问题变成有限个常数问题，规模可控，保守性介于两者之间。</p>
+<h3 id="无源性的三个扩展">53.9.3 无源性的三个扩展</h3>
+<p>基础无源性要求 <span class="math inline">\dot V\le u^{\mathsf T}y</span>，条件很强。三种扩展扩大了它的适用范围。</p>
+<p><strong>增量无源</strong>把条件从“能量”换成“增量能量”：存在 <span class="math inline">V(x_1,x_2)</span> 使</p>
+<p><span class="math display">
+\dot V\le(u_1-u_2)^{\mathsf T}(y_1-y_2)
+\tag{53-42}
+</span></p>
+<p>它保证任意两条轨迹的“输入输出差”满足耗散关系，因此可以用来证明跟踪误差收敛，而不只是证明原点稳定。对本章的机械臂，增量无源对应“任意两个初始状态的轨迹最终重合”，这与收缩分析的目标一致，但用的工具不同。</p>
+<p><strong><span class="math inline">L_2</span> 增益</strong>把等号换成不等式：<span class="math inline">\dot V\le\gamma^{2}\|u\|^{2}-\|y\|^{2}</span>，其中 <span class="math inline">\gamma</span> 是增益上界。它与无源性同源但不完全等价：无源性只约束 <span class="math inline">u^{\mathsf T}y</span> 这一项，不约束 <span class="math inline">\|u\|^{2}</span>，所以无源系统的 <span class="math inline">L_2</span> 增益不一定有限（纯积分器的增益是无穷）。<span class="math inline">L_2</span> 增益的好处是可以量化“最坏情况下输出有多大”，代价是失去了无源性的组合简洁性——两个增益为 <span class="math inline">\gamma_1</span>、<span class="math inline">\gamma_2</span> 的系统互联，总增益不一定小于 <span class="math inline">\gamma_1\gamma_2</span>，需要小增益条件 <span class="math inline">\gamma_1\gamma_2&lt;1</span>。</p>
+<p><strong>小增益定理</strong>是 <span class="math inline">L_2</span> 增益的组合规则：若两个稳定系统的增益满足 <span class="math inline">\gamma_1\gamma_2&lt;1</span>，则负反馈互联稳定。它与无源性的关系是“对偶”：无源性用“能量不增”做组合，小增益用“增益乘积小于一”做组合。前者对相位不敏感、对幅值要求严；后者对幅值要求松、对相位敏感。工程上两者常常一起用：先用无源性保证低频段，再用小增益保证高频段。</p>
+<p>三种扩展的选择取决于你要证明什么。证“收敛到原点”，基础无源性够了；证“跟踪误差收敛”，用增量无源；证“有界且界可算”，用 <span class="math inline">L_2</span> 增益。三者不是替代关系，而是同一套能量方法在不同问题上的投影。</p>
+<h3 id="一条可执行的改进路线">53.9.4 一条可执行的改进路线</h3>
+<p>前面三小节列了七八种改进手段，实际动手时不可能全试。给一条按成本排序的路线，从最便宜的试起，每步都设一个“该停”的判据。</p>
+<p><strong>第一步：换 <span class="math inline">V</span> 的次数，成本一次求解。</strong> 二元问题从四次升到六次，本章实测耗时从 <span class="math inline">0.044</span> s 到 <span class="math inline">0.096</span> s，网格最大值从 <span class="math inline">-1.647\times10^{-1}</span> 到 <span class="math inline">-2.555\times10^{-1}</span>，改善 <span class="math inline">55\%</span>。这一步的“该停”判据是：网格最大值已经比“够用的裕度”更负。什么叫够用？若你的状态估计误差是 <span class="math inline">5\%</span>，<span class="math inline">\max\dot V</span> 达到 <span class="math inline">-10^{-1}</span> 量级就足够了，再往下压没有实际收益。</p>
+<p><strong>第二步：加 S-procedure 限定区域，成本是每加一个约束多一个乘子。</strong> 若六次型仍不可行，多半不是次数不够，而是“全局”这个要求太强。用 <span class="math inline">x^{\mathsf T}Px\le1</span> 把搜索范围限定在工作区域内，往往立刻可行。这一步的“该停”判据是：限定区域之后可行，且该区域覆盖了你关心的全部工况。若区域缩到只剩原点附近，那这个证书没有意义。</p>
+<p><strong>第三步：优化度量或 <span class="math inline">\varepsilon</span>，成本是外层二分。</strong> 收缩分析里换 <span class="math inline">\Theta</span>，SOS 里把 <span class="math inline">\varepsilon</span> 当变量最大化。本章实测 <span class="math inline">\Theta_{\text{opt}}=4.059I</span>，与 <span class="math inline">I</span> 只差一个缩放，说明这个对象上没有改进空间。这一步的价值主要在于<strong>确认没有改进空间</strong>，而不是真的改进。若二分出来的最优值与初值差不到 <span class="math inline">10\%</span>，就该停手。</p>
+<p><strong>第四步：分段或分层，成本是问题数量翻倍。</strong> 把状态空间分成几块、每块解一个小问题。这一步的代价不只是求解次数，还有块与块之间的拼接验证（边界上 <span class="math inline">V</span> 是否连续、轨迹是否真的一直待在块内）。除非前三步都失败，不建议轻易上这一步。</p>
+<p><strong>第五步：换工具。</strong> 若四步都失败，说明 SOS 这条路对这个对象不通。此时应回到 §53.11.3 的判定表，改用收缩分析或分段线性化。硬撑着调 SOS 参数是最差的选择，因为失败的原因往往不在参数上。</p>
+<p>这条路线有一个隐含的前提：<strong>每次只改一个因素</strong>。同时改次数和 <span class="math inline">\varepsilon</span>，就算结果变好了也不知道是哪个起的作用。本章的三个深化报告（eps 扫描、<span class="math inline">\Theta</span> 优化、六次型）之所以分开做，就是为了让每个因素的影响可以单独读出。</p>
+<p>还有一条经验值得写下来：改进的收益通常不是单调的。六次型比四次型好，但八次型未必比六次型好——次数升高会让数值条件变差，求解器的可行域边界变得模糊，<code>optimal_inaccurate</code> 的概率上升。本章没有做八次型的实验，但从表 53-7 的规模增长可以推断，二元八次型的乘子阶数会到 21，耗时可能到 <span class="math inline">0.2</span> s 以上，而裕度改善未必能再翻一倍。<strong>在“次数”这个维度上，收益递减出现得很早。</strong></p>
+<h2 id="工程落地">53.10 工程落地</h2>
+<p>前面九节讲的是“能不能证”，这一节讲“证得出来之后怎么用”。三种工具在纸面上都很漂亮，落到工程项目里会碰到三类硬问题：算不动、对不上、交不出去。算不动是规模问题，对不上是模型与实测的偏差问题，交不出去是证书的表达与复核问题。本节按这三条线展开。</p>
+<h3 id="规模与耗时的实测">53.10.1 规模与耗时的实测</h3>
+<p>SOS 方法最容易被低估的成本是规模。<span class="math inline">n</span> 个状态、<span class="math inline">V</span> 取 <span class="math inline">2d</span> 次，半正定矩阵的阶数等于 <span class="math inline">d</span> 次单项式的个数：</p>
+<p><span class="math display">
+N(n,d)=\binom{n+d}{d}
+\tag{53-43}
+</span></p>
+<p>这里数的是次数不超过 <span class="math inline">d</span> 的单项式，所以组合数上标是 <span class="math inline">d</span>、下标是 <span class="math inline">n+d</span>。对二元系统，<span class="math inline">d=2</span> 时 <span class="math inline">N=6</span>，<span class="math inline">d=3</span> 时 <span class="math inline">N=10</span>，看不出什么。但 <span class="math inline">N</span> 在三维、四维会迅速膨胀。表 53-7 是脚本枚举出来的实测值：</p>
+<p>表 53-7 次数不超过 <span class="math inline">d</span> 的单项式个数 <span class="math inline">N(n,d)</span></p>
+<table>
+<thead>
+<tr class="header">
+<th>状态维数 <span class="math inline">n</span></th>
+<th>次数 <span class="math inline">d</span></th>
+<th>单项式个数 <span class="math inline">N</span></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>2</td>
+<td>2</td>
+<td>6</td>
+</tr>
+<tr class="even">
+<td>2</td>
+<td>3</td>
+<td>10</td>
+</tr>
+<tr class="odd">
+<td>3</td>
+<td>2</td>
+<td>10</td>
+</tr>
+<tr class="even">
+<td>3</td>
+<td>3</td>
+<td>20</td>
+</tr>
+<tr class="odd">
+<td>4</td>
+<td>2</td>
+<td>15</td>
+</tr>
+<tr class="even">
+<td>4</td>
+<td>3</td>
+<td>35</td>
+</tr>
+<tr class="odd">
+<td>5</td>
+<td>3</td>
+<td>56</td>
+</tr>
+<tr class="even">
+<td>6</td>
+<td>3</td>
+<td>84</td>
+</tr>
+</tbody>
+</table>
+<p>表的最后一行是一个信号：六维、三次时矩阵阶数 84，半定规划的变量数已经上万，本机单次求解超过十秒。<strong>SOS 的可用边界大概在五个状态、三次以内</strong>，再往上必须借助结构（分片、稀疏、对称性）或者换工具。</p>
+<p>耗时另做了一组合成实验：对阶数 <span class="math inline">N=6,10,15,21,28</span> 的 Lyapunov 型 LMI 求解，本机耗时依次为 <span class="math inline">0.005</span>、<span class="math inline">0.009</span>、<span class="math inline">0.022</span>、<span class="math inline">0.052</span>、<span class="math inline">0.163</span> s。这组数字说明两件事。第一，耗时随 <span class="math inline">N</span> 增长明显快于线性：<span class="math inline">N</span> 从 6 增到 28，耗时增了约 33 倍，而 <span class="math inline">N</span> 只增了 4.7 倍。内点法每步要对 <span class="math inline">N\times N</span> 矩阵做分解，复杂度大致按 <span class="math inline">N^{3}</span> 走，再加上迭代步数随问题变难而增加，实测的增速介于 <span class="math inline">N^{2}</span> 与 <span class="math inline">N^{3}</span> 之间。第二，这些数字与机器强相关：同一段代码换台机器跑，<span class="math inline">N=28</span> 那一行可能在 <span class="math inline">0.16</span> s 到 <span class="math inline">0.19</span> s 之间浮动。正文引用这类数字时只能当作量级，不能当作基准。</p>
+<p><span class="math inline">V</span> 的次数同样推高成本。对同一个二元对象，二次型求解 <span class="math inline">0.033</span> s 就返回 <code>infeasible</code>；四次型 <span class="math inline">0.044</span> s 得到 <code>optimal</code>；六次型 <span class="math inline">0.096</span> s 也得到 <code>optimal</code>，但平方和乘子的阶数从 10 涨到 15（六次型的 <span class="math inline">\dot V</span> 是八次，乘子矩阵要覆盖到四次）。也就是说，<strong>把 <span class="math inline">V</span> 从四次提到六次，代价是求解时间翻倍、最大矩阵阶数涨到 1.5 倍</strong>，而换来的裕度改善是网格上 <span class="math inline">\max\dot V</span> 从 <span class="math inline">-1.647\times10^{-1}</span> 降到 <span class="math inline">-2.555\times10^{-1}</span>，负值幅度增加约 55%。这笔交易在二元系统上很划算，在五元以上就未必了。</p>
+<h3 id="从模型到-sos-的数据通路">53.10.2 从模型到 SOS 的数据通路</h3>
+<p>工程上真正费时间的不是求解，而是把模型变成求解器能吃的形式。这条通路有四个环节，每个环节都可能出错。</p>
+<p><strong>第一环：方程写成多项式。</strong> SOS 只认多项式。三角函数、指数、饱和、死区都不是多项式，必须先处理。三种常见处理方式：小角度下 <span class="math inline">\sin\theta\approx\theta-\theta^{3}/6</span> 做 Taylor 截断；把三角函数换成正弦余弦两个状态并附加恒等式 <span class="math inline">s^{2}+c^{2}=1</span>；用分段多项式并在每段上单独求解。第一种最简单但只在局部有效，第二种保全局但增加状态维数，第三种最灵活但要做分段拼接。</p>
+<p>需要注意，Taylor 截断会改变平衡点位置。<span class="math inline">\sin\theta\approx\theta</span> 在 <span class="math inline">\theta=0</span> 处与原式同根，但 <span class="math inline">\sin\theta\approx\theta-\theta^{3}/6</span> 在 <span class="math inline">\theta=\pi</span> 附近会引入虚假平衡点。截断之后必须重新解一遍 <span class="math inline">f(x)=0</span>，确认平衡点没有漂移。</p>
+<p><strong>第二环：平衡点平移。</strong> 所有结论都针对原点，所以先把工作点移到原点。这一步看似平凡，但平移会改变多项式的系数结构：原本稀疏的式子可能变稠密。若工作点本身是符号表达式（比如随工况变化），就不要做符号平移，直接在求解时把 <span class="math inline">x</span> 替换成 <span class="math inline">x-x_0</span>。</p>
+<p><strong>第三环：决策变量与约束装配。</strong> <span class="math inline">V</span> 的系数是决策变量，<span class="math inline">\dot V+\varepsilon\|x\|^{2}</span> 的平方和分解是约束。装配时最容易错的是交叉项系数：<span class="math inline">V</span> 里 <span class="math inline">x_1x_2</span> 的系数是 <span class="math inline">2P_{12}</span>，不是 <span class="math inline">P_{12}</span>。这个 2 来自二次型的展开，一旦漏掉，求出来的 <span class="math inline">V</span> 与求解器认为的 <span class="math inline">V</span> 不是同一个函数，回代验证就会给出错误的 <span class="math inline">\dot V</span>。本章 §53.8.1 记录了一次真实的踩坑：漏掉这个 2 之后，回代的 <span class="math inline">\max\dot V</span> 是 <span class="math inline">-9.13\times10^{-2}</span>，仍然是负的，所以“看起来能过”；补上之后变成 <span class="math inline">-1.647\times10^{-1}</span>，数值差近一倍。</p>
+<p><strong>第四环：解的回代。</strong> 求解器返回的是矩阵，不是函数。要把矩阵还原成多项式，再代回原方程（注意是原方程，不是截断后的方程）做网格或随机采样验证。这一步不能省，因为求解器的 <code>optimal</code> 只说明“在它理解的模型上可行”，不说明“在你的模型上可行”。</p>
+<p>四个环节里，第一环决定结论的有效范围，第二、三环决定数值对不对，第四环决定敢不敢签字。工程上建议把四环写成一条脚本流水线，每次改模型都整条重跑，不要手工改中间结果。</p>
+<h3 id="证书怎么复核">53.10.3 证书怎么复核</h3>
+<p>SOS 的结果交付出去，对方拿什么复核？不能只给一个“求解成功”。一份可复核的证书至少包含四样东西。</p>
+<p><strong>一是 <span class="math inline">V</span> 的显式表达式。</strong> 不是矩阵，是多项式，系数写到小数点后六位。对方可以自己代点验算正定性。</p>
+<p><strong>二是 <span class="math inline">\dot V</span> 的显式表达式与它的上界。</strong> 给定一个区域（比如 <span class="math inline">\|x\|\le2</span>），报告该区域上 <span class="math inline">\max\dot V</span> 的数值，以及取得该值的点。本章的实测是 <span class="math inline">\max\dot V=-1.647\times10^{-1}</span>（区域 <span class="math inline">\|x\|\ge0.5</span> 的网格上）。注意这里报告的是网格最大值，不是解析上界，交付时要写清网格密度（本章用 <span class="math inline">121\times121</span>）。</p>
+<p><strong>三是 <span class="math inline">\varepsilon</span> 与它的验证残差。</strong> <span class="math inline">\varepsilon</span> 是人为设定的裕度，求解器返回的 <span class="math inline">\min[-\dot V-\varepsilon\|x\|^{2}]</span> 应该接近零而不是明显为正。本章实测是 <span class="math inline">-0.000000\times10^{0}</span>，说明约束是紧的。若这个数明显为正（比如 <span class="math inline">10^{-2}</span>），说明网格没覆盖到最坏点，结论不可信。</p>
+<p><strong>四是求解器的名称、版本与状态。</strong> <code>optimal</code>、<code>optimal_inaccurate</code>、<code>infeasible</code> 三种状态的含义完全不同。<code>optimal_inaccurate</code> 意味着数值上勉强收敛，此时必须把 <span class="math inline">\varepsilon</span> 调小重解一次，看结论是否稳定。</p>
+<p>这四样东西合起来，复核者能在半小时内独立判断结论是否成立。缺任何一样，都会让对方退回“你自己再确认一下”。</p>
+<h3 id="无源性在机械臂上的落地">53.10.4 无源性在机械臂上的落地</h3>
+<p>无源性的验证比 SOS 简单，因为它不需要求解器，只需要能量平衡。但落地时有三处容易做错。</p>
+<p><strong>第一处：端口选在哪里。</strong> 无源性是“端口”的性质，端口选错，结论就没意义。对机械臂，自然的端口是关节力矩 <span class="math inline">\tau</span> 与关节速度 <span class="math inline">\dot q</span>。若把端口选成力矩与关节位置，得到的不是无源性而是“位置无源”，两者不是一回事。选端口的判据是：端口的功率乘积 <span class="math inline">u^{\mathsf T}y</span> 必须等于外部注入系统的功率。</p>
+<p><strong>第二处：能量函数取什么。</strong> 机械臂的天然能量是动能加势能：</p>
+<p><span class="math display">
+V(q,\dot q)=\tfrac12\dot q^{\mathsf T}M(q)\dot q+U(q)
+\tag{53-44}
+</span></p>
+<p>其中 <span class="math inline">M(q)</span> 是惯量矩阵，<span class="math inline">U(q)</span> 是重力势能。这个 <span class="math inline">V</span> 对 <span class="math inline">q,\dot q</span> 正定（在势能极小点附近），且沿无驱使系统满足 <span class="math inline">\dot V=-\dot q^{\mathsf T}D\dot q\le0</span>。用 (53-44) 做验证，不需要解任何方程，只需要确认 <span class="math inline">M(q)</span> 正定、<span class="math inline">D</span> 半正定。</p>
+<p><strong>第三处：控制器要满足什么。</strong> 无源控制器的典型形式是“PD 加前馈”：<span class="math inline">\tau=-K_p(q-q_d)-K_d\dot q+\tau_{ff}</span>，其中 <span class="math inline">K_p,K_d</span> 对称正定。代入能量平衡，得到</p>
+<p><span class="math display">
+\dot V=-\dot q^{\mathsf T}(D+K_d)\dot q\le0
+\tag{53-45}
+</span></p>
+<p>这说明 PD 控制天然是无源的，只要 <span class="math inline">K_d</span> 正定。这条结论解释了为什么 PD 在机器人上如此稳健：它不依赖模型精度，只依赖能量耗散。反过来，若控制器里有积分项，能量平衡会多出一项，无源性就被破坏——这是“积分项导致振荡”的一个结构性解释。</p>
+<p>本章脚本报告 5 给出一组实测：对单自由度机械臂（<span class="math inline">M=0.5</span>、<span class="math inline">b=0.4</span>、<span class="math inline">k=4.905</span>），在 <span class="math inline">t\in[0,6]</span> s 上积分，得到 <span class="math inline">V(T)-V(0)=+3.913069</span>，输入注入能量 <span class="math inline">\int\tau\dot q\,\mathrm{d}t=+36.474922</span>，阻尼耗散 <span class="math inline">b\int\dot q^{2}\,\mathrm{d}t=+32.561853</span>，残差 <span class="math inline">+2.486\times10^{-7}</span>。残差是数值积分误差，量级在 <span class="math inline">10^{-7}</span>，说明能量平衡在数值上是自洽的。这三行数字就是一份最小可复核的无源性证据：储能变化等于注入减耗散。</p>
+<h3 id="无源性在电路上的落地">53.10.5 无源性在电路上的落地</h3>
+<p>电路里无源性的对应物是“无源网络”，判据是端口阻抗的实部非负。对线性时不变的单端口网络，条件简化为</p>
+<p><span class="math display">
+\mathrm{Re}\,Z(\mathrm{j}\omega)\ge0,\qquad \forall\omega
+\tag{53-46}
+</span></p>
+<p>本章报告 4 的实测对应的是另一种表述：对传递函数 <span class="math inline">G(s)</span>，要求 <span class="math inline">\mathrm{Re}\,G(\mathrm{j}\omega)\ge0</span>。脚本扫频得到 <span class="math inline">\min\mathrm{Re}\,G=+3.325\times10^{-6}</span>（在 <span class="math inline">\omega=1.000\times10^{-2}</span> 处），<span class="math inline">\max\mathrm{Re}\,G=+4.999955</span>（在 <span class="math inline">\omega=3.133</span> 处），<span class="math inline">\max|G|=4.999978</span>。最小值贴着零但不为负，正是无源性的边界特征——这个系统是“临界无源”的，低频段几乎没有阻尼余量。</p>
+<p>这个数字在工程上的含义很直接：低频段任何一点参数漂移都可能把 <span class="math inline">\mathrm{Re}\,G</span> 推到负值，系统就从无源变成有源，级联稳定性保证随之失效。对应的做法是在低频段串一个小的物理电阻，或者把控制器的高通转折频率抬高，让 <span class="math inline">\mathrm{Re}\,G</span> 的最小值离零远一些。</p>
+<p>反例在报告 7 里：取 <span class="math inline">G(s)=1/(s^{2}+3s-1)</span>，扫频得到 <span class="math inline">\min\mathrm{Re}\,G=-0.499963</span>，负实部出现在 <span class="math inline">\omega&lt;1.414214</span> 的频段。分母 <span class="math inline">s^{2}+3s-1</span> 的根是 <span class="math inline">\{-3.302776,\;0.302776\}</span>，有一个右半平面极点。这个例子说明：<strong>有右半平面极点的系统一定不是无源的</strong>，反过来，无源性也直接排除了右半平面极点。这一点让无源性在电路里比在机械系统里更好用——电路工程师本来就在看阻抗的实部。</p>
+<h3 id="与全书其他章节的接口">53.10.6 与全书其他章节的接口</h3>
+<p>本章的三种工具不是孤立的，它们在第 52 章与后续章节之间起承上启下的作用。</p>
+<p><strong>向上接第 52 章。</strong> 第 52 章给了 Lyapunov 定理与二次型的构造方法，本章的 SOS 是它的直接推广：把“找 <span class="math inline">V</span>”从解方程变成解半定规划。第 52 章 §52.9.7 已经提过平方和松弛，本章把它展开成可执行的流程。若读者只需要处理线性系统或弱非线性系统，第 52 章的二次型方法足够，不必上 SOS。</p>
+<p><strong>向下接第 58 章。</strong> 第 58 章讲模型预测控制，它需要在线解优化问题。MPC 的稳定性证明通常要一个终端 Lyapunov 函数或者终端约束集，本章的 SOS 正好可以用来构造这两样东西——把 <span class="math inline">\dot V&lt;0</span> 的区域解出来，作为终端不变集。这是一条实用的衔接路径：离线用 SOS 算终端集，在线用 MPC 只解二次规划。</p>
+<p><strong>横向接第 44 章与第 106 章。</strong> PID 的稳定性分析传统上用频域方法（Nyquist、Bode），本章的收缩分析提供了另一种视角：把闭环看成“误差动态”，用矩阵测度估计收缩速率。两种视角给出的结论常常一致，但收缩分析的结论更容易推广到非线性与被控对象参数变化的情形。若现场只有 PID 且对象近似线性，第 44 章的方法更省事。</p>
+<p><strong>横向接第 47 章与第 107 章。</strong> Smith 预估器处理纯滞后，它的稳定性对模型误差极其敏感。本章的小增益视角可以给出一个定量判据：把模型误差看成不确定性块，用 <span class="math inline">\gamma_1\gamma_2&lt;1</span> 判断闭环是否还能稳定。这个判据比“凭经验留裕度”更可靠，但需要把误差量化成增益。</p>
+<p>这张接口图的价值在于：<strong>遇到具体问题时先判断该用哪一章的工具，而不是把所有工具都试一遍。</strong> 线性、无滞后、参数稳定——第 52 章；有非线性但维数低——本章 SOS；有约束且要在线优化——第 58 章；有大滞后——第 47 章；要处理未建模动态——本章小增益。</p>
+<h3 id="落地检查清单">53.10.7 落地检查清单</h3>
+<p>把前面六小节压成一张清单，工程上按顺序过一遍，能挡掉大部分返工。</p>
+<p><strong>模型侧。</strong> 平衡点是否已平移到原点；多项式化之后的平衡点是否与原系统一致；状态量的量纲是否统一（量纲不统一会让 <span class="math inline">\varepsilon</span> 的选择失去意义）；参数是否给的是标称值加范围，而不是单一值。</p>
+<p><strong>求解侧。</strong> <span class="math inline">V</span> 的次数是否与 <span class="math inline">\dot V</span> 的次数匹配（<span class="math inline">V</span> 取 <span class="math inline">2d</span> 次，<span class="math inline">\dot V</span> 取 <span class="math inline">2d+\deg f</span> 次）；交叉项系数是否乘了 2；求解器状态是否为 <code>optimal</code> 而非 <code>optimal_inaccurate</code>；<span class="math inline">\varepsilon</span> 是否做了至少一个数量级的扫描，确认结论不敏感。</p>
+<p><strong>验证侧。</strong> 是否用原方程（不是截断方程）做了回代；网格密度是否足够（本章用 <span class="math inline">121\times121</span>，二维够用，三维要降到 <span class="math inline">41^{3}</span> 左右）；<span class="math inline">\min[-\dot V-\varepsilon\|x\|^{2}]</span> 是否接近零；区域外的行为是否单独检查过（SOS 只保证区域内）。</p>
+<p><strong>交付侧。</strong> 是否给出了 <span class="math inline">V</span>、<span class="math inline">\dot V</span>、<span class="math inline">\varepsilon</span>、求解器版本四样东西；结论的适用范围是否写在最前面；是否标注了“网格验证”而非“解析证明”。</p>
+<p>这张清单不解决理论问题，但能挡住 80% 的工程返工。剩下的 20% 属于模型本身的问题，只能回到物理层面重新建模。</p>
+<h3 id="一页纸的交付模板">53.10.8 一页纸的交付模板</h3>
+<p>工程上最终要交的往往不是脚本，而是一页纸。这一页纸写什么，直接决定结论能不能被采纳。下面给出本章推荐的模板，六段，每段不超过五行。</p>
+<p><strong>第一段，结论。</strong> 一句话说清证了什么：对象是什么、在什么范围内、用什么方法、结论是什么。例如“对式 (53-1) 的硬化弹簧系统，在 <span class="math inline">\|x\|\le2</span> 内存在四次 Lyapunov 函数，<span class="math inline">\dot V\le-1.6\times10^{-1}</span>，渐近稳定”。注意“全局”与“在 <span class="math inline">\|x\|\le2</span> 内”不能同时出现——若只验证了区域，就说区域。</p>
+<p><strong>第二段，方法。</strong> 一行写工具与求解器：SOS + CLARABEL，或矩阵测度，或 KYP。再一行写关键参数：<span class="math inline">\varepsilon=10^{-3}</span>、<span class="math inline">V</span> 四次、度量 <span class="math inline">\Theta=I</span>。这一段的目的是让读者能复现。</p>
+<p><strong>第三段，证据。</strong> 给出 <span class="math inline">V</span> 的表达式（或矩阵），给出 <span class="math inline">\max\dot V</span> 与验证残差，给出网格密度。若是无源性，给能量平衡的三行数字与残差；若是收缩，给 <span class="math inline">\rho</span> 与实测斜率。这一段是整页纸的核心，没有它，前面两段都是空话。</p>
+<p><strong>第四段，边界。</strong> 明确写出结论不适用的情形：模型截断误差超过多少时失效、参数漂移超过多少时需重算、采样周期超过多少时不再成立。这一段最容易被省略，但它决定了结论会不会被误用。</p>
+<p><strong>第五段，复现方式。</strong> 脚本路径、运行命令、输出对应的报告编号。一行足够。</p>
+<p><strong>第六段，遗留问题。</strong> 哪些没做、为什么没做。例如“未验证区域外行为”“未考虑摩擦”“<span class="math inline">\Theta</span> 只试了常数”。写遗留问题不是示弱，而是给后续工作留接口——工程上最怕的是“看起来什么都证了”的交付。</p>
+<p>这六段加起来不到一页，但它把“结论、方法、证据、边界、复现、遗留”六件事都交代了。对比一下常见的交付：只写结论与方法，证据放在附件里，边界和遗留完全不提。这种交付在评审会上几乎必然被打回，因为评审者无法判断结论可信度。</p>
+<p>模板还有一个好处：它强制作者想清楚“边界”。写第四段时，作者必须回答“我的模型在哪里不准”，这个问题往往能暴露出建模阶段被忽略的假设。本章的机械臂例子就是如此——<span class="math inline">\sin q\approx q-q^{3}/6</span> 的截断，在 <span class="math inline">|q|</span> 接近 <span class="math inline">1</span> rad 时相对误差已到 <span class="math inline">1\%</span> 左右（因为在 <span class="math inline">q=1</span> 处截断值 <span class="math inline">0.8333</span> 与真值 <span class="math inline">0.8415</span> 相差 <span class="math inline">0.0081</span>）。若工作行程接近 <span class="math inline">\pm1</span> rad，这个截断就不再是“小量”，必须改用完整非线性或者加高阶项，否则证书证明的是另一个系统。</p>
+<h3 id="参数摄动怎么办">53.10.9 参数摄动怎么办</h3>
+<p>本章所有结论都是对一组固定参数说的：刚度 <span class="math inline">1</span>、阻尼 <span class="math inline">1</span>、惯量 <span class="math inline">0.5</span>。真实系统的参数会漂移——温度改变阻尼、负载改变惯量、磨损改变刚度。证书在标称点成立，不代表在参数区间内成立。</p>
+<p>处理参数摄动有三条路，成本依次上升。</p>
+<p><strong>第一条，网格化。</strong> 在参数区间内取若干个点，每个点解一次 SOS，看是否全部可行。本章对象的单次求解是 <span class="math inline">0.044</span> s，取 <span class="math inline">5\times5=25</span> 个参数组合也只要一秒多，完全可接受。这条路的优点是实现简单、结论直观（“在这 25 个点上都能证”），缺点是只覆盖离散点，点与点之间的行为没有保证。工程上的补救是把网格取得比“能接受的最坏情况”更密，并且报告里明确写“网格验证”。</p>
+<p><strong>第二条，把参数当状态。</strong> 把漂移的参数 <span class="math inline">\theta</span> 增广成一个状态，附加 <span class="math inline">\dot\theta=0</span>，在 <span class="math inline">(\theta,x)</span> 空间里解 SOS，要求证书对所有 <span class="math inline">\theta</span> 在区间内成立。这条路给出的是连续结论，但状态维数加一，规模按表 53-7 上升一档。二元加一个参数变成三元，三次单项式从 10 个涨到 20 个，求解时间从 <span class="math inline">0.044</span> s 涨到 <span class="math inline">0.1</span> s 量级，仍然可做；四元加参数就到边界了。</p>
+<p><strong>第三条，鲁棒 SOS。</strong> 把参数写成不确定项，要求 <span class="math inline">\dot V&lt;0</span> 对所有不确定项成立。这需要把乘子也做成参数的函数（多项式依赖），或者用仿射依赖加额外的 LMI。这条路理论最完整，实现最复杂，一般要借助专用工具（比如 SOSTOOLS 的多项式依赖乘子，或 YALMIP 的鲁棒对偶化）。</p>
+<p>三条路的选择判据是：参数漂移小于 <span class="math inline">\pm10\%</span>、且只想知道“大概稳不稳”——网格化；漂移大到 <span class="math inline">\pm30\%</span>、且要连续结论——参数当状态；要做认证级结论——鲁棒 SOS。绝大多数工程问题用第一条就够了，因为参数漂移的实际分布往往比区间窄，网格化配上“最坏点单独加密”能覆盖住。</p>
+<p>有一个陷阱要提醒：<strong>参数摄动与状态区域不是一回事。</strong> 前者改变方程，后者限定初值。本章的 S-procedure 处理的是后者，不能拿来处理前者。把参数当成“额外的状态约束”写进 S-procedure，得到的结论是“在参数取某个值的那个切片上成立”，而不是“对所有参数成立”——这两者的差别在评审时经常被抓住。判断方法很简单：看这个量是否出现在 <span class="math inline">f(x)</span> 的系数里。出现，是参数；只出现在初值条件里，是区域，两者的处理方法不能互换，这一点务必分清。</p>
+<h2 id="优缺点与适用边界">53.11 优缺点与适用边界</h2>
+<p>三种工具在文献里常被写得像“万能钥匙”，实际用起来各有明确的短板。这一节把它们放在一起对比，并给出“什么时候该用、什么时候不该用”的判据。</p>
+<h3 id="五条优点">53.11.1 五条优点</h3>
+<p><strong>第一，结论是全局的，不是局部线性化。</strong> 二次型证书配合 SOS 松弛，给出的是“在整个状态下 <span class="math inline">\dot V&lt;0</span>”，而不是“在平衡点附近存在一个邻域”。这一点在工程上非常值钱：第 52 章的线性化方法只能保证小偏差下的稳定性，一旦扰动大到进入非线性区，结论就失效；SOS 给出的区域大得多。本章实测中，四次型证书在 <span class="math inline">\|x\|\ge0.5</span> 的环带上仍有 <span class="math inline">\max\dot V=-1.647\times10^{-1}</span>，说明它在这个环带上是严格耗散的。</p>
+<p><strong>第二，证书可机器验证。</strong> <span class="math inline">V</span> 是显式多项式，<span class="math inline">\dot V</span> 也是，任何第三方拿到这两条式子就能独立验算。这比“仿真里看起来收敛”强得多——仿真只能覆盖有限条轨迹，而证书覆盖整个区域。</p>
+<p><strong>第三，收缩分析不要求知道平衡点。</strong> 这是它相对 Lyapunov 方法的独特优势。Lyapunov 方法必须先把平衡点找出来、平移到原点，再构造 <span class="math inline">V</span>；收缩分析只看雅可比的对称部分，任意两条轨迹都会互相靠拢，不需要知道它们最终落在哪里。对平衡点随工况漂移的系统（比如负载变化的机械臂），这一点非常实用。</p>
+<p><strong>第四，无源性天然支持模块化组合。</strong> 两个无源系统负反馈互联仍然无源，这个结论不需要重新做稳定性分析。工程上的意义是：控制器、执行器、被控对象可以分别验证，然后直接拼起来。这比“整体系级建模再分析”省了大量工作。</p>
+<p><strong>第五，三种工具共享同一套数值基础设施。</strong> SOS 用半定规划，收缩用特征值，无源用频域扫频——三者都能在 Python 里用现成库完成。本章的脚本一共不到五百行，就覆盖了全部三类验证。</p>
+<h3 id="六条局限">53.11.2 六条局限</h3>
+<p><strong>第一，多项式假设是硬约束。</strong> 摩擦、饱和、死区、继电器、查表——这些在真实系统里随处可见的东西都不是多项式。把它们硬拟合成多项式，会引入模型误差；而 SOS 的结论对模型误差没有鲁棒性保证，拟合误差稍大就可能把“稳定”证成“不稳定”，或者反过来。这是 SOS 在工程上最大的障碍，比计算规模更难绕。</p>
+<p><strong>第二，保守性无法定量估计。</strong> SOS 给出的是“存在一个 <span class="math inline">V</span> 使 <span class="math inline">\dot V&lt;0</span>”，但它不告诉你这个 <span class="math inline">V</span> 离“最好”有多远。同一个系统，用四次型能证、六次型也能证，两次的 <span class="math inline">\max\dot V</span> 差 55%，但你无法判断再提高到八次还能改善多少。这种“不知道离边界多远”的状态，在需要定量裕度的场合（比如适航认证）很难交差。</p>
+<p><strong>第三，数值可行性不等于存在性。</strong> 求解器返回 <code>infeasible</code>，可能是真的不存在这样的 <span class="math inline">V</span>，也可能是数值条件太差、求解器没找到。两者的区别在工程上很重要：前者说明方法不适用，后者说明要调参数重试。本章 §53.8.2 列了四种常见原因，但现实中往往要靠经验判断。</p>
+<p><strong>第四，收缩速率依赖度量，度量选择没有系统方法。</strong> <span class="math inline">\mu_\Theta(J)</span> 的值随 <span class="math inline">\Theta</span> 变化，本章的二分法能求出最优的常数 <span class="math inline">\Theta</span>，但对时变 <span class="math inline">\Theta(x)</span> 没有通用解法。选错度量会得到过分保守的 <span class="math inline">\rho</span>，甚至得到 <span class="math inline">\rho\le0</span> 的错误结论。文献里的做法多是“试几个对角阵”，缺少理论指导。</p>
+<p><strong>第五，无源性对控制器结构限制很强。</strong> 只要控制器里有积分环节，无源性通常就被破坏。而工程上 PID 的积分项恰恰是消除稳态误差的关键。这意味着无源性设计与“零稳态误差”之间存在结构性张力，只能靠“积分抗饱和”或“用前馈代替积分”来缓解，都不是免费的。</p>
+<p><strong>第六，与工业工具的衔接不顺。</strong> 现场的 PLC、DCS 里没有半定规划求解器，SOS 只能离线做。离线算出的 <span class="math inline">V</span> 要转成在线可用的判据（比如查表、拟合、简化为二次型），转换过程又会引入误差。这条“离线证、在线用”的链路目前没有标准工具支撑。</p>
+<h3 id="适用边界">53.11.3 适用边界</h3>
+<p>把上面的优缺点压成一张判定表，遇到具体对象时按行对照即可。</p>
+<p>表 53-8 三种工具的适用边界</p>
+<table>
+<thead>
+<tr class="header">
+<th>判据</th>
+<th>SOS / Lyapunov</th>
+<th>收缩分析</th>
+<th>无源性</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>状态维数</td>
+<td><span class="math inline">\le5</span></td>
+<td>不限（只需算雅可比）</td>
+<td>不限</td>
+</tr>
+<tr class="even">
+<td>模型形式</td>
+<td>必须是多项式</td>
+<td>可微即可</td>
+<td>需要能量函数</td>
+</tr>
+<tr class="odd">
+<td>是否需要平衡点</td>
+<td>需要</td>
+<td>不需要</td>
+<td>需要（或增量形式）</td>
+</tr>
+<tr class="even">
+<td>能否给速率</td>
+<td>能（间接）</td>
+<td>能（直接给 <span class="math inline">\rho</span>）</td>
+<td>不能</td>
+</tr>
+<tr class="odd">
+<td>能否组合</td>
+<td>弱</td>
+<td>弱</td>
+<td>强</td>
+</tr>
+<tr class="even">
+<td>典型失败原因</td>
+<td>规模爆炸、非多项式</td>
+<td>度量选错</td>
+<td>控制器含积分</td>
+</tr>
+</tbody>
+</table>
+<p>三条边界值得单独说。</p>
+<p><strong>维数边界。</strong> 五维是 SOS 的实际天花板，这来自表 53-7 的规模增长。超过五维，要么降阶（把快模态用奇异摄动消掉），要么分区（把大系统拆成几个小子系统分别验证），要么换收缩分析——收缩分析的成本只与雅可比的维数有关，算一个 <span class="math inline">n\times n</span> 矩阵的特征值，<span class="math inline">n=50</span> 也毫无压力。</p>
+<p><strong>模型边界。</strong> 如果对象里有多项式之外的非线性（摩擦、饱和），SOS 的结论只能当作“标称模型下的参考”，不能当作保证。此时更可靠的做法是把非多项式部分当作有界扰动，用鲁棒方法（<span class="math inline">L_2</span> 增益、小增益）处理，而不是硬拟合。</p>
+<p><strong>结构边界。</strong> 无源性要求控制器“不吃能量”，这与积分作用冲突。若系统必须用积分消除稳态误差，就不要指望用无源性证稳定性，改用 Lyapunov 或收缩分析。反过来，若系统是“多个模块互联”（比如机器人关节、电力电子变换器并联），无源性的组合优势就非常突出，值得为它放弃积分项。</p>
+<h3 id="与相邻章节方法的对比">53.11.4 与相邻章节方法的对比</h3>
+<p>本章的工具不是唯一的稳定性分析手段，和全书其他章节的方法放在一起看，边界会更清楚。</p>
+<p><strong>与 PID（第 44、106 章）比。</strong> PID 的分析靠频域：相位裕度、增益裕度、Nyquist 曲线。这套方法在单输入单输出、近似线性的对象上极其高效，工程师看一眼 Bode 图就能判断。本章的方法在三个地方补它的不足：对象强非线性时（频域线性化失效）、多变量耦合时（频域判据难推广）、需要全局结论时（频域只给局部）。代价是计算复杂度和建模要求都高得多。实践中的分工是：<strong>先用 PID 加频域分析打底，稳定裕度不够或非线性明显时再上本章的工具。</strong></p>
+<p><strong>与 MPC（第 58、80 章）比。</strong> MPC 的核心是在线解优化，天然处理约束，但稳定性证明需要终端代价或终端集。本章的 SOS 正好可以为 MPC 提供终端不变集：离线解出“<span class="math inline">\dot V&lt;0</span> 的最大水平集”，在线把它当终端约束。两者是互补关系而不是替代关系。若系统没有约束、维数又低，MPC 的在线计算是浪费，直接用本章的静态证书更合适。</p>
+<p><strong>与 Smith 预估（第 47、107 章）比。</strong> 纯滞后系统的相位随频率无限下降，任何有限增益的反馈都会在某个频率上失稳。Smith 预估通过“把滞后移出闭环”来解决，但它对模型误差极其敏感——滞后时间估错 10%，闭环可能就从稳定变成振荡。本章的小增益视角可以给这个敏感性一个定量刻画：把滞后误差 <span class="math inline">\Delta\tau</span> 折算成不确定性块的增益，用 <span class="math inline">\gamma_1\gamma_2&lt;1</span> 判断闭环还能不能稳。这个判据比“凭经验留裕度”可靠，但需要把时滞误差量化。</p>
+<p><strong>与鲁棒控制（第 57 章）比。</strong> 鲁棒控制（<span class="math inline">H_\infty</span>、<span class="math inline">\mu</span> 综合）处理的是“参数在集合内变化”的情形，本章处理的是“非线性函数已知”的情形。两者可以叠加：先用 SOS 证明标称模型稳定，再用鲁棒方法证明参数摄动不破坏这个结论。叠加的代价是双重保守性，实际工程里通常只用一种。</p>
+<p>表 53-9 四种方法的定位</p>
+<table>
+<thead>
+<tr class="header">
+<th>方法</th>
+<th>最擅长的场合</th>
+<th>主要成本</th>
+<th>本书章节</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>频域 / PID</td>
+<td>单变量、近似线性、快速整定</td>
+<td>非线性下失效</td>
+<td>第 44、106 章</td>
+</tr>
+<tr class="even">
+<td>MPC</td>
+<td>有约束、多变量、在线优化</td>
+<td>在线算力、终端集设计</td>
+<td>第 58、80 章</td>
+</tr>
+<tr class="odd">
+<td>Smith 预估</td>
+<td>大纯滞后</td>
+<td>对滞后误差敏感</td>
+<td>第 47、107 章</td>
+</tr>
+<tr class="even">
+<td>本章三种工具</td>
+<td>强非线性、需要全局结论、模块化组合</td>
+<td>建模与离线计算</td>
+<td>本章</td>
+</tr>
+</tbody>
+</table>
+<h3 id="什么时候不该用">53.11.5 什么时候不该用</h3>
+<p>这一小节说反面。以下四种情形，建议直接换工具，不要在本章的方法上耗时间。</p>
+<p><strong>对象根本无法写成多项式，且非线性很强。</strong> 比如含继电器的开关系统、含查表映射的发动机控制。硬拟合多项式的误差会吃掉全部结论的可靠性，不如用仿真加蒙特卡洛，或者用描述函数法做近似分析。</p>
+<p><strong>状态维数超过八维，又没有可利用的结构。</strong> 表 53-7 的规模增长决定了这一点。此时应该考虑降阶、分区或者数据驱动方法，而不是硬上 SOS。</p>
+<p><strong>需要在线实时判断稳定性。</strong> SOS 的求解时间是秒级到分钟级，不可能放进 1 ms 的控制周期。在线只能用简化的判据（比如第 52 章 §52.10.5 提到的在线监测 <span class="math inline">V</span>），而在线监测的前提是离线已经算好了 <span class="math inline">V</span>。</p>
+<p><strong>系统本身是开环稳定的，且性能要求不高。</strong> 这种情况下做 SOS 是过度设计。用一个保守的 PID，留足裕度，成本低得多。</p>
+<p>反过来，有三种情形特别值得用本章的方法：对象是低维强非线性（比如本章的硬化弹簧、单摆、单自由度机械臂）；需要给出“整个区域都稳定”的强结论（比如安全相关的场合）；系统由多个模块互联，需要模块化验证（比如机器人、电力电子）。</p>
+<p>这四种“不该用”的判断成本都很低：看一眼模型里有没有非多项式项、数一下状态维数、问一句要不要在线判断、查一下开环是否已经稳定。建议在动手写求解器代码之前，先花十分钟过一遍这张清单。它挡掉的不是难题，而是“方向错了还使劲”的那类浪费——后者往往要等到投入几天之后才发现，代价比十分钟大得多。</p>
+<h3 id="一次选错工具的复盘">53.11.6 一次选错工具的复盘</h3>
+<p>最后记一个典型的判断过程，说明“选工具”本身也会出错。</p>
+<p>一个容易犯的错误是：拿到三关节机械臂（六状态）就想用 SOS 一次性证明全部稳定性。按表 53-7 估算，六状态、三次的矩阵阶数是 84，求解时间超过十秒，而且这还只是单次求解——实际要扫描 <span class="math inline">\varepsilon</span>、扫描 <span class="math inline">V</span> 的次数、还要做回代验证，总时间不可接受。更麻烦的是，三关节机械臂的动力学里有大量三角函数，多项式化之后次数会升到很高，规模还要再翻。</p>
+<p>正确的做法是先退一步用收缩分析。对三关节机械臂，雅可比是 <span class="math inline">6\times6</span>，算特征值毫无压力；虽然得到的 <span class="math inline">\rho</span> 比较保守（约 <span class="math inline">0.1</span> /s 量级），但至少能给出一个全局的收敛速率估计。再进一步，把机械臂看成“关节 + 负载”两个无源模块的互联，用无源性证明级联稳定，得到的是结构性的结论，不依赖具体参数。</p>
+<p>这次复盘给出的教训是：<strong>先按规模筛工具，再按模型形式筛，最后按需要的结论强度筛。</strong> 反过来（先想要最强的结论，再硬套工具）很容易在规模上撞墙。本章的三种工具恰好覆盖了这条筛选链的三个出口：规模小、模型多项式、要强结论——SOS；规模中等、模型可微、要速率——收缩；规模大、要模块化——无源。</p>
+<h2 id="python-仿真代码">53.12 Python 仿真代码</h2>
+<p>本章所有数字都来自一个脚本：<code>book/code/ch053_sim.py</code>，四百九十二行，不依赖本书其他模块，只用到 <code>numpy</code>、<code>scipy</code>、<code>cvxpy</code>。图由另一个脚本 <code>book/code/ch053_figs.py</code> 生成。这一节讲脚本的结构、几个核心函数、十三个报告怎么读，以及换成自己的对象要改哪几行。</p>
+<h3 id="文件组织与运行方式">53.12.1 文件组织与运行方式</h3>
+<p>脚本的直接运行方式是一行命令：</p>
+<pre class="text"><code>&quot;D:\Anaconda3\envs\py311\python.exe&quot; code\ch053_sim.py</code></pre>
+<p>工作目录是 <code>book</code>，输出全部打到屏幕，不写文件。这样设计的原因是：正文引用的每个数字都必须能在终端里一眼对上，不经过任何中间文件，避免“表里的数和脚本里的数不是一次跑的”这种对不上账的情况。</p>
+<p>文件按四段组织，顺序与阅读顺序一致：</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 第 1 段：多项式工具</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> exponents(nx, deg)      <span class="co"># 枚举次数不超过 deg 的单项式指数</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> poly_deriv(p, k)        <span class="co"># 对第 k 个变量求偏导</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> lie_deriv(V, f)         <span class="co"># 沿 f 求 V 的 Lie 导数</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> v_value(V, X)           <span class="co"># 在网格上求多项式值</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> grid(n, lim)            <span class="co"># 生成规则网格</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="co"># 第 2 段：SOS 求解</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> sos_lyapunov(f, quartic<span class="op">=</span><span class="va">True</span>, eps<span class="op">=</span><span class="fl">1e-3</span>, vdeg<span class="op">=</span><span class="va">None</span>)</span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a><span class="co"># 第 3 段：对象与积分器</span></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> f_duffing()             <span class="co"># 硬化弹簧 + 线性阻尼</span></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> f_contract(t, x)        <span class="co"># 线性旋转 + 三次阻尼</span></span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> jac_contract(x)         <span class="co"># 上式的雅可比</span></span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> f_arm(t, x, tau, ...)   <span class="co"># 单自由度机械臂</span></span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> simulate(rhs, x0, T, h) <span class="co"># 定步长输出的高精度积分</span></span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a><span class="co"># 第 4 段：十三个报告</span></span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> report_sos() ... report_summary(rho)</span></code></pre></div>
+<p>这四段的划分对应本章的四类问题：多项式怎么表示、证书怎么解、对象怎么仿真、结论怎么打印。每一段都可以单独拿出来用——比如只想做收缩分析，只需第 1 段的 <code>v_value</code> 和第 3 段的 <code>jac_contract</code>，完全不必碰 <code>cvxpy</code>。</p>
+<p><code>main()</code> 的顺序也值得注意：先跑 SOS（拿到 <span class="math inline">V</span> 与 <span class="math inline">P</span>），再跑收缩（拿到 <span class="math inline">\rho</span>），中间穿插无源、离散、规模，最后用 <code>report_summary</code> 把四种方法的口径并排打印。这个顺序不是随意的——<code>report_summary</code> 需要 <span class="math inline">\rho</span>，所以收缩必须在它之前；而 <code>report_eps_scan</code>、<code>report_theta_opt</code>、<code>report_sixth</code> 三个报告都要多次调用求解器，放在最后可以避免影响前面的计时。</p>
+<h3 id="多项式工具三件套">53.12.2 多项式工具三件套</h3>
+<p>SOS 的全部代码都建立在“多项式用系数字典表示”这个约定上。一个二元多项式写成 <code>{(2, 0): 1.35, (1, 1): 0.75, (0, 2): 1.74}</code>，键是指数元组，值是系数。这个表示法的好处是稀疏：<span class="math inline">V</span> 通常只有不到十项非零，用字典比用稠密数组省一个数量级的内存，而且求导、相乘都只遍历非零项。</p>
+<p>第一个工具是单项式枚举：</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> exponents(nx: <span class="bu">int</span>, deg: <span class="bu">int</span>) <span class="op">-&gt;</span> <span class="bu">list</span>[<span class="bu">tuple</span>[<span class="bu">int</span>, ...]]:</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">&quot;&quot;&quot;返回 nx 元、总次数不超过 deg 的全部单项式指数，按次数升序。&quot;&quot;&quot;</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    out <span class="op">=</span> []</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> rec(prefix, k):</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> k <span class="op">==</span> nx:</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> <span class="bu">sum</span>(prefix) <span class="op">&lt;=</span> deg:</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>                out.append(<span class="bu">tuple</span>(prefix))</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> a <span class="kw">in</span> <span class="bu">range</span>(deg <span class="op">+</span> <span class="dv">1</span> <span class="op">-</span> <span class="bu">sum</span>(prefix)):</span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>            rec(prefix <span class="op">+</span> [a], k <span class="op">+</span> <span class="dv">1</span>)</span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>    rec([], <span class="dv">0</span>)</span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>    out.sort(key<span class="op">=</span><span class="kw">lambda</span> e: (<span class="bu">sum</span>(e), e))</span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> out</span></code></pre></div>
+<p>递归的终止条件是“填满 <span class="math inline">n_x</span> 个位置”，剪枝条件是“当前部分和不超过 <span class="math inline">d</span>”。返回的列表按次数升序排，这一点在后面装配 <span class="math inline">Q</span> 矩阵时很关键：同次的单项式必须排在一起，否则 <span class="math inline">z^{\mathsf T}Qz</span> 展开出来的项会对不上号。</p>
+<p>第二个工具是偏导：</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> poly_deriv(p, k):</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">&quot;&quot;&quot;对 x_k 求偏导，返回新的系数字典。&quot;&quot;&quot;</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    out <span class="op">=</span> {}</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> e, c <span class="kw">in</span> p.items():</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> e[k] <span class="op">==</span> <span class="dv">0</span>:</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>            <span class="cf">continue</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>        e2 <span class="op">=</span> <span class="bu">list</span>(e)</span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>        e2[k] <span class="op">-=</span> <span class="dv">1</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>        out[<span class="bu">tuple</span>(e2)] <span class="op">=</span> out.get(<span class="bu">tuple</span>(e2), <span class="fl">0.0</span>) <span class="op">+</span> c <span class="op">*</span> e[k]</span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> out</span></code></pre></div>
+<p>指数减一、系数乘以原指数，这是最朴素的求导规则。写成“累加”而不是“赋值”，是为了处理 <span class="math inline">x_1^{2}x_2^{2}</span> 这类项在求导后可能与其他项合并的情形。</p>
+<p>第三个工具是 Lie 导数，它把前两个串起来：</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> lie_deriv(V, f):</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">&quot;&quot;&quot;沿 x&#39;=f(x) 求 V 的导数，返回系数字典。&quot;&quot;&quot;</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>    out <span class="op">=</span> {}</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> k, fk <span class="kw">in</span> <span class="bu">enumerate</span>(f):</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>        d <span class="op">=</span> poly_deriv(V, k)</span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> e, c <span class="kw">in</span> d.items():</span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>            <span class="cf">for</span> e2, c2 <span class="kw">in</span> fk.items():</span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>                key <span class="op">=</span> <span class="bu">tuple</span>(a <span class="op">+</span> b <span class="cf">for</span> a, b <span class="kw">in</span> <span class="bu">zip</span>(e, e2))</span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>                out[key] <span class="op">=</span> out.get(key, <span class="fl">0.0</span>) <span class="op">+</span> c <span class="op">*</span> c2</span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> out</span></code></pre></div>
+<p><code>f</code> 是一个列表，第 <span class="math inline">k</span> 个元素是 <span class="math inline">\dot x_k</span> 的系数字典。函数对每个状态分量求偏导、再乘上对应的 <span class="math inline">\dot x_k</span>、最后把所有项按指数相加合并。这三行代码就是整章“沿系统求导”的全部实现，没有任何符号计算库参与。</p>
+<p>用字典表示多项式有一个代价：<strong>次数信息不显式</strong>。一个八次多项式和一个二次多项式在数据结构上完全一样，只有在装配约束时才需要知道“这个项属于哪一次”。本章的做法是在装配时按指数和分类，而不是在数据结构里存次数。这样做的好处是简单，坏处是每次装配都要重新算一遍指数和——在二元、六次的规模下，这点开销可以忽略。</p>
+<h3 id="sos-求解器的核心">53.12.3 SOS 求解器的核心</h3>
+<p><code>sos_lyapunov</code> 是整章最长的函数，约九十行。它的输入是系统方程 <code>f</code>、<span class="math inline">V</span> 的次数 <code>vdeg</code>、裕度 <code>eps</code>，输出是求解状态、各块矩阵、耗时和 <span class="math inline">V</span> 的系数字典。核心逻辑可以压成五步。</p>
+<p><strong>第一步，建二次块。</strong> <span class="math inline">V</span> 的二次部分用 <span class="math inline">P</span> 表示，约束 <span class="math inline">P\succeq\varepsilon I</span> 保证正定：</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>P <span class="op">=</span> cp.Variable((nx, nx), symmetric<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>cons <span class="op">=</span> [P <span class="op">&gt;&gt;</span> eps <span class="op">*</span> np.eye(nx)]</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>quad <span class="op">=</span> []</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(nx):</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> j <span class="kw">in</span> <span class="bu">range</span>(i, nx):</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>        e <span class="op">=</span> [<span class="dv">0</span>] <span class="op">*</span> nx</span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>        e[i] <span class="op">+=</span> <span class="dv">1</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>        e[j] <span class="op">+=</span> <span class="dv">1</span></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>        quad.append((<span class="bu">tuple</span>(e), P[i, i] <span class="cf">if</span> i <span class="op">==</span> j <span class="cf">else</span> <span class="dv">2</span> <span class="op">*</span> P[i, j]))</span></code></pre></div>
+<p>注意最后一行：对角项系数是 <span class="math inline">P_{ii}</span>，非对角项是 <span class="math inline">2P_{ij}</span>。这个 2 就是 §53.8.1 和 §53.10.2 反复强调的那个 2，漏掉它会让回代结果与求解器理解的不一致。</p>
+<p><strong>第二步，建高次块。</strong> 四次块用三个二次单项式 <span class="math inline">[x_1^{2},x_1x_2,x_2^{2}]^{\mathsf T}</span> 做基，<span class="math inline">Q_4\succeq0</span>；六次块用四个三次单项式做基，<span class="math inline">Q_6\succeq0</span>。代码用循环处理，避免为每个次数写一遍：</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> deg <span class="kw">in</span> (<span class="dv">4</span>, <span class="dv">6</span>):</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> vdeg <span class="op">&lt;</span> deg:</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>        <span class="cf">continue</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>    zm <span class="op">=</span> [e <span class="cf">for</span> e <span class="kw">in</span> exponents(nx, deg <span class="op">//</span> <span class="dv">2</span>) <span class="cf">if</span> <span class="bu">sum</span>(e) <span class="op">==</span> deg <span class="op">//</span> <span class="dv">2</span>]</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>    Qv <span class="op">=</span> cp.Variable((<span class="bu">len</span>(zm), <span class="bu">len</span>(zm)), symmetric<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>    cons.append(Qv <span class="op">&gt;&gt;</span> <span class="dv">0</span>)</span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>    blocks.append((zm, Qv))</span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> a, b <span class="kw">in</span> itertools.combinations_with_replacement(<span class="bu">range</span>(<span class="bu">len</span>(zm)), <span class="dv">2</span>):</span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>        e <span class="op">=</span> <span class="bu">tuple</span>(x <span class="op">+</span> y <span class="cf">for</span> x, y <span class="kw">in</span> <span class="bu">zip</span>(zm[a], zm[b]))</span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>        terms.append((lie_deriv({e: <span class="fl">1.0</span>}, f),</span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>                      Qv[a, a] <span class="cf">if</span> a <span class="op">==</span> b <span class="cf">else</span> <span class="dv">2</span> <span class="op">*</span> Qv[a, b]))</span></code></pre></div>
+<p><code>zm</code> 是这一块的基，<code>combinations_with_replacement</code> 遍历上三角（含对角），每一项单独求 Lie 导数后乘上对应的 <span class="math inline">Q</span> 元素。这里同样是“对角取一、非对角取二”。</p>
+<p><strong>第三步，建平方和乘子。</strong> 这是最容易写错的一步。<span class="math inline">\dot V+\varepsilon\|x\|^{2}</span> 是一个偶数次多项式，要证它非负，标准做法是把它写成 <span class="math inline">z^{\mathsf T}Q_2z</span>，其中 <span class="math inline">z</span> 的次数取“目标次数的一半”。对四次型，<span class="math inline">\dot V</span> 是四次，<span class="math inline">z</span> 取到二次；对六次型，<span class="math inline">\dot V</span> 是八次，<span class="math inline">z</span> 要取到四次。代码里写的是</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>z <span class="op">=</span> exponents(nx, vdeg <span class="op">//</span> <span class="dv">2</span> <span class="op">+</span> <span class="dv">1</span>)</span></code></pre></div>
+<p>而不是 <code>vdeg - 1</code>。这两个写法在 <code>vdeg=4</code> 时完全等价（都得到三次以内的单项式集合），但在 <code>vdeg=6</code> 时就分道扬镳：<code>vdeg - 1 = 5</code> 给出 21 个单项式，而 <span class="math inline">\dot V</span> 是八次、乘子只需要到四次（15 个），多出的 6 个纯属冗余。实测这种冗余写法仍能解出 <code>optimal</code>，但 <span class="math inline">Q_2</span> 的阶数从 15 涨到 21、决策变量从 120 涨到 231，零空间变大、数值更脆。改成 <code>vdeg // 2 + 1</code> 之后，基恰好够用，六次型稳定跑通。这是本章代码里第二个真实的坑。</p>
+<p><strong>第四步，装配等式约束。</strong> 把左边的 <span class="math inline">\dot V</span> 与右边的 <span class="math inline">z^{\mathsf T}Q_2z</span> 逐项对齐，再补上 <span class="math inline">\varepsilon\|x\|^{2}</span>：</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>keys <span class="op">=</span> <span class="bu">set</span>(lhs) <span class="op">|</span> <span class="bu">set</span>(rhs) <span class="op">|</span> {(<span class="dv">2</span>, <span class="dv">0</span>), (<span class="dv">0</span>, <span class="dv">2</span>)}</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> e <span class="kw">in</span> keys:</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>    target <span class="op">=</span> eps <span class="op">*</span> (<span class="fl">1.0</span> <span class="cf">if</span> e <span class="kw">in</span> ((<span class="dv">2</span>, <span class="dv">0</span>), (<span class="dv">0</span>, <span class="dv">2</span>)) <span class="cf">else</span> <span class="fl">0.0</span>)</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>    cons.append(lhs.get(e, <span class="dv">0</span>) <span class="op">+</span> target <span class="op">+</span> rhs.get(e, <span class="dv">0</span>) <span class="op">==</span> <span class="dv">0</span>)</span></code></pre></div>
+<p>三个集合取并集，保证没有遗漏的项；<code>lhs</code> 与 <code>rhs</code> 的符号相反，是因为移项到了同一边。</p>
+<p><strong>第五步，求解与回代。</strong> 求解器按 <code>CLARABEL</code>、<code>SCS</code> 的顺序尝试，前者快、后者稳：</p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> solver <span class="kw">in</span> (cp.CLARABEL, cp.SCS):</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">try</span>:</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>        prob.solve(solver<span class="op">=</span>solver)</span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">except</span> <span class="pp">Exception</span>:</span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>        <span class="cf">continue</span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>    status <span class="op">=</span> prob.status</span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> status <span class="kw">in</span> (<span class="st">&quot;optimal&quot;</span>, <span class="st">&quot;optimal_inaccurate&quot;</span>):</span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>        <span class="cf">break</span></span></code></pre></div>
+<p>回代部分把 <span class="math inline">P</span>、<span class="math inline">Q_4</span>、<span class="math inline">Q_6</span> 三块矩阵还原成 <span class="math inline">V</span> 的系数字典，供后续的 <code>lie_deriv</code> 与 <code>v_value</code> 使用。这一段就是 §53.8.1 那个 bug 的现场：<code>Pv[i, j] if i == j else 2 * Pv[i, j]</code>。</p>
+<p>整段代码没有用任何 SOS 专用库（比如 <code>SumOfSquares</code> 或 <code>sostools</code>），全部用 <code>cvxpy</code> 手写。这样做的原因是：手写之后每个约束长什么样一目了然，出问题时能定位到具体哪一项；用封装库虽然代码短，但报错信息往往指不到源头。代价是代码长一些，但对本章这种教学性质的脚本，可读性比紧凑更重要。</p>
+<h3 id="收缩与无源的两段代码">53.12.4 收缩与无源的两段代码</h3>
+<p>相比 SOS，收缩分析的代码短得多，因为它的核心只是一个特征值计算：</p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> report_contraction() <span class="op">-&gt;</span> <span class="bu">float</span>:</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">&quot;&quot;&quot;报告 2：对称部分的矩阵测度、收缩率与两条轨迹的实测速率。&quot;&quot;&quot;</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>    xs <span class="op">=</span> np.linspace(<span class="op">-</span><span class="fl">4.0</span>, <span class="fl">4.0</span>, <span class="dv">161</span>)</span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>    mu <span class="op">=</span> []</span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> x2 <span class="kw">in</span> xs:</span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>        J <span class="op">=</span> jac_contract(np.array([<span class="fl">0.0</span>, x2]))</span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>        mu.append(np.linalg.eigvalsh(<span class="fl">0.5</span> <span class="op">*</span> (J <span class="op">+</span> J.T)).<span class="bu">max</span>())</span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>    mu <span class="op">=</span> np.array(mu)</span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a>    rho <span class="op">=</span> <span class="op">-</span>mu.<span class="bu">max</span>()</span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a>    ...</span></code></pre></div>
+<p><code>0.5 * (J + J.T)</code> 就是 <span class="math inline">J</span> 的对称部分，<code>eigvalsh</code> 取最大特征值即为 <span class="math inline">\mu(J)</span>。注意扫描是在 <span class="math inline">x_2</span> 上做的，<span class="math inline">x_1</span> 固定为零——这不是偷懒，而是因为本对象的雅可比与 <span class="math inline">x_1</span> 无关（只有 <span class="math inline">x_2</span> 出现在 <span class="math inline">J_{22}</span> 里），扫描一维就够了。整段没有迭代、没有求解器，复杂度是 <span class="math inline">161</span> 次 <span class="math inline">2\times2</span> 特征值计算，毫秒量级跑完。</p>
+<p>紧接着用两条轨迹做实测：初值 <span class="math inline">[1,1]</span> 与 <span class="math inline">[-0.5,2]</span>，仿真六秒，取 <span class="math inline">t\in[0.5,3]</span> 段拟合 <span class="math inline">\ln d(t)</span> 的斜率。这一段的意义是把“理论上界 <span class="math inline">\rho</span>”与“实际收敛速度”放在一起对照，实测斜率 <span class="math inline">-1.006814</span> 与 <span class="math inline">\rho=1.0</span> 之比为 <span class="math inline">1.006814</span>，说明界是紧的。</p>
+<p>无源性的报告 4 与报告 5 分别走频域和时域两条路。频域那条更短：</p>
+<div class="sourceCode" id="cb14"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> report_passivity_freq() <span class="op">-&gt;</span> <span class="va">None</span>:</span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">&quot;&quot;&quot;报告 4：机械臂速度输出的频域无源性。&quot;&quot;&quot;</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>    M, b, k <span class="op">=</span> <span class="fl">0.5</span>, <span class="fl">0.4</span>, <span class="fl">4.905</span></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>    w <span class="op">=</span> np.logspace(<span class="op">-</span><span class="dv">2</span>, <span class="dv">2</span>, <span class="dv">2001</span>)</span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>    s <span class="op">=</span> <span class="ot">1j</span> <span class="op">*</span> w</span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>    G <span class="op">=</span> (<span class="fl">2.0</span> <span class="op">*</span> s) <span class="op">/</span> (M <span class="op">*</span> s <span class="op">**</span> <span class="dv">2</span> <span class="op">+</span> b <span class="op">*</span> s <span class="op">+</span> k)</span></code></pre></div>
+<p>这个 <span class="math inline">G</span> 的分子是 <span class="math inline">2s</span>，不是常数——因为输出取的是关节速度 <span class="math inline">\dot q</span> 而不是位置 <span class="math inline">q</span>。分子上的 <span class="math inline">s</span> 让 <span class="math inline">G</span> 在低频按 <span class="math inline">\omega</span> 趋零，所以最小实部只有 <span class="math inline">+3.325\times10^{-6}</span>，贴着零。若把输出换成位置，<span class="math inline">G</span> 在低频会趋于常数，最小实部就不再接近零了。这个差别提醒一件事：<strong>无源性是“端口”的性质，换输出就是换端口。</strong></p>
+<p>时域那条（报告 5）用天然能量做验证：</p>
+<div class="sourceCode" id="cb15"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>V <span class="op">=</span> <span class="fl">0.5</span> <span class="op">*</span> M <span class="op">*</span> X[:, <span class="dv">1</span>] <span class="op">**</span> <span class="dv">2</span> <span class="op">+</span> k <span class="op">*</span> (<span class="fl">1.0</span> <span class="op">-</span> np.cos(X[:, <span class="dv">0</span>]))</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>work <span class="op">=</span> cumulative_trapezoid(tau(t) <span class="op">*</span> X[:, <span class="dv">1</span>], t, initial<span class="op">=</span><span class="fl">0.0</span>)</span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>diss <span class="op">=</span> cumulative_trapezoid(b <span class="op">*</span> X[:, <span class="dv">1</span>] <span class="op">**</span> <span class="dv">2</span>, t, initial<span class="op">=</span><span class="fl">0.0</span>)</span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>resid <span class="op">=</span> V[<span class="op">-</span><span class="dv">1</span>] <span class="op">-</span> V[<span class="dv">0</span>] <span class="op">-</span> work[<span class="op">-</span><span class="dv">1</span>] <span class="op">+</span> diss[<span class="op">-</span><span class="dv">1</span>]</span></code></pre></div>
+<p>第一行是动能加重力势能，势能用 <span class="math inline">1-\cos q</span> 而不是 <span class="math inline">\tfrac12q^{2}</span>，因为机械臂的势能是 <span class="math inline">k(1-\cos q)</span>，在小角度下才近似为 <span class="math inline">\tfrac12kq^{2}</span>。用精确的势能，能量平衡才在任意摆角下成立。最后一行 <code>resid</code> 就是残差，实测 <span class="math inline">+2.486\times10^{-7}</span>。这个残差不是误差指标，而是自检：如果残差远大于积分精度（比如 <span class="math inline">10^{-3}</span>），说明公式推导或者符号写错了，而不是数值问题。</p>
+<p>报告 6 是 KYP 判据的实现，用分块矩阵把“耗散不等式”写成一个 LMI：</p>
+<div class="sourceCode" id="cb16"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>A <span class="op">=</span> np.array([[<span class="fl">0.0</span>, <span class="fl">1.0</span>], [<span class="op">-</span>k <span class="op">/</span> M, <span class="op">-</span>b <span class="op">/</span> M]])</span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>B <span class="op">=</span> np.array([[<span class="fl">0.0</span>], [<span class="fl">2.0</span>]])</span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>C <span class="op">=</span> np.array([[<span class="fl">0.0</span>, <span class="fl">1.0</span>]])</span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>P <span class="op">=</span> cp.Variable((<span class="dv">2</span>, <span class="dv">2</span>), symmetric<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>blk <span class="op">=</span> cp.bmat([[A.T <span class="op">@</span> P <span class="op">+</span> P <span class="op">@</span> A, P <span class="op">@</span> B <span class="op">-</span> C.T],</span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a>               [B.T <span class="op">@</span> P <span class="op">-</span> C, np.zeros((<span class="dv">1</span>, <span class="dv">1</span>))]])</span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a>prob <span class="op">=</span> cp.Problem(cp.Minimize(<span class="dv">0</span>), [P <span class="op">&gt;&gt;</span> <span class="dv">0</span>, blk <span class="op">&lt;&lt;</span> <span class="dv">0</span>])</span></code></pre></div>
+<p><code>blk</code> 是一个 <span class="math inline">3\times3</span> 的分块矩阵，左上块是 <span class="math inline">\dot V</span> 的二次型部分，右上与左下是输入输出交叉项，右下是零。要求 <code>blk &lt;&lt; 0</code>，等价于</p>
+<p><span class="math display">
+\begin{bmatrix}A^{\mathsf T}P+PA&amp;PB-C^{\mathsf T}\\B^{\mathsf T}P-C&amp;0\end{bmatrix}\preceq0
+\tag{53-47}
+</span></p>
+<p>这正是 KYP 引理的标准形式。实测解出 <span class="math inline">P=\mathrm{diag}(4.905003,\,0.5)</span>，LMI 的最大特征值是 <span class="math inline">+4.160\times10^{-10}</span>，即约束取等号，说明这个系统恰好处在无源的边界上，与报告 4 的 <span class="math inline">\min\mathrm{Re}\,G=+3.325\times10^{-6}</span> 互相印证。两个完全不同的判据（一个扫频、一个解 LMI）给出同一个“临界无源”的结论，这种交叉验证比单一判据可靠得多。</p>
+<h3 id="十三个报告怎么读">53.12.5 十三个报告怎么读</h3>
+<p>脚本跑完会打印十三个报告，每个报告前有一行分隔符和标题。表 53-10 是清单与阅读要点。</p>
+<p>表 53-10 十三个报告的内容与正文对应关系</p>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>报告</th>
+<th>函数</th>
+<th>打印什么</th>
+<th>正文位置</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>1</td>
+<td><code>report_sos</code></td>
+<td>二次型 <code>infeasible</code>、四次型 <code>optimal</code>、<span class="math inline">P</span>、<span class="math inline">\dot V</span> 系数、网格最大值</td>
+<td>§53.1、§53.7</td>
+</tr>
+<tr class="even">
+<td>2</td>
+<td><code>report_contraction</code></td>
+<td><span class="math inline">\max\lambda_{\max}(\mathrm{sym}\,J)</span>、<span class="math inline">\rho</span>、拟合斜率、两点距离</td>
+<td>§53.4.2、§53.6.3</td>
+</tr>
+<tr class="odd">
+<td>3</td>
+<td><code>report_forced</code></td>
+<td>受迫情形下距离随时间的变化与末值比</td>
+<td>§53.4.2</td>
+</tr>
+<tr class="even">
+<td>4</td>
+<td><code>report_passivity_freq</code></td>
+<td><span class="math inline">\min\mathrm{Re}\,G</span>、<span class="math inline">\max\mathrm{Re}\,G</span>、<span class="math inline">\max|G|</span></td>
+<td>§53.4.3、§53.10.5</td>
+</tr>
+<tr class="odd">
+<td>5</td>
+<td><code>report_energy</code></td>
+<td>储能变化、注入能量、耗散、残差</td>
+<td>§53.3.3、§53.10.4</td>
+</tr>
+<tr class="even">
+<td>6</td>
+<td><code>report_kyp</code></td>
+<td>求解状态、<span class="math inline">P</span>、特征值、LMI 最大特征值</td>
+<td>§53.2.3</td>
+</tr>
+<tr class="odd">
+<td>7</td>
+<td><code>report_counterexample</code></td>
+<td>负实部最小值、负实部频段、分母的根</td>
+<td>§53.4.4</td>
+</tr>
+<tr class="even">
+<td>8</td>
+<td><code>report_discrete</code></td>
+<td><span class="math inline">\max\sigma_{\max}</span>、<span class="math inline">e^{-\rho T_s}</span>、逐步比的最大最小平均</td>
+<td>§53.5</td>
+</tr>
+<tr class="odd">
+<td>9</td>
+<td><code>report_cost</code></td>
+<td>八组单项式个数、五组 SDP 耗时</td>
+<td>§53.10.1</td>
+</tr>
+<tr class="even">
+<td>10</td>
+<td><code>report_summary</code></td>
+<td>四种方法的口径并排</td>
+<td>§53.2.4</td>
+</tr>
+<tr class="odd">
+<td>11</td>
+<td><code>report_eps_scan</code></td>
+<td>五个 <span class="math inline">\varepsilon</span> 的状态、耗时、<span class="math inline">Q_2</span> 最小特征值、网格最大值</td>
+<td>§53.7.1</td>
+</tr>
+<tr class="even">
+<td>12</td>
+<td><code>report_theta_opt</code></td>
+<td>最优 <span class="math inline">\rho</span>、最优 <span class="math inline">\Theta</span>、条件数</td>
+<td>§53.7.3</td>
+</tr>
+<tr class="odd">
+<td>13</td>
+<td><code>report_sixth</code></td>
+<td>六次型的状态、耗时、<span class="math inline">Q_2</span> 阶数、网格最大值、非零项数</td>
+<td>§53.7.2</td>
+</tr>
+</tbody>
+</table>
+<p>读这十三个报告有个顺序建议：先看 1 和 2，确认两种主工具都能出结果；再看 4、5、6、7，确认无源这条线自洽（报告 4 与报告 6 应该互相印证，报告 7 是反例）；然后看 8、9，了解离散与规模；最后看 10 到 13，这四个是“深化”报告，用来回答“参数怎么选”“能不能更好”。若时间有限，1、2、7 三个报告足以判断这套方法在你的对象上能不能用。</p>
+<p>有一个细节需要提醒：报告 1 里 <span class="math inline">Q_2</span> 的最小特征值是 <span class="math inline">-8.877\times10^{-9}</span>，是负数，看起来像“矩阵不正定”，其实是内点法的锥边界行为——求解器把特征值推到零附近，数值上会略微穿越。判断是否可行要看求解状态，不要看这个数是否严格非负。报告 13 的 <span class="math inline">Q_6</span> 最小特征值是 <span class="math inline">+9.652\times10^{-8}</span>，是正数，同样是数值零。两者都是“约束取等号”的表现，不是错误。</p>
+<h3 id="图怎么出">53.12.6 图怎么出</h3>
+<p>插图脚本 <code>ch053_figs.py</code> 与仿真脚本分离，原因是两者的依赖不同：仿真只依赖 <code>numpy/scipy/cvxpy</code>，出图还要依赖 <code>matplotlib</code> 与本书的样式模块。分开之后，即使没有装 <code>matplotlib</code> 也能跑数值。</p>
+<p>脚本头部的三行路径注入是关键：</p>
+<div class="sourceCode" id="cb17"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>BOOK <span class="op">=</span> Path(<span class="va">__file__</span>).resolve().parents[<span class="dv">1</span>]</span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>sys.path.insert(<span class="dv">0</span>, <span class="bu">str</span>(BOOK))</span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>sys.path.insert(<span class="dv">0</span>, <span class="bu">str</span>(BOOK <span class="op">/</span> <span class="st">&quot;styles&quot;</span>))</span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>sys.path.insert(<span class="dv">0</span>, <span class="bu">str</span>(BOOK <span class="op">/</span> <span class="st">&quot;code&quot;</span>))</span></code></pre></div>
+<p>第一个是书根目录，第二个是样式模块，第三个是仿真脚本。有了这三行，脚本在 <code>book/code</code> 与 <code>book</code> 两个目录下都能直接运行，不必设置 <code>PYTHONPATH</code>。</p>
+<p>随后导入样式与仿真：</p>
+<div class="sourceCode" id="cb18"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> plot_styles <span class="im">import</span> setup, save, LINE_MAIN, LINE_COMP, SINGLE, DOUBLE</span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> flow_styles <span class="im">as</span> fs</span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> ch053_sim <span class="im">as</span> cs</span></code></pre></div>
+<p><code>setup()</code> 统一设置字体、线宽、刻度方向；<code>save(fig, stem)</code> 同时导出 SVG 与 PDF。图 53-1 与图 53-11 是流程图，用 <code>flow_styles</code> 的 <code>canvas/process/decision/arrow</code>；其余九张是数据图，用 <code>plot_styles</code>。两套样式不能混用——<code>flow_styles</code> 的坐标单位是厘米、画布是空白轴，<code>plot_styles</code> 的坐标是数据单位、带刻度。混用会导致比例失真。</p>
+<p>模块级还缓存了求解结果，避免每张图重解一次：</p>
+<div class="sourceCode" id="cb19"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>F <span class="op">=</span> cs.f_duffing()</span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>Q4 <span class="op">=</span> cs.sos_lyapunov(F, quartic<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>V <span class="op">=</span> Q4[<span class="st">&quot;V&quot;</span>]</span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>VDOT <span class="op">=</span> cs.lie_deriv(V, F)</span></code></pre></div>
+<p>这四行在导入时执行一次，后面的九张图共用同一个 <span class="math inline">V</span> 与 <span class="math inline">\dot V</span>。这样既省时间，也保证所有图用的是同一份证书——若每张图各解一次，求解器的数值波动可能让不同图的曲线对不上。</p>
+<h3 id="换成自己的对象要改哪几行">53.12.7 换成自己的对象要改哪几行</h3>
+<p>把脚本用到自己的系统上，改动集中在四个地方，其余代码不用动。</p>
+<p><strong>第一处，写状态方程。</strong> 按 <code>f_duffing</code> 的格式，返回一个列表，第 <span class="math inline">k</span> 项是 <span class="math inline">\dot x_k</span> 的系数字典：</p>
+<div class="sourceCode" id="cb20"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> f_mine():</span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">&quot;&quot;&quot;单摆：x1&#39;=x2, x2&#39;=-sin(x1)-0.2*x2（三次截断）。&quot;&quot;&quot;</span></span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> [{(<span class="dv">0</span>, <span class="dv">1</span>): <span class="fl">1.0</span>},</span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>            {(<span class="dv">1</span>, <span class="dv">0</span>): <span class="op">-</span><span class="fl">1.0</span>, (<span class="dv">3</span>, <span class="dv">0</span>): <span class="fl">1.0</span> <span class="op">/</span> <span class="fl">6.0</span>, (<span class="dv">0</span>, <span class="dv">1</span>): <span class="op">-</span><span class="fl">0.2</span>}]</span></code></pre></div>
+<p>注意三次项系数是 <span class="math inline">+1/6</span>，来自 <span class="math inline">\sin\theta\approx\theta-\theta^{3}/6</span> 的移项。写完之后先做一件事：解 <span class="math inline">f(x)=0</span> 确认平衡点，本章的对象平衡点在原点，不需要平移；若你的对象平衡点不在原点，先做平移。</p>
+<p><strong>第二处，改 <code>nx</code>。</strong> <code>sos_lyapunov</code> 里的 <code>nx = 2</code> 是写死的常量，换成三维要改成 3。同时 <code>grid</code> 与 <code>v_value</code> 也要相应调整（<code>v_value</code> 目前只处理两个变量，三维要加一项）。这是脚本为了简短做的妥协，工程上应该把 <code>nx</code> 提成参数。</p>
+<p><strong>第三处，选次数。</strong> 先试 <code>vdeg=2</code>，不可行再试 4，再不行试 6。每升一档，用表 53-7 估一下规模，超过 35 就要谨慎。若 6 次还不行，不要继续升，改用 S-procedure 限定区域（§53.9.1）。</p>
+<p><strong>第四处，改验证区域。</strong> <code>grid(121, 2.0)</code> 里的 <code>2.0</code> 是验证范围，要按你对象的实际工作范围改。范围太小会漏掉最坏点，范围太大则会包含不该保证的区域（比如物理上不可达的状态），两者都会让结论失真。</p>
+<p>改完之后的标准流程是：跑 <code>report_sos</code>，看状态与网格最大值；跑一次回代，确认 <span class="math inline">\min[-\dot V-\varepsilon\|x\|^{2}]</span> 接近零；最后画水平集图，用眼睛确认 <span class="math inline">V</span> 的形状合理。三步都过，才把它写进报告。</p>
+<h3 id="常见报错与排查">53.12.8 常见报错与排查</h3>
+<p>脚本跑不起来或者结果不对，多数是下面五类问题。</p>
+<p><strong><code>infeasible</code> 但理论上应该可行。</strong> 先查 <span class="math inline">\varepsilon</span> 是否太大（本章实测在 <span class="math inline">10^{-1}</span> 到 <span class="math inline">10^{-5}</span> 之间都不影响可行性，但如果你的对象量纲没归一化，<span class="math inline">\varepsilon=10^{-3}</span> 可能相对过大）；再查 <span class="math inline">V</span> 的次数是否太低；最后查方程里是否有非多项式项被悄悄丢掉了。</p>
+<p><strong><code>optimal</code> 但回代后 <span class="math inline">\dot V</span> 有正值。</strong> 九成是系数装配错了，重点查三处：交叉项是否乘了 2、<span class="math inline">z</span> 的次数是否够、等式约束的符号是否一致。本章的两个 bug 都属于这一类。</p>
+<p><strong><code>SolverError</code> 或 <code>Reduced cost solution failed</code>。</strong> 数值条件差。依次试：把状态量归一化（让各分量量级接近 1）、把 <span class="math inline">\varepsilon</span> 调大一个数量级、换 <code>SCS</code> 求解器、把 <code>eps</code> 参数传给 <code>solve</code>。</p>
+<p><strong>图里中文变成方块。</strong> <code>plot_styles.setup()</code> 没调用，或者系统缺 SimSun。前者检查导入顺序，后者装字体或者改用 <code>Microsoft YaHei</code>。</p>
+<p><strong>图里中文与公式混排时报 <code>Font 'default' does not have a glyph</code>。</strong> matplotlib 的 mathtext 不认中文字形，同一个字符串里不能既有中文又有 <code>$...$</code>。拆成两个 <code>ax.text</code> 调用即可，本章图 53-3 就是这么改的。</p>
+<p>这五类覆盖了实际遇到的绝大多数问题。若报错不在其中，先看求解器状态（<code>prob.status</code>），再看约束的数量级（<code>cons</code> 里是否有 <span class="math inline">10^{6}</span> 与 <span class="math inline">10^{-6}</span> 混在一起），通常能定位到具体哪一条约束病态。</p>
+<h3 id="从脚本到交付">53.12.9 从脚本到交付</h3>
+<p>脚本本身不是交付物，交付物是“结论 + 可复核的证据”。本章的做法是把两者绑在一起：正文每个数字后面都能追到某个报告，每个报告都能用一行命令复现。</p>
+<p>具体做法有三条。第一，报告只打印不加工——不做四舍五入、不做单位换算，原始数字直接出来，正文再决定保留几位。第二，报告标题带编号，正文引用时写“报告 5”而不是“仿真结果”，读者能直接定位。第三，凡是与机器相关的量（耗时、迭代次数），正文一律加“本机”限定，或者只给量级。</p>
+<p>这套做法还有一个副作用：改代码之后，正文里对不上的数字会立刻暴露。比如把 <span class="math inline">\varepsilon</span> 从 <span class="math inline">10^{-3}</span> 改成 <span class="math inline">10^{-2}</span>，报告 1 的网格最大值会从 <span class="math inline">-1.647\times10^{-1}</span> 变成 <span class="math inline">-1.747\times10^{-1}</span>，正文若还写着旧值，一跑就发现。这种“数字对不上”的报警，比任何单元测试都直接。</p>
+<p>最后提一句扩展方向。本章脚本只做了二元系统，若要处理三元以上，最省力的扩展是把 <code>nx</code> 提成参数、把 <code>v_value</code> 改成循环、把 <code>grid</code> 换成正交采样（三维用 <span class="math inline">41^{3}</span> 已经够密）。再往上，就该考虑用 <code>SumOfSquares</code> 之类的专用库，或者换 Julia 的 <code>SumOfSquares.jl</code>——后者的解析与求解性能都比手写 Python 好一个量级，代价是要多维护一套工具链。</p>
+<h3 id="移植与二次开发">53.12.10 移植与二次开发</h3>
+<p>脚本用 Python 写，是因为求解器生态最全、调试最方便。但在实际项目里，它往往需要移植——控制器代码可能是 C，验证报告可能要用 MATLAB 出图，团队里可能只认某个商业求解器。这一小节说清楚移植时哪些部分可以照搬、哪些必须重写。</p>
+<p><strong>可以照搬的部分：多项式工具。</strong> <code>exponents</code>、<code>poly_deriv</code>、<code>lie_deriv</code> 这三段是纯算法，没有任何库依赖，翻译成 C 或 MATLAB 都是逐行对应。C 版本需要注意两点：指数用定长数组（状态维数已知）、系数字典换成“指数编码 + 系数”的数组（用 <span class="math inline">\sum e_i B^{i}</span> 编码，<span class="math inline">B</span> 取最大次数加一）。MATLAB 版本更简单，直接用 <code>containers.Map</code> 或者结构体数组。</p>
+<p><strong>必须重写的部分：求解器调用。</strong> <code>cvxpy</code> 的建模语法在别的环境里没有对应物。MATLAB 里用 YALMIP 加 SeDuMi 或 MOSEK，写法差别很大：YALMIP 用 <code>sdpvar</code> 声明变量、用 <code>&gt;=</code> 直接写矩阵不等式，不需要手工把等式约束逐项列出。Julia 里用 <code>JuMP</code> 加 <code>SumOfSquares.jl</code>，可以用 <code>@polyvar</code> 声明多项式、用 <code>@constraint</code> 写约束，代码量比本章少一半。</p>
+<p>移植时最容易丢的是“交叉项乘 2”这个约定。不同库对二次型的参数化方式不同：有的库内部已经处理了 2，用户写 <code>P[1,2]</code> 就是 <span class="math inline">V</span> 里 <span class="math inline">x_1x_2</span> 的系数；有的库要求用户自己乘。移植之后必须重新做一次回代验证，用本章 §53.8.7 的方法把 <span class="math inline">\dot V</span> 的系数打印出来逐项核对。</p>
+<p><strong>数值设置的移植。</strong> 三个参数要跟着走：求解器的容差（<code>cvxpy</code> 的 <code>abstol</code>/<code>reltol</code> 对应 MOSEK 的 <code>MSK_DPAR_INTPNT_CO_TOL_*</code>）、锥的规模上限、以及是否允许 <code>optimal_inaccurate</code>。后者的处理策略在不同求解器里差别很大：有的会明确返回“近似最优”，有的直接把近似解当最优返回。移植之后要在同一组数据上跑一遍，确认返回的状态与原来一致。</p>
+<p><strong>二次开发的两个方向。</strong> 一个是往上做——把本章脚本包装成一个命令行工具，输入是方程的系数字典，输出是证书与验证报告。这一步的价值在于让不懂 SOS 的同事也能用。另一个是往下做——把 <span class="math inline">V</span> 的求解放进一个更大的优化循环，比如用它做控制器参数的整定：外层扫控制器增益，内层解 SOS 判断闭环是否稳定，取“能证稳定”的增益范围。后者的计算量是外层次数乘以内层求解时间，本章的 <span class="math inline">0.044</span> s 意味着外层扫一百个点也只要几秒，完全可行。</p>
+<p>这两个方向都不需要改算法，只需要改组织方式。真正需要新算法的是“时变度量”和“分段证书”，那属于研究性工作，不在本章范围内。</p>
+<p>最后提醒一点维护上的事：脚本的价值在于“每个数字都能复现”，所以任何改动都要重跑全部十三个报告，而不是只跑改动涉及的那一个。原因很实际——<code>report_theta_opt</code> 与 <code>report_eps_scan</code> 都依赖同一个 <code>sos_lyapunov</code>，改动求解器设置会同时影响两者；只跑一个，很容易漏掉另一个的数值变化。本章正文里那些标着“实测”的数字，都是在一次完整运行里取得的，这样才对得上账。若某次运行出现耗时的明显异常，先检查机器负载，再检查求解器版本，不要急着改模型。</p>
+
+<nav class="footnav"><a href="ch052.html">← 上一章</a><a href="index.html">返回目录</a><a href="ch054.html">下一章 →</a></nav>
+</body>
+</html>

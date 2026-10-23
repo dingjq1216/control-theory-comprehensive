@@ -1,0 +1,1634 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="zh-CN" xml:lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>第 58 章　模型预测控制（MPC） · 控制大综合</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    span.underline{text-decoration: underline;}
+    div.column{display: inline-block; vertical-align: top; width: 50%;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    ul.task-list{list-style: none;}
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+  <link rel="stylesheet" href="assets/book.css" />
+  <script src="assets/katex/katex.min.js"></script>
+  <script>document.addEventListener("DOMContentLoaded", function () {
+   var mathElements = document.getElementsByClassName("math");
+   var macros = [];
+   for (var i = 0; i < mathElements.length; i++) {
+    var texText = mathElements[i].firstChild;
+    if (mathElements[i].tagName == "SPAN") {
+     katex.render(texText.data, mathElements[i], {
+      displayMode: mathElements[i].classList.contains('display'),
+      throwOnError: false,
+      macros: macros,
+      fleqn: false
+     });
+  }}});
+  </script>
+  <link rel="stylesheet" href="assets/katex/katex.min.css" />
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+  <link rel="stylesheet" href="assets/site.css" />
+</head>
+<body>
+<nav class="topnav"><a class="home" href="index.html">目录</a><span class="pos">058 / 115</span><span class="pager"><a href="ch057.html">上一章</a><a href="ch059.html">下一章</a></span></nav>
+
+<nav id="TOC" role="doc-toc">
+<ul>
+<li><a href="#第58章-模型预测控制mpc">第58章 模型预测控制（MPC）</a>
+<ul>
+<li><a href="#动机与直观理解">58.1 动机与直观理解</a></li>
+<li><a href="#数学原理">58.2 数学原理</a></li>
+<li><a href="#设计步骤">58.3 设计步骤</a></li>
+<li><a href="#连续情形">58.4 连续情形</a></li>
+<li><a href="#离散情形">58.5 离散情形</a></li>
+<li><a href="#稳定性与性能">58.6 稳定性与性能</a></li>
+<li><a href="#参数意义与作用">58.7 参数意义与作用</a></li>
+<li><a href="#调参方法与经验">58.8 调参方法与经验</a></li>
+<li><a href="#优化与改进">58.9 优化与改进</a></li>
+<li><a href="#工程落地">58.10 工程落地</a></li>
+<li><a href="#优缺点与适用边界">58.11 优缺点与适用边界</a></li>
+<li><a href="#python-仿真代码">58.12 Python 仿真代码</a></li>
+</ul></li>
+</ul>
+</nav>
+<h1 id="第58章-模型预测控制mpc">第58章 模型预测控制（MPC）</h1>
+<h2 id="动机与直观理解">58.1 动机与直观理解</h2>
+<p>有一类控制问题，难点不在“稳不稳”，而在“明知道前面有墙，还得提前松油门”。位置伺服轴以 2 m/s 冲向工位，反向推力上限只有 0.5，安全行程 1 m；无论 PID 参数怎么调，只要它还按“误差大就全速给”的规律动作，就一定会撞上去。人开车不会这样：眼睛看到前方距离，脑子里预演一段“现在踩刹车会发生什么”，再决定这一脚踩多深。模型预测控制（model predictive control，MPC）做的就是这件事——用模型把未来若干步预演一遍，在满足约束的前提下选当前这一拍的动作。</p>
+<h3 id="从一个提前刹车的场景说起">58.1.1 从一个“提前刹车”的场景说起</h3>
+<p>把上述场景写成数字：对象为 <span class="math inline">G_p(s)=1/[s(s+1)]</span>，状态取位置与速度 <span class="math inline">\boldsymbol{x}=[p,\ v]^{\mathrm{T}}</span>，执行器推力限幅 <span class="math inline">|u|\le 0.5</span>，每拍变化不超过 <span class="math inline">0.1</span>。初始速度为 2 m/s、位置为 0，目标是停在 <span class="math inline">p=1</span> m 处，同时不允许越过 1 m。</p>
+<p>先算一笔账。对象的推力经一阶滞后转成速度：<span class="math inline">\dot v=-v+u</span>。取满反向推力 <span class="math inline">u=-0.5</span>，速度满足 <span class="math inline">\dot v=-(v+0.5)</span>，解为</p>
+<p><span class="math display">
+v(t)=(v_0+0.5)e^{-t}-0.5
+</span></p>
+<p>令 <span class="math inline">v=0</span> 得最短制动时间 <span class="math inline">t_{\min}=\ln 5\approx1.61</span> s；对速度积分得最小制动距离</p>
+<p><span class="math display">
+s_{\min}=\int_0^{t_{\min}}v\,\mathrm{d}t
+=v_0-u_{\max}t_{\min}\approx1.195\ \mathrm{m}
+</span></p>
+<p>也就是说，即便从第一拍起就用满反向推力，也要 1.195 m 才能停住，比 1 m 的行程多出约 0.2 m。再叠加速率限幅（<span class="math inline">\Delta u\le0.1</span>，需要 5 拍才能从 0 拉到 <span class="math inline">-0.5</span>），实际越界还会更大——软约束版本的实测峰值是 1.272 m（§58.8）。</p>
+<p>这个“不可行”不是场景设定的漏洞，而正是要考察的东西：<strong>目标不可达时，控制器如何动作、如何暴露冲突</strong>。</p>
+<p>PID 的表现可以预料。初始误差 <span class="math inline">e=r-y=1</span>，为正，控制器朝目标加速——它没有办法区分“目标在前面”和“目标可达”。等位置越过 1 m，误差变号，积分项还要先把此前累积的正向积分退掉，输出才可能反向；这段退饱和时间里，轴继续前冲。第 44 章的抗积分饱和能让它退得快一点，但它回答不了“从现在开始全力制动，还要滑多远”。</p>
+<p>MPC 的第一拍就把这笔账算清了：优化器用模型向前推演，发现无论后续怎么给推力都无法避免越过 1 m，于是把这一拍压到反向限幅——不是为了“更优”，而是为了把越界量压到最小。软约束版本最终在 1.272 m 处止住，随后退回目标（§58.8 的实测）。这个动作 PID 也可能“碰巧”做对，但那是试出来的；MPC 是从可行性推出来的，换个初速或行程不必重新试。</p>
+<p>MPC 的正式提法是每一拍解一个小规模优化：</p>
+<p><span class="math display">
+\min_{u_0,\dots,u_{N_p-1}}\ \sum_{k=0}^{N_p-1}\left[(y_k-r)^2 q_y+v_k^2 q_v+u_k^2 r_u\right]
+\tag{58-1}
+</span></p>
+<p>约束是 <span class="math inline">\boldsymbol{x}_{k+1}=\boldsymbol{A}\boldsymbol{x}_k+\boldsymbol{B}u_k</span>、<span class="math inline">|u_k|\le 0.5</span>、<span class="math inline">|u_k-u_{k-1}|\le 0.1</span>。式 (58-1) 的第一项要求“尽量贴住目标”，后两项分别惩罚“冲得太快”和“用力过猛”。在可行情形下，优化器会自动在“提前松油门”与“尽快到位”之间找到平衡；在不可行情形下，硬约束问题无解，必须引入松弛变量才有输出（§58.8）。</p>
+<p>这也解释了为什么 MPC 的输出有时看起来很“保守”：它不是在追当前误差，而是在所有未来轨迹里挑一条代价最小的。当前时刻的动作只是这条轨迹的起点。</p>
+<h3 id="三个要素与一条反馈">58.1.2 三个要素与一条反馈</h3>
+<p>MPC 的名字里藏着三个要素，缺一不可：</p>
+<ul>
+<li><strong>预测模型</strong>：能给出“给定未来控制序列，未来输出是什么”。线性系统用状态空间矩阵即可，非线性对象可用辨识模型（第 22 章）或 Koopman 模型（第 77 章）。</li>
+<li><strong>滚动优化</strong>：每一拍求解一个有限时域的约束优化，只执行最优序列的第一个元素，下一拍照样重算。</li>
+<li><strong>反馈校正</strong>：重算时用的是当前实测状态（或观测器估计的状态，第 54 章），因此模型误差、扰动、噪声都会通过“重新预测”被吸收。</li>
+</ul>
+<p>三个要素各自对应一种典型失效，排查时可以先归类：</p>
+<ul>
+<li>模型错——预测会“自信地走错路”，表现为控制量方向对、幅度错，或大范围工况下时好时坏。此时改权重没有用，必须回到建模（§58.3 第二步）。</li>
+<li>不算只执行一次——退化成前馈，扰动与模型误差无人回收，稳态会漂。表现为“开环看着挺好，闭环一加负载就偏”。</li>
+<li>反馈通道断——用模型内部状态递推而不校正，误差会缓慢累积。表现为“长时间运行后越来越偏”，重启又恢复正常。</li>
+</ul>
+<p>现场遇到“MPC 效果不好”，先判断属于哪一类，再决定改模型、改结构还是改观测器，比盲目调参有效得多。</p>
+<p>图 58-1 把这三件事画在同一张时间轴上：每拍都有一段向前看的预测窗口，窗口内的曲线是“如果按当前计划走会怎样”，而实际只走一步就重新规划。三条预测曲线在第 5、20、40 步分别重算，窗口整体右移，这就是“滚动时域”（receding horizon）的字面含义。</p>
+<figure>
+<img src="figs/ch058/fig_058_01_rhc.svg" alt="图 58-1　滚动时域：预测窗口逐拍右移，只执行第一步" /><figcaption aria-hidden="true">图 58-1　滚动时域：预测窗口逐拍右移，只执行第一步</figcaption>
+</figure>
+<p>只执行第一步这一点常被误解为“浪费算力”。实际上正是这一步的“反悔权”构成了反馈：模型不准、扰动来了、指令变了，下一拍的计划会自动修正。若把整段最优序列存起来顺序执行（开环），系统就是前馈，误差无处回收。</p>
+<h3 id="与-pidlqr-的关系">58.1.3 与 PID、LQR 的关系</h3>
+<p>把 MPC 放在熟悉的坐标系里，可以看得更清楚。</p>
+<ul>
+<li>相对 PID：PID 是“看当前误差”，MPC 是“看未来一段误差”。PID 的微分项某种程度上是“看趋势”，但它没有模型、不知道执行器还能出多大力，因此无法处理约束。第 44 章的整定表回答“三个增益怎么定”，本章回答“约束下的动作序列怎么定”。</li>
+<li>相对 LQR：无约束、无限时域、二次代价的 MPC，其解就是 LQR。第 55 章给出的 Riccati 解，正是本章终端代价矩阵的来源。区别在于：LQR 的增益是离线算好的常数，MPC 每拍在线解一个带约束的优化，因此能“遇墙绕墙”。</li>
+<li>相对前馈：第 46 章的前馈依赖已知扰动通道与模型，MPC 把前馈、反馈、约束统一在一个目标函数里，不需要单独设计两套通道。</li>
+</ul>
+<p>从“换工况”的成本看，三者的差别也很清楚：PID 换工况通常要重新整定增益；LQR 换工况要重算 Riccati 解；MPC 换工况多数只需改参考轨迹与约束边界，权重往往可以复用。反过来，MPC 把复杂度从“整定”转移到了“建模与求解”——这也是它维护画像的由来（§58.11）。</p>
+<p>图 58-2 给出 MPC 的闭环结构。与常规反馈回路相比，多了一个虚线框内的“预测模型”：它同时接收当前控制量和测量输出，向优化器提供未来轨迹。优化器是控制器本体，其输出不是“误差的函数”，而是“约束优化问题的解”。</p>
+<figure>
+<img src="figs/ch058/fig_058_02_structure.svg" alt="图 58-2　MPC 闭环结构：优化器、预测模型与被控对象" /><figcaption aria-hidden="true">图 58-2　MPC 闭环结构：优化器、预测模型与被控对象</figcaption>
+</figure>
+<h3 id="四个常见误解">58.1.4 四个常见误解</h3>
+<p>在进入推导之前，先澄清四个流传很广的说法，它们会让后续讨论跑偏。</p>
+<ul>
+<li><strong>“MPC 一定比 PID 好”</strong>。无约束时 MPC 等价于 LQR，性能未必超过整定良好的 PID，却多出建模、求解、维护三份成本。它的优势只在约束与耦合上（§58.11）。</li>
+<li><strong>“模型必须非常精确”</strong>。滚动反馈能吸收相当程度的参数误差，图 58-3 的预测与实测会分离，但闭环依然收敛。真正致命的是<strong>未建模的纯延迟</strong>（§58.6 实测：超调 21%、调节时间 13.6 s），而不是增益差 30%。</li>
+<li><strong>“MPC 给出全局最优”</strong>。它每拍只解一个有限时域问题，得到的是“局部、短视”的最优。时域过短会停在半路（表 58-4），这也是终端代价存在的理由。</li>
+<li><strong>“MPC 只能用于慢过程”</strong>。过程工业的分钟级回路是它的传统地盘，但经过代码生成或显式化，毫秒级场合同样可用（§58.9）。限制不在算法，而在最坏执行时间能否被证明。</li>
+</ul>
+<p>这四条误解有一个共同根源：把 MPC 当成“更强的 PID”，于是期待它在所有维度都更好。实际上它是一次<strong>问题表述方式的改变</strong>——把“误差→动作”的映射，换成“约束下的轨迹选择”。一旦这样看，就能理解为什么它在约束宽松时退化为 LQR、在时域过短时退化为短视的前馈、在模型失准时退化为“自信地走错路”。它的强项与弱项都来自同一个地方：模型与优化。</p>
+<p>判断自己是否真的理解这一点，可以用一个简单的自测：给定一个新工况，能否在动手之前说出“这个工况下哪条约束会先激活、时域够不够、模型误差会往哪个方向偏”。答得出来，说明用的是 MPC 的思路；答不出来，多半还在用调 PID 的思路调它。</p>
+<h3 id="本章路线与一句话核心">58.1.5 本章路线与一句话核心</h3>
+<p>本章按“原理—设计—连续/离散—稳定性—参数—调参—改进—落地”推进。§58.2 推导预测方程与二次规划形式；§58.3 给出七步设计流程；§58.4 讨论连续域提法与采样选择；§58.5 落到离散实现与计算结构；§58.6 讲终端代价、递归可行性与稳定性；§58.7、§58.8 讲参数影响与现场调参；§58.9 介绍 offset-free、显式 MPC、学习增强等改进；§58.10 给出实时预算与投运检查表；§58.11 说明适用边界；§58.12 给出可复现代码。</p>
+<p>如果只记一句话：<strong>MPC 的价值不在于“更优”，而在于“把约束显式地写进决策”；一旦约束可以忽略，它就该退回 LQR 或 PID。</strong></p>
+<p>读者可按需选读：关心现场投运的读 §58.3、§58.8、§58.10；要做算法实现的读 §58.2、§58.5、§58.9；要做稳定性论证的读 §58.6、§58.7。三条路径最后都落在 §58.12 的脚本上，本章所有数字都由该脚本实跑得到。</p>
+<h2 id="数学原理">58.2 数学原理</h2>
+<p>本节把“预演一遍”写成可计算的数学对象。为了让推导可以手算复核，先限定在线性时不变、约束为凸集的情形；非线性 MPC 的差别只在预测模型与求解器，结构完全一样（§58.9 再提）。</p>
+<h3 id="预测模型与四条前提">58.2.1 预测模型与四条前提</h3>
+<p>离散状态空间模型取</p>
+<p><span class="math display">
+\boldsymbol{x}_{k+1}=\boldsymbol{A}\boldsymbol{x}_k+\boldsymbol{B}u_k,\qquad y_k=\boldsymbol{C}\boldsymbol{x}_k
+\tag{58-2}
+</span></p>
+<p>其中 <span class="math inline">\boldsymbol{x}_k\in\mathbb{R}^{n}</span>，<span class="math inline">u_k\in\mathbb{R}</span>（多输入时 <span class="math inline">u_k\in\mathbb{R}^{m}</span>，下文公式按单输入写，推广只需把 <span class="math inline">u_k</span> 换成向量、<span class="math inline">\boldsymbol{B}</span> 换成矩阵）。本章所有结论建立在四条前提上：</p>
+<ul>
+<li>模型在预测时域内不变，即 <span class="math inline">\boldsymbol{A},\boldsymbol{B},\boldsymbol{C}</span> 不随 <span class="math inline">k</span> 变化；</li>
+<li>约束是凸的（箱式约束、线性约束都满足）；</li>
+<li>状态可测或可由观测器给出（估计误差在 §58.9 讨论）；</li>
+<li>采样周期 <span class="math inline">T_s</span> 远小于闭环主导时间常数，使“拍间保持恒定”的假设成立。</li>
+</ul>
+<p>第四条最容易被忽略。若 <span class="math inline">T_s</span> 与对象时间常数同量级，离散模型本身已不能描述拍间行为，再精确的优化也无意义。§58.4 给出选取准则。</p>
+<p>四条前提被违反时，症状各不相同，值得事先知道：</p>
+<ul>
+<li><strong>模型时变</strong>（如催化剂老化、温漂）：预测误差随时域长度累积，表现为“刚投运很好，几个月后变差”。先缩短 <span class="math inline">N_p</span>，再考虑在线辨识（§58.9）。</li>
+<li><strong>约束非凸</strong>（如“功率不得同时超过某两个量的组合”之外的逻辑约束）：QP 退化为非凸问题，解不唯一，求解时间不可预测。工程上应尽量把约束写成凸的，逻辑条件放到外层做调度。</li>
+<li><strong>状态不可测</strong>：估计误差直接当作初始条件误差进入预测，等效于每一步都从错误起点出发。它和模型误差不同，靠加长时域无法改善。</li>
+<li><strong>采样过慢</strong>：拍间动态被抹平，模型在离散点上准、在拍间完全不对；此时任何在线优化都救不回来。</li>
+</ul>
+<p>本章后续的实测，本质上是在逐个检验这四条前提的敏感度。</p>
+<p>四条前提里，最常见也最隐蔽的是第一条。现场的“时不变”往往只是近似：环境温度让摩擦系数变化，负载惯量随工件更换而变，长期运行后丝杠磨损让传动刚度下降。这些变化都慢，单次测试看不出来，但会让模型在几个月内逐渐失准。对策不是把模型做得更复杂，而是建立<strong>周期性复核</strong>机制：每隔固定时间重做一次开环复核，把误差画在同一张图上，一旦超出允许带就重新辨识。这属于运维流程，而不是算法问题，却决定了 MPC 能否长期可用。</p>
+<p>第二条也常被工程约束的写法破坏。看似简单的“模式切换”（例如制冷与制热不能同时开）在数学上是非凸的，直接写成约束会让 QP 失效。正确做法是把模式当作外层调度变量，每种模式内部各解一个凸问题，而不是试图用一个 QP 覆盖所有模式。这条经验在暖通、能源管理里尤其常见。</p>
+<p>至于第三、第四条，它们的共同点是“无法靠调参弥补”。状态估计不准，优化器每拍都从错误的起点出发；采样太慢，模型与对象在拍间脱节。遇到这两类症状，先补硬件或改结构，不要在权重上找答案——这也是 §58.8 把“先定前提、再调参数”放在最前面的原因。</p>
+<h3 id="预测方程">58.2.2 预测方程</h3>
+<p>把未来 <span class="math inline">N_p</span> 步的状态堆成列向量</p>
+<p><span class="math display">
+\boldsymbol{X}=\begin{bmatrix}\boldsymbol{x}_1\\ \boldsymbol{x}_2\\ \vdots\\ \boldsymbol{x}_{N_p}\end{bmatrix},\qquad
+\boldsymbol{U}=\begin{bmatrix}u_0\\ u_1\\ \vdots\\ u_{N_c-1}\end{bmatrix}
+\tag{58-3}
+</span></p>
+<p>逐拍代入式 (58-2) 可得</p>
+<p><span class="math display">
+\boldsymbol{X}=\boldsymbol{\Phi}\boldsymbol{x}_0+\boldsymbol{\Gamma}\boldsymbol{U}
+\tag{58-4}
+</span></p>
+<p>其中</p>
+<p><span class="math display">
+\boldsymbol{\Phi}=\begin{bmatrix}\boldsymbol{A}\\ \boldsymbol{A}^2\\ \vdots\\ \boldsymbol{A}^{N_p}\end{bmatrix},\qquad
+\boldsymbol{\Gamma}_{kj}=\sum_{i:\ \min(i,N_c-1)=j}\boldsymbol{A}^{k-1-i}\boldsymbol{B}
+\tag{58-5}
+</span></p>
+<p>式 (58-5) 中的 <span class="math inline">k</span> 从 1 到 <span class="math inline">N_p</span>，<span class="math inline">j</span> 从 0 到 <span class="math inline">N_c-1</span>。第二式的求和号看起来别扭，它表达的是“控制时域内的保持”：前 <span class="math inline">N_c</span> 拍允许逐拍变化，第 <span class="math inline">N_c</span> 拍之后保持最后一个值不变，即</p>
+<p><span class="math display">
+u_k=u_{\min(k,\,N_c-1)},\qquad k=0,\dots,N_p-1
+\tag{58-6}
+</span></p>
+<p>这种“前段自由、后段保持”的做法叫<strong>移动阻塞</strong>（move blocking）。它把决策变量从 <span class="math inline">N_p</span> 个减到 <span class="math inline">N_c</span> 个，计算量随 <span class="math inline">N_c</span> 而非 <span class="math inline">N_p</span> 增长；代价是牺牲了远端的调节自由度——而远端本来也不确定，牺牲它是划算的。<span class="math inline">N_c=N_p</span> 时退化为逐拍自由的标准形式。</p>
+<p>这些符号值得用一组具体数字校验一次。本章对象在 <span class="math inline">T_s=0.1</span> s 下的离散矩阵为 <span class="math inline">\boldsymbol{A}=[\,[1,\,0.095163],\,[0,\,0.904837]\,]</span>、<span class="math inline">\boldsymbol{B}=[0.004837,\ 0.095163]^{\mathrm{T}}</span>（前者按行写）。</p>
+<p>取 <span class="math inline">N_p=3</span>、<span class="math inline">N_c=2</span>，则 <span class="math inline">\boldsymbol{\Gamma}</span> 按行分三块：</p>
+<ul>
+<li>第 1 行：<span class="math inline">[\boldsymbol{B},\ \boldsymbol{0}]</span>，位置分量 0.004837；</li>
+<li>第 2 行：<span class="math inline">[\boldsymbol{A}\boldsymbol{B},\ \boldsymbol{B}]</span>，位置分量 0.013893 与 0.004837；</li>
+<li>第 3 行：<span class="math inline">[\boldsymbol{A}^2\boldsymbol{B},\ \boldsymbol{A}\boldsymbol{B}+\boldsymbol{B}]</span>，位置分量 0.022086 与 0.018730。</li>
+</ul>
+<p>第三行第二块是读图的重点：它等于 <span class="math inline">0.013893+0.004837</span>，约为 <span class="math inline">3.87</span> 倍的首拍增益。原因是移动阻塞让 <span class="math inline">u_1</span> 一直保持到预测末端，它在第 2、3 拍都起作用，累积效果是 <span class="math inline">\boldsymbol{B}+\boldsymbol{A}\boldsymbol{B}</span>。若不做阻塞（<span class="math inline">N_c=N_p</span>），这一块只会是 <span class="math inline">\boldsymbol{A}^2\boldsymbol{B}</span>，<span class="math inline">u_2</span> 在前一拍不起作用——这正是“控制时域决定未来能拐几次弯”的矩阵解释。</p>
+<p>再验一个数量级：设 <span class="math inline">u_0=u_1=0.5</span> 恒定，三拍（0.3 s）后位置只前进 0.0204 m，速度约 0.130 m/s。这与 §58.1 的结论一致——0.5 的推力在 0.3 s 内只能走两厘米，1 m 的行程从一开始就停不住。</p>
+<h3 id="代价函数">58.2.3 代价函数</h3>
+<p>工程上最常用的二次代价为</p>
+<p><span class="math display">
+J=\sum_{k=0}^{N_p-1}\left[(y_k-r)^2q_y+v_k^2q_v+u_k^2r_u\right]
++\left(\boldsymbol{x}_{N_p}-\boldsymbol{x}_{\mathrm{ref}}\right)^{\mathrm{T}}\boldsymbol{P}\left(\boldsymbol{x}_{N_p}-\boldsymbol{x}_{\mathrm{ref}}\right)
+\tag{58-7}
+</span></p>
+<p>前三项是<strong>阶段代价</strong>：<span class="math inline">q_y</span> 罚跟踪误差，<span class="math inline">q_v</span> 罚速度（对位置伺服而言相当于阻尼），<span class="math inline">r_u</span> 罚控制能量。第四项是<strong>终端代价</strong>，<span class="math inline">\boldsymbol{P}</span> 常取离散代数 Riccati 方程的解（第 55 章），<span class="math inline">\boldsymbol{x}_{\mathrm{ref}}=[r,\ 0]^{\mathrm{T}}</span> 是目标稳态。</p>
+<p>终端项必须写在 <span class="math inline">\boldsymbol{x}_{N_p}-\boldsymbol{x}_{\mathrm{ref}}</span> 上，而不是 <span class="math inline">\boldsymbol{x}_{N_p}</span> 上。这不是形式问题：本章脚本最初把终端项误写成 <span class="math inline">\boldsymbol{x}_{N_p}^{\mathrm{T}}\boldsymbol{P}\boldsymbol{x}_{N_p}</span>，其余设置不变，仿真得到的稳态停在 1.135 m 而不是 1.000 m，跟踪误差被终端项“拽”出一个固定偏差。改回误差形式后偏差消失。凡是终端代价与阶段代价的参考点不一致，都会出现这类静差。</p>
+<p>式 (58-7) 可写成矩阵形式。令 <span class="math inline">\bar{\boldsymbol{Q}}</span> 为按拍堆叠的权重矩阵（末块换成 <span class="math inline">\boldsymbol{P}</span>），<span class="math inline">\bar{\boldsymbol{R}}=r_u\boldsymbol{I}_{N_c}</span>，则</p>
+<p><span class="math display">
+J=\left(\boldsymbol{X}-\boldsymbol{X}_{\mathrm{ref}}\right)^{\mathrm{T}}\bar{\boldsymbol{Q}}\left(\boldsymbol{X}-\boldsymbol{X}_{\mathrm{ref}}\right)
++\boldsymbol{U}^{\mathrm{T}}\bar{\boldsymbol{R}}\boldsymbol{U}
+\tag{58-8}
+</span></p>
+<p>这里的 <span class="math inline">\bar{\boldsymbol{Q}}</span> 由 <span class="math inline">q_y\boldsymbol{C}^{\mathrm{T}}\boldsymbol{C}+q_v\boldsymbol{e}_v\boldsymbol{e}_v^{\mathrm{T}}</span> 逐块对角堆成，<span class="math inline">\boldsymbol{e}_v</span> 是速度选择向量。矩阵写法便于批量计算，标量写法便于调参时判断“改哪一项”。</p>
+<p>值得一提的是三个权重的量纲并不相同：<span class="math inline">q_y</span> 的单位是 <span class="math inline">1/\mathrm{m}^2</span>，<span class="math inline">q_v</span> 是 <span class="math inline">1/(\mathrm{m/s})^2</span>，<span class="math inline">r_u</span> 是 <span class="math inline">1/\mathrm{N}^2</span>。直接按“感觉”取 1 或 10，等于让量纲决定权重——位置以毫米计时，<span class="math inline">q_y</span> 会被放大百万倍，控制量几乎不起作用。正确做法是先按满量程归一化（§58.3 式 58-15），再在这个无量纲空间里调相对大小。</p>
+<p>另外，<span class="math inline">y_k</span> 和 <span class="math inline">v_k</span> 都来自同一个状态向量，为什么要在代价里分开写？因为二者对应两类不同的工程诉求：前者是“到位精度”，后者是“别冲太快”。写成 <span class="math inline">q_y</span>、<span class="math inline">q_v</span> 两项，现场工程师可以分别解释、分别让步；若合成一个 <span class="math inline">\boldsymbol{Q}=\mathrm{diag}(q_1,q_2)</span>，数学上等价，沟通上却失去了抓手。</p>
+<h3 id="约束的矩阵形式">58.2.4 约束的矩阵形式</h3>
+<p>三类约束在工程中最常见：</p>
+<p><span class="math display">
+u_{\min}\le u_k\le u_{\max},\qquad
+\Delta u_{\min}\le u_k-u_{k-1}\le \Delta u_{\max},\qquad
+y_{\min}\le y_k\le y_{\max}
+\tag{58-9}
+</span></p>
+<p>第一类是执行器能力，第二类是执行器寿命与机械冲击，第三类是工艺或安全边界。把它们按拍展开，可统一写成</p>
+<p><span class="math display">
+\boldsymbol{G}\boldsymbol{U}\le \boldsymbol{W}+\boldsymbol{E}\boldsymbol{x}_0
+\tag{58-10}
+</span></p>
+<p>其中 <span class="math inline">\boldsymbol{W}</span> 含常值上下界与上一拍控制量 <span class="math inline">u_{-1}</span>，<span class="math inline">\boldsymbol{E}</span> 来自 <span class="math inline">\boldsymbol{\Phi}</span>（输出约束依赖初始状态）。式 (58-10) 的右端随 <span class="math inline">\boldsymbol{x}_0</span> 变化，这正是“状态越界则约束越紧”的数学来源：初始状态恶劣时，可行域会自动收缩，甚至变空。</p>
+<p>把三类约束的规模算清楚，有助于判断求解负担。输入幅值约束产生 <span class="math inline">2N_c</span> 行（上下各一），速率约束也是 <span class="math inline">2N_c</span> 行，输出约束是 <span class="math inline">2N_p</span> 行，合计约 <span class="math inline">4N_c+2N_p</span> 行。本章 <span class="math inline">N_p=20</span>、<span class="math inline">N_c=5</span> 时为 60 行，规模很小；若 <span class="math inline">N_p=200</span>、<span class="math inline">N_c=50</span>，则到 600 行，密度虽低但约束矩阵的构造本身就会成为开销。</p>
+<p>结构上也有规律：输入与速率约束的系数是单位阵与差分阵，与状态无关，可以离线拼好；只有输出约束那部分随 <span class="math inline">\boldsymbol{x}_0</span> 变化，且只影响右端项。<strong>在线阶段真正需要改的只有右端向量</strong>，这是热启动能奏效、也是嵌入式实现能做得很快的根本原因。</p>
+<p>把速率约束写开看，这个“只改右端”的性质最清楚。<span class="math inline">\Delta u</span> 约束可写成 <span class="math inline">\boldsymbol{D}\boldsymbol{U}\le\boldsymbol{d}</span>，其中</p>
+<p><span class="math display">
+\boldsymbol{D}=\begin{bmatrix}
+1&amp;0&amp;\cdots&amp;0\\
+-1&amp;0&amp;\cdots&amp;0\\
+1&amp;-1&amp;\cdots&amp;0\\
+-1&amp;1&amp;\cdots&amp;0\\
+&amp;\ddots&amp;&amp;\\
+0&amp;\cdots&amp;1&amp;-1\\
+0&amp;\cdots&amp;-1&amp;1
+\end{bmatrix},\qquad
+\boldsymbol{d}=\begin{bmatrix}
+u_{-1}+\Delta u_{\max}\\
+-u_{-1}-\Delta u_{\min}\\
+\Delta u_{\max}\\
+-\Delta u_{\min}\\
+\vdots
+\end{bmatrix}
+</span></p>
+<p>前两行含 <span class="math inline">u_{-1}</span>，其余行是常数。也就是说，每拍更新约束时只需改右端向量的前两个元素，系数矩阵原封不动。工程实现里通常把这两行作为“边界行”单独存放，避免每拍重建整个矩阵。</p>
+<p>输出约束则不同：<span class="math inline">\boldsymbol{C}\boldsymbol{x}_k\le y_{\max}</span> 展开后，左端含 <span class="math inline">\boldsymbol{\Gamma}</span> 的对应行、右端含 <span class="math inline">\boldsymbol{\Phi}</span> 的对应行乘以 <span class="math inline">\boldsymbol{x}_0</span>。但改变的仍然只是右端，系数矩阵与状态无关。若把输出约束写成上下限对称形式，上下两行共享同一组系数、符号相反，可以合并存储。</p>
+<p>一个常被忽略的细节是约束的<strong>冗余</strong>。相邻两拍的输出约束在时间上相关，某些行可能永远不会先于其他行被触发。冗余行不改变最优解，却会增加求解器的迭代次数。剔除的办法不是凭“对象单调”猜测，而是在标称轨迹与最坏工况下分别统计每行的激活情况，只删掉“远离边界且在所有测试工况下都未激活”的行；只要工况覆盖不全，就宁可保留。删错一行的代价是约束失效，比多算几毫秒严重得多。</p>
+<h3 id="二次规划标准形式">58.2.5 二次规划标准形式</h3>
+<p>把式 (58-4) 代入式 (58-8)，合并同类项，得到标准二次规划</p>
+<p><span class="math display">
+\min_{\boldsymbol{U}}\ \tfrac{1}{2}\boldsymbol{U}^{\mathrm{T}}\boldsymbol{H}\boldsymbol{U}+\boldsymbol{x}_0^{\mathrm{T}}\boldsymbol{F}^{\mathrm{T}}\boldsymbol{U}
+\quad \text{s.t.}\quad \boldsymbol{G}\boldsymbol{U}\le\boldsymbol{W}+\boldsymbol{E}\boldsymbol{x}_0
+\tag{58-11}
+</span></p>
+<p><span class="math display">
+\boldsymbol{H}=2\left(\boldsymbol{\Gamma}^{\mathrm{T}}\bar{\boldsymbol{Q}}\boldsymbol{\Gamma}+\bar{\boldsymbol{R}}\right),\qquad
+\boldsymbol{F}=2\boldsymbol{\Phi}^{\mathrm{T}}\bar{\boldsymbol{Q}}\boldsymbol{\Gamma}
+\tag{58-12}
+</span></p>
+<p><span class="math inline">\boldsymbol{H}</span> 正定（只要 <span class="math inline">\bar{\boldsymbol{R}}\succ0</span>），因此问题是严格凸的，局部最优即全局最优，解唯一。这一点决定了 MPC 的可重复性：同一状态、同一参数，任何合格求解器给出的第一步控制量应当一致（差异只在数值容差内）。</p>
+<p>求解器分两类：<strong>有效集法</strong>适合小规模、热启动频繁的场合；<strong>内点法</strong>适合大规模、约束结构复杂的场合。本章脚本用 OSQP（一阶算子分裂法），在本例规模下单次迭代耗时 0.04–0.14 ms（§58.10 实测）。规模再大时，可改用稀疏 QP 形式（直接以状态为决策变量、保留块三对角结构），而不是继续扩大稠密的 <span class="math inline">\boldsymbol{H}</span>；那是另一套建模方式，不能与紧缩型混用。</p>
+<p>从式 (58-12) 还能读出一个工程事实：<span class="math inline">\boldsymbol{H}</span> 只与模型、时域、权重有关，与当前状态无关。因此它可以离线算一次、在线反复使用；每拍变化的只有一次项（通过 <span class="math inline">\boldsymbol{x}_0</span>）与约束右端（通过 <span class="math inline">\boldsymbol{x}_0</span>、<span class="math inline">u_{-1}</span>）。这一点决定了 MPC 的在线计算量与“状态在哪个位置”基本无关——同一套参数下，最坏情况的耗时可以由问题规模预先估出，而不是靠实测撞出来。对实时系统，这个性质比“平均算得快”重要得多。</p>
+<p>顺带说明 <span class="math inline">\boldsymbol{H}</span> 的条件数问题。若位置以米、速度以米每秒、控制量以牛计，三者数量级可能相差 <span class="math inline">10^3</span> 以上，<span class="math inline">\boldsymbol{H}</span> 的最大与最小特征值之比随之恶化，一阶法收敛变慢、内点法报“解不准确”。这不是求解器的错，是建模时没有归一化。处理办法在 §58.5.5 展开。</p>
+<p>在代码里，这一套对应“参数化问题”的写法：<span class="math inline">\boldsymbol{x}_0</span> 与 <span class="math inline">u_{-1}</span> 声明为 <code>Parameter</code>，<span class="math inline">\boldsymbol{H}</span>、<span class="math inline">\boldsymbol{G}</span> 用常数构造，编译一次后每拍只赋新值。CVXPY 的规范参数程序（DPP）规则要求参数只以仿射方式出现，否则每次求解都会重新做符号化简；本章的约束与代价都满足这一条，因此编译只发生一次。这一点对“每拍 1 ms”的量级影响很大——若每拍重新构造问题，光是解析与规范化就足以吃掉整个周期。</p>
+<p>本章默认配置下，<span class="math inline">\boldsymbol{H}</span> 是 <span class="math inline">5\times5</span> 稠密阵，<span class="math inline">\boldsymbol{F}</span> 是 <span class="math inline">5\times2</span>，约束矩阵约 <span class="math inline">60\times5</span>。这三个规模都可以打印出来核对：若 <span class="math inline">\boldsymbol{H}</span> 的行数等于 <span class="math inline">N_p</span> 而不是 <span class="math inline">N_c</span>，说明代码误用了稀疏形式与紧缩形式的混合写法，后面所有耗时结论都不再成立。</p>
+<h3 id="滚动时域与隐式反馈律">58.2.6 滚动时域与隐式反馈律</h3>
+<p>记式 (58-11) 的最优解为 <span class="math inline">\boldsymbol{U}^{*}(\boldsymbol{x}_k)</span>，控制器只取第一个分量：</p>
+<p><span class="math display">
+u_k=\kappa(\boldsymbol{x}_k)=\boldsymbol{e}_1^{\mathrm{T}}\boldsymbol{U}^{*}(\boldsymbol{x}_k)
+\tag{58-13}
+</span></p>
+<p>闭环系统为</p>
+<p><span class="math display">
+\boldsymbol{x}_{k+1}=\boldsymbol{A}\boldsymbol{x}_k+\boldsymbol{B}\,\kappa(\boldsymbol{x}_k)
+\tag{58-14}
+</span></p>
+<p><span class="math inline">\kappa(\cdot)</span> 是一个<strong>隐式</strong>定义的分段仿射函数：它没有解析表达式，必须在线求解；但对固定有效约束集，它可以写成 <span class="math inline">\kappa(\boldsymbol{x})=\boldsymbol{K}_i\boldsymbol{x}+\boldsymbol{c}_i</span> 的形式。显式 MPC 就是把所有可能的分段预先算出、存成查找表（§58.9）。</p>
+<p>为什么不能像 LQR 那样，离线算出一个固定增益 <span class="math inline">\boldsymbol{K}</span> 就完事？因为约束一旦激活，最优解的“形状”就变了：未饱和时它由 <span class="math inline">\boldsymbol{H}</span> 与一次项决定，饱和后它被压在边界上，等效增益随之改变。不同状态落在不同的有效约束组合里，就有不同的 <span class="math inline">\boldsymbol{K}_i</span>。这些区域的数量随状态维数指数增长，所以对高维系统，“离线枚举所有增益”不可行，只能在线求解——这不是实现偷懒，而是组合复杂度的必然。</p>
+<p>由此也能理解 MPC 闭环的两个特点。第一，它是<strong>非线性</strong>系统，哪怕对象与约束都是线性的；因此不能用线性系统的极点、裕度去评价它，稳定性要靠 §58.6 的价值函数论证。第二，它的“增益”随工作点变化：远离约束时接近 LQR，贴近约束时变得“迟钝”——这恰好是想要的，因为此时再大的增益也换不来更快的响应，只会加深饱和。</p>
+<p>图 58-3 对比了“第 20 步的预测轨迹”与“随后实际走出的轨迹”。两者在前 10 步几乎重合，之后逐渐分离——分离来自模型误差与离散化误差，而非算法错误。MPC 并不要求预测完全准确，它只要求误差在下一拍被重新观测并纠正。理解这一点，才能理解为什么一个“不太准”的模型也能撑起可用的 MPC。</p>
+<figure>
+<img src="figs/ch058/fig_058_03_prediction.svg" alt="图 58-3　第 20 步的预测轨迹与随后实测轨迹" /><figcaption aria-hidden="true">图 58-3　第 20 步的预测轨迹与随后实测轨迹</figcaption>
+</figure>
+<h2 id="设计步骤">58.3 设计步骤</h2>
+<p>MPC 的设计不是“选一个求解器，把矩阵填进去”。真正决定成败的是前四步：约束有没有列全、模型在工况范围内准不准、时域是否覆盖了对象的主要动态、权重与物理量纲是否匹配。后面的求解与投运，只是把这些前提落实。本节给出七步流程，每一步都写明“交付什么、怎么判合格”。</p>
+<p>这七步的顺序不能颠倒，也不能跳。跳过第一步，后面就会用“反复调权重”去补一个本来该由约束表达的需求；跳过第二步，现场会用“模型不准”解释一切异常，最后换成 PID 收场。经验上，一个 MPC 项目七成的时间应当花在前两步，三成花在算法与调试——反过来分配的项目，最后大多退回 PID。</p>
+<h3 id="第一步把控制目标写成可测量的量">58.3.1 第一步：把控制目标写成可测量的量</h3>
+<p>先回答三个问题：被控量是什么、允许偏差多少、哪些量绝对不能越界。工艺给出的“温度稳一点”“别撞到限位”不能直接进优化器，必须转成数值：跟踪误差的允许带、输出的上下限、执行器的物理极限与变化率极限。</p>
+<p>这一步的交付物是一张<strong>约束清单</strong>，至少包含：变量名、物理含义、下限、上限、超限后果、是否可软化。最后两列最关键——“超限后果”决定约束是硬是软，“是否可软化”决定求解器在冲突时是报错还是让步（§58.8 展开）。</p>
+<p>以本章场景为例，一张合格的清单应当写成这样：</p>
+<ul>
+<li>推力 <span class="math inline">u</span>：<span class="math inline">\pm0.5</span> N，超限导致驱动器过流，硬约束，不可软化；</li>
+<li>推力变化率 <span class="math inline">\Delta u</span>：<span class="math inline">\pm0.1</span> N/拍，超限加速丝杠磨损，可软化到 0.12；</li>
+<li>位置 <span class="math inline">y</span>：不超过 1.0 m，超限撞机械限位，硬约束（或软化并报警）；</li>
+<li>速度 <span class="math inline">v</span>：不超过 2.5 m/s，超限激发结构共振，硬约束；</li>
+<li>跟踪误差：<span class="math inline">\pm0.01</span> m，属工艺指标，写进代价、不写进约束。</li>
+</ul>
+<p>最后一条最常被写错。把“希望达到的精度”写成硬约束，等于要求控制器在所有工况下都完美，稍有扰动就不可行；写进代价，则是“尽量做到，做不到时退而求其次”。<strong>约束表达“绝不能”，代价表达“最好能”</strong>，两者混淆是 MPC 项目最常见的设计错误。</p>
+<p>约束清单还要回答“这些数从哪来”。三条常见来源各有各的坑：查手册得到的执行器极限往往偏乐观（标称值而非连续工作值），应按降额后的值填；机械限位要靠限位开关的位置反推，并留出制动距离，而不是直接写“行程 1 m”；工艺给出的偏差带通常是统计口径（例如 95% 分位），当成瞬时硬约束会过紧。凡是无法追溯到数据手册、图纸或工艺文件的数值，都应在清单上标“待确认”，不能默认它成立。</p>
+<p>清单写完还有一步自检：把每条约束在标称轨迹上的<strong>激活率</strong>估出来。本章 <span class="math inline">u_{\max}=0.5</span> 的激活率很高（阶跃起始段几乎全程贴边），<span class="math inline">\Delta u</span> 的激活率中等，位置上限从不激活。激活率高的约束是性能瓶颈，需要重点核算；激活率为零的约束要么设得过松，要么根本不该写——它们只增加问题规模，不产生任何作用。</p>
+<p>工况不止一个时，约束清单要按工况分支。例如设备有“空载/满载”两档，推力上限相同但加速度需求不同，同一组权重在两档下的表现会差很多。工程做法是给每档一组参数、用调度变量切换，而不是用一组参数去覆盖所有工况——后者必然在某些档位上过保守、另一些档位上不可行。</p>
+<h3 id="第二步建模与验证">58.3.2 第二步：建模与验证</h3>
+<p>线性 MPC 用状态空间模型。模型来源有三种：机理建模（第 10 章）、辨识（第 15–22 章）、线性化（在工作点附近）。无论哪种，都必须做<strong>开环复核</strong>：给一段与实际相近的输入序列，比较模型输出与实测输出，误差应小于跟踪允许带的三分之一。若做不到，先回到辨识，不要指望 MPC 的反馈能“补”回来。</p>
+<p>模型阶次不必高。位置伺服用二阶、过程对象用一阶加延迟、机电系统用三到五阶，通常足够。高阶模型带来的预测精度提升，往往被参数不确定性与计算量抵消。第 20 章的子空间辨识可以直接给出可用阶次，第 24 章讨论了“过拟合的高阶模型在闭环中反而更差”的现象。</p>
+<p>开环复核有四个常见陷阱，值得逐条排除：</p>
+<ul>
+<li><strong>数据不覆盖工作区间</strong>。只用小幅阶跃辨识，增益与时间常数都是局部值；一到大幅动作就偏。复核数据要覆盖实际会走到的幅值与频率。</li>
+<li><strong>用闭环数据直接辨识</strong>。闭环数据里输入与输出相关，直接拟合会得到有偏的模型，需要做闭环辨识或加激励。</li>
+<li><strong>只看拟合度不看残差结构</strong>。<span class="math inline">R^2</span> 很高但残差有系统性弯曲，说明模型缺项（少一个极点或少一段延迟），换参数补不上。</li>
+<li><strong>不测纯延迟</strong>。给一个脉冲，看输出多久后才开始动；这个时间是模型里最贵的一项信息（§58.6 会看到它对闭环的影响远大于增益误差）。</li>
+</ul>
+<p>复核分三层做，逐层加严。第一层是<strong>单点阶跃</strong>：在一个工作点附近，比较模型与实测的上升沿，主要看增益与时间常数。第二层是<strong>多工况</strong>：换三个以上幅值与方向，看参数是否随工作点漂移；若漂移明显，单一线性模型不够，需要分段或增益调度。第三层是<strong>闭环回放</strong>：把录制的闭环输入序列喂给模型，比较输出轨迹；这一层能暴露开环测试看不到的问题，例如执行器非线性与延迟。</p>
+<p>三层都过，模型才算“能用”。只做第一层就上线，现场常见的表现是“小信号很好、大动作就乱”——因为大幅动作进入了非线性区，而模型在那一带从未被验证过。</p>
+<p>还有一处容易被忽略：复核的<strong>步长要和预测步长一致</strong>。很多人拿连续数据做一次整段仿真，拟合度漂亮，就认为模型可用；但 MPC 是每拍用离散模型往前推 <span class="math inline">N_p</span> 步，误差会逐步累积。正确的做法是按 <span class="math inline">T_s</span> 离散后做 <span class="math inline">N_p</span> 步递推，比较第 <span class="math inline">N_p</span> 步的预测值与实测值。开局误差可以容忍（反馈会纠正），<span class="math inline">\hat{\boldsymbol{x}}_{N_p}</span> 的误差不能容忍——它决定了优化器对“远处约束”的判断是否可信。工程门槛可以取“末端多步误差不超过允许带的 1 倍”：超过这个量级，即使单步拟合再好，也应缩短时域或换模型，而不是继续调权重。</p>
+<h3 id="第三步离散化与采样周期">58.3.3 第三步：离散化与采样周期</h3>
+<p>用零阶保持器把连续模型转成式 (58-2) 的离散形式，采样周期按“闭环响应时间的十分之一到二十分之一”选取。太慢会丢失拍间动态，太快则预测步数膨胀、计算量上升且数值条件变差。</p>
+<p>以本章对象为例，闭环上升时间约 1.6 s，取 <span class="math inline">T_s=0.1</span> s，一个上升过程有 16 个采样点，既够分辨动态，又让 <span class="math inline">N_p=20</span>（2 s）覆盖整个过渡过程。若把 <span class="math inline">T_s</span> 改成 0.01 s，为覆盖同样时长需 <span class="math inline">N_p=200</span>，计算量增加十倍而信息量几乎不变。</p>
+<p>采样还有一笔隐性的账：零阶保持本身带来约 <span class="math inline">\omega T_s/2</span> 的相位滞后（§58.4.3）。本章剪切频率约 3 rad/s，<span class="math inline">T_s=0.1</span> s 时这项滞后为 8.6°；若把 <span class="math inline">T_s</span> 压到 0.02 s，可降到 1.7°，但 <span class="math inline">N_p</span> 要从 20 涨到 100 才能覆盖同样时长，计算量增加五倍。<strong>用五倍算力换七度相位，通常不划算</strong>——除非系统本身的相位裕度已经很低，此时应先考虑提高采样率，而不是继续加大时域。</p>
+<p>采样周期还是算力预算的分母。MPC 的单步求解必须在一个 <span class="math inline">T_s</span> 内完成，若按 50% 的预算规则（§58.3.7），可用于优化的时间是 <span class="math inline">0.5T_s</span>。<span class="math inline">T_s</span> 每减半，预算减半，而 <span class="math inline">N_p</span> 要加倍才能覆盖同样的物理时长，于是对求解器的要求提高了四倍。这条杠杆比“换更快的 CPU”有力得多，也解释了为什么工程上宁可接受 8.6° 的相位滞后，也不轻易把采样周期压到 10 ms 以下。</p>
+<p>选 <span class="math inline">T_s</span> 时还应核对一个下限：一个 <span class="math inline">T_s</span> 内的控制增量不能超过执行器的实际响应能力。本章 <span class="math inline">\Delta u</span> 上限 0.1 N/拍，若驱动器本身的电流环带宽只有 20 Hz，那么 0.1 s 一拍尚可跟踪，改成 0.01 s 一拍就变成“算了但执行不出来”。这种情况下缩短采样周期不仅无益，还会让优化器反复给出与实际不符的指令。</p>
+<h3 id="第四步选预测时域与控制时域">58.3.4 第四步：选预测时域与控制时域</h3>
+<p>预测时域 <span class="math inline">N_pT_s</span> 应覆盖“从当前状态走到目标附近”所需时间的 1.5–3 倍。太短会看不到远处的约束（§58.5 的无终端代价算例在 <span class="math inline">N_p=2</span> 时停在 0.395）；太长则远端预测本就不可信，徒增计算。</p>
+<p>更严格一点，<span class="math inline">N_pT_s</span> 还要不小于“纯延迟 + 上升时间”之和。若对象有 <span class="math inline">d</span> 拍延迟，那么前 <span class="math inline">d</span> 拍的控制量对输出毫无作用，有效预测长度只有 <span class="math inline">(N_p-d)T_s</span>。只看 <span class="math inline">N_p</span> 不看 <span class="math inline">d</span>，就会在带延迟的对象上重演“时域太短”的所有症状——而这类症状最容易被误诊为权重问题。</p>
+<p>控制时域 <span class="math inline">N_c</span> 一般取 <span class="math inline">N_p</span> 的四分之一到三分之一，且不小于 3。<span class="math inline">N_c</span> 太小会让控制量“僵硬”，在需要快速反向的场合跟不上；<span class="math inline">N_c=N_p</span> 则计算量最大而收益有限。本章默认 <span class="math inline">N_p=20</span>、<span class="math inline">N_c=5</span>，即 2 s 预测、0.5 s 自由控制。</p>
+<p><span class="math inline">N_c</span> 还有一个与延迟直接相关的约束：<span class="math inline">N_c</span> 应大于延迟拍数。理由很直观——若自由控制段在第 <span class="math inline">d</span> 拍之前就冻结，优化器实际上无法对延迟之后的那段轨迹做任何安排，等于把一段本可优化的区间交给了“保持”假设，遇到扰动也就没有可用的后续动作。带延迟的对象上，“<span class="math inline">N_c&lt;</span> 延迟拍数”是比“<span class="math inline">N_c</span> 取 <span class="math inline">N_p</span> 的三分之一”更硬的约束。</p>
+<p>时域选定后，用一次“截断测试”确认没有选短：把 <span class="math inline">N_p</span> 逐次加倍，观察指标是否还变。若从 20 加到 40 指标几乎不动，说明 20 已经够；若还在明显改善，说明当前时域截掉了有用的信息。这个测试只需跑几组仿真，比事后在权重上反复试错便宜得多。</p>
+<h3 id="第五步定权重与终端代价">58.3.5 第五步：定权重与终端代价</h3>
+<p>权重决定“在可行域内挑哪一个解”。推荐先把三个权重按物理量纲归一化：以允许的最大跟踪误差 <span class="math inline">e_{\max}</span>、最大速度 <span class="math inline">v_{\max}</span>、最大控制量 <span class="math inline">u_{\max}</span> 为基准，取</p>
+<p><span class="math display">
+q_y=\frac{1}{e_{\max}^2},\qquad q_v=\frac{\alpha}{v_{\max}^2},\qquad r_u=\frac{\beta}{u_{\max}^2}
+\tag{58-15}
+</span></p>
+<p>其中 <span class="math inline">\alpha,\beta</span> 是无量纲的相对权重，初值都取 1，再按 §58.8 的方法微调。这样做的目的不是“算得准”，而是让调参有方向：增大 <span class="math inline">\alpha</span> 相当于加大阻尼，增大 <span class="math inline">\beta</span> 相当于让控制器“更省力”。</p>
+<p>归一化的好处可以用一句话概括：它把“三个数”变成了“两个比例”。按式 (58-15) 取初值后，三项代价在标称工况下的贡献大致同阶，任何一个改动都会立刻在曲线上显示出来；不归一化时，某一项可能大出三个数量级，另外两项怎么调都“听不见”。<strong>调参时最怕的不是参数难调，而是某个参数根本没有效果</strong>，归一化解决的正是这个问题。</p>
+<p>终端代价用离散 Riccati 解（第 55 章），它把“时域之外的代价”折算进来，使短时域也能稳定。若不愿求解 Riccati，也可用终端等式约束 <span class="math inline">\boldsymbol{x}_{N_p}=\boldsymbol{x}_{\mathrm{ref}}</span>，但可行域会明显缩小，工程上不如终端代价灵活。</p>
+<p>这里有一个必须保持一致的地方：求 <span class="math inline">\boldsymbol{P}</span> 用的 <span class="math inline">\boldsymbol{Q},\boldsymbol{R}</span> 必须与在线代价里的权重同源。若在线把 <span class="math inline">q_y</span> 从 10 改成 100，而 <span class="math inline">\boldsymbol{P}</span> 还是按 <span class="math inline">q_y=10</span> 算的，终端代价就低估了“继续走下去”的代价，等于在时域末端人为打折，短时域的性能会退回无终端项的水平。正确做法是把权重改动写成“改参数 → 重算 <span class="math inline">\boldsymbol{P}</span> → 重跑验证”的三步，不允许只改一半。本章脚本的 <code>terminal_cost()</code> 就是按当前权重现算，避免了这种不同步。</p>
+<p>权重的初值还有一个更省事的取法：先把它当成 LQR 问题解一次，用得到的 <span class="math inline">\boldsymbol{Q},\boldsymbol{R}</span> 作为 MPC 的起点。理由是——无约束、时域无限时，两者等价（§58.4.1）；从这个起点出发，加约束只会让轨迹偏离 LQR，而不会因为权重本身选得不合理就已经很差。之后若发现约束激活导致响应变慢，那是约束的账，不该记在权重上。</p>
+<h3 id="第六步离线闭环验证">58.3.6 第六步：离线闭环验证</h3>
+<p>把控制器放回闭环，至少跑四类工况：标称跟踪、约束激活、模型失配、约束冲突。每一类都要看三样东西：输出曲线、控制量曲线、求解状态。前两样判断性能，第三样判断可行性——若出现 <code>infeasible</code>，说明约束清单里有互相矛盾的要求，必须回到第一步。</p>
+<p>本章脚本的四个对应实验是：<code>exp_horizon</code>（标称）、<code>exp_saturation</code>（约束激活）、<code>exp_mismatch</code>（失配）、<code>exp_soft</code>（冲突）。四类都通过，才进入下一步。</p>
+<p>每一类的判据要事先写死，否则“看着还行”会变成默认结论：</p>
+<ul>
+<li><strong>标称</strong>：跟踪误差按允许带判定，本章目标是调节时间 2.7 s、IAE 1.46 量级，超调不超过 5%。</li>
+<li><strong>约束激活</strong>：峰值控制量应贴住限幅而不越界，饱和时长占比要记录；若长期 100% 饱和，说明推力选小了，问题不在控制器。</li>
+<li><strong>失配</strong>：时间常数与增益各摄动 ±30%，再加 2～5 拍延迟，观察是否失稳；延迟项必须单独列一行。</li>
+<li><strong>冲突</strong>：故意把目标设到物理不可达的位置，检查控制器是否“不输出 0、有报警、有可接受的越界量”，而不是静默失效（§58.8）。</li>
+</ul>
+<p>四类工况跑完，建议把关键指标存成一份<strong>基线指纹</strong>：IAE、超调、调节时间、峰值控制量、求解耗时中位数与 p95，每项一行。它的作用不是存档，而是让后续每一次参数改动都能被量化判断。没有基线，改完一个参数只能凭“看着顺不顺”下结论；有了基线，指标变化 3% 还是 30% 一目了然。工程上最常出现的争论——“我觉得这样更稳”“我觉得原来更好”——本质都是缺一份可比对的基线。</p>
+<p>基线还要注明测试条件：初值、参考幅值、仿真步数、求解器容差。同一组参数在不同初值下的 IAE 可能差出一倍，若条件不写清，两份基线根本无法比较。本章所有指标都对应“零初值、1 m 阶跃、120 步、eps 1e-7”这一组条件，读者复现时应保持一致。</p>
+<h3 id="第七步实时性与投运准备">58.3.7 第七步：实时性与投运准备</h3>
+<p>测最坏情况下的单步计算时间，而不是平均值。判据是：最坏计算时间不超过采样周期的 50%，留一半给采样、通信、执行与抖动。若不满足，依次尝试：减小 <span class="math inline">N_c</span>、用移动阻塞、稀疏化、换更快的求解器或生成显式查表。</p>
+<p>“50%”不是随手定的。一个控制周期里，除了求解，还有传感器采样与滤波、通信往返、执行器指令下发、操作系统调度抖动。这些加起来通常占 30%～40%，再留 10%～20% 的余量，剩下给求解的只有一半。若按平均值卡到 90%，偶发的长尾会把周期撑破，表现为“平时很好、偶尔丢一拍”，而丢一拍对闭环的冲击往往比参数不准更大。</p>
+<p>测耗时的方法本身也有讲究。桌面操作系统上的单次计时受调度、缓存、降频影响，波动可达数倍，因此要跑足够多次并取分位数：中位数代表常态，p95 代表偶发长尾，最大值用于发现极端情况。只看平均值会同时掩盖两端的真相——平均值漂亮但 p95 超标，现场就会偶发丢拍；平均值超标但最大值可控，则说明只是常数开销大，优化方向完全不同。</p>
+<p>投运前还要准备一份<strong>降级方案</strong>。无论测试做得多充分，现场总会出现意料之外的不可行：传感器跳变导致状态越界、目标值被上级系统写成非法值、执行器反馈丢失。此时控制器不能停在原地等重启。合理的降级顺序是：先放松软约束、再退到“保持上一拍控制量”、最后切到一条保守的 PID 或直接停机。这条链路要在离线阶段就写好并测试过，而不是等故障发生了再临时加。</p>
+<p>实时性验收还应包括一次<strong>长时拷机</strong>：连续运行数小时，观察耗时是否随时间漂移。内存泄漏、日志文件膨胀、求解器内部缓存增长都会让第 10000 拍的耗时明显高于第 100 拍。这类问题在 120 步的仿真里永远暴露不出来，却常常是现场“跑了半天突然卡死”的原因。</p>
+<p>图 58-11 把七步串成流程图。注意其中两个回退分支：仿真不达标回到权重/时域，实时预算不够回到计算结构。现场投运后仍需持续监控求解状态与约束激活频次，这部分在 §58.10 展开。</p>
+<figure>
+<img src="figs/ch058/fig_058_11_flow.svg" alt="图 58-11　MPC 工程实施流程与两个回退分支" /><figcaption aria-hidden="true">图 58-11　MPC 工程实施流程与两个回退分支</figcaption>
+</figure>
+<p>七步的交付物汇总在表 58-1。这张表可直接作为项目评审的检查单：任何一项空缺，都意味着后面的调试会以“反复试参数”的形式把问题补回来。</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">步骤</th>
+<th style="text-align: left;">交付物</th>
+<th style="text-align: left;">合格判据</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">1 目标与约束</td>
+<td style="text-align: left;">约束清单（含超限后果、可否软化）</td>
+<td style="text-align: left;">每条约束有量纲、有上下限、有来源</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">2 建模</td>
+<td style="text-align: left;">状态空间模型 + 开环复核曲线</td>
+<td style="text-align: left;">开环误差 &lt; 允许带的三分之一</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">3 离散化</td>
+<td style="text-align: left;"><span class="math inline">\boldsymbol{A},\boldsymbol{B},\boldsymbol{C}</span> 与 <span class="math inline">T_s</span></td>
+<td style="text-align: left;">一个上升过程 ≥ 10 个采样点</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">4 时域</td>
+<td style="text-align: left;"><span class="math inline">N_p</span>、<span class="math inline">N_c</span></td>
+<td style="text-align: left;"><span class="math inline">N_pT_s</span> 覆盖过渡过程的 1.5–3 倍</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">5 权重</td>
+<td style="text-align: left;"><span class="math inline">q_y,q_v,r_u,\boldsymbol{P}</span></td>
+<td style="text-align: left;">按式 (58-15) 归一化，量纲一致</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">6 闭环验证</td>
+<td style="text-align: left;">四类工况的曲线与求解状态</td>
+<td style="text-align: left;">无 <code>infeasible</code>，指标达标</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">7 实时性</td>
+<td style="text-align: left;">最坏单步耗时</td>
+<td style="text-align: left;">&lt; 采样周期的 50%</td>
+</tr>
+</tbody>
+</table>
+<p>表 58-1 中最容易糊弄的是第 1 步和第 2 步。这两项的合格判据都是“看数据”而不是“看文档”：约束清单要有量纲与来源，模型复核要有曲线与误差，评审时可以直接翻。凡是只写“已确认”而没有数值的，一律按未完成处理。</p>
+<h2 id="连续情形">58.4 连续情形</h2>
+<p>连续时间提法回答的是“如果计算不受限，最优控制长什么样”，它是理解离散实现的参照系，也是分析工具。真正上机的 MPC 几乎都跑在离散拍上，但连续域的三个结论会直接影响工程决策：无约束时域无限时退化为 LQR、约束使最优解出现在边界、采样与保持会额外吃掉相位。</p>
+<h3 id="连续时间最优控制问题">58.4.1 连续时间最优控制问题</h3>
+<p>设对象为</p>
+<p><span class="math display">
+\dot{\boldsymbol{x}}(t)=\boldsymbol{A}_c\boldsymbol{x}(t)+\boldsymbol{B}_c u(t),\qquad y(t)=\boldsymbol{C}_c\boldsymbol{x}(t)
+\tag{58-16}
+</span></p>
+<p>在时域 <span class="math inline">[0,T]</span> 上极小化</p>
+<p><span class="math display">
+J=\int_0^{T}\left[(y-r)^2q_y+v^2q_v+u^2r_u\right]\mathrm{d}t
++\left(\boldsymbol{x}(T)-\boldsymbol{x}_{\mathrm{ref}}\right)^{\mathrm{T}}\boldsymbol{P}\left(\boldsymbol{x}(T)-\boldsymbol{x}_{\mathrm{ref}}\right)
+\tag{58-17}
+</span></p>
+<p>约束为 <span class="math inline">u(t)\in\mathcal{U}</span>、<span class="math inline">\boldsymbol{x}(t)\in\mathcal{X}</span>。与式 (58-7) 相比，求和换成积分，决策变量从一个有限维向量变成一个函数 <span class="math inline">u(\cdot)</span>。这就是连续 MPC 与离散 MPC 的本质差别：前者是无穷维优化，后者是有限维二次规划。</p>
+<p>两种提法的关系可以这样理解：连续版是“问题本身”，离散版是“问题的一个有限维近似”。近似的好坏取决于参数化方式——分段常数假设控制量在拍间不变，等价于零阶保持；分段线性则隐含一阶保持，精度高一阶，但决策变量翻倍。选哪种取决于执行器的实际行为，而不是数学上的方便：若执行器本身就是零阶保持（DAC、PWM 调制的驱动器），再高的参数化也换不来精度，只会增加计算量。</p>
+<h3 id="连续提法的三个用途">58.4.2 连续提法的三个用途</h3>
+<p>直接在线求解式 (58-17) 需要先把 <span class="math inline">u(\cdot)</span> 参数化（分段常数、分段线性或多项式），参数化之后又回到有限维问题，与离散 MPC 殊途同归。因此连续提法的主要价值不在实现，而在分析：</p>
+<ul>
+<li><strong>无约束、<span class="math inline">T\to\infty</span>、<span class="math inline">r=0</span></strong>：式 (58-17) 的解由 Riccati 方程给出，最优控制是常增益状态反馈 <span class="math inline">u=-\boldsymbol{K}\boldsymbol{x}</span>。这正是第 55 章的 LQR，也是本章终端代价 <span class="math inline">\boldsymbol{P}</span> 的来源。</li>
+<li><strong>约束起作用时</strong>：最优解不再能用常增益表示，控制量会贴着边界走（bang-bang 或边界弧）。图 58-4 的无约束曲线峰值推力 3.05，而执行器只能给 0.55；这个差值就是“约束改变了最优解”的直接证据。</li>
+<li><strong>稳定性分析</strong>：连续域可用 Lyapunov 函数与不变集描述“终端集”，离散域再把同样的几何对象搬到 <span class="math inline">\boldsymbol{x}_{k+N_p}</span> 上（§58.6）。</li>
+</ul>
+<p>因此，工程上正确的顺序是：先在连续域把物理关系、量纲、约束边界想清楚，再离散化实现；而不是直接对着矩阵调参。</p>
+<p>约束起作用时，解的结构值得多看一眼。以单输入为例，最优解由切换函数决定：切换函数为正时取上界，为负时取下界，为零时停在中间（奇异弧）。这种“贴边”行为不是数值误差，而是最优性的体现——在边界上，任何偏离都会让某一项代价变大。PID 无法复制这种结构，因为它没有“边界”的概念：饱和只是执行器的物理限制，而不是控制器主动做出的选择。<strong>MPC 的限幅是算出来的，PID 的限幅是被迫的</strong>，二者的区别在接近边界时最明显。</p>
+<p>连续最优控制的正规工具是 Pontryagin 极小值原理：构造哈密顿函数 <span class="math inline">H=L+\boldsymbol{\lambda}^{\mathrm{T}}f</span>，最优控制使 <span class="math inline">H</span> 逐点最小，协态 <span class="math inline">\boldsymbol{\lambda}</span> 由 <span class="math inline">\dot{\boldsymbol{\lambda}}=-\partial H/\partial\boldsymbol{x}</span> 反向积分，终端条件由终端代价给出。对线性二次问题，这套条件可化成 Riccati 方程；对含输入约束的问题，它给出 bang-bang 结构。理论上很完整，但它要求解一个两点边值问题，且状态约束会带来更复杂的互补条件——<strong>能写出条件不等于能算出解</strong>，这正是工程上不直接在线求解连续最优控制的原因。</p>
+<p>还有一个结构性事实：约束越接近“硬”，最优解越倾向于停在边界上，控制量的变化越不平滑。这会让执行器承受更多冲击，也会让数值求解对约束边界的精度更敏感。工程上常故意把某些约束软化一点点（例如允许 1% 的越界），就是用一点最优性换取解的光滑性与可解性。这不是妥协，而是把“数学模型的最优”换算成“物理系统的最优”。</p>
+<p>这也解释了为什么调参经验在 MPC 上不好迁移。PID 的增益调大，响应变快、超调变大，关系单调；MPC 里把 <span class="math inline">q_y</span> 调大，在远离约束时响应变快，一旦控制量贴住限幅就再难改善，甚至因为反复饱和而变慢。判断依据不能只看一条曲线，要看约束是否被激活。</p>
+<h3 id="连续设计到离散实现的桥">58.4.3 连续设计到离散实现的桥</h3>
+<p>离散化用零阶保持器（第 4 章）：</p>
+<p><span class="math display">
+\boldsymbol{A}=e^{\boldsymbol{A}_cT_s},\qquad
+\boldsymbol{B}=\int_0^{T_s}e^{\boldsymbol{A}_c\tau}\mathrm{d}\tau\,\boldsymbol{B}_c
+\tag{58-18}
+</span></p>
+<p>零阶保持本身引入约半个采样周期的等效延迟，其相位滞后为</p>
+<p><span class="math display">
+\varphi_{\mathrm{ZOH}}\approx-\omega\frac{T_s}{2}
+\tag{58-19}
+</span></p>
+<p>在剪切频率 <span class="math inline">\omega_c=3</span> rad/s、<span class="math inline">T_s=0.1</span> s 时，这项滞后约 0.15 rad，即 8.6°。它不大，但也不是零：若系统原本相位裕度只有 30°，这 8.6° 就占去近三成。第 14 章的抗混叠滤波器还会再叠加相位，二者必须一起核算。</p>
+<p>离散化是否可信，有一个几分钟就能做完的检验：把 ZOH 模型与精细步长（例如 <span class="math inline">T_s/20</span>）的高阶仿真放在同一阶跃输入下对比，看前几个采样点是否重合。若第一拍内就明显偏离，说明 <span class="math inline">T_s</span> 相对对象动态太大；若只在长尾处偏，通常是模型阶次不足或存在未建模延迟。这个检验能提前消掉大部分“模型不准”的争议——争议往往来自没做这一步，而不是模型本身有多差。</p>
+<p>本章对象取 <span class="math inline">T_s=0.1</span> s，闭环上升时间 1.6 s，采样比约 16:1；这是“够用且不过度”的典型取值。把 <span class="math inline">T_s</span> 减到 0.02 s 会把相位滞后降到 1.7°，但 <span class="math inline">N_p</span> 需从 20 增到 100 才能覆盖同样时长，计算量增加五倍，收益只有几度相位。</p>
+<h3 id="约束如何改变可达性能">58.4.4 约束如何改变可达性能</h3>
+<p>图 58-4 给出三组对照：无约束、仅输入限幅、输入加速率限幅。三者用的是同一个预测模型与同一组权重，差别只在约束集。实测指标列在表 58-2。</p>
+<figure>
+<img src="figs/ch058/fig_058_04_constraints.svg" alt="图 58-4　输入限幅与速率限幅对跟踪性能的影响" /><figcaption aria-hidden="true">图 58-4　输入限幅与速率限幅对跟踪性能的影响</figcaption>
+</figure>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">约束设置</th>
+<th style="text-align: right;">上升时间 (s)</th>
+<th style="text-align: right;">调节时间 (s)</th>
+<th style="text-align: right;">峰值控制量</th>
+<th style="text-align: right;">控制量总变差</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">无约束</td>
+<td style="text-align: right;">1.339</td>
+<td style="text-align: right;">2.100</td>
+<td style="text-align: right;">3.05</td>
+<td style="text-align: right;">3.46</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">仅输入限幅 0.55</td>
+<td style="text-align: right;">2.097</td>
+<td style="text-align: right;">3.400</td>
+<td style="text-align: right;">0.55</td>
+<td style="text-align: right;">1.09</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">限幅 + 速率 0.08/步</td>
+<td style="text-align: right;">2.245</td>
+<td style="text-align: right;">3.800</td>
+<td style="text-align: right;">0.55</td>
+<td style="text-align: right;">1.22</td>
+</tr>
+</tbody>
+</table>
+<p>这张表说明两件事。第一，约束不是“稍微牺牲一点性能”：把峰值推力从 3.05 压到 0.55，上升时间增加 57%，调节时间增加 62%。第二，速率限幅的代价比幅值限幅小得多（上升时间只再增 7%），但它换来的是执行器寿命与机械冲击的改善，现场往往更看重后者。</p>
+<p>如果只看连续域的 LQR 设计，这三行会是同一行——LQR 不知道 0.55 的存在。MPC 的第一个不可替代之处就在这里：它把“做不到”变成优化问题的一部分，而不是等执行器饱和后再由抗饱和逻辑补救。</p>
+<p>还要注意，这三行不是“三种控制器”，而是同一个控制器在三组约束下的表现：权重、时域、模型全都没变，唯一变的是可行域。这提醒我们，现场抱怨“MPC 响应慢”时，应先看约束，再看权重——很多时候慢不是调出来的，而是执行器就只有这么大。推力上限放宽一倍，响应自然会快，前提是机械与电气允许。<strong>约束决定可达性能的上限，权重只决定在这个上限内怎么分配。</strong></p>
+<p>速率约束的代价之所以远小于幅值约束，可以从“它限制了谁”来理解。幅值约束限制的是加速度的“高度”，直接影响能否在给定距离内完成加减速，改变的是可达集本身；速率约束限制的是控制量变化的“斜率”，只影响轨迹的平滑程度，不改变稳态可达点。本章的阶跃任务里，真正吃紧的是“推力够不够”，而不是“推力能不能瞬间改变”，所以把 <span class="math inline">\Delta u</span> 从 0.25 收到 0.08 只让上升时间多 7%。若换成频繁正反向的跟踪任务，速率约束会变成主要瓶颈——<strong>同一条约束的代价，取决于任务的时间尺度</strong>，不能脱离工况谈松紧。</p>
+<h3 id="连续域实现的三个细节">58.4.5 连续域实现的三个细节</h3>
+<p>即便最终跑离散算法，连续域的物理事实仍会以三种方式影响实现：</p>
+<ul>
+<li><strong>计算延迟</strong>：从采样到输出控制量有一个计算周期，等效为额外一拍延迟。标准做法是把预测起点前移一拍，用 <span class="math inline">\hat{\boldsymbol{x}}_{k+1}=\boldsymbol{A}\hat{\boldsymbol{x}}_k+\boldsymbol{B}u_{k-1}</span> 作为初始状态，而不是直接用 <span class="math inline">\boldsymbol{x}_k</span>。</li>
+<li><strong>采样抖动</strong>：实际采样时刻不会严格等间隔。抖动超过 <span class="math inline">0.1T_s</span> 时，应按最坏间隔设计，或在时间戳上做重采样。</li>
+<li><strong>保持器的非线性</strong>：零阶保持是分段常数，实际执行器（尤其是液压与气动）在拍间仍有动态。这部分动态若不能忽略，应并入对象模型，而不是假设它不存在。</li>
+</ul>
+<p>三个细节的共同点是：它们都属于“连续世界的残余”，无法在离散模型里自动体现，必须在工程实现时显式补偿。</p>
+<p>这三条也解释了为什么“仿真很好、现场不行”经常成对出现：仿真里没有计算延迟、没有抖动、执行器是理想保持器。把这三项补进仿真，曲线的差别往往比换算法更大。第 24 章“数字孪生”的一部分工作，就是把这些非理想因素显式建模，而不是期待控制器自动适应。</p>
+<p>延迟要按“全链路”记账，而不是只看控制器那一段。一个完整的回路至少有：传感器采样与滤波（0.5～2 拍）、总线传输（0.1～1 拍）、控制器计算（0.2～0.5 拍）、执行器指令更新（0.5～1 拍）。这些加起来常常是 2～4 拍，而 §58.6 的实测表明，5 拍未建模延迟就足以让超调从 1.35% 涨到 21%。<strong>延迟不会因为分段而被摊薄，它按总和起作用</strong>。工程做法是先测总延迟，再把总延迟写进预测模型，而不是逐段优化、最后加起来仍然超标。</p>
+<h2 id="离散情形">58.5 离散情形</h2>
+<p>上机运行的是离散版本。本节把 §58.2 的矩阵写开，解释三件事：为什么预测矩阵是下三角结构、移动阻塞怎样改变问题规模、时域长度在实测中到底带来多大差别。</p>
+<h3 id="预测矩阵的结构">58.5.1 预测矩阵的结构</h3>
+<p>以 <span class="math inline">N_p=3</span>、<span class="math inline">N_c=3</span> 为例，把式 (58-4) 展开：</p>
+<p><span class="math display">
+\begin{bmatrix}\boldsymbol{x}_1\\ \boldsymbol{x}_2\\ \boldsymbol{x}_3\end{bmatrix}
+=\begin{bmatrix}\boldsymbol{A}\\ \boldsymbol{A}^2\\ \boldsymbol{A}^3\end{bmatrix}\boldsymbol{x}_0
++\begin{bmatrix}\boldsymbol{B} &amp; \boldsymbol{0} &amp; \boldsymbol{0}\\
+\boldsymbol{A}\boldsymbol{B} &amp; \boldsymbol{B} &amp; \boldsymbol{0}\\
+\boldsymbol{A}^2\boldsymbol{B} &amp; \boldsymbol{A}\boldsymbol{B} &amp; \boldsymbol{B}\end{bmatrix}
+\begin{bmatrix}u_0\\ u_1\\ u_2\end{bmatrix}
+\tag{58-20}
+</span></p>
+<p><span class="math inline">\boldsymbol{\Gamma}</span> 是分块下三角 Toeplitz 矩阵：第 <span class="math inline">k</span> 行第 <span class="math inline">j</span> 列的非零块只出现在 <span class="math inline">j&lt;k</span>，因为“未来的控制不能影响过去的状态”。这个因果结构决定了 MPC 的预测无法被“事后修正”：一旦某一步状态已经越过约束边界，只能靠后续控制挽回，而不能改变历史。</p>
+<p>块下三角还带来一个计算上的好处：<span class="math inline">\boldsymbol{\Gamma}^{\mathrm{T}}\bar{\boldsymbol{Q}}\boldsymbol{\Gamma}</span> 可按块递推计算，不必显式构造 <span class="math inline">\boldsymbol{\Gamma}</span> 再相乘。当 <span class="math inline">N_p</span> 达到几百时，这一点的差别是数量级的。</p>
+<p>从结构还能读出一个容易误解的推论。紧缩型的 <span class="math inline">\boldsymbol{H}</span> 是 <span class="math inline">N_c\times N_c</span> 的<strong>稠密</strong>矩阵——块下三角相乘后不再稀疏；它的规模只由控制时域决定，与 <span class="math inline">N_p</span> 无关。§58.10 的实测中 <span class="math inline">N_c</span> 固定为 5，<span class="math inline">\boldsymbol{H}</span> 始终是 <span class="math inline">5\times5</span>，<span class="math inline">N_p</span> 增大只影响 <span class="math inline">\boldsymbol{\Phi}</span>、<span class="math inline">\boldsymbol{\Gamma}</span> 与约束行数，耗时因此近似线性增长（0.047 ms 到 0.135 ms）。这提示一个实践要点：<strong>想控制计算量，先控制 <span class="math inline">N_c</span></strong>；<span class="math inline">N_p</span> 的影响主要在矩阵构造与约束规模上。</p>
+<h3 id="移动阻塞的实际效果">58.5.2 移动阻塞的实际效果</h3>
+<p>表 58-3 给出 <span class="math inline">N_p=20</span> 时改变 <span class="math inline">N_c</span> 的实测结果。所有工况使用同一组权重与约束。</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: right;">控制时域 <span class="math inline">N_c</span></th>
+<th style="text-align: right;">IAE</th>
+<th style="text-align: right;">调节时间 (s)</th>
+<th style="text-align: right;">控制量总变差</th>
+<th style="text-align: right;">单步中位数 (ms)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">1.691</td>
+<td style="text-align: right;">3.300</td>
+<td style="text-align: right;">1.86</td>
+<td style="text-align: right;">1.06</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">1.529</td>
+<td style="text-align: right;">2.900</td>
+<td style="text-align: right;">2.05</td>
+<td style="text-align: right;">1.07</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">5</td>
+<td style="text-align: right;">1.458</td>
+<td style="text-align: right;">2.700</td>
+<td style="text-align: right;">2.09</td>
+<td style="text-align: right;">1.07</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">10</td>
+<td style="text-align: right;">1.468</td>
+<td style="text-align: right;">2.800</td>
+<td style="text-align: right;">2.05</td>
+<td style="text-align: right;">1.15</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">20</td>
+<td style="text-align: right;">1.471</td>
+<td style="text-align: right;">2.800</td>
+<td style="text-align: right;">2.04</td>
+<td style="text-align: right;">1.22</td>
+</tr>
+</tbody>
+</table>
+<p>三个结论。第一，<span class="math inline">N_c</span> 从 2 增到 5，调节时间从 3.3 s 降到 2.7 s，改善明显；再从 5 增到 20，指标几乎不变（1.458 对 1.471，差异在噪声量级）。第二，<span class="math inline">N_c</span> 太小会让控制“僵硬”：两段式控制无法在接近目标时精细反向，控制量总变差反而更小但跟踪更差。第三，计算耗时随 <span class="math inline">N_c</span> 增长缓慢（1.06 ms 到 1.22 ms），因为本例规模小、Python 开销占主导；在嵌入式实现中，<span class="math inline">N_c</span> 对耗时的影响会显著得多。</p>
+<p>工程取值建议：<span class="math inline">N_c=\lceil N_p/4\rceil</span>，且不小于 3。这既保留了必要的调节自由度，又避免了无谓的计算。</p>
+<p>移动阻塞还有一个不太直观的好处：它降低了问题的“有效自由度”，让解更稳定。<span class="math inline">N_c=N_p</span> 时，相邻两拍的决策变量高度可替代，最优解在数值上可能有多个近似等价的候选，表现为控制量轻微抖动；阻塞把后段合并后，这种“平局”减少，解更确定。代价是远端不能精细调节——但对本章这类二阶对象，远端本来就不需要精细调节。</p>
+<p>阻塞模式要与执行器能力匹配。若执行器更新率低于采样率（例如每两拍才更新一次指令），却把阻塞设成逐拍自由，优化器会算出执行器根本执行不了的序列；反之，执行器很快而阻塞很粗，则浪费了能力。<strong>阻塞的粒度应等于执行器实际能分辨的时间粒度</strong>，这条比“取 <span class="math inline">N_p</span> 的四分之一”更本质。</p>
+<p>阻塞段的长度不必均匀。常见做法是前密后疏：前几步逐拍自由，后面每两拍或三拍一段。理由是近端需要精细调节，远端只需大致方向；这比均匀阻塞更省变量，也更符合“远端本来就不确定”的事实。</p>
+<p>段数还与对象阶次有关。二阶对象通常 3～5 段就够；含长延迟或柔性模态时，需要更多段才能表达“先等延迟过去再动作”的计划。判断方法很直接：把 <span class="math inline">N_c</span> 逐步加到指标不再改善为止，表 58-3 中 <span class="math inline">N_c=5</span> 就是本章的拐点。<strong>不要用“段数越多越精确”的直觉去定 <span class="math inline">N_c</span></strong>，多出来的段只是把同样的动作拆细，并不增加信息。</p>
+<h3 id="热启动与求解状态">58.5.3 热启动与求解状态</h3>
+<p>MPC 每拍求解的问题只有右端项（<span class="math inline">\boldsymbol{x}_0</span>、<span class="math inline">u_{-1}</span>）变化，矩阵 <span class="math inline">\boldsymbol{H}</span>、<span class="math inline">\boldsymbol{G}</span> 不变。利用这一点可以做<strong>热启动</strong>：把上一拍的最优解平移一位作为初值，求解器通常两三步迭代就收敛。</p>
+<p>热启动带来一个副作用：求解器可能返回 <code>optimal_inaccurate</code> 或在上一次的解附近停滞。工程上必须逐拍检查求解状态，而不是只看曲线好不好看。本章脚本把每拍的 <code>status</code> 存在 <code>res["status"]</code> 里，出现非最优时统计步数。§58.8 的软约束实验正是靠这个统计发现“硬约束从第 0 步起就不可行”。</p>
+<p>热启动也有失效的时候。相邻两拍的激活约束集差别很大时（例如刚撞上输出上限又离开），上一拍的解可能落在当前可行域之外，求解器要先“爬”回来，迭代次数反而比冷启动更多。判断方法看迭代次数与求解时间：若某些拍明显变慢，且集中在约束切换处，就应改成<strong>条件热启动</strong>——只在约束集未变时复用。</p>
+<p>另一条实践经验是把初值投影到当前可行域再送入求解器。这段代码只有几行，却能避免大量无效迭代，对嵌入式实现尤其值得。它和 §58.8 的软约束并不重复：投影保证“起点合法”，软化保证“问题有解”，两者解决的是不同层面的问题。</p>
+<h3 id="时域长度的实测影响">58.5.4 时域长度的实测影响</h3>
+<p>图 58-5 给出两组曲线：左图带 Riccati 终端代价，右图不带。同一组 <span class="math inline">N_p</span> 取值，差别只在终端项。</p>
+<figure>
+<img src="figs/ch058/fig_058_05_horizon.svg" alt="图 58-5　预测时域对跟踪的影响：有终端代价（左）与无终端代价（右）" /><figcaption aria-hidden="true">图 58-5　预测时域对跟踪的影响：有终端代价（左）与无终端代价（右）</figcaption>
+</figure>
+<p>数据列在表 58-4。带终端代价时，<span class="math inline">N_p=2</span> 与 <span class="math inline">N_p=20</span> 的 IAE 分别为 0.999 与 0.963，几乎一致——终端项把“时域之外”折算进来了，短时域也能得到接近无限时域的行为。不带终端代价时，<span class="math inline">N_p=2</span> 的末端值只有 0.395，<span class="math inline">N_p=3</span> 为 0.865，<span class="math inline">N_p\ge5</span> 才回到 1.000。原因很直观：优化器只看两步，认为“再往前走收益抵不上控制代价”，于是提前收手。</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: right;"><span class="math inline">N_p</span></th>
+<th style="text-align: right;">有终端代价 IAE</th>
+<th style="text-align: right;">有终端代价末值</th>
+<th style="text-align: right;">无终端代价 IAE</th>
+<th style="text-align: right;">无终端代价末值</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">0.999</td>
+<td style="text-align: right;">1.000</td>
+<td style="text-align: right;">9.621</td>
+<td style="text-align: right;">0.395</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">0.999</td>
+<td style="text-align: right;">1.000</td>
+<td style="text-align: right;">5.722</td>
+<td style="text-align: right;">0.865</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">5</td>
+<td style="text-align: right;">0.999</td>
+<td style="text-align: right;">1.000</td>
+<td style="text-align: right;">2.175</td>
+<td style="text-align: right;">1.000</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">10</td>
+<td style="text-align: right;">1.033</td>
+<td style="text-align: right;">1.000</td>
+<td style="text-align: right;">1.142</td>
+<td style="text-align: right;">1.000</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">20</td>
+<td style="text-align: right;">0.963</td>
+<td style="text-align: right;">1.000</td>
+<td style="text-align: right;">0.994</td>
+<td style="text-align: right;">1.000</td>
+</tr>
+</tbody>
+</table>
+<p>表 58-4 还暴露一个细节：带终端代价时 <span class="math inline">N_p=10</span> 的 IAE（1.033）反而略大于 <span class="math inline">N_p=2</span>（0.999）。这不是“时域越长越差”，而是约束与离散化共同作用的结果：该工况下控制量已达限幅 1.0，轨迹贴着约束走，IAE 的差异主要来自饱和段的长短。<strong>在约束激活的工况下，时域长度不再是主导因素，约束才是。</strong></p>
+<p>把两栏并排看，还有一个更实用的结论：要达到 <span class="math inline">0.99</span> 量级的 IAE，带终端代价只需 <span class="math inline">N_p=2</span>，不带则要 <span class="math inline">N_p=20</span>。终端项把“时域长度”换成了“一次离线矩阵求解”，这是本章最划算的一笔替换——多花几行代码，省掉十倍的在线规模。</p>
+<h3 id="离散实现的数值细节">58.5.5 离散实现的数值细节</h3>
+<p>离散 QP 的数值质量取决于三件事：</p>
+<ul>
+<li><strong>量纲归一化</strong>。位置以 m 计、速度以 m/s 计、控制量以 N 计，三者数量级可能相差 <span class="math inline">10^3</span>。直接代入会让 <span class="math inline">\boldsymbol{H}</span> 的条件数极差，求解器报“不准确”。做法是把状态与控制量都除以各自的满量程，优化完再乘回去。</li>
+<li><strong>约束的冗余</strong>。同时给 <span class="math inline">u</span> 的上下限与 <span class="math inline">\Delta u</span> 的上下限时，某些组合是冗余的（例如 <span class="math inline">\Delta u</span> 上限大于 <span class="math inline">2u_{\max}</span>）。冗余约束不会改变解，但会增加有效集法的迭代次数。生成约束矩阵后应做一次冗余剔除。</li>
+<li><strong>终止精度</strong>。在线 MPC 不需要 <span class="math inline">10^{-10}</span> 的精度，<span class="math inline">10^{-6}</span> 足够；把 <code>eps_abs</code>、<code>eps_rel</code> 放宽一个量级，迭代次数通常减半。精度过低会让控制量出现小幅抖动，表现为执行器“嗡嗡响”。</li>
+</ul>
+<p>归一化的具体做法：取位置满量程 <span class="math inline">p_{\max}</span>、速度满量程 <span class="math inline">v_{\max}</span>、推力满量程 <span class="math inline">u_{\max}</span>，令 <span class="math inline">\tilde p=p/p_{\max}</span>、<span class="math inline">\tilde v=v/v_{\max}</span>、<span class="math inline">\tilde u=u/u_{\max}</span>，则模型变为 <span class="math inline">\tilde{\boldsymbol{A}}=\boldsymbol{S}_x^{-1}\boldsymbol{A}\boldsymbol{S}_x</span>、<span class="math inline">\tilde{\boldsymbol{B}}=\boldsymbol{S}_x^{-1}\boldsymbol{B}S_u</span>，其中 <span class="math inline">\boldsymbol{S}_x=\mathrm{diag}(p_{\max},v_{\max})</span>、<span class="math inline">S_u=u_{\max}</span>。权重同步折算为 <span class="math inline">\tilde q_y=q_yp_{\max}^2</span>、<span class="math inline">\tilde q_v=q_vv_{\max}^2</span>、<span class="math inline">\tilde r_u=r_uu_{\max}^2</span>，代价值不变。整套变换只在构造时做一次，在线阶段不必反复。</p>
+<p>这三条都属于“实现层”的问题，但在现场表现得很像“算法不对”。排查顺序应是：先看求解状态与迭代次数，再看约束是否冗余，最后才怀疑模型与权重。</p>
+<p>本章默认配置下实测 <span class="math inline">\boldsymbol{H}</span> 的条件数约 145（特征值从 2.0 到 291），属于健康范围，所以 OSQP 能在几十次迭代内收敛。<span class="math inline">q_y</span> 取 <span class="math inline">10^3</span> 时升到约 <span class="math inline">4.8\times10^3</span>，取 <span class="math inline">10^4</span> 时升到约 <span class="math inline">3.7\times10^4</span>——条件数随权重差异近似线性恶化，迭代次数与“非最优”步数也随之增加。判断方法很简单：在初始化时打印 <code>numpy.linalg.cond(H)</code>，超过 <span class="math inline">10^6</span> 就必须先归一化，再去调任何参数。</p>
+<h2 id="稳定性与性能">58.6 稳定性与性能</h2>
+<p>MPC 的稳定性分析比经典反馈难一层：控制器本身是一个优化问题，闭环没有显式表达式，算不出极点，也画不出根轨迹。工程上真正需要回答的是三个问题——滚动优化会不会把系统弄发散、性能上限由谁决定、模型不准时还剩多少余量。</p>
+<p>三个问题可以先给出轮廓：滚动优化本身不保证稳定，必须补上“时域之外”的信息；性能上限由约束与物理决定，权重只能在其内部分配；失配余量对参数偏差较宽、对未建模延迟很窄。下面逐条展开，并在本章对象上给出实测。</p>
+<h3 id="滚动最优不等于闭环稳定">58.6.1 滚动最优不等于闭环稳定</h3>
+<p>先看一个容易踩的坑。“每一拍都求到了最优解”与“闭环稳定”是两件不同的事：前者只说明当前这个有限时域问题可行且有解，后者要求整条轨迹收敛。</p>
+<p>反例就在表 58-4 里。<span class="math inline">N_p=2</span>、不带终端代价时，优化器每一拍都在自己的窗口内做到了最优，但每一拍都判断“再往前走一步的收益抵不上控制代价”，于是提前收手，最终停在 0.395 m。每一拍都“对”，整条轨迹却停在错误的位置。这种失败不表现为发散，而表现为“停在半路”，最容易被误判成“权重没调好”。</p>
+<p>更严重的情形是真正发散。若对象含积分环节、代价又重度惩罚控制量，短时域优化器会持续给出偏小的控制量，误差累积；下一拍窗口仍只看眼前，仍给出偏小的量，误差单调增长。此时每拍的求解状态都是 <code>optimal</code>，看曲线却已经飞了。</p>
+<p>两种失败在日志上可以区分。停在半路时，控制量会衰减到接近零、误差保持常量、<span class="math inline">J^{*}</span> 逐拍趋近一个非零常数；真正发散时，控制量持续偏小但不为零、误差单调增大、<span class="math inline">J^{*}</span> 也持续上升。前者是“优化目标写错了”，后者是“闭环根本不稳定”。混为一谈会导致完全错误的处置：前者加终端项即可，后者要检查对象是否本身不稳定、时域是否短于必要长度。</p>
+<p>因此“每拍有解”只是必要条件。要保证闭环稳定，必须给优化问题补上“时域之外怎么办”的信息。</p>
+<p>用价值函数做 Lyapunov 函数是标准路线，但它成立的前提是 <span class="math inline">J^{*}_k</span> 单调。窗口每拍右移，被优化的目标函数其实在变——第 <span class="math inline">k</span> 拍与第 <span class="math inline">k+1</span> 拍对的不是同一个和式，无法逐项比较，单调性就断了。补上终端项之后，“补出来的序列”把两个和式接上，单调性才重新成立。<strong>终端代价不是调优选项，而是稳定性证明的支点</strong>：删掉它，证明的第一步就塌了。</p>
+<h3 id="终端代价与终端集">58.6.2 终端代价与终端集</h3>
+<p>补信息有三种做法，强度依次减弱：</p>
+<ul>
+<li><strong>终端等式约束</strong>：强制 <span class="math inline">\boldsymbol{x}_{N_p}=\boldsymbol{x}_{\mathrm{ref}}</span>。最强，但可行域最小，稍有扰动就不可行。</li>
+<li><strong>终端代价</strong>：不约束终点的位置，只按“从终点继续走下去还要付多少”给它记一笔账。</li>
+<li><strong>终端集</strong>：只要求 <span class="math inline">\boldsymbol{x}_{N_p}</span> 落进一个受控不变集 <span class="math inline">\Omega</span>，是前两者的折中。</li>
+</ul>
+<p>工程上最常用第二种，因为这笔账可以离线算清。取 <span class="math inline">\boldsymbol{P}</span> 为离散代数 Riccati 方程的解：</p>
+<p><span class="math display">
+\boldsymbol{P}=\boldsymbol{Q}+\boldsymbol{A}^{\mathrm{T}}\boldsymbol{P}\boldsymbol{A}
+-\boldsymbol{A}^{\mathrm{T}}\boldsymbol{P}\boldsymbol{B}
+\left(\boldsymbol{R}+\boldsymbol{B}^{\mathrm{T}}\boldsymbol{P}\boldsymbol{B}\right)^{-1}
+\boldsymbol{B}^{\mathrm{T}}\boldsymbol{P}\boldsymbol{A}
+\tag{58-21}
+</span></p>
+<p>它满足</p>
+<p><span class="math display">
+\boldsymbol{x}_{N_p}^{\mathrm{T}}\boldsymbol{P}\boldsymbol{x}_{N_p}
+=\min_{u_{N_p},u_{N_p+1},\dots}\ \sum_{k=N_p}^{\infty}
+\left(\boldsymbol{x}_k^{\mathrm{T}}\boldsymbol{Q}\boldsymbol{x}_k+u_k^{\mathrm{T}}\boldsymbol{R}u_k\right)
+\tag{58-22}
+</span></p>
+<p>也就是说，终端代价恰好等于“从这里开始用 LQR 走到无穷远”的总代价。把它加进有限时域目标，等于把 <span class="math inline">N_p</span> 之后那一段截断误差一次性补上。这正是表 58-4 中 <span class="math inline">N_p=2</span> 也能落到 1.000 的原因。</p>
+<p>有了终端代价，稳定性可以三步证完：</p>
+<ol type="1">
+<li><strong>递归可行性</strong>：若第 <span class="math inline">k</span> 拍的问题可行，取其最优序列，丢掉第一个元素，末尾补上 LQR 律。LQR 律把终端集映回自身，补出来的序列仍满足全部约束，故第 <span class="math inline">k+1</span> 拍一定可行。</li>
+<li><strong>代价单调</strong>：第 <span class="math inline">k+1</span> 拍的最优值不会超过这条“补出来的”序列的代价，而后者比第 <span class="math inline">k</span> 拍的最优值少了一项单步代价：</li>
+</ol>
+<p><span class="math display">
+J^{*}_{k+1}\le J^{*}_{k}
+-\left(\boldsymbol{x}_k^{\mathrm{T}}\boldsymbol{Q}\boldsymbol{x}_k+u_k^{\mathrm{T}}\boldsymbol{R}u_k\right)
+\tag{58-23}
+</span></p>
+<ol start="3" type="1">
+<li><strong>收敛</strong>：<span class="math inline">J^{*}_{k}</span> 正定、单调下降且有下界，故收敛；配合能观性可得 <span class="math inline">\boldsymbol{x}_k\to\boldsymbol{0}</span>。</li>
+</ol>
+<p>三步里最要紧的是第 1 步：终端集必须在 LQR 律下不变，且整体落在约束集内部。若终端集压到了输入限幅的边界，“补出来的序列”就可能违约，递归可行性断裂，证明失效。这一点在实现时最常被忽略——<span class="math inline">\boldsymbol{P}</span> 是从无约束 LQR 算来的，它默认“终端附近不饱和”。</p>
+<p>终端集的具体做法：取 <span class="math inline">\Omega_\alpha=\{\boldsymbol{x}:\boldsymbol{x}^{\mathrm{T}}\boldsymbol{P}\boldsymbol{x}\le\alpha\}</span>，选最大的 <span class="math inline">\alpha</span>，使 <span class="math inline">\Omega_\alpha</span> 内任意状态在 LQR 律下的控制量与速率都不越界。<span class="math inline">\alpha</span> 可以在边界上采样求得，也可以解一个小优化。它一旦定下，就应纳入可行性监视：若某拍预测末端落在 <span class="math inline">\Omega_\alpha</span> 之外，说明剩余时域不足以安全收尾，应提前减速或报警。</p>
+<p>工程上很多人只用终端代价、不设终端集，等价于取 <span class="math inline">\alpha=\infty</span>。约束宽松时这个近似成立；约束经常激活时（例如本章 <span class="math inline">u_{\max}=1.0</span> 经常贴边），就必须校验，否则稳定性证明里的递归可行性只是一纸空文。</p>
+<p>把三步证明摊开，可以看到它其实依赖四个前提，缺一个就断链：</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">前提</th>
+<th style="text-align: left;">数学要求</th>
+<th style="text-align: left;">违反后的症状</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">初始可行</td>
+<td style="text-align: left;">第 0 拍问题可行</td>
+<td style="text-align: left;">第一拍就 <code>infeasible</code>，控制器无法启动</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">终端集不变</td>
+<td style="text-align: left;">LQR 律把 <span class="math inline">\Omega_\alpha</span> 映回自身</td>
+<td style="text-align: left;">补出来的序列越界，第二拍不可行</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">终端集在约束内</td>
+<td style="text-align: left;"><span class="math inline">\Omega_\alpha</span> 上 <span class="math inline">u</span> 与 <span class="math inline">\Delta u</span> 均不越界</td>
+<td style="text-align: left;">证明只在“终端附近不饱和”的假设下成立</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">模型准确</td>
+<td style="text-align: left;">预测模型与实际对象一致</td>
+<td style="text-align: left;">补出来的序列在实际对象上不成立</td>
+</tr>
+</tbody>
+</table>
+<p>第一、二、三条是数学条件，第四条是物理条件。教科书上的稳定性定理默认四条全满足，而工程现场最常破的是第四条——它不在优化问题里，检查求解器状态永远看不出来。</p>
+<p><strong><span class="math inline">\alpha=\infty</span> 到底丢掉了什么。</strong> 不设终端集时，第 1 步“丢掉首元素、末尾补 LQR 律”这个构造依然可以做，但补出来的序列只保证代价有限，不保证约束满足。若终端附近控制量已经贴住限幅，补上的 LQR 律会要求更大的控制量，序列违约，递归可行性断裂。此时现象往往不是立刻发散，而是“约束边缘反复横跳”：某拍可行、下一拍不可行、再下一拍因为状态被拉回又可行。日志里表现为 <code>infeasible</code> 偶发，曲线表现为小幅抖动。这类问题最难查，因为它不像持续不可行那样显眼。</p>
+<p>一个低成本的校验办法：在标称轨迹上记录每拍预测末端的 <span class="math inline">\boldsymbol{x}_{N_p}^{\mathrm{T}}\boldsymbol{P}\boldsymbol{x}_{N_p}</span>，画出它随时间的曲线。若这条曲线在接近目标时单调下降且始终很小，说明终端项在工作；若它在目标附近反而抬起，说明优化器正把状态往终端集外推，<span class="math inline">\alpha=\infty</span> 的近似已经失效。这个量在代码里只需一行，却比盯着位置曲线更早暴露问题。</p>
+<p><strong>非线性与时变对象。</strong> 上面的证明建立在“线性、时不变”两个假设上。对象非线性时，<span class="math inline">\boldsymbol{x}_{k+1}=\boldsymbol{A}\boldsymbol{x}_k+\boldsymbol{B}u_k</span> 只是局部近似，补出来的序列在真实对象上不一定可行，第一步就断。工程上有三条应对：在工作点附近线性化并限制状态偏离（增益调度 MPC）；用非线性模型做预测（NMPC，每步解非凸问题，可行性与求解时间都更难保证）；或者用 tube MPC——把不确定性显式写成有界扰动，在线只优化标称轨迹，再用一个辅助反馈把实际状态约束在标称轨迹周围的“管子”里。</p>
+<p>tube MPC 的思路值得记住，因为它把“证明”和“鲁棒”两件事分开了：标称问题负责性能，辅助反馈负责把实际状态拉回管子。代价是管子半径必须离线算好，且要保守——管子越粗，可行域越小。对本章这种确定性仿真，tube 没有必要；但对存在执行器死区、摩擦突变或负载变化的真实伺服，它是从“能跑”到“敢投运”的关键一步。</p>
+<p>最后要强调：稳定性证明回答的是“会不会发散”，不回答“多快、多准”。后者由约束与权重决定，是下一节的内容。把两件事混在一起谈，就会出现“证了稳定所以性能应该好”的错误期待。</p>
+<h3 id="短时域的实测代价">58.6.3 短时域的实测代价</h3>
+<p>把上述结论落到本章对象上。图 58-6 是 <span class="math inline">N_p=3</span> 的相平面轨迹。</p>
+<figure>
+<img src="figs/ch058/fig_058_06_phase.svg" alt="图 58-6　短时域相平面：无终端代价停在 0.865，有终端代价到达目标" /><figcaption aria-hidden="true">图 58-6　短时域相平面：无终端代价停在 0.865，有终端代价到达目标</figcaption>
+</figure>
+<p>两条轨迹都从原点出发，目标标在 <span class="math inline">(1,0)</span> 处。无终端代价的曲线在速度降到零时位置只有 0.865，之后不再移动——它已经“收敛”了，只是收敛到了错误的地方。带终端代价的曲线则一路推进到目标。</p>
+<p>读相平面图时注意两点。第一，无终端代价的轨迹并不是发散，它收敛到了一个错误的平衡点：速度为零、位置 0.865，此时再多走一步的收益恰好抵不上控制代价，优化器没有动力继续。第二，带终端代价的轨迹在接近目标时速度曲线更陡——终端项告诉它“到了之后还要付代价”，所以愿意在末端多花一点推力。两点合起来说明：短时域失败的本质不是“算不准”，而是<strong>目标函数写错了</strong>，把“到终点就结束”错当成了“任务完成”。</p>
+<p>对照表 58-4，<span class="math inline">N_p=3</span> 时两者差别是：IAE 5.722 对 1.471，调节时间 11.3 s 对 2.8 s。付出的代价几乎为零：终端项只是一个二次型，离线算一次 <span class="math inline">\boldsymbol{P}</span>，在线求解规模不变。实测单步耗时在两种设置下都是 1.07 ms，差异落在测量噪声里。</p>
+<p>因此工程上的默认配置应当是“短时域 + 终端代价”，而不是“长时域 + 无终端项”。前者把计算量花在刀刃上；后者要靠 <span class="math inline">N_p\ge5</span> 才自然收敛，而时域越长，最坏情况下的求解时间越高（§58.10）。</p>
+<p>现场识别“停在半路”有一个比看位置曲线更快的办法：同时画出速度。正常收敛时，速度会在到达目标附近穿过零并小幅反向；停在半路时，速度单调衰减到零后就再不动了，控制量随之缓慢衰减到接近零（本章实测末值为 0.02），而不是维持一个足以继续推进的力——优化器认为“再动不划算”，于是主动放弃。速度曲线出现这种“耗尽式”收敛，基本可以确诊为终端项缺失或时域过短，而不是权重问题。两种原因的区分也简单：加终端项后若立刻到位，是终端项的问题；仍不到位，才是时域太短。</p>
+<h3 id="模型失配下还剩多少余量">58.6.4 模型失配下还剩多少余量</h3>
+<p>真实对象永远与预测模型有差别。图 58-7 给出四组工况：标称、时间常数偏大 30%、纯延迟 5 步（0.5 s）、增益偏低 30% 再叠加 2 步延迟。</p>
+<figure>
+<img src="figs/ch058/fig_058_07_mismatch.svg" alt="图 58-7　模型失配下的跟踪：纯延迟最致命" /><figcaption aria-hidden="true">图 58-7　模型失配下的跟踪：纯延迟最致命</figcaption>
+</figure>
+<p>四组工况的指标列在表 58-5。所有工况使用同一控制器（<span class="math inline">N_p=20</span>、<span class="math inline">N_c=5</span>、终端代价齐全），只改被控对象的参数。</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">工况</th>
+<th style="text-align: right;">IAE</th>
+<th style="text-align: right;">超调量 (%)</th>
+<th style="text-align: right;">调节时间 (s)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">标称</td>
+<td style="text-align: right;">1.458</td>
+<td style="text-align: right;">1.35</td>
+<td style="text-align: right;">2.700</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">时间常数 +30%</td>
+<td style="text-align: right;">1.606</td>
+<td style="text-align: right;">4.14</td>
+<td style="text-align: right;">4.400</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">纯延迟 5 步</td>
+<td style="text-align: right;">2.575</td>
+<td style="text-align: right;">21.36</td>
+<td style="text-align: right;">13.600</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">增益 −30% + 2 步延迟</td>
+<td style="text-align: right;">1.915</td>
+<td style="text-align: right;">3.75</td>
+<td style="text-align: right;">4.500</td>
+</tr>
+</tbody>
+</table>
+<p>三条读数：</p>
+<ul>
+<li><strong>参数偏差可以容忍</strong>。时间常数偏大 30%，对象比模型慢，预测偏乐观，实际响应拖长，调节时间从 2.7 s 增到 4.4 s，但没有失稳。滚动反馈每拍都用实测状态重算，偏差被持续纠正，只是纠正得慢。</li>
+<li><strong>未建模延迟最危险</strong>。5 步延迟相当于 0.5 s，占闭环上升时间（1.6 s）的三成。模型里没有这段延迟，优化器拿到的是已经过时的状态，等于一直按旧情报刹车，超调 21%、调节时间 13.6 s。延迟还会整体后移“预测—执行”的相位关系，吃掉稳定裕度，再大一点就会振荡。</li>
+<li><strong>增益偏低反而温和</strong>。增益 −30% 意味着实际推力只有模型的七成，等效于降低回路增益，稳定裕度变大；叠加的延迟只有 0.2 s，尚在可承受范围，所以 IAE 1.915 好于纯延迟工况。</li>
+</ul>
+<p>结论很明确：<strong>上线前必须先测延迟，并把延迟显式写进预测模型</strong>，不能指望反馈去吸收它。做法是状态增广，把最近 <span class="math inline">d</span> 拍的控制量纳入状态：</p>
+<p><span class="math display">
+\boldsymbol{x}^{a}_{k+1}=
+\begin{bmatrix}\boldsymbol{A} &amp; \boldsymbol{B}_{d}\\
+\boldsymbol{0} &amp; \boldsymbol{S}\end{bmatrix}\boldsymbol{x}^{a}_k
++\begin{bmatrix}\boldsymbol{0}\\ \boldsymbol{e}_1\end{bmatrix}u_k
+\tag{58-24}
+</span></p>
+<p>其中 <span class="math inline">\boldsymbol{S}</span> 是移位寄存器，<span class="math inline">\boldsymbol{B}_{d}=[\boldsymbol{0},\dots,\boldsymbol{0},\boldsymbol{B}]</span>，<span class="math inline">\boldsymbol{e}_1=[1,0,\dots,0]^{\mathrm{T}}</span>。这样第 <span class="math inline">k</span> 拍优化时“看到”的仍是 <span class="math inline">d</span> 拍之前的控制效果，与实际执行一致。代价是状态维数增加 <span class="math inline">d</span> 倍，<span class="math inline">N_p</span> 不变时 <span class="math inline">\boldsymbol{\Gamma}</span> 的规模也随之上升，需要在延迟精度与计算量之间取平衡。</p>
+<p>经验门槛：纯延迟超过闭环上升时间的 20%，就必须显式建模；超过 50%，普通 MPC 很难把超调压住。本章 5 步延迟是 0.5 s，占上升时间 1.6 s 的 31%，正落在“必须建模”的区间——这也解释了为什么这一组的指标会突然恶化，而 ±30% 的参数偏差只是温和变差。</p>
+<p>若不便增广状态，还有两条退路：用 Smith 预估器把延迟移出回路，或在时间戳上做预测对齐（测量值带上采样时刻，预测时按实际时刻推演）。前者要求模型准确，后者要求时钟同步；两者都不如显式增广稳妥，但在改造老设备时常常更现实。</p>
+<p>延迟怎么测，也有讲究。最直接的办法是给一个短脉冲，记录“指令下发时刻”到“输出开始变化时刻”的差值；但输出变化往往有死区与噪声，起点难判。更稳的做法是互相关：把输入序列与输出序列做互相关，峰值位置即延迟的估计，分辨率受采样周期限制。若延迟小于一个采样周期，两种方法都测不准，此时应按最坏情况取一整拍，宁可保守。<strong>延迟测不准的代价是不对称的</strong>：估小了，闭环超调；估大了，只是保守一点。工程上永远向上取整。</p>
+<p>失配实验的方法论也值得记一笔：一次只改一个参数，否则无法归因。本章第四组刻意叠加两项，用来检验“小误差叠加”是否比“大误差单项”更糟——结果是 1.915 对 2.575，说明延迟的主导性远大于增益偏差。</p>
+<h3 id="性能上限由约束决定">58.6.5 性能上限由约束决定</h3>
+<p>最后回到性能。表 58-2 已经显示：约束一收紧，上升时间就从 1.339 s 变成 2.245 s。这不是权重造成的——把 <span class="math inline">q_y</span> 加倍、<span class="math inline">r_u</span> 减半，曲线几乎不动，因为控制量已经贴在限幅上，再大的权重也只能让它贴着。</p>
+<p>对本章对象，制动力给定时，最小制动距离与最小制动时间有解析下界。速度方程 <span class="math inline">\dot v=-v+u</span>，取 <span class="math inline">u=-u_{\max}</span> 得 <span class="math inline">v(t)=(v_0+u_{\max})e^{-t}-u_{\max}</span>，于是</p>
+<p><span class="math display">
+t_{\min}=\ln\!\left(1+\frac{v_0}{u_{\max}}\right),\qquad
+s_{\min}=v_0-u_{\max}t_{\min}
+\tag{58-25}
+</span></p>
+<p>取 <span class="math inline">v_0=2</span> m/s、<span class="math inline">u_{\max}=0.5</span>，得 <span class="math inline">t_{\min}=\ln 5\approx1.61</span> s、<span class="math inline">s_{\min}\approx1.195</span> m——与 §58.1.1 的推演一致。</p>
+<p>这里有一个容易套错公式的地方。若对象是纯双积分器（输入直接等于加速度），同样 <span class="math inline">v_0=2</span>、<span class="math inline">a_{\max}=0.5</span> 会得到 <span class="math inline">s_{\min}=v_0^2/(2a_{\max})=4</span> m；本章对象的一阶速度滞后在高速度段提供了额外减速（<span class="math inline">v=2</span> 时总减速度为 2.5 m/s<span class="math inline">^2</span>），实际下界只有 1.195 m。<strong>制动距离必须按对象算</strong>，套用双积分公式会把可行性判断放大四倍，进而把本来只差 0.2 m 的工况误判成“完全不可达”。</p>
+<p>§58.1 的场景把安全行程设成 1 m，比 1.195 m 少约 0.2 m，因此物理上停不住——MPC 也不会变魔术。它能做的是尽早识别“目标不可达”，并把冲突以可解释的方式暴露出来（软约束、优先级、报警），而不是像 PID 那样一路顶到限幅、最后撞上去。本章软约束实测峰值 1.272 m，比理论下界多出的 0.077 m 正是速率限幅的代价：反推力需要 5 拍才能拉满，这 5 拍内减速能力不足。</p>
+<p>从可达集的角度看，约束收紧等价于把“从当前状态出发能到达的集合”缩小。推力越小、行程越短，可达集越窄，能实现的调节时间下界越高。这解释了为什么约束紧时加权重没有用：权重只能在可达集内部挑点，不能把集合变大。工程上的性能三角是推力（功率）、行程（时间）、带宽，三者不可能同时最优；MPC 的作用是在给定两边的前提下，把第三边用到极限。</p>
+<p>所以评价一个 MPC 控制器，正确的顺序是：先看约束是否合理、是否被激活，再看终端代价是否配上，最后才看权重。顺序反了，就会在权重上反复试错，却始终碰不到问题的实质。</p>
+<h2 id="参数意义与作用">58.7 参数意义与作用</h2>
+<p>把式 (58-7) 摊开看，可调的东西只有七个：两个时域 <span class="math inline">N_p</span>、<span class="math inline">N_c</span>，三个权重 <span class="math inline">q_y</span>、<span class="math inline">q_v</span>、<span class="math inline">r_u</span>，一个终端矩阵 <span class="math inline">\boldsymbol{P}</span>，再加上约束边界。它们不是平行关系：约束决定“能不能做到”，时域决定“看多远”，权重决定“在能做到的范围内偏向哪一头”，<span class="math inline">\boldsymbol{P}</span> 则是一次性的买断价。</p>
+<p>这七个参数可以分两层：<strong>结构层</strong>（<span class="math inline">N_p</span>、<span class="math inline">N_c</span>、<span class="math inline">\boldsymbol{P}</span> 与约束边界）决定问题的形状，<strong>权重层</strong>（<span class="math inline">q_y</span>、<span class="math inline">q_v</span>、<span class="math inline">r_u</span>）决定形状内部的偏好。调参应先定结构、再调权重；结构错了，权重怎么调都补不回来。现场把大量时间花在权重上，往往是因为结构层没定对。</p>
+<h3 id="两个时域看多远能拐几次弯">58.7.1 两个时域：看多远、能拐几次弯</h3>
+<p><span class="math inline">N_p</span> 的物理含义是“往前看多久”，单位是拍，换成秒是 <span class="math inline">N_pT_s</span>。它有下限也有上限：</p>
+<ul>
+<li><strong>太短会短视</strong>。表 58-4 里 <span class="math inline">N_p=2</span> 且无终端代价时，优化器只看 0.2 s，看不到“再走一步就能到位”，于是停在 0.395 m。</li>
+<li><strong>太长会引入误差</strong>。模型在远处的预测必然越来越不准（非线性、延迟、扰动都在累积），把 3 s 之后的轨迹也纳入优化，等于让不准的信息参与决策。</li>
+</ul>
+<p>经验取值是覆盖闭环主要动态的 1～3 倍上升时间。本章 <span class="math inline">T_s=0.1</span> s、<span class="math inline">N_p=20</span> 对应 2 s，约为上升时间 1.6 s 的 1.2 倍。若对象时间常数很大而采样很快，<span class="math inline">N_p</span> 会到几百，此时必须靠终端代价把“看不过来”的部分折算进来。</p>
+<p><span class="math inline">N_c</span> 是控制时域，靠移动阻塞实现：只优化前 <span class="math inline">N_c</span> 拍，之后保持最后一个值不变。它决定了“未来允许拐几次弯”。<span class="math inline">N_c=1</span> 时整段预测共用一个控制量，控制器退化成“选一个力度走到底”，接近纯比例；<span class="math inline">N_c=N_p</span> 时每拍都可独立调整，自由度最大。表 58-3 的实测已给出结论：<span class="math inline">N_c</span> 从 2 到 5 收益明显，5 以上几乎不变，取 <span class="math inline">\lceil N_p/4\rceil</span> 即可。</p>
+<p>两个时域还有一条硬关系：<span class="math inline">N_c\le N_p</span>。若 <span class="math inline">N_c&gt;N_p</span>，多出来的决策变量对预测没有贡献，只会让 <span class="math inline">\boldsymbol{H}</span> 近似奇异。实现时应显式截断，不要指望求解器自己处理。</p>
+<p>另一条经验是 <span class="math inline">N_pT_s</span> 必须覆盖纯延迟。若对象有 5 步延迟而 <span class="math inline">N_p=3</span>，优化器根本看不到延迟后的效果，等于把延迟当成不存在。这也是 §58.6.4 的延迟工况必须先增广状态、再谈时域的原因：<strong>时域只能“看”，看不到的东西还得靠模型“记住”</strong>。</p>
+<h3 id="输出权重-q_y追得多紧">58.7.2 输出权重 <span class="math inline">q_y</span>：追得多紧</h3>
+<p><span class="math inline">q_y</span> 直接决定跟踪误差在代价里的分量。图 58-8 与表 58-6 是 <span class="math inline">q_y</span> 取 1、10、100 的实测。</p>
+<figure>
+<img src="figs/ch058/fig_058_08_weights.svg" alt="图 58-8　输出权重 qy 对位置响应与控制量的影响" /><figcaption aria-hidden="true">图 58-8　输出权重 qy 对位置响应与控制量的影响</figcaption>
+</figure>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: right;"><span class="math inline">q_y</span></th>
+<th style="text-align: right;">IAE</th>
+<th style="text-align: right;">超调量 (%)</th>
+<th style="text-align: right;">上升时间 (s)</th>
+<th style="text-align: right;">调节时间 (s)</th>
+<th style="text-align: right;">峰值控制量</th>
+<th style="text-align: right;">控制量总变差</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">2.491</td>
+<td style="text-align: right;">0.00</td>
+<td style="text-align: right;">3.96</td>
+<td style="text-align: right;">7.00</td>
+<td style="text-align: right;">0.661</td>
+<td style="text-align: right;">1.07</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">10</td>
+<td style="text-align: right;">1.458</td>
+<td style="text-align: right;">1.35</td>
+<td style="text-align: right;">1.60</td>
+<td style="text-align: right;">2.70</td>
+<td style="text-align: right;">1.000</td>
+<td style="text-align: right;">2.09</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">100</td>
+<td style="text-align: right;">1.394</td>
+<td style="text-align: right;">0.72</td>
+<td style="text-align: right;">1.41</td>
+<td style="text-align: right;">2.40</td>
+<td style="text-align: right;">1.000</td>
+<td style="text-align: right;">2.72</td>
+</tr>
+</tbody>
+</table>
+<p><span class="math inline">q_y</span> 从 1 加到 10，上升时间缩短 60%，这是最划算的一档；从 10 加到 100，上升时间只再降 12%，控制量总变差却增加 30%。原因是推力已经顶到限幅 1.0，再加大权重也只能贴着边界走（§58.6.5）。</p>
+<p>所以 <span class="math inline">q_y</span> 的调法不是“越大越好”，而是先找到“刚好用满执行器”的那一档，再往回收一点。用满意味着没有余量应对扰动，往回收 20%～30% 通常更稳。</p>
+<p>表 58-6 还有一列值得看：控制量总变差从 2.09 增到 2.72（+30%），而上升时间只改善 12%。总变差直接对应执行器的往复次数与发热，是寿命的代理指标。可以用边际收益来判断：每提升 1% 的响应要付出多少执行器负担，超过 2:1 就不划算。本章 <span class="math inline">q_y</span> 从 10 到 100 的边际比约为 2.5:1，所以 10 是更合理的默认值。</p>
+<p>“刚好用满执行器”这一档可以用二分法找，不必凭感觉。先取一个明显偏小的 <span class="math inline">q_y</span>，记录峰值控制量；再取一个明显偏大的，观察峰值是否贴住限幅。确认跨越之后，在区间内二分五六次，就能把“峰值刚好达到 <span class="math inline">0.9u_{\max}</span>”的权重定位到两位有效数字。整个过程是几次自动仿真，比在界面上拖滑块可靠得多，而且结果可复现、可写进配置。</p>
+<p>要注意这个边界随工况变化。同样的 <span class="math inline">q_y</span>，小幅阶跃时峰值只有限幅的一半，大幅阶跃时早已贴边。所以“用满”应按最恶劣的标称工况来定，而不是按最常见的工况；否则一遇到大指令就进入饱和，边际收益骤降，现场就会觉得“参数换了但没效果”。</p>
+<h3 id="速度权重-q_v加多少阻尼">58.7.3 速度权重 <span class="math inline">q_v</span>：加多少阻尼</h3>
+<p><span class="math inline">q_v</span> 惩罚的是预测轨迹里的速度，作用相当于 PD 里的微分项：速度大就提前收力，因此抑制超调。但它和微分项一样有代价——压得太狠，系统会“拖着走”，响应变慢，而且对速度测量的噪声更敏感。</p>
+<p><span class="math inline">q_v</span> 与 <span class="math inline">q_y</span> 的比例决定阻尼强弱。对本章这种“位置—速度”结构，<span class="math inline">q_v/q_y</span> 取 <span class="math inline">1/\omega_n^{2}</span> 量级（<span class="math inline">\omega_n</span> 为期望闭环自然频率）是合理起点：<span class="math inline">\omega_n=1</span> rad/s 时约取 1，与脚本默认值一致。若超调偏大就加大，若响应发木就减小。</p>
+<p><span class="math inline">q_v</span> 对噪声敏感，是因为它乘在速度上，而速度通常由差分得到，噪声被 <span class="math inline">1/T_s</span> 放大。若现场速度信号毛刺明显，应先加低通滤波或改用观测器，再谈 <span class="math inline">q_v</span>；否则调大 <span class="math inline">q_v</span> 等于把噪声直接搬进控制量，表现为阀或电机的“沙沙”声。<strong>先治信号，再调权重</strong>，顺序反了会把滤波器的问题记到控制器头上。</p>
+<h3 id="控制权重-r_u只有比值有意义">58.7.4 控制权重 <span class="math inline">r_u</span>：只有比值有意义</h3>
+<p>这是最容易被误解的一个。把整个代价乘以正数 <span class="math inline">\alpha</span>，最优解不变：</p>
+<p><span class="math display">
+J\left(\alpha q_y,\alpha q_v,\alpha r_u\right)=\alpha J\left(q_y,q_v,r_u\right)
+\tag{58-26}
+</span></p>
+<p>所以三个权重里只有两个独立自由度，真正起作用的是比值 <span class="math inline">q_y/r_u</span> 与 <span class="math inline">q_v/r_u</span>。工程上常把 <span class="math inline">r_u</span> 固定为 1，只调另外两个；或者反过来固定 <span class="math inline">q_y=1</span>，用 <span class="math inline">r_u</span> 当“省力旋钮”。两种做法等价，混着调则容易在原地打转。</p>
+<p><span class="math inline">r_u</span> 增大意味着“用力贵”，控制器会更柔和：控制量总变差下降、执行器磨损减少，代价是响应变慢。它和输入速率约束 <span class="math inline">\Delta u_{\max}</span> 的作用有重叠，区别在于 <span class="math inline">r_u</span> 是“软”的偏好，<span class="math inline">\Delta u_{\max}</span> 是“硬”的边界。若已经设了严格的速率约束，<span class="math inline">r_u</span> 的影响会被削弱。</p>
+<p>纪律比公式重要：一次只动一个旋钮。既然只有比值有意义，同时改两个权重等于既改了比值又改了尺度，事后无法归因。建议把三个权重同除以 <span class="math inline">r_u</span>，固定 <span class="math inline">r_u=1</span> 后再调另外两个——这也是本章脚本的做法。</p>
+<h3 id="终端代价-boldsymbolp不是独立参数">58.7.5 终端代价 <span class="math inline">\boldsymbol{P}</span>：不是独立参数</h3>
+<p><span class="math inline">\boldsymbol{P}</span> 由 <span class="math inline">q_y</span>、<span class="math inline">q_v</span>、<span class="math inline">r_u</span> 通过式 (58-21) 算出，不能单独指定——改了权重，<span class="math inline">\boldsymbol{P}</span> 就跟着变。这带来一个副作用：想让“远处更保守”，只能连阶段代价一起改。</p>
+<p>变通做法是用两组权重：一组偏保守，离线算出 <span class="math inline">\boldsymbol{P}</span>；阶段代价用另一组偏激进的权重。这样终端“刹车”更早，近处仍然跟得紧。代价是稳定性证明里的单调性不再严格成立，只能当作工程近似。</p>
+<p>一个量级检查：<span class="math inline">\boldsymbol{P}</span> 的元素应与 <span class="math inline">\boldsymbol{Q}</span> 同阶或更大。若算出来的 <span class="math inline">\boldsymbol{P}</span> 远小于 <span class="math inline">\boldsymbol{Q}</span>，说明终端项几乎不起作用，短时域下就会重演表 58-4 右栏的“停在半路”。</p>
+<p>还要注意 <span class="math inline">\boldsymbol{P}</span> 与约束的一致性。Riccati 解来自无约束 LQR，若终端附近实际会饱和，<span class="math inline">\boldsymbol{P}</span> 描述的“买断价”就偏低，终端项不足以拉住状态。校验方法：在目标附近取几个典型状态，用 LQR 律反算控制量，看是否超限；超限说明终端假设不成立，应改用终端集，或工程上加大 <span class="math inline">\boldsymbol{P}</span> 作为近似。本章调试时遇到的“稳态停在 1.135 m”，就是终端项写错位置造成的——它作用在了绝对状态而非误差状态上，与 <span class="math inline">\boldsymbol{P}</span> 本身的数值无关。</p>
+<h3 id="参数速查">58.7.6 参数速查</h3>
+<p>表 58-7 把六个参数放在一起，供现场对照。</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">参数</th>
+<th style="text-align: left;">物理含义</th>
+<th style="text-align: left;">增大后</th>
+<th style="text-align: left;">本章取值</th>
+<th style="text-align: left;">主要副作用</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><span class="math inline">N_p</span></td>
+<td style="text-align: left;">往前看多少拍</td>
+<td style="text-align: left;">看得更远、计算更贵</td>
+<td style="text-align: left;">20（2 s）</td>
+<td style="text-align: left;">远处模型误差进入决策</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><span class="math inline">N_c</span></td>
+<td style="text-align: left;">未来能拐几次弯</td>
+<td style="text-align: left;">自由度更大、计算略增</td>
+<td style="text-align: left;">5</td>
+<td style="text-align: left;">超过 <span class="math inline">N_p/4</span> 基本无收益</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><span class="math inline">q_y</span></td>
+<td style="text-align: left;">跟踪误差的份量</td>
+<td style="text-align: left;">追得更紧</td>
+<td style="text-align: left;">10</td>
+<td style="text-align: left;">饱和后收益递减、控制量抖动</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><span class="math inline">q_v</span></td>
+<td style="text-align: left;">速度的份量</td>
+<td style="text-align: left;">阻尼更大、超调更小</td>
+<td style="text-align: left;">1</td>
+<td style="text-align: left;">响应发木、噪声敏感</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><span class="math inline">r_u</span></td>
+<td style="text-align: left;">用力的价格</td>
+<td style="text-align: left;">动作更柔和</td>
+<td style="text-align: left;">1</td>
+<td style="text-align: left;">响应变慢、静差增大</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><span class="math inline">\boldsymbol{P}</span></td>
+<td style="text-align: left;">终端买断价</td>
+<td style="text-align: left;">短时域也能稳定</td>
+<td style="text-align: left;">Riccati 解</td>
+<td style="text-align: left;">与阶段权重耦合</td>
+</tr>
+</tbody>
+</table>
+<p>现场可以按三组典型配置起步：<strong>快响应</strong>（<span class="math inline">q_y</span> 大、<span class="math inline">r_u</span> 小，接受饱和）、<strong>平滑</strong>（<span class="math inline">r_u</span> 大、速率约束紧）、<strong>保守</strong>（终端权重大、留 20% 推力余量）。先用场景库比较三组，再在选中的一组上微调，比从零试凑快得多。</p>
+<p>三组配置的差别不在“好坏”，而在取舍：快响应适合节拍优先的产线，平滑适合机械寿命敏感的场合，保守适合安全余量要求高的设备。把它们写成配置项而不是临时参数，现场换型时可以直接切换，也便于事后追溯“当时为什么这么设”。</p>
+<p>调参顺序建议与表的行序一致：先定时域，再定 <span class="math inline">q_y</span> 到“刚好用满”，然后用 <span class="math inline">q_v</span> 压超调，最后用 <span class="math inline">r_u</span> 微调柔和度。反过来先调 <span class="math inline">r_u</span>，往往会把“约束不够”误判成“权重不对”。</p>
+<p>表 58-7 还要配一个警告：这六行不是六个独立旋钮。改动任一权重都会让 Riccati 解变化，进而改变终端项；改动 <span class="math inline">N_p</span> 会改变“看多远”，从而改变同一组权重下的饱和时长；收紧 <span class="math inline">\Delta u_{\max}</span> 会让 <span class="math inline">r_u</span> 的效果被掩盖。工程上判断一次改动是否有效，要同时看三样：跟踪指标、控制量总变差、求解状态。只看第一样，很容易把“约束更紧”误读成“权重更优”。</p>
+<p>还有一条总原则值得写在参数表旁边：<strong>任何一次调参都要能回答“为什么是它”</strong>。若答案是“试了试感觉好一点”，说明还没找到真正的瓶颈，只是碰巧落在某个局部。真正有效的改动通常伴随一个可解释的机制——饱和段缩短了、超调来自速度项不足、静差来自模型缺积分。找不到机制时，宁可先回去补测量，也不要继续在参数上做随机搜索。</p>
+<h2 id="调参方法与经验">58.8 调参方法与经验</h2>
+<p>MPC 的调参比 PID 多一层麻烦：参数之间通过约束耦合，单独看某一个参数“该调大还是调小”往往没有答案。可行的做法是把调参拆成有先后顺序的几件事，并且把“约束冲突”当成一等公民来处理，而不是等它出现时手忙脚乱。</p>
+<h3 id="先定约束再谈权重">58.8.1 先定约束，再谈权重</h3>
+<p>顺序错了会白费很多时间。正确的顺序是：</p>
+<ol type="1">
+<li><strong>确认物理边界</strong>：执行器推力、速率、行程、安全余量。这些是硬事实，不因控制器而变。</li>
+<li><strong>定采样周期与 <span class="math inline">N_p</span></strong>：由闭环带宽与计算预算共同决定（§58.4、§58.10）。</li>
+<li><strong>加终端代价</strong>：先用默认权重算一次 Riccati 解，把“停在半路”的风险消掉。</li>
+<li><strong>调 <span class="math inline">q_y</span> 到刚好用满执行器</strong>，再用 <span class="math inline">q_v</span> 压超调。</li>
+<li><strong>最后用 <span class="math inline">r_u</span> 或 <span class="math inline">\Delta u_{\max}</span> 调柔和度</strong>。</li>
+</ol>
+<p>反过来先调权重，常见的结局是：为了追上目标把 <span class="math inline">q_y</span> 越加越大，控制量长期贴限幅，超调压不住，再回头怀疑模型——其实问题从第一步就没定义清。</p>
+<p>第五步也常被跳过。“柔和度”听起来是审美问题，实际是寿命与噪声问题：<span class="math inline">r_u</span> 或 <span class="math inline">\Delta u_{\max}</span> 定得太松，控制量会在目标附近小幅抖动，长期看这是执行器的主要磨损来源。定得太紧，又会把跟踪误差拖大。它应该和机械维护周期一起定，而不是最后随手填一个数。</p>
+<p>约束边界本身也需要“调”，只是它的调整依据是测量而不是优化。上线后统计每条约束的激活率：长期 100% 激活，说明执行器选小了，或者目标设得太激进，此时控制器能做的只是“贴着上限跑”，再调权重没有意义；从不激活且离边界很远，说明这条约束可以收紧，用安全余量换性能，或干脆删掉以减小问题规模。合理的状态是“关键约束在恶劣工况下偶尔激活，正常工况下留 10%～20% 余量”。</p>
+<p>这条统计也是判断“性能是否还有提升空间”的最直接依据。若约束从未激活，性能瓶颈在权重或时域；若约束长期激活，瓶颈在物理条件，换算法、调权重都无法突破。把这两种情况分清，能省掉大量无效的调参时间。</p>
+<h3 id="约束冲突硬约束会罢工">58.8.2 约束冲突：硬约束会“罢工”</h3>
+<p>约束冲突是 MPC 最典型的现场故障，而且它的表现很反直觉。图 58-9 是一个刻意构造的例子：初速 2 m/s 冲向 <span class="math inline">y=1</span> m，推力上限 0.5、每拍变化不超过 0.1，输出上限 1.0 m。</p>
+<figure>
+<img src="figs/ch058/fig_058_09_soft.svg" alt="图 58-9　硬约束不可行与软约束回收" /><figcaption aria-hidden="true">图 58-9　硬约束不可行与软约束回收</figcaption>
+</figure>
+<p>按 §58.6.5 的下界，这个初速在 0.5 的推力下最少要 1.195 m 才能停住，1 m 的输出上限从一开始就不可能满足。两种处理的结果是：</p>
+<ul>
+<li><strong>硬约束</strong>：从第 0 步起问题不可行（150 步全部返回 <code>infeasible</code>），控制器输出恒为 0。系统完全不制动，靠对象自身的阻尼滑行，位置一路漂到 2.0 m——<strong>比不管还糟</strong>。</li>
+<li><strong>软约束</strong>：允许越界但记账，峰值冲到 1.272 m，随后回退并稳定在 1.0 m。150 步中有 17 步返回 <code>optimal_inaccurate</code>，集中在越过峰值后的回落段（第 62～83 步），其余为最优。</li>
+</ul>
+<p>“不可行时输出 0”是 MPC 最危险的失效模式。它不报警、不振荡，看上去只是“没反应”，操作员很难判断控制器已经放弃。任何上线的 MPC 都必须显式处理这条路径。</p>
+<p>求解器的失败状态要分清：<code>infeasible</code> 是约束互相矛盾（如本例），<code>unbounded</code> 是目标没有下界（常见于符号写反或漏了二次项），<code>optimal_inaccurate</code> 是近似收敛。三者处置完全不同——第一种要软化或放宽约束，第二种是代码缺陷，第三种多半是量纲或精度设置问题。统一当成“没解出来”，就会错过真正的线索。</p>
+<h3 id="软约束怎么写rho-取多大">58.8.3 软约束怎么写、<span class="math inline">\rho</span> 取多大</h3>
+<p>软约束的做法是给越界量配一个松弛变量，并对它罚钱：</p>
+<p><span class="math display">
+\min\ J+\rho\sum_{k=1}^{N_p}s_k,\qquad
+y_k\le y_{\max}+s_k,\qquad s_k\ge 0
+\tag{58-27}
+</span></p>
+<p><span class="math inline">\rho</span> 的取法有明确依据：它必须大于原硬约束的影子价格。若 <span class="math inline">\rho</span> 太小，“越界”比“用力”便宜，优化器会心安理得地越界；若 <span class="math inline">\rho</span> 太大，问题条件数变差，求解器容易报不准确。</p>
+<p>实用做法是先按 <span class="math inline">\rho=10^{2}</span> 试，观察稳态是否回到约束内；若仍有残余越界，按十倍递增。更好的做法是把 <span class="math inline">\rho</span> 按输出量程归一化：<span class="math inline">\rho=\rho_0/y_{\max}^{2}</span>，这样换量纲不必重调。</p>
+<p><span class="math inline">\rho</span> 到底能改变什么，可以用一组实测回答。表 58-9 把 <span class="math inline">\rho</span> 从 1 扫到 <span class="math inline">10^{5}</span>，其余设置与图 58-9 完全一致。</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: right;"><span class="math inline">\rho</span></th>
+<th style="text-align: right;">峰值 (m)</th>
+<th style="text-align: right;">终值 (m)</th>
+<th style="text-align: right;">控制量总变差</th>
+<th style="text-align: right;">非最优步数</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1.272</td>
+<td style="text-align: right;">1.000</td>
+<td style="text-align: right;">1.01</td>
+<td style="text-align: right;">19</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">10</td>
+<td style="text-align: right;">1.272</td>
+<td style="text-align: right;">1.000</td>
+<td style="text-align: right;">1.01</td>
+<td style="text-align: right;">20</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">100</td>
+<td style="text-align: right;">1.272</td>
+<td style="text-align: right;">1.000</td>
+<td style="text-align: right;">1.01</td>
+<td style="text-align: right;">17</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;"><span class="math inline">10^{3}</span></td>
+<td style="text-align: right;">1.272</td>
+<td style="text-align: right;">1.000</td>
+<td style="text-align: right;">1.01</td>
+<td style="text-align: right;">16</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;"><span class="math inline">10^{4}</span></td>
+<td style="text-align: right;">1.272</td>
+<td style="text-align: right;">1.000</td>
+<td style="text-align: right;">1.01</td>
+<td style="text-align: right;">24</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;"><span class="math inline">10^{5}</span></td>
+<td style="text-align: right;">1.272</td>
+<td style="text-align: right;">1.000</td>
+<td style="text-align: right;">1.03</td>
+<td style="text-align: right;">55</td>
+</tr>
+</tbody>
+</table>
+<p>结果很说明问题：峰值与终值<strong>完全不随 <span class="math inline">\rho</span> 变化</strong>。原因是在这个工况下，越界由动力学强制——初速 2 m/s、推力只有 0.5，无论权重怎么设，都必须滑过 1 m。<span class="math inline">\rho</span> 唯一影响的是数值健康：从 <span class="math inline">10^{4}</span> 到 <span class="math inline">10^{5}</span>，非最优步数从 24 跳到 55，总变差也略微上升，说明条件数开始恶化。</p>
+<p>这给出一个实用的判别法：<strong>如果调 <span class="math inline">\rho</span> 能明显改变越界量，说明约束本来可行，越界是“买来的”，应加大 <span class="math inline">\rho</span>；如果怎么调都不变，说明越界是物理强制的，应改执行器、改流程或改目标，而不是继续调 <span class="math inline">\rho</span>。</strong>把这两种情况混为一谈，是软约束调参最常见的无效劳动。</p>
+<p>松弛变量可以逐拍独立，也可以整段共用一个。两者差别不在峰值，而在“越界怎么分布”：逐拍独立时罚的是各拍越界量之和，优化器倾向于把越界摊到少数几拍；整段共用时罚的是最大越界，多拍同时贴着同一个越界量不再额外收费，越界容易被“摊平”。本章脚本为了演示简洁，用的是单个标量松弛，图 58-9 中越界持续了约 30 拍才收回；若希望越界尽快收敛，应改为逐拍独立，让每一拍的越界都单独付账。</p>
+<p>更精细的做法是<strong>分层软化</strong>：安全相关约束给极高的 <span class="math inline">\rho</span>（近乎硬），工艺约束给中等 <span class="math inline">\rho</span>，舒适性指标给低 <span class="math inline">\rho</span>。冲突时系统会先牺牲舒适性，再牺牲工艺，绝不碰安全。代价是要维护三组松弛变量与权重，代码复杂度上升，但对有安全等级要求的设备值得。它和 §58.6.2 的终端集是两种不同层面的保障：终端集保证“收尾可行”，分层软化保证“冲突时退让有序”。</p>
+<p>软化还有两条边界。第一，<strong>输入幅值约束通常不该软化</strong>：推力越界对应过流或机械过载，软化了等于允许控制器“违规”，只是把问题从算法推给了硬件。真要软化，也应只软速率约束——它对应磨损而非即时损坏。第二，松弛变量要带量纲归一化。位置以米、速度以米每秒计时，同一个 <span class="math inline">\rho</span> 对两者的“罚款力度”完全不同；按各自量程除以 <span class="math inline">y_{\max}</span> 后再罚，才能让“先牺牲谁”由设定决定，而不是由单位决定。</p>
+<p>罚函数的形式也值得选一下。L1（线性罚）的好处是“要么不越界，要么只越必要的那一点”，解更稀疏、物理意义清楚；L2（二次罚）在大越界时罚得更狠，但小越界几乎免费，容易出现“长期微量越界”。本章用 L1，与式 (58-27) 一致。若发现稳态始终差一点点才回到边界内，多半是 L2 的锅，换成 L1 即可。</p>
+<h3 id="症状与处置">58.8.4 症状与处置</h3>
+<p>现场排查可以照表 58-8 走。左列是现象，中列是最常见的原因，右列是第一步该做的事。</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">现象</th>
+<th style="text-align: left;">可能原因</th>
+<th style="text-align: left;">处置</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">缓慢爬行、停在半路</td>
+<td style="text-align: left;">时域太短且无终端代价</td>
+<td style="text-align: left;">加 Riccati 终端项</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">起步即不可行、输出恒 0</td>
+<td style="text-align: left;">初始状态不在可达集</td>
+<td style="text-align: left;">改软约束并报警</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">越界后回不来</td>
+<td style="text-align: left;"><span class="math inline">\rho</span> 偏小或松弛共用</td>
+<td style="text-align: left;">加大 <span class="math inline">\rho</span>、逐拍独立</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">控制量贴限幅抖动</td>
+<td style="text-align: left;">速率约束过紧 + <span class="math inline">q_y</span> 过大</td>
+<td style="text-align: left;">放宽 <span class="math inline">\Delta u_{\max}</span> 或回收 <span class="math inline">q_y</span></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">每拍都报不准确</td>
+<td style="text-align: left;">量纲差异大、<span class="math inline">\boldsymbol{H}</span> 条件数差</td>
+<td style="text-align: left;">状态与控制量归一化</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">稳态有静差</td>
+<td style="text-align: left;">模型无积分、扰动未建模</td>
+<td style="text-align: left;">offset-free 增广（§58.9）</td>
+</tr>
+</tbody>
+</table>
+<p>这张表的价值在于把“调参”变成“诊断”：每条现象都对应一个可验证的假设，而不是“再试试别的权重”。</p>
+<p>还可以补两条常见现象。“目标附近小幅抖动”多为终止精度过松，或 <span class="math inline">\Delta u</span> 约束与 <span class="math inline">r_u</span> 相互冲突——控制量在两个相邻值之间来回跳，幅度不大却持续不断。“指令阶跃后长时间不动”多为 <span class="math inline">N_c</span> 太小或速率约束过紧，优化器“想动但动不了”。两条都属实现层，不必动模型，先查求解精度与速率约束。</p>
+<h3 id="离线回放比在线试快得多">58.8.5 离线回放比在线试快得多</h3>
+<p>调参不要在线做。正确做法是准备一个场景库：阶跃、斜坡、多段指令、负载扰动、参数摄动、初始状态偏离，每个场景录一段真实数据或高保真仿真数据，然后批量回放。</p>
+<p>回放时同时记录三类量：跟踪指标（IAE、超调、调节时间）、执行器负担（总变差、峰值、饱和时长）、求解健康度（非最优步数、单步耗时上分位数）。只看第一类，很容易选出“性能好但执行器很快磨坏”的参数。</p>
+<p>一组参数在场景库上的表现若出现“某个场景特别好、其余都差”，通常说明参数在迎合那一个场景，应直接淘汰。工程上要的是没有短板的一组，而不是平均分最高的一组。</p>
+<p>场景库的最小集合：阶跃（不同幅值）、斜坡、多段指令、负载扰动（输入端与输出端各一）、参数摄动（增益、时间常数、延迟）、初始状态偏离、约束冲突。每个场景录 10～30 s，统一采样率。回放脚本要能一键跑完全部场景并输出对比表——否则没人会坚持用，再好的方法也会退化成“现场试”。</p>
+<p>回放结果要按场景分组看，而不是只看总分。总分掩盖短板：一个参数组可能靠三个简单场景把均分拉高，却在唯一带延迟的场景上超调 40%。工程验收看的恰恰是“最差的那个场景能不能接受”。</p>
+<p>回放数据最好来自真实设备，而不是纯仿真。仿真里没有传感器噪声、没有执行器死区、没有总线抖动，用仿真数据选出的参数往往偏激进。若暂时拿不到实测数据，至少要在仿真里注入这几类非理想因素：给测量叠加上限幅内的白噪声、给控制量加死区与量化、把通信延迟设成随机抖动。这样选出的参数鲁棒性会好得多，代价是仿真结果不再“漂亮”——但这才是现场的样子。</p>
+<p>回放的价值还在于它把“调参”变成了可重复的实验。同一个场景库、同一套指标、同一份脚本，任何人跑都得到同一张表。参数好不好不再依赖某个人的手感，而是看数据。这一点对团队协作的意义，甚至大于对算法本身的意义。</p>
+<h2 id="优化与改进">58.9 优化与改进</h2>
+<p>前八节讲的是“标准 MPC”。它在工程上有三个已知短板：没有积分作用，遇到常值扰动会留静差；每拍都要在线求解，算力紧张时吃紧；线性模型撑不住强非线性对象。本节按这三条讲四类改进路线。</p>
+<h3 id="静差把扰动增广进模型">58.9.1 静差：把扰动增广进模型</h3>
+<p>先看实测。在本章对象的输入端叠加 0.2 的常值扰动（<span class="math inline">t\ge5</span> s），最大偏差 0.0666 m，终值停在 1.0655 m，静差 <span class="math inline">6.55\times10^{-2}</span> m。原因不复杂：代价函数里没有积分项，稳态时优化器认为“已经到位”——按模型预测 <span class="math inline">y=1</span>，实际却差 0.0655。这和第 44 章讲过的 P 控制静差是同一回事。</p>
+<p>常规有两条补救路线。一是在代价里直接加误差积分，等价于给 MPC 装一个 I 项；二是 <strong>offset-free</strong> 结构：把扰动当作状态估计出来，再前馈抵消。后者更受青睐，因为它保留了约束处理能力，也不破坏 §58.6 的稳定性论证结构。</p>
+<p>做法是把常值输入扰动 <span class="math inline">d</span> 增广进状态：</p>
+<p><span class="math display">
+\begin{bmatrix}\boldsymbol{x}_{k+1}\\ d_{k+1}\end{bmatrix}
+=\begin{bmatrix}\boldsymbol{A} &amp; \boldsymbol{B}\\ \boldsymbol{0} &amp; 1\end{bmatrix}
+\begin{bmatrix}\boldsymbol{x}_{k}\\ d_{k}\end{bmatrix}
++\begin{bmatrix}\boldsymbol{B}\\ 0\end{bmatrix}u_k,\qquad
+y_k=\begin{bmatrix}\boldsymbol{C} &amp; 0\end{bmatrix}
+\begin{bmatrix}\boldsymbol{x}_{k}\\ d_{k}\end{bmatrix}
+\tag{58-28}
+</span></p>
+<p>用稳态 Kalman 或 Luenberger 观测器估出 <span class="math inline">\hat{d}</span>，再把控制量改成 <span class="math inline">u=u_{\mathrm{mpc}}-\hat{d}</span>：优化器算的是“需要多少总推力”，减掉扰动提供的部分，剩下的才是执行器该出的力。</p>
+<p>一个实现陷阱：目标点也必须用增广模型重新算稳态。若仍按原模型把目标当成 <span class="math inline">\boldsymbol{x}_{\mathrm{ref}}</span>，扰动估计会把稳态拉偏，静差换个地方又冒出来。offset-free 的失败案例里，一半以上是“目标计算不一致”。</p>
+<p>正确的做法是解一次稳态方程：<span class="math inline">\boldsymbol{x}_{\mathrm{ss}}=\boldsymbol{A}\boldsymbol{x}_{\mathrm{ss}}+\boldsymbol{B}(u_{\mathrm{ss}}+\hat d)</span>、<span class="math inline">\boldsymbol{C}\boldsymbol{x}_{\mathrm{ss}}=r</span>，联立求出 <span class="math inline">(\boldsymbol{x}_{\mathrm{ss}},u_{\mathrm{ss}})</span>，再把终端项与输出目标都换成这对值。它保证“模型意义上的到位”与“实际意义上的到位”是同一个点。</p>
+<p>还有两个前提常被忽略。第一，扰动必须<strong>能观</strong>：若 <span class="math inline">d</span> 只作用于不可测的状态，观测器估不出它，静差依旧。第二，<span class="math inline">\hat d</span> 要限幅。长时间饱和后，观测器本身也会累积误差，出现类似积分饱和的现象；给 <span class="math inline">\hat d</span> 设一个物理上合理的上下界，既防发散，也让故障更容易被发现。</p>
+<p>从机理上看，offset-free 并没有“偷偷加积分”。它做的是把未知常值当成状态，用观测器逐步逼近，再用估计值前馈。积分作用体现在 <span class="math inline">\hat d</span> 的收敛过程里，而不是显式写在代价函数中——这也是它不破坏约束处理与稳定性论证的原因。</p>
+<p>观测器的收敛速度要单独设，不能和 MPC 的时域混为一谈。经验是把扰动观测器的极点放在闭环带宽的 <span class="math inline">1/3</span> 到 <span class="math inline">1/5</span> 处：太快会把噪声当成扰动，<span class="math inline">\hat d</span> 抖动并直接注入控制量；太慢则扰动已经影响了整条轨迹才被纠正，静差消失得很慢。本章的 0.2 阶跃扰动，若观测器带宽与闭环相当，大约 3～4 个闭环时间常数后 <span class="math inline">\hat d</span> 才稳定；这段时间内的偏差是“必须付”的，不能指望调参消掉。</p>
+<p>还要给 <span class="math inline">\hat d</span> 设一个物理上限，并在超限时报警而不是静默截断。常值扰动通常来自负载、摩擦或供压偏差，量级有明确范围；若估计值持续顶在上限，说明模型缺了别的项（例如执行器增益衰减），此时限幅只是掩盖问题。把“<span class="math inline">\hat d</span> 长期饱和”当成一条独立的监控指标，往往比看位置曲线更早发现问题。</p>
+<h3 id="显式-mpc把在线优化搬到离线">58.9.2 显式 MPC：把在线优化搬到离线</h3>
+<p>线性系统、二次代价、多面体约束这三者凑齐时，最优解有解析结构：它是状态的分段仿射函数。</p>
+<p><span class="math display">
+u^{*}(\boldsymbol{x})=\boldsymbol{K}_i\boldsymbol{x}+\boldsymbol{c}_i,
+\qquad \boldsymbol{x}\in\mathcal{R}_i
+\tag{58-29}
+</span></p>
+<p>离线把状态空间切成若干多面体区域 <span class="math inline">\mathcal{R}_i</span>，每区存一对 <span class="math inline">(\boldsymbol{K}_i,\boldsymbol{c}_i)</span>；在线只需定位区域，再做一次矩阵乘法。最坏执行时间因此可预测，适合毫秒甚至微秒级的场合，例如电力电子与电机驱动。</p>
+<p>代价是区域数随状态维数指数增长。两个状态、<span class="math inline">N_p=10</span> 时通常几百到几千个区域；四个状态以上常到十万级，存储和定位都吃不消。所以显式 MPC 的适用范围比宣传中窄得多，它解决的是“算力极小但状态很少”的问题，不是通用加速手段。</p>
+<p>可以粗算一笔存储账：每个区域存一个增益矩阵与一个偏置向量，两个状态、单输入时约 3 个双精度数，即 24 字节；一千个区域约 24 KB，十万个区域约 2.4 MB。存储本身不算大，真正的麻烦在<strong>定位</strong>——每次采样都要判断状态落在哪个多面体里，区域多时这一步的耗时可能超过在线求解一个小规模 QP。</p>
+<p>显式解还有一个隐性代价：它把模型“焊死”在表里。对象参数一变，整张表都要重算；在线 MPC 则每拍用新状态重新优化，对参数变化天然宽容。因此显式 MPC 适合模型稳定、批量生产的产品（电机驱动、电源），不适合需要频繁改造的过程装置。</p>
+<p>区域数量对状态维数的敏感度值得记住。两个状态时通常几百到几千区，三个状态可能上万，四个状态常到十万级——大致每增加一维，区域数乘上一个两位数。原因不难理解：每一组有效约束组合都可能对应一个区域，而组合数随维数组合式增长。所以“显式 MPC 适合低维”不是实现限制，而是组合数学的限制。</p>
+<p>在线定位也有技巧。朴素的逐区域判断是 <span class="math inline">O(n)</span>，十万个区域时不可接受；实际做法是预先构造一棵二叉搜索树或把区域组织成层次结构，把定位降到 <span class="math inline">O(\log n)</span>。即便如此，树的结构必须与区域一起重新生成，模型一变就要整体重建。这套工程复杂度，往往比“在线解一个小 QP”更高——这也是显式 MPC 在实际项目中不如文献中常见的原因。</p>
+<p>折中做法是“显式 + 在线兜底”：正常情况下查表，若状态落在所有区域之外（模型漂移或扰动导致），切换到在线求解并报警。这样既保住了常见的快速路径，又不至于在边界情形下输出无定义。</p>
+<h3 id="快速求解先看清瓶颈在哪">58.9.3 快速求解：先看清瓶颈在哪</h3>
+<p>§58.10 的实测会显示一个反直觉的事实：求解器本身只要 0.04～0.14 ms，而整个 Python 调用约 1 ms。<strong>瓶颈往往不在 QP，而在接口、内存分配与数据搬运。</strong></p>
+<p>三条有效手段：</p>
+<ul>
+<li><strong>代码生成</strong>：把 QP 的数据结构编译成 C（acados、HPIPM 一类），去掉解释器与动态分配的开销。</li>
+<li><strong>固定迭代次数</strong>：不追求每拍最优，只做一次或固定几次迭代（real-time iteration），把“最坏执行时间”从统计量变成常数。</li>
+<li><strong>结构利用</strong>：紧缩型的 <span class="math inline">\boldsymbol{H}</span> 只有 <span class="math inline">N_c\times N_c</span>（本章 <span class="math inline">5\times5</span>），真正随 <span class="math inline">N_p</span> 增长的是约束行数；按行分块直接拼装约束矩阵，避免显式构造 <span class="math inline">\boldsymbol{\Gamma}</span> 再做大矩阵乘，能把每次迭代的常数开销压下来。</li>
+</ul>
+<p>第三条的效果在实测中已经能看出来：<span class="math inline">N_p</span> 从 10 增到 80，求解器耗时只从 0.043 ms 增到 0.135 ms，近似线性而非立方。原因不是 <span class="math inline">\boldsymbol{H}</span> 稀疏（它是稠密的），而是约束行数与迭代中的稀疏矩阵—向量乘都是线性增长，OSQP 作为一阶方法正好吃这一口。若换成需要分解稠密矩阵的内点法，规模上去后耗时会明显更陡。</p>
+<p>固定迭代与提前终止值得单独说。<strong>real-time iteration</strong> 的核心不是“算得快”，而是“算得固定”：每次采样只做一次线性化与一次 QP 迭代，结果直接下发，下一拍在新状态上重来。它放弃每拍最优，换来最坏时间恒定；只要外层反馈足够快，次优偏差会被下一拍纠正。工业上许多高速 MPC 都是这个思路。</p>
+<p>代价是稳定性证明变复杂：单步不完全求解不再保证代价单调，需要额外的收缩或充分下降条件。工程上的通行做法是“限制迭代次数的同时保留可行性”——哪怕只前进一小步，也要保证约束不被破坏。</p>
+<p>还要提醒一句量级：代码生成后在嵌入式上做到几十微秒是常见的公开基准，但那是针对小规模、结构固定的问题；本章的 Python 实现在毫秒量级，主要成本在解释器与内存管理。<strong>不要把 PC 上的 Python 数字直接当成嵌入式性能</strong>，两者通常差一到两个数量级。</p>
+<h3 id="学习增强补模型或补策略">58.9.4 学习增强：补模型，或补策略</h3>
+<p>两条路，风险不同。</p>
+<ul>
+<li><strong>学模型</strong>：用神经网络或 Koopman 算子替代机理模型，扩展到时变、强非线性对象（第 77 章）。风险在外推——训练分布之外的行为没有任何保证，而 MPC 恰恰喜欢把状态推到约束边界附近。</li>
+<li><strong>学策略</strong>：用 MPC 批量生成 <span class="math inline">(\boldsymbol{x},u^{*})</span> 样本，训练网络逼近这个映射，在线只做前向推理。风险在约束违反：网络不知道边界在哪，输出可能越界。</li>
+</ul>
+<p>工程上较稳妥的是混合结构：学习部分只负责“提议”，外面套一层安全过滤——投影到约束集，或用不变集做一次可行性检查。纯粹端到端、无约束保证的方案，目前还不适合放在有安全要求的回路上。</p>
+<p>两条路的数据需求也不同。Koopman 需要覆盖工作区间的激励数据，升维之后还可能失去物理可解释性；神经网络样本效率低，遇到工况切换时容易外推失败。若数据采集成本高，优先考虑“机理模型 + 局部修正”，而不是推倒重来建一个纯数据模型。</p>
+<p>无论走哪条路，都要留一条回到名义模型的路径：一旦学习模型的预测残差超过阈值，就切回机理模型并报警。这条路径平时用不到，出事时是唯一能解释“为什么控制器突然变了性格”的线索。</p>
+<p>学习部分还有一个容易被低估的风险：<strong>分布漂移是渐进的，而失效是突发的</strong>。模型在训练分布内表现良好，随着设备老化，输入慢慢移出分布，输出却仍然“看起来合理”，直到某一天越过边界才爆发。对策不是提高网络容量，而是持续监控输入分布与预测残差，把“离分布有多远”当成一个实时指标，而不是等闭环出问题再回溯。</p>
+<p>安全过滤也不该只有一层。常见做法是三层串联：网络输出先做物理投影（限幅、限速），再过一遍基于名义模型的可达性检查，最后交给一个独立的监督逻辑判断“这一步是否会让状态进入不可恢复区域”。三层都通过才下发；任一层拒绝，就退回名义 MPC。这套结构增加了延迟，但把一个“不可解释的黑箱”变成了“有明确否决权的白箱”，对需要通过评审的项目是必要的。</p>
+<h3 id="放在哪一层与底层-pid-分工">58.9.5 放在哪一层：与底层 PID 分工</h3>
+<p>MPC 不该取代所有回路。常见的分层是：</p>
+<ul>
+<li><strong>上层（秒级）</strong>：MPC 处理多变量耦合、约束与经济目标，输出各回路的设定值。</li>
+<li><strong>下层（毫秒级）</strong>：PID 或伺服环跟踪设定值，负责抗扰与快速动态。</li>
+</ul>
+<p>这样 MPC 的采样周期可以放宽到 0.1～1 s，算力压力骤降；底层的快速扰动也不必进入优化模型，模型可以只保留慢动态。反过来，把所有回路塞进一个 MPC，模型维数与求解时间都会失控。</p>
+<p>判断依据很直接：如果一个问题没有约束、没有多变量耦合、动态又不慢，用 PID 就够了。MPC 的价值来自“约束”和“耦合”，不来自“先进”。</p>
+<p>两层的时间尺度要拉开。经验上，上层采样周期至少是下层的 5～10 倍，否则两层会互相打架：下层还没跟踪上设定值，上层已经根据“没跟上”又改了一次设定值，形成拍频式振荡。若把 MPC 放在 0.1 s、底层伺服放在 10 ms，比例正好是 10 倍，属于安全区间。</p>
+<p>另一个细节是设定值滤波。上层输出若直接阶跃给下层，下层会瞬间饱和；加一个一阶滤波（时间常数取上层周期的 1～2 倍）能让下层始终工作在线性区，也避免上层“看到”下层饱和而误判对象动态。</p>
+<p>两层之间的接口也要约定清楚。上层至少应告诉下层三件事：目标值、可用范围（不只是当前设定值）、以及“我现在处于降级状态”的标志。第三项最容易被忽略——若上层已经不可行、正在靠软约束维持，下层却毫不知情地继续按原设定值跟踪，两层的错误会叠加。工程做法是把健康状态做成一个显式信号，下层收到异常标志后切到本地保守设定值，而不是继续信任上层。</p>
+<p>反过来，下层也应向上层反馈“我能跟到多快”。若下层已经饱和，上层却仍按理想动态预测，就会反复给出无法实现的设定值，形成慢速振荡。把下层的饱和标志纳入上层的约束，是两层协同里最划算的一项改动，代价只是几个布尔量。</p>
+<h2 id="工程落地">58.10 工程落地</h2>
+<p>算法正确只完成了一半。上线还要回答四个问题：算得过来吗、状态从哪来、算不出来怎么办、怎么证明它一直是好的。本节按这四问展开。</p>
+<h3 id="算力预算先量再定">58.10.1 算力预算：先量，再定</h3>
+<p>图 58-10 与表 58-10 是本章脚本在普通 PC 上的实测：每档 40 次重复，取中位数与 95 分位，限幅与无限幅两组分别统计。</p>
+<figure>
+<img src="figs/ch058/fig_058_10_compute.svg" alt="图 58-10　预测时域对单步耗时的影响：总耗时与求解器耗时" /><figcaption aria-hidden="true">图 58-10　预测时域对单步耗时的影响：总耗时与求解器耗时</figcaption>
+</figure>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: right;"><span class="math inline">N_p</span></th>
+<th style="text-align: right;">中位总耗时 (ms)</th>
+<th style="text-align: right;">中位总耗时/无限幅 (ms)</th>
+<th style="text-align: right;">求解器中位 (ms)</th>
+<th style="text-align: right;">p95 总耗时 (ms)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">10</td>
+<td style="text-align: right;">1.085</td>
+<td style="text-align: right;">1.017</td>
+<td style="text-align: right;">0.047</td>
+<td style="text-align: right;">2.011</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">20</td>
+<td style="text-align: right;">0.973</td>
+<td style="text-align: right;">1.012</td>
+<td style="text-align: right;">0.053</td>
+<td style="text-align: right;">1.462</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">40</td>
+<td style="text-align: right;">1.028</td>
+<td style="text-align: right;">1.189</td>
+<td style="text-align: right;">0.079</td>
+<td style="text-align: right;">1.529</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">80</td>
+<td style="text-align: right;">1.268</td>
+<td style="text-align: right;">1.124</td>
+<td style="text-align: right;">0.135</td>
+<td style="text-align: right;">2.492</td>
+</tr>
+</tbody>
+</table>
+<p>三条读数：</p>
+<ul>
+<li>求解器耗时随 <span class="math inline">N_p</span> 近似线性（0.047 ms 到 0.135 ms），八倍规模只慢了三倍。这与前面的结构分析一致：<span class="math inline">\boldsymbol{H}</span> 只有 <span class="math inline">5\times5</span> 且不随 <span class="math inline">N_p</span> 变，增长的是约束行数，一阶法每步的工作量随之线性上升。</li>
+<li>总耗时几乎不随 <span class="math inline">N_p</span> 变化，稳定在 1 ms 附近，说明固定开销占主导。想在 Python 层把时间压下来，收益有限。</li>
+<li>p95 达到 2.0～2.5 ms，是中位数的两倍。实时设计必须按 p95 甚至最大值，而不是中位数。</li>
+</ul>
+<p>p95 与中位数的差距来自哪里？主要是三处：求解器迭代次数在约束切换时会突增；Python 的内存分配与垃圾回收有随机停顿；操作系统的调度抖动。三者都不是“算法慢”，而是“运行时环境不稳定”。对应的处理也各不相同：给 QP 设固定迭代上限、预分配所有数组、把控制线程绑核并提高优先级。</p>
+<p>要对症下药，得先把耗时拆成三层分别测：<strong>纯矩阵运算</strong>（构造 <span class="math inline">\boldsymbol{\Gamma}</span>、装配约束）、<strong>求解器内部</strong>（<code>prob.solver_stats.solve_time</code>）、<strong>框架开销</strong>（参数赋值、结果读取、类型转换）。三者相加接近总耗时，但优化手段完全不同：第一层靠预计算与缓存（<span class="math inline">\boldsymbol{\Gamma}</span>、<span class="math inline">\boldsymbol{H}</span> 与状态无关，初始化算一次即可），第二层靠换算法或固定迭代次数，第三层只能靠换实现语言或代码生成。若不做这个拆分，很容易把框架开销误判成“求解太慢”，然后去做毫无收益的算法优化。</p>
+<p>本章的实测正是这种情况：<span class="math inline">N_p=80</span> 时求解器只占 0.135 ms，而总耗时 1.268 ms，框架与装配占了近九成。换成 C 实现后，这九成会大幅压缩，求解器那一小段反而变成主要成本——<strong>优化到后期，瓶颈会自动搬家</strong>，每一轮都要重新测量。</p>
+<p>这也说明为什么“先量再定”比“按经验估”可靠：同一个算法在不同实现下可能差十倍，而 p95 与中位数的比例又取决于环境。没有测量，预算就只是猜测。</p>
+<p>预算约束写成</p>
+<p><span class="math display">
+T_{\mathrm{calc}}^{\mathrm{p95}}+T_{\mathrm{io}}+T_{\mathrm{margin}}\le T_s
+\tag{58-30}
+</span></p>
+<p>本章 <span class="math inline">T_s=0.1</span> s，<span class="math inline">T_{\mathrm{calc}}^{\mathrm{p95}}</span> 只占 2.5%，余量充足。但若把 <span class="math inline">T_s</span> 压到 10 ms（更快的外环或更小的对象），同一套 Python 实现会吃掉四分之一周期，再加上 IO 与抖动，已经没有余量——这时必须换 C 实现或代码生成，而不是“优化一下 Python”。</p>
+<h3 id="部署形态">58.10.2 部署形态</h3>
+<p>四种选择，按算力与确定性排序：</p>
+<ul>
+<li><strong>代码生成</strong>：由建模工具直接生成 C（QP 数据、求解器、甚至整个控制器），确定性最好，调试最难。</li>
+<li><strong>手写小规模 QP 求解器</strong>：状态与控制量都很少时（例如 <span class="math inline">N_c\le5</span>），有效集法几十行就能写完，反而比通用库快。</li>
+<li><strong>嵌入式解释执行</strong>：在目标机上跑通用求解库，开发快，但内存分配与异常路径难以预测。</li>
+<li><strong>定点运算</strong>：省成本、省功耗，但动态范围窄，约束边界附近容易出现极限环。</li>
+</ul>
+<p>无论哪种，都要做到<strong>在线阶段零动态内存分配</strong>：所有矩阵、工作区在初始化时一次性分配。这是“最坏执行时间”可控的前提。日志、文件 IO、垃圾回收都必须挡在控制周期之外。</p>
+<p>手写小规模 QP 之所以现实，是因为紧缩型问题的规模由 <span class="math inline">N_c</span> 决定。本章 <span class="math inline">N_c=5</span>、单输入，决策变量只有 5 个；有效集法在这么小的规模上，每步只做几次数值运算，代码量可以控制在一两百行。它的最坏迭代次数还能显式限定，适合需要“最坏时间可证”的场合。代价是没有通用求解器的鲁棒性——退化、病态、不可行等边界情形都要自己处理，测试工作量远大于代码量。</p>
+<p>四种形态的选择也不必一次定死。常见路径是：先在 PC 或工控机上用通用库跑通，积累场景与参数；确认算法有效后，再把热点路径换成代码生成或手写实现。反过来先做嵌入式优化，往往会为一个还没验证的算法付出大量工程成本。</p>
+<p>四种形态的取舍可以归结为两个问题：<strong>批量还是单台</strong>、<strong>有无安全认证</strong>。批量产品值得投入代码生成与定点优化，摊薄开发成本；单台设备或试点项目用解释执行更快落地，先验证算法再谈性能。有认证要求时，优先选择结构简单、行为可穷举的实现——哪怕慢一点，可证明性比速度更值钱。</p>
+<p>定点实现还要多做一步：在约束边界附近做扫频测试，确认量化误差不会让控制量在两个相邻档位之间反复跳。这一步在浮点开发中完全体会不到，却是定点版本最常见的现场问题。</p>
+<h3 id="状态从哪来">58.10.3 状态从哪来</h3>
+<p>MPC 要的是完整状态，现场往往只测得到一个位置。三条常见路径：</p>
+<ul>
+<li><strong>观测器</strong>：Kalman 或 Luenberger，用模型补出速度等不可测量。它同时能估计 §58.9.1 的扰动，一举两得。</li>
+<li><strong>差分求速度</strong>：实现最简单，但噪声被放大 <span class="math inline">1/T_s</span> 倍，必须滤波；滤波又带来相位滞后，等于自己造了一个延迟。</li>
+<li><strong>无传感器估算</strong>：从电流、力矩反推，精度完全取决于模型，模型失配时会系统性偏移。</li>
+</ul>
+<p>无论哪条，估计出来的状态都带延迟。这个延迟必须计入预测起点（§58.4.5），否则优化器会拿“过去的现在”做决策，效果与未建模延迟相同。</p>
+<p>顺序上有一个容易搞反的地方：应当先做状态估计、再做时间对齐，最后前移一拍作为预测起点。反过来先前移再估计，等于把同一个延迟算了两次。</p>
+<p>观测器的带宽要按“够快但不过快”来选。经验是把观测器极点放在闭环极点的 2～5 倍处：太慢，估计值跟不上真实状态，等效于给回路又加了一段延迟，§58.6 的失配结论会原样重现；太快，测量噪声被放大进速度估计，控制量随之抖动，还会通过 <span class="math inline">\Delta u</span> 约束触发不必要的饱和。这一步没有解析最优，只能在噪声水平与响应速度之间实测折中。</p>
+<p>差分求速度的做法还要多算一笔账：噪声放大倍数为 <span class="math inline">1/T_s</span>，<span class="math inline">T_s=0.1</span> s 时是 10 倍，若位置噪声为 0.1 mm，速度噪声就达 1 mm/s，再经 <span class="math inline">q_v</span> 放大进入代价，控制量会明显毛刺。滤波能压住它，但一阶滤波的相位滞后在剪切频率处不可忽略——<strong>用滤波换平滑，本质上是用延迟换噪声</strong>，这笔交易必须记在预算里，而不是当成“免费的预处理”。</p>
+<p>时间同步也值得单独检查。若传感器数据通过总线异步到达，控制器读到的“当前状态”可能由不同时刻的样本拼成，速度与位置的时序不一致，预测会凭空产生一个虚假的加速度。低成本的做法是给每个样本打时间戳，在控制器里按统一时刻重采样；要求更高时用硬件触发或 PTP 同步。</p>
+<h3 id="失效与降级">58.10.4 失效与降级</h3>
+<p>MPC 的失效模式比 PID 多，必须逐条设计降级路径：</p>
+<ul>
+<li><strong>求解超时</strong>：把上一拍解平移一位当次优解执行（热启动兜底），同时计数；连续多次超时切到 PID。</li>
+<li><strong>问题不可行</strong>：软约束兜底；若仍不可行，保持上一拍控制量并报警，绝不能输出 0（§58.8.2）。</li>
+<li><strong>状态估计发散</strong>：切到开环保持或手动，并锁定切换原因供事后分析。</li>
+<li><strong>传感器故障</strong>：切备用通道或按安全顺序停机。</li>
+</ul>
+<p>原则只有一条：任何失效路径都要落到一个<strong>可预测的保守动作</strong>上。现场最怕的不是性能下降，而是“控制器悄悄放弃、没人知道”。</p>
+<p>降级不应是“一个 if 判断”，而应是一个状态机：正常 → 降级 → 安全，每级有明确的进入条件与退出条件，并且<strong>带滞回</strong>。没有滞回，系统会在边界上反复切换，比一直待在降级状态更糟。例如连续 3 次超时进入降级，要连续 20 次正常才允许恢复；恢复后 1 分钟内再次超时，则直接锁定到安全状态并等待人工确认。</p>
+<p>这套逻辑必须演练。每季度至少注入一次故障——拔掉一个传感器、强制求解超时、把目标设到不可达——确认系统按设计动作。<strong>没有演练过的降级路径，等于没有</strong>：代码里写着，现场第一次真正触发时才发现条件写错，这类事故并不少见。</p>
+<p>演练结果要留痕：注入了什么故障、系统在几拍内进入哪一级、恢复用了多久、期间输出如何变化。这份记录的价值不在于证明系统“没问题”，而在于暴露“哪一级切换得比预期慢”。切换慢往往不是逻辑写错，而是滞回阈值定得太保守——例如要求连续 20 次正常才恢复，实际却因为偶发噪声永远凑不满，系统就卡在降级态出不来。</p>
+<h3 id="投运检查单">58.10.5 投运检查单</h3>
+<p>上线前按表 58-11 逐项签字。任何一项没有量化结论，就不要投运。</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">项目</th>
+<th style="text-align: left;">检查内容</th>
+<th style="text-align: left;">通过标准</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">模型</td>
+<td style="text-align: left;">阶跃响应拟合误差</td>
+<td style="text-align: left;">主要动态段误差 &lt; 10%</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">延迟</td>
+<td style="text-align: left;">实测纯延迟与模型对比</td>
+<td style="text-align: left;">偏差 &lt; 1 个采样周期</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">约束</td>
+<td style="text-align: left;">边界是否留余量</td>
+<td style="text-align: left;">机械/电气余量 ≥ 10%</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">可行性</td>
+<td style="text-align: left;">全场景库回放</td>
+<td style="text-align: left;">无连续非最优步</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">算力</td>
+<td style="text-align: left;">单步耗时 p95 与最大值</td>
+<td style="text-align: left;">≤ 50% 采样周期</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">降级</td>
+<td style="text-align: left;">注入超时、不可行、断线</td>
+<td style="text-align: left;">均进入预期状态</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">观测器</td>
+<td style="text-align: left;">估计值与实测对比</td>
+<td style="text-align: left;">稳态偏差 &lt; 2%</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">记录</td>
+<td style="text-align: left;">每拍状态、解、耗时</td>
+<td style="text-align: left;">可回溯 ≥ 30 天</td>
+</tr>
+</tbody>
+</table>
+<p>这张表里最容易被跳过的是“降级”和“记录”。前者在演示时永远用不到，出事时却是唯一救命的东西；后者在调参阶段看不出价值，等现场出现偶发异常时，没有逐拍记录就无从复现。</p>
+<p>表外还有三件事，同样影响长期可用性。<strong>版本一致</strong>：模型文件、参数集、控制器代码必须有同一个版本号，改一个就要同步另一个，否则现场会出现“代码是新的、参数是旧的”这类无法复现的问题。<strong>变更评审</strong>：任何约束边界的修改都要走评审，因为它们直接对应安全余量。<strong>人员培训</strong>：值班人员至少要能读懂三类报警——不可行、超时、估计发散，并知道每一类该做什么。</p>
+<p>记录的内容也要设计，不是“越多越好”。最小集合是：每拍的测量值、估计状态、下发控制量、求解状态、求解耗时、约束激活标志、<span class="math inline">\hat d</span>（若启用）。这七项足以复现绝大多数异常。若存储紧张，可以按“事件触发”记录——正常时每 10 拍存一条，一旦出现非最优、饱和、越界就转为逐拍记录，并保留前后各 30 秒。这样既能控制体积，又不会在关键时刻丢数据。</p>
+<p>最后一个常被忽略的检查项是<strong>回放能力</strong>：拿现场记录的数据，能否在办公室完整重跑一遍并得到相同结果。这要求求解器版本、参数、初值全部可复现，也要求记录包含足够的信息。做不到回放的系统，出了问题只能靠猜；能做到回放的系统，大多数问题在第一次复现时就能定位。</p>
+<h2 id="优缺点与适用边界">58.11 优缺点与适用边界</h2>
+<p>MPC 常被当成“高端控制”的代名词，这既高估了它，也低估了它。它解决的是特定结构的问题：有约束、有预测需求、有多变量耦合。离开这三条，它的优势会迅速消失，只剩下维护成本。</p>
+<p>评价是否值得上，最好用<strong>总拥有成本</strong>的视角，而不是只看控制器本身的开发量。建模、集成、调试、维护四块里，前两块在项目期内完成，后两块贯穿整个设备生命周期。很多项目在验收时表现优异，两三年后却因为模型失准、原开发者离职而被迫退回 PID——失败不在技术，而在没有为长尾成本做准备。</p>
+<h3 id="四条不可替代的优势">58.11.1 四条不可替代的优势</h3>
+<ul>
+<li><strong>约束进入优化</strong>，而不是事后补救。§58.4 的实测里，把推力从 3.05 压到 0.55，上升时间增加 57%——这个代价是物理决定的，MPC 至少会如实反映；PID 则会先饱和、再靠抗饱和逻辑勉强收场。</li>
+<li><strong>预测带来提前量</strong>。§58.1 的刹车场景里，控制器在误差还很小的时候就开始动作。凡是对象有明显惯性或纯延迟的场合，这一点是 PID 给不了的。</li>
+<li><strong>多变量天然协调</strong>。一个目标函数同时处理多个输入输出，耦合项自动进入优化，不需要先设计解耦器再分别整定。</li>
+<li><strong>目标可解释</strong>。代价函数的每一项都能对应到工艺指标（跟踪精度、能耗、执行器磨损），改目标不必改结构，这一点在项目移交时尤其重要。</li>
+</ul>
+<p>这四条优势里，只有第一条是“结构性”的，后三条都可以被其他方法部分替代：预测提前量可以用前馈加 Smith 预估近似，多变量协调可以用解耦器加单回路整定，目标可解释可以用一套文档来补。真正让 MPC 难以替代的，是“约束在优化内部被精确处理”——它不需要事后加抗饱和，也不需要为每种约束组合单独设计逻辑。判断一个项目是否值得上 MPC，最终还是会回到这一条：约束是否多、是否经常激活、是否互相冲突。</p>
+<p>也可以反向理解：若一个项目的约束只有执行器幅值这一条，而且很少贴边，那么 MPC 的优势几乎为零，剩下的全是成本。这类项目在现实中占比不低，却常常因为“先进”而被选中，最后以“维护不了”收场。</p>
+<h3 id="五条实际代价">58.11.2 五条实际代价</h3>
+<ul>
+<li><strong>建模与维护成本高</strong>。模型要准到“能预测未来几秒”，对象改造、催化剂老化、机械磨损都会让它失准，需要定期复核。</li>
+<li><strong>算力与确定性要求高</strong>。每拍都要在线求解，最坏执行时间必须可证（§58.10.1），嵌入式部署往往要做代码生成。</li>
+<li><strong>参数多且互相牵制</strong>。§58.7 的六个参数没有一个能独立定，调参必须配场景库回放（§58.8.5）。</li>
+<li><strong>失效模式多</strong>。不可行、超时、估计发散、传感器故障，每一种都要单独设计降级路径（§58.10.4）。</li>
+<li><strong>认证困难</strong>。带学习环节或非线性优化的 MPC，很难给出形式化的稳定性与安全性证明；安全关键领域通常只接受线性 MPC 加不变集保证。</li>
+</ul>
+<p>这五条代价里，最容易被低估的是第一条的“维护”部分。建模成本在项目预算里看得见，维护成本却分散在未来几年：每次设备改造要复核模型，每次换型要重跑场景库，每次人员变动要重新交接参数含义。一个 MPC 项目的真实成本，往往在投运后第三年才显现。若组织没有为此准备人力，技术再先进也会退化成“不敢动、也不敢拆”的黑箱。</p>
+<p>认证方面还有一条现实约束：可解释性不等于可认证性。即使每一步的优化问题都能打印出来，评审方仍会追问“如何保证在所有可能状态下都有解、都安全”。能回答这个问题的，通常是受限形式的 MPC（线性、终端集、tube），而不是功能最全的那个版本。这意味着安全关键场合要接受性能上的保守，把“能证明”放在“跑得好”之前。</p>
+<h3 id="适用判据">58.11.3 适用判据</h3>
+<p>判断要不要上 MPC，可以照表 58-12 逐条对照。</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">条件</th>
+<th style="text-align: left;">倾向</th>
+<th style="text-align: left;">说明</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">存在硬约束且经常被激活</td>
+<td style="text-align: left;">用 MPC</td>
+<td style="text-align: left;">约束越紧，相对收益越大</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">多变量强耦合</td>
+<td style="text-align: left;">用 MPC</td>
+<td style="text-align: left;">省去解耦设计与反复整定</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">纯延迟大、需要提前动作</td>
+<td style="text-align: left;">用 MPC</td>
+<td style="text-align: left;">模型里显式含延迟即可</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">单回路、无约束、线性</td>
+<td style="text-align: left;">用 PID</td>
+<td style="text-align: left;">MPC 只增加成本</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">采样周期小于 1 ms</td>
+<td style="text-align: left;">显式 MPC 或专用算法</td>
+<td style="text-align: left;">通用 QP 求解来不及</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">模型难建、强非线性</td>
+<td style="text-align: left;">先建模或分层</td>
+<td style="text-align: left;">底层 PID + 上层慢 MPC</td>
+</tr>
+</tbody>
+</table>
+<p>这张表的关键不在“哪一行打勾”，而在<strong>约束是否经常被激活</strong>。约束长期不激活时，MPC 的行为与 LQR 几乎一致，付出的却是在线求解与维护成本；约束长期激活时，PID 无论怎么调都只能贴着边界挣扎，这时 MPC 的收益是结构性的。</p>
+<p>反过来看，有四类项目几乎注定失败：模型建不出来或工况变化太快，模型刚辨识完就过期；状态不可测且观测器也补不出，预测从错误的起点出发；现场没有能维护参数的人，投运后没人敢动；把 MPC 用在无约束的单回路上，收益抵不过复杂度。这四类的共同点不是“算法不够好”，而是前提不成立——换任何先进算法都救不回来。</p>
+<p>实践上更可取的是<strong>分阶段引入</strong>，而不是一次替换。第一阶段让 MPC 只做“监督层”：底层仍是原来的 PID，MPC 只在其上给出设定值与约束边界，即使 MPC 失效，底层仍能维持基本运行。第二阶段把速率约束与多变量协调交给 MPC，观察数月，确认无异常激活与频繁降级。第三阶段才考虑取消底层回路，让 MPC 直接输出执行器指令。每阶段都有独立的验收标准与回退方式，风险被切成三段，而不是押在一次投运上。</p>
+<p>这套路径还有一个隐性好处：它让现场人员逐步建立对 MPC 的信任。控制器再正确，若操作员不理解它为什么在某时刻突然减速，也会被手动干预掉。分阶段上线给了双方适应的时间，也给日志留下了“人在回路里”的对照记录。</p>
+<h3 id="三个容易误用的场景">58.11.4 三个容易误用的场景</h3>
+<ul>
+<li><strong>把 MPC 当万能优化器</strong>。目标函数里塞进十几项经济指标，权重之间没有可比性，最终变成一个没人说得清的黑箱。正确做法是分层：经济优化在上层慢慢算，MPC 只负责设定值跟踪。</li>
+<li><strong>用 MPC 掩盖执行器缺陷</strong>。执行器卡涩、死区、回差若没有写进模型，MPC 会不断加大动作去“克服”它，反而激发振荡。这类问题应先修硬件或加补偿，而不是换算法。</li>
+<li><strong>在无约束问题上用 MPC</strong>。此时它与 LQR 的解几乎相同，却要多付在线求解、参数整定、失效处理三份成本。</li>
+</ul>
+<h3 id="与其他方法的关系">58.11.5 与其他方法的关系</h3>
+<p>把 MPC 放回方法谱系里，它的位置很清楚：</p>
+<ul>
+<li>相对 <strong>LQR</strong>：无约束、无限时域时二者等价，终端代价 <span class="math inline">\boldsymbol{P}</span> 就是 Riccati 解，MPC 相当于“带约束的 LQR”。</li>
+<li>相对 <strong>鲁棒控制</strong>：MPC 的鲁棒性来自滚动反馈，没有解析的裕度指标；安全关键场合可以在外面套一层 tube MPC 或不变集约束，用计算量换保证。</li>
+<li>相对 <strong>自适应控制</strong>：参数慢变时可以在线辨识再送入 MPC，但辨识误差会直接进入预测，必须限制参数变化率。</li>
+<li>相对 <strong>学习控制</strong>：学习负责模型或策略，MPC 负责约束与安全层（§58.9.4），两者是互补而非替代。</li>
+</ul>
+<p>这张谱系图还能回答一个常见疑问：“既然 LQR 也有 <span class="math inline">\boldsymbol{P}</span>，为什么还要 MPC？”差别只在约束。无约束时，MPC 的最优解恰是 LQR 的静态反馈，逐拍求解纯属浪费；一旦约束激活，LQR 只能靠饱和与抗饱和逻辑近似处理，而 MPC 是把这个约束直接纳入优化，解出来的动作在“当前这一步”就是最优且可行的。换句话说，<strong>LQR 告诉你“理想情况下该怎么走”，MPC 告诉你“在限制下这一步该出多大力”</strong>。</p>
+<p>反过来也要承认 MPC 的边界：它不给解析的稳定裕度，也不能自动处理未建模动态。工程上常用“MPC + 一个低频的鲁棒性检查（增益/相位裕度估计、参数摄动回放）”组合，而不是指望 MPC 自己把所有问题吃掉。</p>
+<p>最后给一条实用判据：只问三个问题——约束是否经常被触碰？是否存在多变量耦合？模型能否建到“预测误差小于控制精度”？三个都答“是”，MPC 值得上；有一个答“否”，先考虑更简单的方案。</p>
+<h2 id="python-仿真代码">58.12 Python 仿真代码</h2>
+<p>本章的可复现实验由两个脚本完成，都在 <code>book/code/</code> 下：</p>
+<ul>
+<li><code>ch058_sim.py</code>：对象离散化、紧缩型 MPC、闭环仿真与九组实验；</li>
+<li><code>ch058_figs.py</code>：读取实验函数，生成全书统一的 SVG 与 PDF 插图。</li>
+</ul>
+<p>运行方式（在 <code>book/</code> 目录下，使用带 <code>control</code>、<code>cvxpy</code> 的环境）：</p>
+<pre><code>python code/ch058_sim.py
+python code/ch058_figs.py</code></pre>
+<p>两个脚本都不需要命令行参数，全部配置集中在文件顶部：<code>TS</code>、默认时域与权重、实验用的扫描点。改实验只需改这些常量，不必动函数体。图输出到 <code>book/figs/ch058/</code>，每张图同时保存 SVG 与 PDF，前者用于网页，后者用于印刷。</p>
+<p>下面是控制器的核心，约 60 行，只保留对象离散化、预测矩阵与控制器本体；九组实验与绘图代码在同名脚本的其余部分。导入语句为 <code>numpy as np</code>、<code>control as ct</code>、<code>cvxpy as cp</code>。</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>TS <span class="op">=</span> <span class="fl">0.1</span>                                    <span class="co"># 采样周期 (s)</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> plant_ss(gain<span class="op">=</span><span class="fl">1.0</span>, tau<span class="op">=</span><span class="fl">1.0</span>):</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    ac <span class="op">=</span> np.array([[<span class="fl">0.0</span>, <span class="fl">1.0</span>], [<span class="fl">0.0</span>, <span class="op">-</span><span class="fl">1.0</span> <span class="op">/</span> tau]])   <span class="co"># p_dot = v</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    bc <span class="op">=</span> np.array([[<span class="fl">0.0</span>], [gain <span class="op">/</span> tau]])             <span class="co"># tau*v_dot = -v + gain*u</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    cc <span class="op">=</span> np.array([[<span class="fl">1.0</span>, <span class="fl">0.0</span>]])</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    d <span class="op">=</span> ct.c2d(ct.ss(ac, bc, cc, <span class="fl">0.0</span>), TS, method<span class="op">=</span><span class="st">&quot;zoh&quot;</span>)</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> (np.asarray(d.A, <span class="bu">float</span>), np.asarray(d.B, <span class="bu">float</span>),</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>            np.asarray(d.C, <span class="bu">float</span>), np.asarray(d.D, <span class="bu">float</span>))</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>A, B, C, D <span class="op">=</span> plant_ss()</span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>NX <span class="op">=</span> A.shape[<span class="dv">0</span>]</span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>VEL <span class="op">=</span> np.array([<span class="fl">0.0</span>, <span class="fl">1.0</span>])                  <span class="co"># 速度行</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> prediction_matrices(np_, nc):</span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>    phi <span class="op">=</span> np.zeros((NX <span class="op">*</span> (np_ <span class="op">+</span> <span class="dv">1</span>), NX))</span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>    gam <span class="op">=</span> np.zeros((NX <span class="op">*</span> (np_ <span class="op">+</span> <span class="dv">1</span>), nc))</span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>    ak <span class="op">=</span> np.eye(NX)</span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> k <span class="kw">in</span> <span class="bu">range</span>(np_ <span class="op">+</span> <span class="dv">1</span>):</span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>        phi[k <span class="op">*</span> NX:(k <span class="op">+</span> <span class="dv">1</span>) <span class="op">*</span> NX, :] <span class="op">=</span> ak</span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="bu">min</span>(k, np_)):</span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>            j <span class="op">=</span> <span class="bu">min</span>(i, nc <span class="op">-</span> <span class="dv">1</span>)</span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a>            gam[k <span class="op">*</span> NX:(k <span class="op">+</span> <span class="dv">1</span>) <span class="op">*</span> NX, j] <span class="op">+=</span> np.linalg.matrix_power(A, k <span class="op">-</span> <span class="dv">1</span> <span class="op">-</span> i) <span class="op">@</span> B[:, <span class="dv">0</span>]</span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a>        ak <span class="op">=</span> A <span class="op">@</span> ak</span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> phi, gam</span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> MPC:</span>
+<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>, np_<span class="op">=</span><span class="dv">20</span>, nc<span class="op">=</span><span class="dv">5</span>, qy<span class="op">=</span><span class="fl">10.0</span>, qv<span class="op">=</span><span class="fl">1.0</span>, ru<span class="op">=</span><span class="fl">1.0</span>,</span>
+<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a>                 p_term<span class="op">=</span><span class="va">None</span>, umax<span class="op">=</span><span class="fl">1.0</span>, dumax<span class="op">=</span><span class="fl">0.25</span>, ymax<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb2-30"><a href="#cb2-30" aria-hidden="true" tabindex="-1"></a>                 soft<span class="op">=</span><span class="va">False</span>, rho<span class="op">=</span><span class="fl">1.0e2</span>):</span>
+<span id="cb2-31"><a href="#cb2-31" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.Np, <span class="va">self</span>.Nc <span class="op">=</span> np_, nc</span>
+<span id="cb2-32"><a href="#cb2-32" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.phi, <span class="va">self</span>.gam <span class="op">=</span> prediction_matrices(np_, nc)</span>
+<span id="cb2-33"><a href="#cb2-33" aria-hidden="true" tabindex="-1"></a>        u, x0, uprev, ref <span class="op">=</span> cp.Variable(nc), cp.Parameter(NX), cp.Parameter(), cp.Parameter()</span>
+<span id="cb2-34"><a href="#cb2-34" aria-hidden="true" tabindex="-1"></a>        x <span class="op">=</span> <span class="va">self</span>.phi <span class="op">@</span> x0 <span class="op">+</span> <span class="va">self</span>.gam <span class="op">@</span> u</span>
+<span id="cb2-35"><a href="#cb2-35" aria-hidden="true" tabindex="-1"></a>        yrow <span class="op">=</span> np.zeros((np_, NX <span class="op">*</span> (np_ <span class="op">+</span> <span class="dv">1</span>)))</span>
+<span id="cb2-36"><a href="#cb2-36" aria-hidden="true" tabindex="-1"></a>        vrow <span class="op">=</span> np.zeros((np_, NX <span class="op">*</span> (np_ <span class="op">+</span> <span class="dv">1</span>)))</span>
+<span id="cb2-37"><a href="#cb2-37" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> k <span class="kw">in</span> <span class="bu">range</span>(np_):</span>
+<span id="cb2-38"><a href="#cb2-38" aria-hidden="true" tabindex="-1"></a>            yrow[k, k <span class="op">*</span> NX:(k <span class="op">+</span> <span class="dv">1</span>) <span class="op">*</span> NX] <span class="op">=</span> C[<span class="dv">0</span>]</span>
+<span id="cb2-39"><a href="#cb2-39" aria-hidden="true" tabindex="-1"></a>            vrow[k, k <span class="op">*</span> NX:(k <span class="op">+</span> <span class="dv">1</span>) <span class="op">*</span> NX] <span class="op">=</span> VEL</span>
+<span id="cb2-40"><a href="#cb2-40" aria-hidden="true" tabindex="-1"></a>        cost <span class="op">=</span> (qy <span class="op">*</span> cp.sum_squares(yrow <span class="op">@</span> x <span class="op">-</span> ref) <span class="op">+</span> qv <span class="op">*</span> cp.sum_squares(vrow <span class="op">@</span> x)</span>
+<span id="cb2-41"><a href="#cb2-41" aria-hidden="true" tabindex="-1"></a>                <span class="op">+</span> ru <span class="op">*</span> cp.sum_squares(u))</span>
+<span id="cb2-42"><a href="#cb2-42" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> p_term <span class="kw">is</span> <span class="kw">not</span> <span class="va">None</span>:              <span class="co"># 终端项必须作用在误差状态上</span></span>
+<span id="cb2-43"><a href="#cb2-43" aria-hidden="true" tabindex="-1"></a>            cost <span class="op">+=</span> cp.quad_form(x[<span class="op">-</span>NX:] <span class="op">-</span> ref <span class="op">*</span> np.array([<span class="fl">1.0</span>, <span class="fl">0.0</span>]),</span>
+<span id="cb2-44"><a href="#cb2-44" aria-hidden="true" tabindex="-1"></a>                                 cp.psd_wrap(p_term))</span>
+<span id="cb2-45"><a href="#cb2-45" aria-hidden="true" tabindex="-1"></a>        cons <span class="op">=</span> [u <span class="op">&lt;=</span> umax, u <span class="op">&gt;=</span> <span class="op">-</span>umax,</span>
+<span id="cb2-46"><a href="#cb2-46" aria-hidden="true" tabindex="-1"></a>                u[<span class="dv">0</span>] <span class="op">-</span> uprev <span class="op">&lt;=</span> dumax, u[<span class="dv">0</span>] <span class="op">-</span> uprev <span class="op">&gt;=</span> <span class="op">-</span>dumax,</span>
+<span id="cb2-47"><a href="#cb2-47" aria-hidden="true" tabindex="-1"></a>                u[<span class="dv">1</span>:] <span class="op">-</span> u[:<span class="op">-</span><span class="dv">1</span>] <span class="op">&lt;=</span> dumax, u[<span class="dv">1</span>:] <span class="op">-</span> u[:<span class="op">-</span><span class="dv">1</span>] <span class="op">&gt;=</span> <span class="op">-</span>dumax]</span>
+<span id="cb2-48"><a href="#cb2-48" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> ymax <span class="kw">is</span> <span class="kw">not</span> <span class="va">None</span> <span class="kw">and</span> soft:</span>
+<span id="cb2-49"><a href="#cb2-49" aria-hidden="true" tabindex="-1"></a>            s <span class="op">=</span> cp.Variable(nonneg<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb2-50"><a href="#cb2-50" aria-hidden="true" tabindex="-1"></a>            cons.append(yrow <span class="op">@</span> x <span class="op">&lt;=</span> ymax <span class="op">+</span> s)</span>
+<span id="cb2-51"><a href="#cb2-51" aria-hidden="true" tabindex="-1"></a>            cost <span class="op">+=</span> rho <span class="op">*</span> s</span>
+<span id="cb2-52"><a href="#cb2-52" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.prob <span class="op">=</span> cp.Problem(cp.Minimize(cost), cons)</span>
+<span id="cb2-53"><a href="#cb2-53" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.u, <span class="va">self</span>.x0, <span class="va">self</span>.uprev, <span class="va">self</span>.ref <span class="op">=</span> u, x0, uprev, ref</span>
+<span id="cb2-54"><a href="#cb2-54" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-55"><a href="#cb2-55" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> step(<span class="va">self</span>, x, ref, u_prev):</span>
+<span id="cb2-56"><a href="#cb2-56" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.x0.value, <span class="va">self</span>.ref.value, <span class="va">self</span>.uprev.value <span class="op">=</span> x, ref, u_prev</span>
+<span id="cb2-57"><a href="#cb2-57" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.prob.solve(solver<span class="op">=</span>cp.OSQP, warm_start<span class="op">=</span><span class="va">True</span>,</span>
+<span id="cb2-58"><a href="#cb2-58" aria-hidden="true" tabindex="-1"></a>                        eps_abs<span class="op">=</span><span class="fl">1e-7</span>, eps_rel<span class="op">=</span><span class="fl">1e-7</span>, max_iter<span class="op">=</span><span class="dv">8000</span>)</span>
+<span id="cb2-59"><a href="#cb2-59" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="bu">float</span>(u_prev) <span class="cf">if</span> <span class="va">self</span>.u.value <span class="kw">is</span> <span class="va">None</span> <span class="cf">else</span> <span class="bu">float</span>(<span class="va">self</span>.u.value[<span class="dv">0</span>])</span></code></pre></div>
+<p>几处与正文对应的实现细节：</p>
+<ul>
+<li>状态顺序必须是 <span class="math inline">[p,v]</span>。若用 <code>ct.tf([1],[1,1,0])</code> 直接离散，<code>control</code> 库给出的状态顺序是 <span class="math inline">[v,p]</span>，代入正文的 <span class="math inline">\boldsymbol{C}=[1,0]</span> 会取错输出。显式写连续状态方程可以避免这个坑。</li>
+<li>终端代价作用在 <span class="math inline">\boldsymbol{x}_{N_p}-r\boldsymbol{x}_{\mathrm{ref}}</span> 上，<span class="math inline">\boldsymbol{x}_{\mathrm{ref}}=[1,0]^{\mathrm{T}}</span>。写在 <span class="math inline">\boldsymbol{x}_{N_p}</span> 上会让稳态偏移（本章调试时曾停在 1.135 m）。</li>
+<li><code>step()</code> 里没有 <code>try/except</code> 兜底以外的花招，但每拍都记下 <code>prob.status</code>。所有“曲线看着不对”的问题，都应先查这个字段。</li>
+<li>指标口径统一走 <code>simlib.step_metrics</code>，调节时间取 ±2% 误差带，与全书一致。</li>
+</ul>
+<p>改参数做自己的实验，只需三步：在 <code>MPC(...)</code> 里换时域或权重；在 <code>simulate(...)</code> 里换对象、延迟或初始状态；读取返回字典里的 <code>y</code>、<code>u</code>、<code>ms</code>、<code>status</code>。所有实验函数都走同一条 <code>simulate</code> 通路，因此不同实验之间的数字可以直接比较。新增实验时建议沿用 <code>exp_</code> 前缀，并在表 58-13 里登记，避免图表与代码失联。</p>
+<p>跑对没跑对，可以先用三个数自检。第一，离散矩阵：<span class="math inline">T_s=0.1</span> 时应得到 <span class="math inline">\boldsymbol{A}_{12}=0.095163</span>、<span class="math inline">\boldsymbol{B}_2=0.095163</span>，与本节的解析值一致；第二，<span class="math inline">\boldsymbol{\Gamma}</span>：<span class="math inline">N_p=3</span>、<span class="math inline">N_c=2</span> 时第三行位置分量为 0.022086 与 0.018730；第三，标称 IAE：默认配置下应在 1.46 附近，若差出一个数量级，多半是状态顺序或参考点写错。三个数都对，后面的结论才值得信。</p>
+<p>脚本一次完整运行会依次打印九组实验的指标，正常耗时在秒级（耗时统计那组因为要重复 40 次，会稍长）。输出里没有 <code>infeasible</code> 才算干净；若某组出现大量 <code>optimal_inaccurate</code>，先按 §58.5.5 检查条件数与精度设置，而不是急着改权重。</p>
+<p>运行环境有三处容易踩坑：<code>cvxpy</code> 需要 OSQP 后端（<code>pip install osqp</code>），否则指定 <code>solver=cp.OSQP</code> 会直接报错；<code>control</code> 库不同版本对 <code>ss</code>、<code>c2d</code> 的参数名有过调整，建议锁定较新的版本；图内文字若出现方框，先检查是否把中文、英文与公式混在同一个字符串里——这是字体回退失败，不是编码问题。</p>
+<p>表 58-13 列出九组实验与它们对应的图表，便于按图反查代码。</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">实验函数</th>
+<th style="text-align: left;">内容</th>
+<th style="text-align: left;">对应图表</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><code>exp_horizon</code></td>
+<td style="text-align: left;">预测时域扫描（有无终端代价）</td>
+<td style="text-align: left;">图 58-5、表 58-4</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>exp_nc</code></td>
+<td style="text-align: left;">控制时域扫描</td>
+<td style="text-align: left;">表 58-3</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><code>exp_weights</code></td>
+<td style="text-align: left;"><span class="math inline">q_y</span> 扫描</td>
+<td style="text-align: left;">图 58-8、表 58-6</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>exp_terminal</code></td>
+<td style="text-align: left;">终端代价的相平面对比</td>
+<td style="text-align: left;">图 58-6</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><code>exp_compute</code></td>
+<td style="text-align: left;">单步耗时统计</td>
+<td style="text-align: left;">图 58-10、表 58-10</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>exp_saturation</code></td>
+<td style="text-align: left;">输入/速率限幅对比</td>
+<td style="text-align: left;">图 58-4、表 58-2</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><code>exp_mismatch</code></td>
+<td style="text-align: left;">参数摄动与延迟</td>
+<td style="text-align: left;">图 58-7、表 58-5</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>exp_soft</code></td>
+<td style="text-align: left;">硬约束不可行与软约束回收</td>
+<td style="text-align: left;">图 58-9</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><code>exp_disturbance</code></td>
+<td style="text-align: left;">常值扰动下的静差</td>
+<td style="text-align: left;">§58.9.1 正文</td>
+</tr>
+</tbody>
+</table>
+<p>这套代码可以直接当模板用：换对象只需改 <code>plant_ss</code>，换约束只需改 <code>MPC</code> 的构造参数，换指标只需改 <code>metrics</code>。三处之外的部分与具体对象无关。迁移到真实设备时，把 <code>simulate</code> 里的状态递推换成“读传感器—估计状态—调 <code>step</code>—写执行器”的循环即可，控制器本体一行不用改。<strong>能这样切开，本身就是好实现的标准</strong>：算法与运行环境解耦，离线验证的结论才能直接搬到线上。</p>
+<p>最后提醒一句：本章所有数字都对应一组明确的测试条件（零初值、1 m 阶跃、120 步、eps <span class="math inline">10^{-7}</span>）。读者若改动其中任何一项，指标会变，但趋势与结论不变。比较时务必保持条件一致，否则“我的 IAE 比书里小”这类结论没有意义。</p>
+<p>至此本章的骨架完整：从“提前刹车”的直觉出发，写出预测方程与 QP，讨论约束、时域、稳定性与失配，最后落到参数、调参、改进路线与工程检查单。下一章转入滑模控制，它走的是另一条路——不预测未来，而是用不连续的控制律把状态强行拉到一条滑模面上。</p>
+
+<nav class="footnav"><a href="ch057.html">← 上一章</a><a href="index.html">返回目录</a><a href="ch059.html">下一章 →</a></nav>
+</body>
+</html>

@@ -1,0 +1,1768 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="zh-CN" xml:lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>第 98 章　多轴协调与同步控制 · 控制大综合</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    span.underline{text-decoration: underline;}
+    div.column{display: inline-block; vertical-align: top; width: 50%;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    ul.task-list{list-style: none;}
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+  <link rel="stylesheet" href="assets/book.css" />
+  <script src="assets/katex/katex.min.js"></script>
+  <script>document.addEventListener("DOMContentLoaded", function () {
+   var mathElements = document.getElementsByClassName("math");
+   var macros = [];
+   for (var i = 0; i < mathElements.length; i++) {
+    var texText = mathElements[i].firstChild;
+    if (mathElements[i].tagName == "SPAN") {
+     katex.render(texText.data, mathElements[i], {
+      displayMode: mathElements[i].classList.contains('display'),
+      throwOnError: false,
+      macros: macros,
+      fleqn: false
+     });
+  }}});
+  </script>
+  <link rel="stylesheet" href="assets/katex/katex.min.css" />
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+  <link rel="stylesheet" href="assets/site.css" />
+</head>
+<body>
+<nav class="topnav"><a class="home" href="index.html">目录</a><span class="pos">098 / 115</span><span class="pager"><a href="ch097.html">上一章</a><a href="ch099.html">下一章</a></span></nav>
+
+<nav id="TOC" role="doc-toc">
+<ul>
+<li><a href="#第-98-章-多轴协调与同步控制">第 98 章 多轴协调与同步控制</a>
+<ul>
+<li><a href="#动机与直观理解">98.1 动机与直观理解</a></li>
+<li><a href="#数学原理">98.2 数学原理</a></li>
+<li><a href="#设计步骤从比例到验收">98.3 设计步骤：从比例到验收</a></li>
+<li><a href="#连续情形两轴为什么越走越不齐">98.4 连续情形：两轴为什么越走越不齐</a></li>
+<li><a href="#离散情形两个时钟的账">98.5 离散情形：两个时钟的账</a></li>
+<li><a href="#稳定性与性能ccc-能压到多低">98.6 稳定性与性能：CCC 能压到多低</a></li>
+<li><a href="#参数逐个讲意义">98.7 参数逐个讲意义</a></li>
+<li><a href="#调参方法与经验">98.8 调参方法与经验</a></li>
+<li><a href="#优化与改进">98.9 优化与改进</a></li>
+<li><a href="#工程落地时序测量与补偿">98.10 工程落地：时序、测量与补偿</a></li>
+<li><a href="#优缺点与适用边界">98.11 优缺点与适用边界</a></li>
+<li><a href="#代码与复现">98.12 代码与复现</a></li>
+</ul></li>
+</ul>
+</nav>
+<h1 id="第-98-章-多轴协调与同步控制">第 98 章 多轴协调与同步控制</h1>
+<p>第 97 章把一条参考轨迹从哪来讲清楚了，但整章只服务一个执行器：一条曲线、一个关节、一台电机。真实的设备很少只有一根轴。龙门铣的横梁由两台电机同时推，飞剪的刀辊要跟住行进中的料带，分度盘要在一个节拍里转过 90°，涂胶机的 X 与 Y 必须同时到位，否则胶线会歪。这些场合的验收指标不是“每根轴跟得多准”，而是“两根轴之间差多少”。</p>
+<p>这两个指标不是一回事，而且差距往往大得离谱。本章的统一算例里，X 轴自己的跟随误差是 2.813 mm，Y 轴是 4.502 mm，单看任何一个都在“毫米级”，按单轴标准都算不合格但也算不上灾难；可它们俩的<strong>差</strong>是 1.688 mm，这个差直接变成 45° 直线上的 1.194 mm 轮廓偏差——也就是工件上一条肉眼可见的斜边。更极端的是主从结构：主轴把自己 2.813 mm 的误差原封不动地传给从轴，从轴再叠加自己 4.502 mm 的误差，同步误差直接变成 4.502 mm，轮廓误差 3.183 mm，是并行结构的 2.667 倍。<strong>同样的两台伺服、同样的两条轨迹，只因为“从轴跟谁”这一句话不同，工件精度差了一倍半。</strong></p>
+<p>一句话概括本章的立场：<strong>多轴协调的难点不在于把每根轴调得更准，而在于让几根轴在同一时刻错得一样多；误差本身可以容忍，误差之差不能。</strong> 前半句决定了本章一半的篇幅要花在“同步”而不是“跟踪”上，后半句决定了另一半篇幅要花在“怎么量这个差”上。</p>
+<h2 id="动机与直观理解">98.1 动机与直观理解</h2>
+<h3 id="三个现场场景">98.1.1 三个现场场景</h3>
+<p><strong>场景一：龙门双驱。</strong> 横梁两端各有一台伺服加减速机，共同推动一个几吨重的滑枕。机械上横梁是刚体，电气上两台电机是并联的。如果左侧电机比右侧快 0.1%，横梁就会被拧成一个微小的角度，这个角度乘上跨度就是导轨的侧向力。跨距 3 m、偏斜 0.1% 的行程差就是 3 mm 的错位，导轨会叫、会爬行、会磨出亮痕。这类设备的验收单上写的不是“定位精度”，而是“双驱同步误差 ≤ 0.05 mm”。</p>
+<p><strong>场景二：飞剪与旋切。</strong> 刀辊要在一个很短的时间窗内，让刀刃的线速度与料带速度相等，并且刀刃位置与料带上的标记对齐。刀辊由伺服驱动，料带由另一台变频器驱动，两者之间没有任何机械连接，唯一的联系是一个电子齿轮比。这里的“同步”是速度同步加上相位同步，误差以“毫米每米”和“度”两种单位同时出现。</p>
+<p><strong>场景三：分度盘。</strong> 一个 8 工位的转盘，每 300 ms 转过 45°，停顿 200 ms 让工位做装配。转盘的输入轴由伺服驱动，输出轴经过一个凸轮机构，或者干脆用一个电子凸轮直接生成“停—转—停”的位移曲线。这里的要求不是匀速跟随，而是<strong>在停顿段绝对不动、在转位段严格按给定曲线走</strong>，因为停顿段的每一次抖动都会让装配头撞偏。</p>
+<p>三个场景对应三套不同的数学：电子齿轮是比例关系，电子凸轮是函数关系，交叉耦合是误差反馈关系。本章按这个顺序展开。</p>
+<h3 id="四个数">98.1.2 四个数</h3>
+<p>第一个数：<strong>1.414 N·m，额定的 141.4%</strong>。主轴 1500 r/min、齿轮比 3:2，从轴要跑到 2250 r/min，也就是 235.62 rad/s。折算惯量 <span class="math inline">3.0\times10^{-4}</span> kg·m²，若要在 50 ms 内从静止加速到这一转速，需要力矩 <span class="math inline">J\omega/t=1.414</span> N·m，而电机额定只有 1.0 N·m。<strong>电子齿轮的第一笔账不是精度账，是力矩账</strong>：比值一改，从轴的转速上限就改了，加速时间跟着改，电机可能直接不够。这一条在选型阶段被漏掉的频率极高，因为齿轮比通常由工艺决定，而工艺工程师不关心电机额定。</p>
+<p>第二个数：<strong>4.502 mm 与 1.688 mm</strong>。同一段 45° 直线、0.5 m/s，主从结构的同步误差是 4.502 mm，并行结构是 1.688 mm。原因很简单也很容易被忽略：并行时两根轴都盯着<strong>理想参考</strong>，各自的误差只由自己的带宽决定；主从时从轴盯着<strong>主轴的实际位置</strong>，主轴那份误差被当成“正确值”照抄一遍，于是从轴的误差变成“主轴误差 + 自己的误差”。本例中主轴误差 2.813 mm 恰好被完整传递，从轴自身误差 4.502 mm 与之叠加后的净值就等于 4.502 mm——因为主轴误差本来就比从轴小，叠加后从轴反而“追平”了。</p>
+<p>第三个数：<strong>810.9 μm</strong>。R=50 mm、1 Hz 的圆，两根轴带宽 40 Hz 与 25 Hz，轮廓误差峰值 810.9 μm、RMS 532.7 μm。这个数用眼睛看图纸是看不出来的——圆还是圆的，只是被拉成了一个略微倾斜的椭圆。它的主项不是幅值衰减（X 只缩 31.2 μm、Y 只缩 79.9 μm），而是<strong>两轴相位滞后之差</strong>：X 滞后 2.864°、Y 滞后 4.581°，差 1.717°，乘上半径再折半就是 750 μm。<strong>在圆周上，两轴的相位差比幅值差重要一个数量级</strong>，这是本章最反直觉的一条。</p>
+<p>第四个数：<strong>314.2 μm</strong>。1 ms 的插补周期，在 0.314 m/s 的圆周速度下对应 314.2 μm 的弧长。若两个轴各用各的插补器、时间戳又对不齐，最坏情况相差整整一拍，就在轮廓上直接加 314.2 μm——相当于把动态误差（532.7 μm）放大了 0.6 倍。<strong>同步误差的一大来源不在控制环里，而在“两根轴认为现在是几点”这件事上。</strong></p>
+<h3 id="三种协调架构">98.1.3 三种协调架构</h3>
+<p><strong>并行（parallel / 各自跟踪）。</strong> 上位机算出同一条轨迹，按轴拆成 <span class="math inline">x_r(t)</span> 与 <span class="math inline">y_r(t)</span>，分别送给两个伺服。两根轴之间没有任何信息交换。优点是结构最简单、任一轴故障不影响另一轴、加减轴只是加一份配置；缺点是两轴的误差互不知情，带宽差多少，同步误差就是多少。</p>
+<p><strong>主从（master-slave）。</strong> 主轴照常跟踪自己的参考，从轴的指令由主轴的实际位置（或实际速度）经一个比例/函数变换得到。优点是<strong>结构上保证了几何关系</strong>——不管主轴怎么错，从轴永远按比例跟着，齿轮比不会被电气误差破坏；缺点是主轴的误差被完整复制，从轴成了“误差的放大器”，而且从轴的动态永远比主轴慢半拍，这半拍在高速时就是可观的轮廓误差。</p>
+<p><strong>交叉耦合（cross-coupled control, CCC）。</strong> 两根轴各自闭环，但额外算一个共同的误差量——通常是轮廓误差，即实际点到理想轨迹的<strong>法向</strong>距离——再按增益 <span class="math inline">K_c</span> 分配回两根轴的指令。优点是直接针对“要减小什么”下手，不改动原有伺服环，可以外挂；缺点是需要知道轨迹的几何（法向），在自由曲线与尖角处法向不唯一，而且在增益过大时会与原有环耦合、引起抖动。</p>
+<p>本章的三种结构都用同一组轴参数、同一条轨迹来比，所以差异只来自结构本身。</p>
+<h3 id="一个算例贯穿全章">98.1.4 一个算例贯穿全章</h3>
+<p>统一算例是一台两轴直角平台，参数如表 98-1。</p>
+<p><strong>表 98-1 统一算例的两轴参数</strong></p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">项</th>
+<th style="text-align: left;">数值</th>
+<th style="text-align: left;">说明</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">丝杠导程</td>
+<td style="text-align: left;">10.0 mm</td>
+<td style="text-align: left;">电机一转，工作台走 10 mm</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">编码器</td>
+<td style="text-align: left;">2500 ppr × 4 = 10000 counts/rev</td>
+<td style="text-align: left;">四倍频后的计数</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">单脉冲当量（直线）</td>
+<td style="text-align: left;">1.000 μm/count</td>
+<td style="text-align: left;">导程 ÷ 每转计数</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">单脉冲当量（电机转角）</td>
+<td style="text-align: left;">0.628 mrad/count</td>
+<td style="text-align: left;"><span class="math inline">2\pi/10000</span>，即 0.036°</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">闭环带宽</td>
+<td style="text-align: left;">X 40 Hz、Y 25 Hz</td>
+<td style="text-align: left;">比值 1.600</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">闭环阻尼比</td>
+<td style="text-align: left;">1.0（临界阻尼）</td>
+<td style="text-align: left;">无超调</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">折算惯量</td>
+<td style="text-align: left;"><span class="math inline">3.0\times10^{-4}</span> kg·m²</td>
+<td style="text-align: left;">含丝杠、联轴器、负载</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">电机额定力矩</td>
+<td style="text-align: left;">1.0 N·m</td>
+<td style="text-align: left;">连续堵转</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">插补周期</td>
+<td style="text-align: left;">1 ms</td>
+<td style="text-align: left;">两根轴共用同一节拍</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">积分步长</td>
+<td style="text-align: left;">0.1 ms</td>
+<td style="text-align: left;">仿真的数值步长</td>
+</tr>
+</tbody>
+</table>
+<p>两条轨迹：<strong>直线</strong> 45°、0.5 m/s、走 0.20 s；<strong>圆弧</strong> R=50 mm、1 Hz、走 1.0 s。另有两组辅助算例：电子齿轮（主轴 1500 r/min、比 3:2、啮合 50 ms）与电子凸轮（分度 90°、300 ms、分度盘折算惯量 0.02 kg·m²）。运动学约束算例复用第 96 章的两连杆（0.40 m + 0.30 m），让末端沿一条直线走 0.5 m/s。</p>
+<p>两轴带宽取 40 Hz 与 25 Hz 是刻意的：真实平台的 Y 轴通常背着更重的负载（工件、夹具、防护罩），带宽低于 X 轴是常态，比值 1.6 属于“不算差但也绝不相同”的中间地带。若两根轴带宽完全相同，本章一半的结论会消失——这正是很多仿真论文里“同步误差为零”的来源。</p>
+<p>所有读数由 <code>code/ch098_sim.py</code> 一次跑出，分 15 段 [0]–[14]，索引在 §98.12.3。正文里每个数字都能指回某一段。</p>
+<h3 id="本章路线">98.1.5 本章路线</h3>
+<p>§98.2 把三套数学写清楚：齿轮比的分数化与量化误差、凸轮曲线的四种形状与其峰值、两轴闭环的传递函数与同步/轮廓误差的定义。§98.3 给出十步设计流程，从定比一路走到验收。§98.4 讨论连续情形，重点是“毫米级的跟随误差为什么会变成毫米级的轮廓误差”以及那个 <span class="math inline">R\Delta\varphi/2</span> 的相位差公式。§98.5 讨论离散情形，1 ms 节拍与时间戳抖动各贡献多少。§98.6 把 CCC 的增益扫描与饱和、稳定性放在一起。§98.7 逐个参数讲意义，§98.8 讲现场怎么选，§98.9 讲优化，§98.10 讲落地（同步误差怎么测、启停怎么排），§98.11 讲边界，§98.12 交代码。</p>
+<h3 id="与相邻章的分工">98.1.6 与相邻章的分工</h3>
+<p>本章只讲“轴与轴之间”这一层，四件事明确外包：</p>
+<ul>
+<li>单轴的三环、编码器、PWM 在第 95 章；本章把每根轴简化成一个二阶闭环，不重推电流环。</li>
+<li>轨迹与插补在第 97 章；本章直接引用其“笛卡尔直线与圆弧”的结论，只关心它们被拆到两根轴之后的事。</li>
+<li>机械臂的几何、雅可比、动力学在第 96 章；本章 §98.9 的运动学约束直接调用其两连杆模型。</li>
+<li>高级控制（滑模、自适应、力控、MPC）在第 99 章与第 58/80 章。本章不引入任何新控制器，CCC 只是一个外挂的误差反馈，不是新算法。</li>
+</ul>
+<p>另外三处容易混淆的内容也一并指回：PID 的整定在第 44 章与第 106 章；Smith 预估在第 47 章与第 107 章；这两者解决的是“单轴滞后”，而本章解决的是“两根轴的滞后不相等”。<strong>单轴滞后是可以用前馈消掉的，两轴滞后之差不能</strong>——因为前馈只能让每根轴更接近理想参考，却不能让两根轴的带宽变得相同。</p>
+<h3 id="六个约定">98.1.7 六个约定</h3>
+<p>第一，<strong>“同步误差”指两轴跟随误差之差</strong>，记 <span class="math inline">e_{syn}=e_y-e_x</span>，单位 mm，正号表示 Y 落后。它是标量，只对两根轴有意义。</p>
+<p>第二，<strong>“轮廓误差”指实际点到理想轨迹的法向距离</strong>，记 <span class="math inline">e_n</span>，单位 mm，正负号按法向定义。它是几何量，与轴数无关。</p>
+<p>第三，<strong>“跟随误差”指单轴自己的参考减实际</strong>，记 <span class="math inline">e_x</span>、<span class="math inline">e_y</span>，单位 mm。三者关系是 <span class="math inline">e_n=e_{syn}\cos\theta</span>（45° 直线时 <span class="math inline">\cos45°=0.7071</span>），本章会反复用到这条投影关系。</p>
+<p>第四，<strong>轴模型一律取临界阻尼二阶闭环</strong> <span class="math inline">G(s)=\omega_n^2/(s^2+2\zeta\omega_n s+\omega_n^2)</span>，<span class="math inline">\zeta=1</span>。这样斜坡输入的稳态误差有闭式 <span class="math inline">2v/\omega_n</span>，正弦输入的幅相也有闭式，全部结论可以手算复核。真实系统的三环结构在第 95 章，其闭环在带宽附近也近似为二阶，本章的结论可以平移，只是 <span class="math inline">\zeta</span> 要按实测填。</p>
+<p>第五，<strong>“协调”与“同步”不作区分</strong>，都指多轴之间的相对关系；“跟踪”专指单轴对自身参考的跟随。</p>
+<p>第六，<strong>所有峰值指绝对值最大值</strong>，不区分正负；RMS 指稳态段（直线取 <span class="math inline">t&gt;100</span> ms，圆弧取 <span class="math inline">t&gt;500</span> ms）的均方根。</p>
+<h3 id="四个常见误区">98.1.8 四个常见误区</h3>
+<p><strong>误区一：每根轴都调得很准，多轴自然就准。</strong> 这是最普遍也最贵的一条。本章的算例里，两根轴的跟随误差分别是 2.813 mm 与 4.502 mm，都在“毫米级”；如果只看单轴指标，把带宽从 25 Hz 提到 40 Hz，Y 轴误差从 4.502 mm 降到 2.813 mm，单轴指标改善 37.5%，看起来很不错。但同步误差从 1.688 mm 变成 0——因为两根轴变得一样了。<strong>关键不是“准”，是“一样”。</strong> 反过来，把两根轴的带宽同时从 40/25 降到 20/12.5，单轴误差全部翻倍，同步误差却一点不变（比值仍是 1.600），轮廓误差也一点不变。这个结论在 §98.7 会用公式再确认一遍。</p>
+<p><strong>误区二：主从比并行“更可靠”，因为从轴永远跟着主轴。</strong> 主从确实保证了几何关系不被破坏——齿轮比是结构性的，不会因为编码器丢脉冲而漂移。但它把主轴的误差完整传下去，本章的 4.502 mm 就是证据。更麻烦的是：主轴误差里有一部分是<strong>低频的</strong>（比如丝杠热伸长、导轨直线度），主从会把这部分原样复制到从轴，而并行不会。所以“主从更可靠”只在“几何关系必须严格保持”的场合成立，在“轮廓精度优先”的场合它更差。</p>
+<p><strong>误区三：交叉耦合增益越大越好。</strong> 本章的扫描里，<span class="math inline">K_c</span> 从 0 加到 5，圆弧 RMS 从 532.7 μm 单调降到 89.5 μm，一直没饱和。若只看这条曲线，结论就是“往死里加”。但这条曲线是在<strong>线性二阶模型、无噪声、无法向估计误差</strong>的前提下算出来的；真实系统里 <span class="math inline">K_c</span> 一大，法向估计的噪声被放大 <span class="math inline">K_c</span> 倍灌进两根轴，同时 CCC 与原有位置环形成一个新的耦合环路，增益过大时会在某个频率上产生极限环。<strong>扫描曲线的右端不是“更好”，是“模型失效的地方”。</strong></p>
+<p><strong>误区四：插补周期越短，同步越好。</strong> 缩短插补周期只减小“两轴时间戳对不齐”这一项，对带宽差造成的同步误差毫无作用。本章 §98.5 的账很干净：共享插补器时，两轴滞后同为 <span class="math inline">T_s/2</span>，轮廓误差<strong>一点不增加</strong>（只是沿轨迹整体后移 157.1 μm）；独立插补器时，最坏差一整拍，轮廓误差加 314.2 μm。所以正确的动作不是“把周期从 1 ms 缩到 0.5 ms”，而是“让两根轴用同一个插补器、同一个时基”。<strong>这是架构问题，不是参数问题。</strong></p>
+<h3 id="同步误差与轮廓误差差在哪">98.1.9 同步误差与轮廓误差差在哪</h3>
+<p>这两个量经常被混用，因为在一维情形下它们相等。三句话分开：</p>
+<p><strong>同步误差是“轴间量”。</strong> 它只依赖两根轴的实际位置，<span class="math inline">e_{syn}=e_y-e_x</span>，与轨迹形状无关。同样的 1.688 mm，在 45° 直线上造成的轮廓误差是 1.194 mm，在 0° 直线上造成的轮廓误差是 0（因为 0° 直线的法向是 Y，<span class="math inline">e_x</span> 根本不在法向上），在 90° 直线上造成的轮廓误差是 0（对称地，<span class="math inline">e_y</span> 不在法向上）。<strong>同步误差大不等于轮廓误差大，要看它落在哪个方向。</strong></p>
+<p><strong>轮廓误差是“几何量”。</strong> 它是实际点到理想曲线的法向距离，与轴数、轴的定义都无关。一台三轴设备、一台五轴设备、一台只有虚拟轴的设备，都可以谈轮廓误差。它才是工件上看得见的那个量。</p>
+<p><strong>两者的换算靠投影。</strong> 45° 直线时 <span class="math inline">e_n=(e_y-e_x)\cos45°=0.7071e_{syn}</span>；圆弧上 <span class="math inline">e_n</span> 是径向距离，<span class="math inline">e_{syn}</span> 没有唯一定义（“两轴之差”在圆上没有几何意义），这时只能用 <span class="math inline">e_n</span> 本身。本章 §98.4 会给出圆弧上 <span class="math inline">e_n</span> 的解析式，它与“两轴相位差”直接挂钩——这就是投影关系在曲线上的推广。</p>
+<p>一条实用判据：<strong>验收单上写“同步误差”的设备，一定同时规定了“在哪个方向量”；没写方向的同步误差指标是不可验收的。</strong> 龙门双驱量的是横梁两端的纵向位置差（垂直于运动方向才是错位），飞剪量的是刀尖与标记的纵向相位差，分度盘量的是角度差。三个“同步误差”的物理含义完全不同。</p>
+<h2 id="数学原理">98.2 数学原理</h2>
+<h3 id="电子齿轮三个层级的同步">98.2.1 电子齿轮：三个层级的同步</h3>
+<p>电子齿轮最朴素的写法是一句比例关系：</p>
+<p><span class="math display">
+\theta_s(t)=R\,\theta_m(t)+\theta_0
+</span></p>
+<p><span class="math inline">R</span> 是齿轮比（从轴/主轴），<span class="math inline">\theta_0</span> 是啮合时的相位预置。三个符号各管一件事，也各自对应一类现场故障：<span class="math inline">R</span> 错了是“走得快慢不对”，<span class="math inline">\theta_0</span> 错了是“位置整体偏一截”，<span class="math inline">t</span> 的时基错了是“走着走着漂了”。</p>
+<p>按约束的强弱，电子齿轮分三层。</p>
+<p><strong>速度同步</strong>：只保证 <span class="math inline">\dot\theta_s=R\dot\theta_m</span>，不管相位。飞锯在追料带时先做这一层，等速度对上了再去对相位。这一层不累积误差，但也不保证任何位置关系。</p>
+<p><strong>位置同步</strong>：保证上式在所有时刻成立。这一层要求从轴的指令由主轴的实际位置实时算出，主从结构天然满足，并行结构只有在两根轴都完美跟踪时才近似成立。</p>
+<p><strong>相位同步</strong>：在位置同步之上，还要求 <span class="math inline">\theta_0</span> 与工艺标记对齐（比如刀尖对准料带上的色标）。这一层的误差不来自伺服，来自“标记检测到的那一刻，主轴位置采样到了哪”。检测延迟 1 ms，在 375 mm/s 的从轴速度下就是 375 μm 的相位偏差——和 §98.5 的时间戳账是同一笔。</p>
+<p>工程上说的“电子齿轮”通常指第二层，第三层要配合飞剪/套准功能单独做。</p>
+<h3 id="为什么齿轮比必须写成分数">98.2.2 为什么齿轮比必须写成分数</h3>
+<p><span class="math inline">R=1.5</span> 在浮点里是精确的，<span class="math inline">R=1.2345</span> 不是。控制器每个周期要算 <span class="math inline">\theta_s=R\theta_m</span>，若 <span class="math inline">R</span> 用双精度浮点存，误差在 <span class="math inline">10^{-16}</span> 量级，走一年也看不出来。真正的问题不在浮点精度，而在<strong>驱动器内部用的是整数计数器</strong>：主轴位置是一个 32 位或 48 位的 count 值，从轴指令也必须落在 count 上。若 <span class="math inline">R</span> 是一个无限小数，每拍都要做一次“乘完再取整”，取整误差会以“每拍 ±0.5 count”的形式累积成随机游走——1 kHz 下每秒 1000 次，走一小时就是 360 万次，最坏累积到 1.8 万 count，即 18 mm。</p>
+<p>所以工业驱动器一律要求把 <span class="math inline">R</span> 写成整数分数 <span class="math inline">p/q</span>，用“分子累加、分母比较”的方式做无误差的整数比例：</p>
+<p><span class="math display">
+\text{acc}\leftarrow\text{acc}+p,\qquad \text{当 acc}\ge q:\ \text{输出一脉冲},\ \text{acc}\leftarrow\text{acc}-q
+</span></p>
+<p>这样任意长时间的比例关系都是精确的（只要 <span class="math inline">p/q</span> 精确等于 <span class="math inline">R</span>），取整误差只在最后一拍出现一次。</p>
+<p>问题变成：<strong>给一个实数 <span class="math inline">R</span>，怎么找分母不超过上限的最近分数，以及这个近似会带来多大偏差。</strong> 本章的搜索上限取 1000（多数驱动器的电子齿轮分子分母都不超过这个量级），结果如表 98-2。</p>
+<p><strong>表 98-2 齿轮比的分数化与量化误差</strong>（分母上限 1000）</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">目标比值</th>
+<th style="text-align: left;">最接近分数</th>
+<th style="text-align: left;">分数值</th>
+<th style="text-align: left;">相对误差</th>
+<th style="text-align: left;">1 m 行程偏差</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">1.5000</td>
+<td style="text-align: left;">3/2</td>
+<td style="text-align: left;">1.500000</td>
+<td style="text-align: left;">0.00 ppm</td>
+<td style="text-align: left;">0.0 μm</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">2.0000</td>
+<td style="text-align: left;">2/1</td>
+<td style="text-align: left;">2.000000</td>
+<td style="text-align: left;">0.00 ppm</td>
+<td style="text-align: left;">0.0 μm</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">1.2345</td>
+<td style="text-align: left;">458/371</td>
+<td style="text-align: left;">1.234501</td>
+<td style="text-align: left;">1.09 ppm</td>
+<td style="text-align: left;">1.1 μm</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">0.7854</td>
+<td style="text-align: left;">538/685</td>
+<td style="text-align: left;">0.785401</td>
+<td style="text-align: left;">1.86 ppm</td>
+<td style="text-align: left;">1.9 μm</td>
+</tr>
+</tbody>
+</table>
+<p>表里最有用的信息不是“误差很小”，而是<strong>误差的量级刚好落在一个脉冲上</strong>：1.09 ppm 在 1 m 行程上是 1.1 μm，而单脉冲当量正好是 1.000 μm。也就是说，一个“看起来无理”的齿轮比，用 458/371 近似后，累积到 1 m 才差一个脉冲。这个量级在绝大多数场合可以接受，但它给了一条明确的下限：<strong>分数化之后的残余误差不可能低于一个脉冲当量每米</strong>，除非把分母上限提上去（分母 10000 时能压到 0.01 ppm 量级，但很多驱动器不支持）。</p>
+<p>第二行与第一行值得对比：<span class="math inline">R=1.5</span> 与 <span class="math inline">R=2.0</span> 都能精确写成小分数，误差 0.00 ppm。所以<strong>能用简单整数比就不要用小数比</strong>——把工艺要求的“1:1.2345”改成“458:371”不损失任何东西，而把“1:1.5”写成“1:1.5000”再让驱动器去近似，就是自找麻烦。</p>
+<h3 id="啮合预置与不预置差多少">98.2.3 啮合：预置与不预置差多少</h3>
+<p>电子齿轮在“使能”那一刻，从轴有两种进入方式。</p>
+<p><strong>直接啮合</strong>：从轴立刻按 <span class="math inline">R\dot\theta_m</span> 跑。若此时主轴已经在 25 rev/s，从轴的速度就从 0 瞬间跳到 37.50 rev/s。本章算例的从轴角速度是 235.62 rad/s，折算惯量 <span class="math inline">3.0\times10^{-4}</span> kg·m²，这份动能是</p>
+<p><span class="math display">
+E_k=\tfrac12 J\omega^2=\tfrac12\times3.0\times10^{-4}\times235.62^2=8.33\ \text{J}
+</span></p>
+<p>8.33 J 在 50 ms 内灌进一根丝杠，等于 167 W 的冲击功率，全部由联轴器和丝杠吸收。现场表现是“咔”一声，然后是反向间隙变大。</p>
+<p><strong>预同步啮合</strong>：先让从轴按斜坡加速到 <span class="math inline">R\dot\theta_m</span>，再把齿轮关系接上。本章算例把斜坡定为 50 ms，需要力矩 1.414 N·m——额定 1.0 N·m 的 141.4%，<strong>斜坡再短电机就不够了</strong>。反过来说，50 ms 是这台电机在 3:2 比值下的物理下限：<span class="math inline">t_{\min}=J\omega/T_{\text{rated}}=3.0\times10^{-4}\times235.62/1.0=70.7</span> ms。所以本章的 50 ms 其实已经超载，这也解释了为什么 141.4% 这个数会出现在这里——它是在提醒“预同步也要选时间”。</p>
+<p><strong>相位预置</strong>：啮合前把从轴的指令位置预置到 <span class="math inline">R\theta_m+\theta_0</span>。若不做这一步，从轴会在啮合瞬间“跳”一个相位差，这个跳变在位置环上表现为一次阶跃，电机全力去追，又是一次冲击。本章算例的预置精度要求是 1 count = 1.000 μm：只要预置到 1 μm 以内，剩下的就交给位置环慢慢吃掉，不会有可见冲击。</p>
+<p>图 98-1 把这两笔账画在一起。</p>
+<figure>
+<img src="figs/ch098/fig_098_01_gearing.svg" alt="图 98-1　电子齿轮啮合瞬间的转速跳变与加速时间-力矩关系" /><figcaption aria-hidden="true">图 98-1　电子齿轮啮合瞬间的转速跳变与加速时间-力矩关系</figcaption>
+</figure>
+<p>左图三条线：主轴（25.00 rev/s）、从轴预同步（50 ms 斜坡升到 37.50 rev/s）、从轴直接啮合（在 50 ms 处从 0 阶跃到 37.50 rev/s）。阶跃那条曲线的垂直段就是 8.33 J 的来源。右图是“加速时间—所需力矩”的双曲线，<span class="math inline">t=50</span> ms 处标出的 1.41 是本章的算例点，它与额定线 1.0 的交点就是 70.7 ms 的物理下限。<strong>双曲线的形状说明一件事：想快，力矩要按 <span class="math inline">1/t</span> 涨，没有别的办法。</strong></p>
+<h3 id="电子凸轮从比例到函数">98.2.4 电子凸轮：从比例到函数</h3>
+<p>电子凸轮把比例关系换成函数关系：</p>
+<p><span class="math display">
+\theta_s(t)=f\big(\theta_m(t)\big)
+</span></p>
+<p><span class="math inline">f</span> 是凸轮曲线，定义域与值域都归一化到 <span class="math inline">[0,1]</span>。工程上把它写成 <span class="math inline">s(\vartheta)</span>，<span class="math inline">\vartheta\in[0,1]</span> 是主轴在一个分度周期内走过的比例，<span class="math inline">s\in[0,1]</span> 是从轴走过的比例。实际转角与时间由两个尺度因子还原：</p>
+<p><span class="math display">
+\theta_s=s\cdot\Delta\theta,\qquad \vartheta=\frac{\theta_m}{\Delta\theta_m},\qquad t=\vartheta\,T
+</span></p>
+<p>对时间求导，链式法则给出三个峰值：</p>
+<p><span class="math display">
+\dot\theta_s=\frac{\Delta\theta}{T}\cdot\frac{ds}{d\vartheta},\qquad
+\ddot\theta_s=\frac{\Delta\theta}{T^2}\cdot\frac{d^2s}{d\vartheta^2},\qquad
+\theta_s^{(3)}=\frac{\Delta\theta}{T^3}\cdot\frac{d^3s}{d\vartheta^3}
+</span></p>
+<p>三个式子结构完全相同：<strong>无量纲形状导数 × 尺度因子</strong>。形状导数只与曲线族有关，尺度因子只与“转多少度、用多少时间”有关。这就是为什么表 98-3 的系数可以脱离具体算例独立使用。</p>
+<h3 id="四种凸轮曲线的形状与峰值">98.2.5 四种凸轮曲线的形状与峰值</h3>
+<p><strong>等加速（三角速度）</strong>：前半段匀加速、后半段匀减速，位移是两段抛物线。</p>
+<p><span class="math display">
+s=2\vartheta^2\ (\vartheta\le\tfrac12),\qquad s=1-2(1-\vartheta)^2\ (\vartheta&gt;\tfrac12)
+</span></p>
+<p>它的加速度是 ±4 的方波，在起点、中点、终点三次<strong>阶跃</strong>。jerk 在这三点是冲激，峰值无定义。这是最“硬”的曲线，只适合低速、大惯量、有机械缓冲的场合。</p>
+<p><strong>简谐（余弦）</strong>：位移是一条升余弦。</p>
+<p><span class="math display">
+s=\tfrac12\big(1-\cos\pi\vartheta\big)
+</span></p>
+<p>速度是正弦、加速度是余弦、jerk 又是正弦。它的加速度在两端为零，所以<strong>进出分度段是平滑的</strong>；但中点加速度达到 <span class="math inline">-\pi^2/2=-4.9348</span>，比等加速的 4 还大 23%。</p>
+<p><strong>五次多项式</strong>：满足两端位移、速度、加速度全为零的六个边界条件。</p>
+<p><span class="math display">
+s=10\vartheta^3-15\vartheta^4+6\vartheta^5
+</span></p>
+<p>它的加速度在中点是 5.7735，比等加速大 44%，比简谐大 17%；但 jerk 峰值 60，是四族里最大的。<strong>五次把“加速度连续”做到了极致，代价全压在 jerk 上。</strong></p>
+<p><strong>摆线</strong>：位移是一个旋转圆上一点的投影。</p>
+<p><span class="math display">
+s=\vartheta-\frac{\sin2\pi\vartheta}{2\pi}
+</span></p>
+<p>它的速度是 <span class="math inline">1-\cos2\pi\vartheta</span>，两端为零；加速度是 <span class="math inline">2\pi\sin2\pi\vartheta</span>，两端为零；jerk 是 <span class="math inline">4\pi^2\cos2\pi\vartheta</span>，两端最大。它是四族里<strong>唯一速度、加速度都在两端为零，且形状最简单</strong>的一条，峰值加速度 6.2832 是四族最大。</p>
+<p><strong>表 98-3 四种凸轮曲线的无量纲峰值</strong>（以 <span class="math inline">\Delta\theta/T^k</span> 为单位）</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">曲线</th>
+<th style="text-align: left;">速度峰值 <span class="math inline">ds/d\vartheta</span></th>
+<th style="text-align: left;">加速度峰值 <span class="math inline">d^2s/d\vartheta^2</span></th>
+<th style="text-align: left;">jerk 峰值 <span class="math inline">d^3s/d\vartheta^3</span></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">等加速</td>
+<td style="text-align: left;">2.0000</td>
+<td style="text-align: left;">4.0000</td>
+<td style="text-align: left;">阶跃（无界）</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">简谐</td>
+<td style="text-align: left;">1.5708</td>
+<td style="text-align: left;">4.9348</td>
+<td style="text-align: left;">15.503</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">五次</td>
+<td style="text-align: left;">1.8750</td>
+<td style="text-align: left;">5.7735</td>
+<td style="text-align: left;">60.000</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">摆线</td>
+<td style="text-align: left;">2.0000</td>
+<td style="text-align: left;">6.2832</td>
+<td style="text-align: left;">39.478</td>
+</tr>
+</tbody>
+</table>
+<p>表的读法：<strong>速度列决定“电机转速够不够”，加速度列决定“力矩够不够”，jerk 列决定“机械会不会响”。</strong> 三列没有一条曲线同时最小，这就是凸轮选型的全部矛盾。等加速速度最小（2.0000，与摆线并列），但 jerk 无界；简谐 jerk 最小（15.503），但加速度不小；五次加速度居中，jerk 最大；摆线加速度最大，jerk 居中。<strong>四族里没有“全能选手”，只有“哪一项你赔得起”。</strong></p>
+<p>图 98-2 把三条曲线画在同一组坐标里。</p>
+<figure>
+<img src="figs/ch098/fig_098_02_cam.svg" alt="图 98-2　四种凸轮曲线的归一化位移、速度与加速度" /><figcaption aria-hidden="true">图 98-2　四种凸轮曲线的归一化位移、速度与加速度</figcaption>
+</figure>
+<p>三格的纵轴都归一化过，所以可以直接比高低。第一格位移几乎重合——这也说明<strong>光看位移曲线选不出凸轮</strong>；第二格速度分出两层（简谐 1.5708 最低，其余三条都在 1.875–2.000）；第三格加速度的差别最大，摆线 6.2832 是简谐 4.9348 的 1.273 倍。等加速那条在第三格里是两段水平线，端点与中点的垂直跳变就是“阶跃”的图形证据。</p>
+<h3 id="换到实际转角与实际时间">98.2.6 换到实际转角与实际时间</h3>
+<p>表 98-3 是无量纲的，代入本章的凸轮算例（分度 90°、300 ms、分度盘折算惯量 0.02 kg·m²）就得到可以拿去选电机的数：</p>
+<ul>
+<li>等加速：速度峰值 10.47 rad/s、加速度 69.81 rad/s²、所需力矩 1.396 N·m</li>
+<li>简谐：8.22 rad/s、86.13 rad/s²、1.723 N·m</li>
+<li>五次：9.82 rad/s、100.77 rad/s²、2.015 N·m</li>
+<li>摆线：10.47 rad/s、109.66 rad/s²、<strong>2.193 N·m</strong></li>
+</ul>
+<p>四族的终点位移都精确等于 1.000000，所以差别全在中间过程。<strong>力矩从 1.396 到 2.193，差 57.1%</strong>——同样的 90°/300 ms，选错曲线就要换大一档电机。而“选错”的代价不止电机：摆线的 109.66 rad/s² 在分度盘上产生的惯性力矩是 2.193 N·m，若减速器额定只有 2.0 N·m，第一天就会打齿。</p>
+<p>图 98-3 把这四组数折算成相对值画出来。</p>
+<figure>
+<img src="figs/ch098/fig_098_09_cam_peaks.svg" alt="图 98-3　四种凸轮曲线相对等加速的峰值对比" /><figcaption aria-hidden="true">图 98-3　四种凸轮曲线相对等加速的峰值对比</figcaption>
+</figure>
+<p>纵轴是“以等加速为 1”的相对峰值。速度那一组四条线几乎重合（1.000 到 1.333），加速度那一组在 1.000 到 1.571 之间（摆线/等加速 = 6.2832/4.0000 = 1.571），jerk 那一组只有三条——等加速的 jerk 是冲激，比值无定义，图上留空。<strong>这张图的用途是一眼看出“哪一列在放大”</strong>：如果你手上的电机是被加速度卡住的，那就只能在等加速与简谐之间选；如果是被 jerk 卡住的（机械有共振），那等加速直接出局。</p>
+<h3 id="两轴闭环与斜坡误差">98.2.7 两轴闭环与斜坡误差</h3>
+<p>轴模型取临界阻尼二阶闭环：</p>
+<p><span class="math display">
+G(s)=\frac{\omega_n^2}{s^2+2\zeta\omega_n s+\omega_n^2},\qquad \zeta=1
+</span></p>
+<p><span class="math inline">\omega_n=2\pi f_{bw}</span>，<span class="math inline">f_{bw}</span> 是闭环带宽。这个模型在带宽附近的相位与真实三环系统吻合得不错，在低频段（<span class="math inline">s\to0</span>）则给出 <span class="math inline">G\to1</span>，即“直流增益为 1”，这正是位置环的要求。</p>
+<p>对斜坡输入 <span class="math inline">r=vt</span>，稳态误差由终值定理给出：</p>
+<p><span class="math display">
+e_{ss}=\lim_{s\to0}s\cdot\frac{1}{s}\cdot\frac{v}{s}\big(1-G(s)\big)
+=\frac{2\zeta v}{\omega_n}=\frac{2v}{\omega_n}
+</span></p>
+<p><span class="math inline">\zeta=1</span> 时就是 <span class="math inline">2v/\omega_n</span>。本章的 45° 直线，两轴的速度分量各是 <span class="math inline">0.5\cos45°=0.35355</span> m/s：</p>
+<p><span class="math display">
+e_x=\frac{2\times0.35355}{2\pi\times40}=2.813\ \text{mm},\qquad
+e_y=\frac{2\times0.35355}{2\pi\times25}=4.502\ \text{mm}
+</span></p>
+<p>仿真给出的稳态值与这两个数<strong>逐位相同</strong>。这不是巧合，而是“二阶闭环 + 斜坡 + 数值积分”三者在这组参数下没有可见偏差，可以作为后面所有结论的锚点。</p>
+<p>注意 <span class="math inline">2v/\omega_n</span> 里没有阻尼比之外的任何参数：<strong>斜坡误差与惯量、力矩、摩擦全都无关，只与速度和带宽有关。</strong> 这条结论在调试现场非常有用——跟随误差大，先看带宽，别急着加增益或者换电机。</p>
+<p>对正弦输入 <span class="math inline">r=A\sin(2\pi ft)</span>，幅值比与相位滞后是标准二阶式：</p>
+<p><span class="math display">
+M=\frac{1}{\sqrt{(1-r^2)^2+(2\zeta r)^2}},\qquad
+\varphi=-\arctan\frac{2\zeta r}{1-r^2},\qquad r=\frac{f}{f_{bw}}
+</span></p>
+<p>本章的圆弧算例 <span class="math inline">f=1</span> Hz，<span class="math inline">r_x=1/40=0.025</span>、<span class="math inline">r_y=1/25=0.040</span>。代入得 X 的幅值比 0.999375、滞后 2.864°；Y 的 0.998403、滞后 4.581°。这两个数在 §98.4 会被换算成“半径缩多少微米”和“弧长落后多少毫米”。</p>
+<h3 id="同步误差与轮廓误差的投影">98.2.8 同步误差与轮廓误差的投影</h3>
+<p>设理想轨迹是直线，单位切向 <span class="math inline">\mathbf{t}=(\cos\theta,\sin\theta)</span>，单位法向 <span class="math inline">\mathbf{n}=(-\sin\theta,\cos\theta)</span>。实际位置与参考位置之差是 <span class="math inline">\mathbf{e}=(e_x,e_y)</span>（参考减实际，所以 <span class="math inline">\mathbf{e}</span> 指向“还差多少”）。轮廓误差是 <span class="math inline">\mathbf{e}</span> 在法向上的投影：</p>
+<p><span class="math display">
+e_n=\mathbf{e}\cdot\mathbf{n}=-e_x\sin\theta+e_y\cos\theta
+</span></p>
+<p><span class="math inline">\theta=45°</span> 时 <span class="math inline">\sin\theta=\cos\theta=0.7071</span>，于是</p>
+<p><span class="math display">
+e_n=(e_y-e_x)\times0.7071=e_{syn}\cos45°
+</span></p>
+<p>这就是 §98.1.9 说的投影关系。代入本章的数：<span class="math inline">e_{syn}=4.502-2.813=1.688</span> mm，<span class="math inline">e_n=1.688\times0.7071=1.194</span> mm。仿真给出的 1.194 mm 与它一致。</p>
+<p><strong>主从结构的同步误差可以整段推导出来。</strong> 主从时从轴指令是 <span class="math inline">u_y=x\cdot\tan\theta</span>（本例 <span class="math inline">\tan45°=1</span>，即 <span class="math inline">u_y=x</span>）。从轴闭环对 <span class="math inline">u_y</span> 的响应是 <span class="math inline">y=G_y u_y</span>，而 <span class="math inline">u_y=x=r_x-e_x</span>，于是</p>
+<p><span class="math display">
+e_y=r_y-y=r_y-G_y(r_x-e_x)=(r_y-G_yr_y)+G_ye_x=e_{y0}+G_ye_x
+</span></p>
+<p><span class="math inline">e_{y0}</span> 是从轴自己的斜坡误差 4.502 mm，<span class="math inline">G_y e_x</span> 是主轴误差经从轴闭环“过滤”后传过来的部分。在低频（斜坡是直流），<span class="math inline">G_y\to1</span>，所以 <span class="math inline">e_y\approx e_{y0}+e_x</span>。本章的 4.502 mm 与这个式子对得上：<span class="math inline">e_x=2.813</span> mm 被完整传递，但由于 <span class="math inline">e_{y0}</span> 本身就比 <span class="math inline">e_x</span> 大，叠加后的净值仍是 4.502 mm（严格说应是 7.315 mm 的“误差和”，但物理上从轴的位置已经包含了主轴的位置，所以同步误差 <span class="math inline">e_y-e_x</span> 恰好等于 <span class="math inline">e_{y0}</span>）。</p>
+<p>这段推导说明了主从的本质：<strong>同步误差等于从轴自己的误差，与主轴误差无关；但轮廓误差等于从轴误差在法向上的投影，主轴误差通过 <span class="math inline">G_y</span> 混进来。</strong> 前者“看起来很好”，后者“实际很差”，这就是为什么主从设备常常“同步误差合格、轮廓误差超标”。</p>
+<h3 id="交叉耦合把法向误差还给两根轴">98.2.9 交叉耦合：把法向误差还给两根轴</h3>
+<p>CCC 的结构只有三行：</p>
+<p><span class="math display">
+e_n=-e_x\sin\theta+e_y\cos\theta
+</span> <span class="math display">
+u_x=r_x-K_ce_n\sin\theta,\qquad u_y=r_y+K_ce_n\cos\theta
+</span></p>
+<p>第一行算法向误差，第二行把它按法向分量分回两根轴的指令。注意符号：<span class="math inline">e_n</span> 为正表示实际点落在法向的负侧（比如 45° 直线时 Y 落后），此时要给 X 减、给 Y 加，把实际点往法向正侧推。<span class="math inline">-K_ce_n\sin\theta</span> 与 <span class="math inline">+K_ce_n\cos\theta</span> 正是这个方向。</p>
+<p>把第二行代进闭环，稳态时可解出残余的法向误差：</p>
+<p><span class="math display">
+e_n=\frac{e_{n0}}{1+K_c}
+</span></p>
+<p><span class="math inline">e_{n0}</span> 是无 CCC 时的轮廓误差。这个式子是近似的（它假设两个闭环在低频都是单位增益），但本章 §98.6 的六点扫描会验证它准到 0.5% 以内：<span class="math inline">K_c=0.5</span> 时 <span class="math inline">1/1.5=0.6667</span>，实测 356.8/532.7 = 0.6698；<span class="math inline">K_c=5</span> 时 <span class="math inline">1/6=0.1667</span>，实测 89.5/532.7 = 0.1680。</p>
+<p><strong><span class="math inline">1/(1+K_c)</span> 是一个“收敛很慢”的压缩率。</strong> 想把误差压到十分之一，<span class="math inline">K_c</span> 要取 9；想压到百分之一，要取 99。这与 PID 里“积分增益压静差”的规律一样：<strong>反馈只能按几何级数压误差，越往后越贵。</strong> 所以 CCC 的合理取值范围通常在 0.5–3，把误差压到 1/2 到 1/4，剩下的交给机械精度与前馈。</p>
+<h3 id="圆弧上的几何相位差比幅值差重要一个数量级">98.2.10 圆弧上的几何：相位差比幅值差重要一个数量级</h3>
+<p>圆轨迹的两轴参考是</p>
+<p><span class="math display">
+x_r=R\cos\omega t,\qquad y_r=R\sin\omega t
+</span></p>
+<p>经过两个带宽不同的闭环后，实际位置近似为</p>
+<p><span class="math display">
+x=A\cos(\omega t-\varphi_x),\qquad y=B\sin(\omega t-\varphi_y)
+</span></p>
+<p><span class="math inline">A=R M_x</span>、<span class="math inline">B=R M_y</span> 是幅值，<span class="math inline">\varphi_x</span>、<span class="math inline">\varphi_y</span> 是相位滞后。代入半径</p>
+<p><span class="math display">
+r^2=A^2\cos^2(\omega t-\varphi_x)+B^2\sin^2(\omega t-\varphi_y)
+</span></p>
+<p>在 <span class="math inline">A\approx B\approx R</span>、<span class="math inline">\varphi\ll1</span> 时展开到一阶：</p>
+<p><span class="math display">
+r^2-R^2\approx-2R^2\delta\sin\theta\cos\theta-R^2(\varepsilon_x\cos^2\theta+\varepsilon_y\sin^2\theta)
+</span></p>
+<p>其中 <span class="math inline">\delta=\varphi_y-\varphi_x</span> 是相位差，<span class="math inline">\varepsilon_x=1-M_x</span>、<span class="math inline">\varepsilon_y=1-M_y</span> 是幅值衰减。第一项是 <span class="math inline">2\theta</span> 的谐波，第二项是常数加 <span class="math inline">2\theta</span> 谐波。因为 <span class="math inline">r^2-R^2\approx2R(r-R)</span>，第一项给出</p>
+<p><span class="math display">
+r-R\approx-\frac{R\delta}{2}\sin2\theta
+</span></p>
+<p><strong>这是一个纯几何的结果：相位差 <span class="math inline">\delta</span> 产生一个幅度为 <span class="math inline">R\delta/2</span> 的椭圆化。</strong> 代入本章的数：<span class="math inline">\delta=4.581°-2.864°=1.717°=0.02997</span> rad，<span class="math inline">R=50</span> mm，幅度 <span class="math inline">=50\times0.02997/2=0.749</span> mm，即 749 μm。</p>
+<p>幅值项给出的是 <span class="math inline">\varepsilon</span> 量级：<span class="math inline">\varepsilon_x=1-0.999375=6.25\times10^{-4}</span>，乘 <span class="math inline">R</span> 是 31.2 μm；<span class="math inline">\varepsilon_y=1.598\times10^{-3}</span>，乘 <span class="math inline">R</span> 是 79.9 μm。两项合起来最多再贡献 80 μm 量级的偏差，与 749 μm 相比是<strong>十分之一</strong>。</p>
+<p>所以本章的 810.9 μm 峰值、532.7 μm RMS 主要由相位差贡献。验证一下 RMS：正弦的 RMS 是幅值 <span class="math inline">/\sqrt2</span>，<span class="math inline">749/1.414=530</span> μm，与实测 532.7 μm 差 0.5%。峰值 749 与实测 810.9 差 8%，多出来的部分正是幅值项与二阶项。</p>
+<p><strong>这条结论的工程含义很硬：提高圆弧精度，先对齐两轴的相位（即让带宽接近），而不是先提高幅值精度（即提高增益）。</strong> 把 Y 的带宽从 25 Hz 提到 40 Hz，幅值差从 80 μm 降到 31 μm，但相位差从 1.717° 降到 0，椭圆化直接消失——这两个效果不在一个量级上。</p>
+<h3 id="三条可带走的闭式">98.2.11 三条可带走的闭式</h3>
+<p>本章后面反复用到的闭式只有三条，先集中列出来：</p>
+<p><strong>斜坡误差</strong> <span class="math inline">e=2v/\omega_n</span>。线性、与带宽成反比、与惯量无关。用于估单轴跟随误差。</p>
+<p><strong>投影关系</strong> <span class="math inline">e_n=e_{syn}\cos\theta</span>。45° 时系数 0.7071。用于把“轴间差”换成“几何差”。</p>
+<p><strong>椭圆化</strong> <span class="math inline">\max|r-R|\approx R|\varphi_y-\varphi_x|/2</span>。与带宽差的<strong>一次方</strong>成正比（因为小 <span class="math inline">\omega</span> 下 <span class="math inline">\varphi\approx2\omega/\omega_n</span>，所以 <span class="math inline">\delta\approx4\omega(1/\omega_{ny}-1/\omega_{nx})</span>）。用于估圆弧轮廓误差。</p>
+<p>三条都是“一阶近似 + 可手算”的形式，误差都在 10% 以内，足够在现场估算用。需要精确值时回到仿真或实测。</p>
+<h3 id="斜坡与正弦是同一件事的两端">98.2.12 斜坡与正弦是同一件事的两端</h3>
+<p>上面三条闭式看起来互不相干，其实前两条与第三条出自同一个式子。二阶闭环的误差幅相是</p>
+<p><span class="math display">
+\left|\frac{E}{R}\right|=\frac{1}{\sqrt{(1-r^2)^2+(2\zeta r)^2}},\qquad r=\frac{\omega}{\omega_n}
+</span></p>
+<p>低频时 <span class="math inline">r\ll1</span>，分母展开取一阶，<span class="math inline">|E/R|\approx2\zeta r</span>。把 <span class="math inline">\zeta=1</span>、<span class="math inline">r=\omega/\omega_n</span>、<span class="math inline">R=A</span>（正弦幅值）代回去，误差幅值</p>
+<p><span class="math display">
+|e|\approx A\frac{2\omega}{\omega_n}=\frac{2v}{\omega_n},\qquad v=\omega A
+</span></p>
+<p><strong>这就是斜坡误差公式。</strong> 它不是“另一条结论”，而是正弦公式在 <span class="math inline">r\ll1</span> 时的极限：正弦的幅值乘角频率就是它的峰值速度，低速正弦与匀速直线在局部看不出区别。</p>
+<p>用本章的圆弧验一下。<span class="math inline">f=1</span> Hz、<span class="math inline">R=50</span> mm，切向速度 <span class="math inline">v=2\pi fR=0.31416</span> m/s。</p>
+<ul>
+<li>X 轴：<span class="math inline">2v/\omega_n=2\times0.31416/251.33=2.500</span> mm。§98.4.5 用幅相公式算出的弧长滞后是 2.499 mm，差 0.04%。</li>
+<li>Y 轴：<span class="math inline">2v/\omega_n=2\times0.31416/157.08=4.000</span> mm。同法算出 3.998 mm，差 0.05%。</li>
+</ul>
+<p>两个数都对上了。<strong>这说明圆弧上那两个“弧长滞后”根本不是新量，就是两根轴各自的斜坡误差。</strong> §98.4.5 之所以要另算一遍，是因为那里要把它们与“半径收缩”放在一起比量级，而不是因为它们是不同的物理量。</p>
+<p>两条弧长滞后之差 1.499 mm 也有意义：它等于 <span class="math inline">R\delta=50\times0.02997=1.499</span> mm，即“相位差折成弧长”。而轮廓误差是 <span class="math inline">R\delta/2=749</span> μm，<strong>正好是它的一半</strong>。</p>
+<p><strong>这个 <span class="math inline">1/2</span> 与直线上的 0.7071 不同，值得单独记住。</strong> 45° 直线上，两轴误差方向固定，同步误差乘 <span class="math inline">\cos45°=0.7071</span> 得到法向分量；圆弧上，两轴的差以“相位差”的形式出现，§98.2.10 的展开给出 <span class="math inline">r-R\approx-(R\delta/2)\sin2\theta</span>，系数就是 <span class="math inline">1/2</span>。差别来自几何：直线的法向是常向量，圆的法向随 <span class="math inline">\theta</span> 转，同一份相位差被两个坐标“摊薄”了一半。</p>
+<p>一句话：<strong>直线看“投影”，圆弧看“摊薄”。</strong> 现场用同一个同步误差读数去估两种轨迹的轮廓误差，系数要用对，否则差 41.4%（<span class="math inline">0.7071/0.5=1.414</span>）——与 §98.5.4 里那个三次根号的误差恰好同一个数，纯属巧合，但同样是“漏一步就错四成”的量级。</p>
+<h3 id="一条口算公式eapprox0.225vf_bw">98.2.13 一条口算公式：<span class="math inline">e\approx0.225\,v/f_{bw}</span></h3>
+<p>把 <span class="math inline">e=2v_{\text{axis}}/\omega_n</span> 里的 <span class="math inline">\omega_n</span> 换成 <span class="math inline">2\pi f_{bw}</span>，得到</p>
+<p><span class="math display">
+e=\frac{2v_{\text{axis}}}{2\pi f_{bw}}=\frac{v_{\text{axis}}}{\pi f_{bw}}
+</span></p>
+<p>剩下的只是“<span class="math inline">v_{\text{axis}}</span> 是路径速度的几分之几”。两种常见情形：</p>
+<p><strong>45° 直线</strong>：每轴速度是 <span class="math inline">v/\sqrt2</span>，所以 <span class="math inline">e=v/(\sqrt2\pi f_{bw})=0.225\,v/f_{bw}</span>。本章 <span class="math inline">v=0.5</span>、<span class="math inline">f_{bw}=25</span>：<span class="math inline">0.225\times0.5/25=4.500</span> mm，与 [5] 的 4.502 mm 一致；X 轴 <span class="math inline">0.225\times0.5/40=2.813</span> mm，也一致。</p>
+<p><strong>圆弧</strong>：每根轴的参考是 <span class="math inline">R\cos\omega t</span>，它的速度幅值就是切向速度 <span class="math inline">v=\omega R</span>，不再除以 <span class="math inline">\sqrt2</span>，所以 <span class="math inline">e=v/(\pi f_{bw})=0.318\,v/f_{bw}</span>。本章 <span class="math inline">v=0.31416</span>、<span class="math inline">f_{bw}=25</span>：<span class="math inline">0.318\times0.31416/25=4.000</span> mm，与 §98.2.12 的 4.000 mm 一致。</p>
+<p>两个系数 0.225 与 0.318 相差 1.414 倍，又是那个 <span class="math inline">\sqrt2</span>。<strong>所以在现场口算时，先问一句“这根轴的速度是路径速度，还是路径速度的 <span class="math inline">1/\sqrt2</span>”</strong>，问错就错四成。</p>
+<p>这条公式的用途是“三秒钟判断量级”：给定速度和带宽，立刻知道误差是几十微米还是几毫米。本章 0.5 m/s、25 Hz 给出 4.5 mm，这就是“毫米级”的来源——<strong>要把它压到几十微米，要么把速度降到 1/100，要么把带宽提 100 倍，两者都不现实；现实的第三条路是 CCC 与前馈，它们不改 <span class="math inline">v</span> 也不改 <span class="math inline">f_{bw}</span>，只是把“两根轴的差”消掉。</strong></p>
+<h2 id="设计步骤从比例到验收">98.3 设计步骤：从比例到验收</h2>
+<h3 id="为什么多轴要写成流程">98.3.1 为什么多轴要写成流程</h3>
+<p>单轴的设计流程在第 95 章已经给过：定负载、算惯量比、选增益、核带宽。多轴不能照搬，因为<strong>多轴的每一个参数都同时影响两根轴，而两根轴的要求往往相反</strong>。</p>
+<p>举个具体的例子。Y 轴带宽低，跟随误差 4.502 mm；要提高轮廓精度，直觉是“把 Y 的带宽提上去”。但带宽提上去意味着增益提上去，而增益提上去意味着 Y 轴对机械共振更敏感——Y 轴恰恰是背着工件、夹具、防护罩的那根轴，共振频率最低。于是“提高 Y 带宽”这件事在电气上正确、在机械上危险。再比如齿轮比，工艺要求 3:2，从轴要到 2250 r/min，电机在 50 ms 内加速需要 141.4% 的额定力矩——比值不能改，只能改加速时间，而加速时间一长，节拍就超了。</p>
+<p>所以多轴的设计必须以“账”的形式排出来：<strong>每一笔都算出数，然后看哪几笔冲突，冲突时按工艺优先级取舍。</strong> 下面十步就是这个顺序。</p>
+<h3 id="第一步定几何与工艺链">98.3.2 第一步：定几何与工艺链</h3>
+<p>先写清楚“哪根轴对哪根轴负责什么”。三种关系：</p>
+<ul>
+<li><strong>比例关系</strong>（电子齿轮）：从轴位置 = 比 × 主轴位置。飞剪、龙门双驱、传送带同步都属这一类。</li>
+<li><strong>函数关系</strong>（电子凸轮）：从轴位置 = <span class="math inline">f</span>(主轴位置)。分度盘、包装机的折页、灌装机的升降都属这一类。</li>
+<li><strong>几何关系</strong>（插补）：两根轴共同决定一个末端点。直角平台、机械臂、切割机都属这一类。</li>
+</ul>
+<p>这一步的输出是一句话：“X 与 Y 通过直线插补共同走 45° 直线”或者“刀辊通过 3:2 电子齿轮跟随料带”。写不出这句话，后面的账无从算起。</p>
+<h3 id="第二步定比值并分数化">98.3.3 第二步：定比值并分数化</h3>
+<p>比例关系直接给 <span class="math inline">R</span>，函数关系给 <span class="math inline">s(\vartheta)</span> 的四个边界条件（起点/终点的位移、速度，通常还有加速度）。</p>
+<p>拿到 <span class="math inline">R</span> 之后立刻做分数化：分母上限按驱动器手册填（本章取 1000），算出 <span class="math inline">p/q</span> 与 ppm 误差。判据是“1 m 行程偏差是否小于 1 个脉冲当量”：本章的 1.09 ppm → 1.1 μm，与 1.000 μm 同量级，可接受；若算出来是 50 ppm（50 μm/m），就要么提高分母上限，要么改机械传动比。</p>
+<p>函数关系这一步要选曲线族。按表 98-3 的三列对照手上的约束：电机转速够不够、力矩够不够、机械怕不怕 jerk。<strong>先看哪一列最紧，再选曲线</strong>，不要反过来。</p>
+<h3 id="第三步核转速与力矩">98.3.4 第三步：核转速与力矩</h3>
+<p>齿轮比定了，从轴的转速就定了：<span class="math inline">n_s=R\,n_m</span>。本章是 <span class="math inline">1.5\times1500=2250</span> r/min，从轴角速度 235.62 rad/s。</p>
+<p>然后算两笔力矩：</p>
+<p><span class="math display">
+T_{\text{acc}}=\frac{J\omega_s}{t_{\text{eng}}},\qquad T_{\text{cam}}=J_{\text{table}}\,\ddot\theta_{\max}
+</span></p>
+<p>第一笔是啮合/加速，本章 50 ms 要 1.414 N·m（141.4% 额定）；第二笔是凸轮惯性力矩，本章摆线要 2.193 N·m。两笔都要与额定比，<strong>取大的那个</strong>。若都超，只有三条路：加大电机、加长加速时间、换曲线族。</p>
+<p>反解加速时间的下限是 <span class="math inline">t_{\min}=J\omega_s/T_{\text{rated}}=70.7</span> ms。这个数比 50 ms 更值得记住，因为它是<strong>物理下限</strong>，与“你想多快”无关。</p>
+<h3 id="第四步定预置与啮合时序">98.3.5 第四步：定预置与啮合时序</h3>
+<p>三件事按顺序：</p>
+<ol type="1">
+<li>啮合前把从轴指令预置到 <span class="math inline">R\theta_m+\theta_0</span>，精度 1 count（1.000 μm）。</li>
+<li>让从轴按斜坡升到 <span class="math inline">R\dot\theta_m</span>，斜坡时间取第三步算出的 <span class="math inline">t_{\min}</span> 以上。</li>
+<li>斜坡到位后再把齿轮关系接上，接上的那一刻速度与位置都连续。</li>
+</ol>
+<p>若省略第 1 步，从轴会在啮合瞬间跳一个相位，位置环全力去追，冲击能量就是 8.33 J 的一部分；若省略第 2 步，速度从 0 阶跃到 235.62 rad/s，8.33 J 全额灌进机械。<strong>两步都省，等于每次开机都拿联轴器当缓冲器。</strong></p>
+<h3 id="第五步定两轴带宽">98.3.6 第五步：定两轴带宽</h3>
+<p>带宽的决定因素在单轴（第 95 章），多轴只加一条约束：<strong>两轴带宽之比</strong>。</p>
+<p>本章取 40/25 = 1.600，这是一个“偏大但仍常见”的值。经验上：</p>
+<ul>
+<li>比值 ≤ 1.25：同步误差主要来自负载扰动，带宽差可以忽略，CCC 的收益有限。</li>
+<li>1.25–2.0：同步误差以带宽差为主，CCC 收益明显（本章 1.49 倍压缩）。</li>
+<li><blockquote>
+<p>2.0：低带宽那根轴成为瓶颈，任何协调算法都只能“陪它慢”，此时应该先解决机械（减重、换导轨、加配重）。</p>
+</blockquote></li>
+</ul>
+<p>本章落在中段，所以既有可算的同步误差，也有可观的 CCC 收益。</p>
+<h3 id="第六步算同步误差与轮廓误差">98.3.7 第六步：算同步误差与轮廓误差</h3>
+<p>用 §98.2 的三条闭式，直线与圆弧各算一遍：</p>
+<p>直线 45°：<span class="math inline">e_x=2.813</span> mm、<span class="math inline">e_y=4.502</span> mm、<span class="math inline">e_{syn}=1.688</span> mm、<span class="math inline">e_n=1.194</span> mm。</p>
+<p>圆弧：<span class="math inline">\delta=1.717°</span>、<span class="math inline">R\delta/2=749</span> μm，加上幅值项得 810.9 μm 峰值、532.7 μm RMS。</p>
+<p>这两组数就是“不加任何协调算法”的基线。<strong>先有基线，才谈得上“改善了百分之多少”。</strong> 现场最常见的错误是上来就调 CCC，调完发现好了一点，但不知道那一点是 CCC 的功劳还是别的东西——因为没有基线。</p>
+<h3 id="第七步选协调结构">98.3.8 第七步：选协调结构</h3>
+<p>按“几何关系是否必须严格保持”分：</p>
+<ul>
+<li>必须严格保持（龙门、飞剪、分度）：<strong>主从</strong>。代价是误差被复制（本章 4.502 mm）。</li>
+<li>只需要轮廓精度（切割、涂胶、雕刻）：<strong>并行 + CCC</strong>。本章能把 532.7 μm 压到 356.8 μm（<span class="math inline">K_c=0.5</span>）。</li>
+<li>两根轴完全独立、只是要同时启停：<strong>并行，不加 CCC</strong>。此时同步误差不重要，重要的是启停时序（§98.10）。</li>
+</ul>
+<p>注意主从与 CCC 一般不叠加：主从已经让从轴跟着主轴，再叠加一个法向耦合，两个环会打架。</p>
+<h3 id="第八步算离散账">98.3.9 第八步：算离散账</h3>
+<p>三笔：</p>
+<ul>
+<li><strong>插补节拍</strong>：共享插补器时，两轴滞后同为 <span class="math inline">T_s/2</span>，轮廓误差不增加，只沿轨迹后移 157.1 μm。独立插补器时，最坏差一整拍，加 314.2 μm。</li>
+<li><strong>时间戳抖动</strong>：<span class="math inline">\sigma=100</span> μs 时，直线 0.5 m/s 下两轴独立的均方根是 <span class="math inline">v\sigma/\sqrt2=35.4</span> μm；单轴最坏 50.0 μm。</li>
+<li><strong>脉冲取整</strong>：1 count = 1.000 μm，圆整误差 ±0.5 μm，可忽略；但若用“每拍算一次增量再取整”，误差会累积，见 §98.5。</li>
+</ul>
+<p>判据：<strong>离散项之和不应超过动态项的三分之一。</strong> 本章动态项 532.7 μm，离散项最坏 314.2 μm，比值 0.59，超标——所以本章的结论是“必须共享插补器”，这正是 §98.10 的一条落地要求。</p>
+<h3 id="第九步核运动学约束">98.3.10 第九步：核运动学约束</h3>
+<p>多轴协调在关节空间设备上还有一层：笛卡尔速度要分解到关节，而关节速度有上限。本章的两连杆算例，末端 0.5 m/s 走直线时，关节 1 峰值 1.357 rad/s、关节 2 峰值 1.691 rad/s。若限幅取 (2.0, 1.2)，关节 2 用掉 141.0%，已经超了；按这个限幅，路径速度只能取 0.355 m/s（原速的 70.9%）。</p>
+<p>这一步的输出是一个<strong>降速系数</strong>。它必须在前面的账之前算，否则会白算一遍——降速 29.1% 之后，所有跟随误差与轮廓误差都按比例缩小，前面按 0.5 m/s 算出来的数全部作废。</p>
+<h3 id="第十步验收">98.3.11 第十步：验收</h3>
+<p>三条判据，缺一不可：</p>
+<ol type="1">
+<li><strong>同步误差</strong>在指定方向上 ≤ 指标（本章并行 1.688 mm、主从 4.502 mm，若指标是 0.05 mm，两者都不合格，说明机械或带宽必须改）。</li>
+<li><strong>轮廓误差</strong>在工件上可测，且与估算同量级（本章 1.194 mm / 532.7 μm）。</li>
+<li><strong>离散项</strong>不超过动态项的三分之一（本章 0.59，不合格，需改架构）。</li>
+</ol>
+<p>三条都过，才谈“调参优化”；任何一条不过，调参都是徒劳——因为瓶颈在结构，不在参数。</p>
+<h3 id="把本章的数走一遍">98.3.12 把本章的数走一遍</h3>
+<p>按十步顺序，本章的账是这样走的：几何是“X/Y 直线插补 45°”；比值 3:2 精确分数化（0.00 ppm）但啮合要 141.4% 额定，改斜坡到 70.7 ms 以上；带宽 40/25，得到 <span class="math inline">e_x=2.813</span>、<span class="math inline">e_y=4.502</span>、<span class="math inline">e_{syn}=1.688</span>、<span class="math inline">e_n=1.194</span> mm；圆弧 810.9 μm 峰值 / 532.7 μm RMS；选并行 + CCC，<span class="math inline">K_c=0.5</span> 后 356.8 μm；离散 314.2 μm 超标，改共享插补器；运动学约束把路径速度压到 0.355 m/s。</p>
+<p><strong>注意最后两笔与前三笔的相互作用</strong>：路径速度压到 0.355 m/s 后，<span class="math inline">e_x</span>、<span class="math inline">e_y</span> 按比例降到 1.996 mm 与 3.194 mm，<span class="math inline">e_{syn}</span> 降到 1.198 mm，<span class="math inline">e_n</span> 降到 0.847 mm——全部按 0.709 缩放。这就是“账要按顺序算”的原因：<strong>降速系数是一个全局缩放因子，它必须在所有绝对值算完之后统一乘上去，而不是每一步各乘一次。</strong></p>
+<h3 id="十步之外的三条自检">98.3.13 十步之外的三条自检</h3>
+<p>十步走完，数有了，但还不能用。三条自检：</p>
+<p><strong>自检一：单位。</strong> 本章的误差同时用 mm 与 μm 表示，混用会差 1000 倍。规矩是“大于 1 mm 用 mm，小于 1 mm 用 μm”，且每次写数都带单位。2.813 mm 与 2813 μm 是同一个数；正文里若出现 2.813 μm，读者无法从上下文判断是笔误还是换了单位。这也正是 §98.4.3 那句“7.315 mm 不是同步误差”容易被误读的原因——两个 2.8/4.5 mm 相加得 7.3 mm，量级上“看起来合理”，实际上那个加法做的事是“把主轴误差与从轴误差叠加”，而主从结构里主轴误差已经被包含在从轴位置里了。</p>
+<p><strong>自检二：共模还是差模。</strong> 每算出一个误差，先问一句“两根轴是不是都有、而且一样多”。157.1 μm 的插补滞后是共模，不进轮廓；314.2 μm 的节拍差是差模，全额进轮廓。两者的绝对值只差 2 倍，对轮廓的贡献却是 0 与 314.2 μm。<strong>这一问能省掉一半的无效优化</strong>，因为现场大部分“看得见的误差”都是共模的，改它不改善工件。</p>
+<p><strong>自检三：缩放方向。</strong> 降速 0.709，全部误差乘 0.709；提高单轴带宽，只有那一根轴的误差变。这两类改动在表 98-7 里分列得很清楚，但现场常混。举个具体的：把 Y 轴带宽从 25 Hz 提到 28 Hz，按 §98.7.4 的闭式，同步误差从 1.688 mm 降到 1.206 mm，轮廓误差从 1.194 mm 降到 0.853 mm，而 X 轴的单轴误差与所有的离散项一点没动。<strong>若把它报成“整体改善 12%”，就是拿一个差模指标的改善去冒充全系统指标</strong>——X 轴那 2.813 mm 还在那里。</p>
+<p>三条自检都不产生新数，只核对旧数。但本章 90% 的算错发生在这一步，而不是发生在公式里。</p>
+<h3 id="十步的输入与输出">98.3.14 十步的输入与输出</h3>
+<p>把十步写成“输入 → 输出”，便于排期与交接：</p>
+<ol type="1">
+<li>几何与工艺链 → 一句“谁对谁负责什么”。</li>
+<li>比值与分数化 → <span class="math inline">R=p/q</span>、ppm 误差。</li>
+<li>转速与力矩 → 从轴转速、<span class="math inline">T_{\text{acc}}</span>、<span class="math inline">T_{\text{cam}}</span>、<span class="math inline">t_{\min}</span>。</li>
+<li>预置与啮合时序 → 预置精度、斜坡时间、冲击能量。</li>
+<li>两轴带宽 → <span class="math inline">\omega_{nx}</span>、<span class="math inline">\omega_{ny}</span>、比值 <span class="math inline">\rho</span>。</li>
+<li>同步与轮廓误差 → <span class="math inline">e_x</span>、<span class="math inline">e_y</span>、<span class="math inline">e_{syn}</span>、<span class="math inline">e_n</span>。</li>
+<li>协调结构 → 并行 / 主从 / 并行 + CCC。</li>
+<li>离散账 → 插补滞后、抖动项、量化项。</li>
+<li>运动学约束 → 降速系数。</li>
+<li>验收 → 三条判据的通过/不通过。</li>
+</ol>
+<p>十行里，第 5、6 两行是<strong>唯一需要迭代的</strong>：带宽定完算误差，若误差不达标，要么改带宽（回到第 5 行）、要么改速度（回到第 9 行）、要么加 CCC（回到第 7 行）。其余八行都是“一次定死”。</p>
+<p><strong>这条迭代路径的判据是“根因在哪”，不是“哪个便宜”。</strong> 误差超标时先问一句：是不是带宽比太大？是，回第 5 行（最贵，但它是根）；不是，再看 CCC（第 7 行）与降速（第 9 行）。<strong>注意这说的是“诊断顺序”，不是“施工顺序”</strong>——施工时按 §98.9.9 的性价比排，先做零风险的降速与共享插补，最后才动带宽。两者不矛盾：<strong>诊断要找根，施工要省力。</strong></p>
+<p>现场常犯的错是把两者混起来：一看到误差大就降速（施工思维），结果把最贵的代价付在了最便宜的地方，带宽比 1.6 倍这个根一直没动；或者反过来，一上来就提带宽（诊断思维用错了地方），机械振起来之后连原来的精度都保不住。</p>
+<p>交接时最该写清的是第 2、3 两行的数：<strong>齿比与力矩是唯二“改一次要动机械”的输出</strong>，其他八行都只是纸面参数。</p>
+<h2 id="连续情形两轴为什么越走越不齐">98.4 连续情形：两轴为什么越走越不齐</h2>
+<h3 id="连续域的第一句话">98.4.1 连续域的第一句话</h3>
+<p>在连续时间里，两轴协调的结论可以压缩成一句话：<strong>若两轴的 <span class="math inline">\omega_n</span> 相同，同一条参考下它们的输出完全相同，同步误差恒为零。</strong></p>
+<p>这不是近似，是严格结论。两个相同传递函数对同一输入 <span class="math inline">r(t)</span> 的响应必然相同，<span class="math inline">y_x=y_y</span>，于是 <span class="math inline">e_x=e_y</span>、<span class="math inline">e_{syn}=0</span>、<span class="math inline">e_n=0</span>。所有多轴误差的根源，都可以追溯到“两个传递函数不相同”这件事上——带宽不同、阻尼不同、前馈不同、饱和不同、甚至只是初始条件不同。</p>
+<p>本章把“不同”压缩成一个参数：带宽比 <span class="math inline">\rho=\omega_{nx}/\omega_{ny}=1.600</span>。后面所有的数都是这个 <span class="math inline">\rho</span> 的函数。</p>
+<h3 id="斜坡输入误差怎么建立起来">98.4.2 斜坡输入：误差怎么建立起来</h3>
+<p>从静止突加一个斜坡参考（速度阶跃），两轴的跟随误差不是瞬间跳到稳态值的，而是按二阶闭环的固有动态爬上去。</p>
+<p>临界阻尼二阶系统的误差响应可以写成</p>
+<p><span class="math display">
+e(t)=\frac{2v}{\omega_n}\Big[1-(1+\omega_n t)e^{-\omega_n t}\Big]
+</span></p>
+<p>括号里从 0 单调升到 1，时间常数 <span class="math inline">1/\omega_n</span>。本章两根轴：</p>
+<ul>
+<li>X 轴 <span class="math inline">\omega_n=251.33</span> rad/s，时间常数 <span class="math inline">1/\omega_n=3.98</span> ms</li>
+<li>Y 轴 <span class="math inline">\omega_n=157.08</span> rad/s，时间常数 <span class="math inline">1/\omega_n=6.37</span> ms</li>
+</ul>
+<p>所以<strong>同步误差也是“慢慢建立”的</strong>：起步瞬间两轴误差都是 0，同步误差为 0；6.37 ms 之后 Y 轴基本到位、X 轴早已到位，同步误差才达到 1.688 mm 的稳态值。这个细节在现场很有用：短行程（几毫秒）的协调运动，同步误差可能只有稳态值的几分之一；而长行程（几十毫秒以上）才需要按稳态值设计。</p>
+<p>图 98-4 左图画的就是这个过程。</p>
+<figure>
+<img src="figs/ch098/fig_098_03_ramp.svg" alt="图 98-4　45° 直线的两轴跟随误差与轮廓误差时程" /><figcaption aria-hidden="true">图 98-4　45° 直线的两轴跟随误差与轮廓误差时程</figcaption>
+</figure>
+<p>左图两条曲线：X 轴从 0 爬到 2.813 mm（正值表示“还差这么多”，即落后于参考），Y 轴爬到 4.502 mm。两条水平虚线是解析稳态值，曲线在 40 ms 之后就贴在虚线上（此时剩余偏差已不到 1.5%）。右图是轮廓误差，从 0 爬到 1.194 mm，形状与两条跟随误差之差完全一致——它就是那两条曲线相减再乘 0.7071。</p>
+<h3 id="主从把主轴的误差抄一遍">98.4.3 主从：把主轴的误差抄一遍</h3>
+<p>并行时两根轴都盯着理想参考，各自的误差互不相干。主从时从轴的指令换成主轴的实际位置：</p>
+<p><span class="math display">
+u_y=x\cdot\tan\theta
+</span></p>
+<p>45° 时 <span class="math inline">\tan\theta=1</span>，所以 <span class="math inline">u_y=x</span>。代入 §98.2.8 的推导，稳态同步误差恰好等于从轴自己的斜坡误差 4.502 mm。</p>
+<p>这个结果值得单独解释，因为它乍看是“巧合”。<strong>主从的同步误差为什么不是 <span class="math inline">e_x+e_y=7.315</span> mm？</strong> 因为从轴的位置 <span class="math inline">y</span> 里已经包含了主轴的位置 <span class="math inline">x</span>：<span class="math inline">y</span> 跟踪的是 <span class="math inline">x</span>，所以 <span class="math inline">y\approx x</span> 加上从轴自己的滞后；于是 <span class="math inline">e_{syn}=e_y-e_x=(r_y-y)-(r_x-x)=(r_y-r_x)-(y-x)</span>。45° 时 <span class="math inline">r_y=r_x</span>，第一项为零；第二项 <span class="math inline">y-x\approx -e_{y0}</span>（从轴相对主轴的滞后）。所以同步误差就是“从轴相对主轴的滞后”，也就是从轴自己的斜坡误差。</p>
+<p><strong>一句话：主从结构下，同步误差与主轴误差无关，等于从轴自身的跟随误差。</strong> 这个结论对任何齿轮比都成立（把 <span class="math inline">\tan\theta</span> 换成 <span class="math inline">R</span> 即可），是主从结构的定义性特征。</p>
+<p>表 98-4 把两种结构并排放在一起。</p>
+<p><strong>表 98-4 并行与主从的同步误差与轮廓误差</strong>（45° 直线、0.5 m/s、稳态段）</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">结构</th>
+<th style="text-align: left;">X 误差</th>
+<th style="text-align: left;">Y 误差</th>
+<th style="text-align: left;">同步误差 <span class="math inline">e_y-e_x</span></th>
+<th style="text-align: left;">轮廓误差 <span class="math inline">e_n</span></th>
+<th style="text-align: left;">相对</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">并行</td>
+<td style="text-align: left;">2.813 mm</td>
+<td style="text-align: left;">4.502 mm</td>
+<td style="text-align: left;">1.688 mm</td>
+<td style="text-align: left;">1.194 mm</td>
+<td style="text-align: left;">1.000</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">主从</td>
+<td style="text-align: left;">2.813 mm</td>
+<td style="text-align: left;">4.502 mm</td>
+<td style="text-align: left;">4.502 mm</td>
+<td style="text-align: left;">3.183 mm</td>
+<td style="text-align: left;">2.667</td>
+</tr>
+</tbody>
+</table>
+<p>表里最刺眼的一列是最后两列：<strong>两种结构的单轴误差完全相同（2.813 与 4.502），但同步误差差 2.667 倍。</strong> 这再次印证 §98.1.8 的误区一——单轴指标看不出多轴问题。</p>
+<p>图 98-5 把两条同步误差曲线画在一起。</p>
+<figure>
+<img src="figs/ch098/fig_098_04_sync.svg" alt="图 98-5　主从与并行的同步误差时程" /><figcaption aria-hidden="true">图 98-5　主从与并行的同步误差时程</figcaption>
+</figure>
+<p>主从那条（实线）爬到 4.502 mm，并行那条（虚线）爬到 1.688 mm。两条曲线的形状相同、建立时间相同（都由 Y 轴的 6.37 ms 时间常数决定），只是幅值差 2.667 倍。<strong>这个 2.667 不是“带宽比 1.600”</strong>——两者不同源：1.600 是 40/25 的比值，2.667 是 4.502/1.688 的比值。混淆这两个数是最常见的分析错误。</p>
+<h3 id="主从的第二个代价低频误差被复制">98.4.4 主从的第二个代价：低频误差被复制</h3>
+<p>主从的 4.502 mm 是稳态误差，可以靠前馈消掉。但它还有一笔账不能靠前馈消：<strong>主轴误差里的低频成分被完整复制到从轴。</strong></p>
+<p>丝杠热伸长在 1 小时内可以到 20–30 μm；导轨直线度在 1 m 上可能是 10 μm；这些误差的频率极低（&lt; 0.01 Hz），前馈根本“看不见”它们——前馈用的是参考信号，而这些误差是机械的、不进参考的。并行结构下，两根轴各自受自己的机械误差影响，同步误差只反映“两者之差”；主从结构下，主轴的机械误差被当成“正确值”传给从轴，从轴于是“忠实地”复制了这份误差。</p>
+<p>对本章的算例，这部分不在模型里（模型没有机械误差），所以 4.502 mm 全是动态误差。真实设备上要在这 4.502 mm 之外再加一份“机械误差的复制”。</p>
+<h3 id="圆弧误差从差变成椭圆">98.4.5 圆弧：误差从“差”变成“椭圆”</h3>
+<p>直线上的误差是一个标量之差，圆弧上的误差是几何形状的改变。§98.2.10 已经给出闭式，这里把它落到具体数字上。</p>
+<p>X 轴：幅值比 0.999375，半径缩 <span class="math inline">50\times(1-0.999375)=31.2</span> μm；相位滞后 2.864°，换算成弧长是 <span class="math inline">R\varphi=50\times2.864\times\pi/180=2.499</span> mm。</p>
+<p>Y 轴：幅值比 0.998403，缩 79.9 μm；滞后 4.581°，弧长 3.998 mm。</p>
+<p><strong>注意这两个弧长的量级：2.499 mm 与 3.998 mm，比半径收缩的 31.2 μm 与 79.9 μm 大两个数量级。</strong> 这是本章最容易被误读的一处：如果只看“弧长滞后”，会以为轮廓误差应该是 4 mm 量级；实际只有 0.53 mm RMS。原因在于<strong>两轴共同的滞后不产生轮廓误差</strong>——整条轨迹被“整体延后”了 3 mm 弧长，形状还是圆。真正产生轮廓误差的是<strong>两者滞后之差</strong> 1.717°。</p>
+<p>用一句话记住：<strong>共模滞后只改“什么时候到”，差模滞后才改“走到哪”。</strong> 伺服系统里所有“共模”的量都可以用时间轴平移理解，所有“差模”的量才是几何误差。</p>
+<p>图 98-6 把半径偏差沿圆周画出来。</p>
+<figure>
+<img src="figs/ch098/fig_098_05_radius.svg" alt="图 98-6　圆弧实际半径沿圆周的偏差（椭圆化）" /><figcaption aria-hidden="true">图 98-6　圆弧实际半径沿圆周的偏差（椭圆化）</figcaption>
+</figure>
+<p>横轴是圆周角 0°–360°，纵轴是 <span class="math inline">r-R</span>，单位 μm。曲线是一个 <span class="math inline">2\theta</span> 的谐波——转一圈，半径偏差起伏两个周期。这就是 §98.2.10 里 <span class="math inline">-\frac{R\delta}{2}\sin2\theta</span> 的图形。<strong>谐波次数是 2 而不是 1，这个细节有诊断价值</strong>：如果实测到的是一次谐波（转一圈起伏一次），那说明两轴有“偏心”或“零点偏置”，而不是带宽差。</p>
+<h3 id="轮廓误差时程与它的峰谷">98.4.6 轮廓误差时程与它的峰谷</h3>
+<p>图 98-7 是把轮廓误差直接画成时间函数。</p>
+<figure>
+<img src="figs/ch098/fig_098_06_contour.svg" alt="图 98-7　圆弧轮廓误差：无 CCC 与 Kc=0.5" /><figcaption aria-hidden="true">图 98-7　圆弧轮廓误差：无 CCC 与 Kc=0.5</figcaption>
+</figure>
+<p>无 CCC 那条（实线）的峰值 810.9 μm、RMS 532.7 μm，峰谷交替、周期是半圈。加上 <span class="math inline">K_c=0.5</span> 的 CCC 后（虚线），峰值降到 545.7 μm、RMS 降到 356.8 μm，形状不变、幅值整体压下去——这说明 CCC 没有改变误差的“机制”，只是把幅值按 <span class="math inline">1/(1+K_c)</span> 缩了。</p>
+<p>注意起步段（0–200 ms）：两条曲线都从 0 开始爬，这一段是初始条件（实际位置在 <span class="math inline">(R,0)</span>、速度为 0，参考已经在动）造成的暂态。稳态段从 500 ms 之后才算，这也是 §98.1.7 约定六的来历。</p>
+<h3 id="同步误差只认倒数之差">98.4.7 同步误差只认“倒数之差”</h3>
+<p>在收束之前，先把最容易被忽略的一条算法写清。45° 直线上两轴的参考速度相同，都是 <span class="math inline">v_t=v/\sqrt2=0.35355</span> m/s，所以</p>
+<p><span class="math display">
+e_{syn}=e_y-e_x=\frac{2v_t}{\omega_{ny}}-\frac{2v_t}{\omega_{nx}}=2v_t\left(\frac{1}{\omega_{ny}}-\frac{1}{\omega_{nx}}\right)
+</span></p>
+<p>代入本章：<span class="math inline">2\times0.35355\times(1/157.08-1/251.33)=0.7071\times2.387\times10^{-3}=1.688</span> mm，与仿真逐位相同。</p>
+<p>这个式子的结构决定了三件事。</p>
+<p><strong>第一，同步误差与绝对带宽无关，只与“两个 <span class="math inline">\omega_n</span> 的倒数之差”有关。</strong> 40/25、20/12.5、80/50 三组的同步误差都是 1.688 mm，因为倒数之差都是 <span class="math inline">2.387\times10^{-3}</span> s/rad。<strong>“整体提高带宽改善不了同步”，这句话的数学依据就在这里。</strong></p>
+<p><strong>第二，它可以反解指标。</strong> 若轮廓误差要求 50 μm，则同步误差要 ≤ <span class="math inline">50/0.7071=70.7</span> μm，于是</p>
+<p><span class="math display">
+\frac{1}{\omega_{ny}}-\frac{1}{\omega_{nx}}\le\frac{70.7\times10^{-6}}{0.7071}=1.000\times10^{-4}\ \text{s/rad}
+</span></p>
+<p>在 <span class="math inline">\omega_{nx}=251.33</span> 不变的前提下，<span class="math inline">\omega_{ny}\ge1/(3.979\times10^{-3}+1.000\times10^{-4})=245.16</span> rad/s，即 <strong>39.0 Hz</strong>。换句话说，<strong>要 50 μm 的轮廓精度，Y 轴必须做到 39.0 Hz——距 X 轴的 40 Hz 只差 1 Hz。</strong> 这就是“指标一旦定得严，两轴带宽就必须几乎相等”的定量版本，也解释了为什么高端机床常把两根轴的带宽整定到 5% 以内。</p>
+<p><strong>第三，它给出敏感度的不对称。</strong> 对 <span class="math inline">\omega_{ny}</span> 求导是 <span class="math inline">-2v_t/\omega_{ny}^2=-2.87\times10^{-5}</span> m/(rad/s)，即每赫兹 0.180 mm；对 <span class="math inline">\omega_{nx}</span> 求导是 <span class="math inline">+2v_t/\omega_{nx}^2=1.12\times10^{-5}</span>，即每赫兹 0.070 mm。两者之比 2.56，正好是 <span class="math inline">(\omega_{nx}/\omega_{ny})^2=1.600^2</span>。<strong>所以“把慢的那根提快”比“把快的那根再提快”有效 2.56 倍</strong>；而慢的那根往往正是负载重、共振低的那根——收益与难度又一次站在同一边。</p>
+<h3 id="连续域的五个结论">98.4.8 连续域的五个结论</h3>
+<p>把 §98.4 收成五条：</p>
+<p><strong>第一，同步误差的根源是传递函数不同，不是“控制得不好”。</strong> 两个相同的 <span class="math inline">\omega_n</span> 给零同步误差，这是结构性结论。</p>
+<p><strong>第二，并行与主从的单轴误差相同，同步误差差 2.667 倍。</strong> 主从的同步误差等于从轴自身误差，与主轴无关。</p>
+<p><strong>第三，共模滞后不产生轮廓误差，差模滞后才产生。</strong> 2.499 mm 与 3.998 mm 的弧长滞后只让轨迹整体后移，1.717° 的相位差才造成 810.9 μm 的轮廓误差。</p>
+<p><strong>第四，圆弧误差的主项是相位差，幅值差是次项。</strong> 749 μm 对 80 μm，差一个数量级。</p>
+<p><strong>第五，所有连续域的账都可以手算到 10% 以内。</strong> <span class="math inline">2v/\omega_n</span>、<span class="math inline">e_{syn}\cos\theta</span>、<span class="math inline">R\delta/2</span> 三条闭式，加上二阶幅相公式，就是本章全部的解析工具。</p>
+<h2 id="离散情形两个时钟的账">98.5 离散情形：两个时钟的账</h2>
+<h3 id="每根轴都有自己的时钟">98.5.1 每根轴都有自己的时钟</h3>
+<p>连续域的模型假设两轴在同一个时刻读到同一条参考。真实系统里，每根轴都有一个本地的采样时钟，两个时钟的相位差可以是任意值。这一步的账与带宽无关，纯粹是“时间对齐”的问题，却常常是同步误差的主项。</p>
+<p>分三种情形：</p>
+<ul>
+<li><strong>共享插补器、共享时钟</strong>：一个控制器算出一条轨迹，按同一节拍同时下发两根轴。理想情形。</li>
+<li><strong>共享插补器、各有本地时钟</strong>：轨迹是统一的，但两根轴的采样时刻有抖动或固定偏移。这是最常见的现场情形（例如 EtherCAT 分布式时钟有几十纳秒的抖动，而普通脉冲型控制有几十微秒）。</li>
+<li><strong>独立插补器</strong>：两根轴各算各的轨迹（例如两台独立的驱动器各自跑一个位置表）。最坏情形，两轴的节拍可以差整整一拍。</li>
+</ul>
+<h3 id="共享插补器滞后存在轮廓不变">98.5.2 共享插补器：滞后存在，轮廓不变</h3>
+<p>先用零阶保持（ZOH）看最理想的情形。位置指令在每拍更新一次，保持到下一拍，等效于一个 <span class="math inline">T_s/2</span> 的平均延时。</p>
+<p>本章 <span class="math inline">T_s=1</span> ms，所以两轴共同滞后 0.50 ms。在 0.314 m/s 的圆周速度下，这个延时对应 157.1 μm 的弧长：</p>
+<p><span class="math display">
+v\frac{T_s}{2}=0.31416\times0.0005=157.1\ \mu\text{m}
+</span></p>
+<p>关键在于：<strong>两根轴的滞后完全相同</strong>，所以这是一次“共模”延时。按 §98.4.5 的结论，共模滞后不产生轮廓误差，只让整条轨迹沿时间轴平移 0.50 ms。轮廓误差一个微米都不增加。</p>
+<p>这条结论解释了为什么工业控制器要坚持“一个插补器算所有轴”。<strong>共享插补器把“轴间时间差”这个误差源彻底消掉了，代价只是 157.1 μm 的共模滞后，而共模滞后可以用前馈或相位补偿轻松吃掉。</strong></p>
+<h3 id="独立插补器最坏差一整拍">98.5.3 独立插补器：最坏差一整拍</h3>
+<p>若两根轴各算各的轨迹，两轴的节拍相位可以差任意值。最坏情形是差半拍（0.5 ms），此时一根轴的指令刚更新、另一根还停在上一拍，等效于两轴之间存在 0.5 ms 的相对延时；再叠加 ZOH 的 <span class="math inline">T_s/2</span>，最坏可达一整拍 1.0 ms。</p>
+<p>1.0 ms 在 0.314 m/s 下是 314.2 μm 的弧长，而且这是<strong>差模</strong>的——它直接变成轮廓误差：</p>
+<p><span class="math display">
+\Delta e_n=vT_s=0.31416\times0.001=314.2\ \mu\text{m}
+</span></p>
+<p>与动态误差（532.7 μm）相比，比值是 0.59。也就是说，<strong>独立插补器引入的误差，与“两根轴带宽不同”造成的误差是同一量级</strong>。这一点非常反直觉：大多数人会认为“1 ms 的节拍误差”是小事，而“带宽差 1.6 倍”是大事；实际两者在同一量级上。</p>
+<p>这也解释了 §98.3.9 的判据为什么把“离散项 ≤ 动态项的 1/3”设为红线：本章的 0.59 超标，说明架构必须改，调参无用。</p>
+<h3 id="时间戳抖动vsigma-的账">98.5.4 时间戳抖动：<span class="math inline">v\sigma</span> 的账</h3>
+<p>即使共享插补器，两根轴的采样时刻也常有微秒级的抖动（分布式时钟的同步误差、中断响应抖动、总线传输抖动）。抖动 <span class="math inline">\sigma</span> 在速度 <span class="math inline">v</span> 下直接变成位置误差 <span class="math inline">v\sigma</span>。</p>
+<p>表 98-5 给出三档抖动的账。</p>
+<p><strong>表 98-5 时间戳抖动折算的位置误差</strong></p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">抖动 <span class="math inline">\sigma</span></th>
+<th style="text-align: left;">圆弧（0.314 m/s）</th>
+<th style="text-align: left;">直线（0.5 m/s）</th>
+<th style="text-align: left;">两轴独立时的均方根（直线）</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">10 μs</td>
+<td style="text-align: left;">3.1 μm</td>
+<td style="text-align: left;">5.0 μm</td>
+<td style="text-align: left;">3.5 μm</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">100 μs</td>
+<td style="text-align: left;">31.4 μm</td>
+<td style="text-align: left;">50.0 μm</td>
+<td style="text-align: left;">35.4 μm</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">1000 μs</td>
+<td style="text-align: left;">314.2 μm</td>
+<td style="text-align: left;">500.0 μm</td>
+<td style="text-align: left;">354.0 μm</td>
+</tr>
+</tbody>
+</table>
+<p>第四列的来历要分三步算，不能直接拿合速度乘。45° 直线上每轴的速度分量是 <span class="math inline">v_t=v/\sqrt2=0.354</span> m/s，抖动造成的位置误差也按分量算：</p>
+<p><span class="math display">
+\sigma_{\text{axis}}=v_t\sigma=\frac{v}{\sqrt2}\sigma
+</span></p>
+<p>两轴的抖动互相独立，同步误差 <span class="math inline">e_{syn}=e_y-e_x</span> 是两个独立同分布量之差，方差相加：</p>
+<p><span class="math display">
+\sigma_{e_{syn}}=\sqrt2\,\sigma_{\text{axis}}=v\sigma
+</span></p>
+<p>轮廓误差是同步误差在法向上的投影，再乘 <span class="math inline">\cos45°=1/\sqrt2</span>：</p>
+<p><span class="math display">
+\sigma_{e_n}=\frac{v\sigma}{\sqrt2}=\frac{0.5\times100\times10^{-6}}{1.414}=35.4\ \mu\text{m}
+</span></p>
+<p><strong>注意最后那个 <span class="math inline">\sqrt2</span> 的方向：先除以 <span class="math inline">\sqrt2</span>（速度分量），再乘 <span class="math inline">\sqrt2</span>（两轴合成），再除以 <span class="math inline">\sqrt2</span>（法向投影），净结果是除以 <span class="math inline">\sqrt2</span>。</strong> 三步里漏掉任何一步，都会差 41.4%。</p>
+<p>图 98-8 把三条曲线画成双对数。</p>
+<figure>
+<img src="figs/ch098/fig_098_08_jitter.svg" alt="图 98-8　时间戳抖动与轮廓误差的关系" /><figcaption aria-hidden="true">图 98-8　时间戳抖动与轮廓误差的关系</figcaption>
+</figure>
+<p>三条线都是斜率 1 的直线，因为误差与抖动是线性关系。按 100 μs 处的顺序从上到下：直线 0.5 m/s 的单轴误差 50.0 μm、两轴独立时的均方根 35.4 μm、圆弧（0.314 m/s）的 31.4 μm。后两条几乎重合，因为 <span class="math inline">0.314/\sqrt2=0.222</span> 与 <span class="math inline">0.5/1.414=0.354</span> 只差 1.6 倍——<strong>这也说明“斜线上的两轴抖动”与“圆弧上的抖动”在量级上没有本质区别，都按 <span class="math inline">v\sigma/\sqrt2</span> 估。</strong> 图的用途是查表：给定抖动指标，一眼看出能支持多高的速度。</p>
+<h3 id="脉冲取整会不会累积">98.5.5 脉冲取整：会不会累积</h3>
+<p>位置指令最终要落到 count 上，1 count = 1.000 μm。取整有两种做法：</p>
+<p><strong>绝对位置取整</strong>：每拍算绝对位置 <span class="math inline">x_k</span>，再圆整到 count。误差始终在 ±0.5 count 内，不累积。</p>
+<p><strong>增量取整</strong>：每拍算增量 <span class="math inline">\Delta x_k=vT_s</span>，圆整后再累加。若 <span class="math inline">\Delta x_k</span> 不是整数 count，每拍都有 ±0.5 count 的取整误差，且这些误差会累积成随机游走。本例 <span class="math inline">v=0.354</span> m/s、<span class="math inline">T_s=1</span> ms，单拍增量 353.55 counts，小数部分 0.55，每拍取整误差 −0.45 count（因为 353.55 圆整到 354，多走了 0.45）。累积 1000 拍就是 450 counts，即 450 μm——但这只是“平均”，实际会围绕这个趋势抖动。</p>
+<p><strong>结论：位置环必须用绝对位置取整，不能用增量取整。</strong> 这是 §98.12 会再提一次的实现细节。</p>
+<h3 id="量化的两个下限">98.5.6 量化的两个下限</h3>
+<p>1 count = 1.000 μm 的直线分辨率，与 0.628 mrad 的转角分辨率，给出两个硬下限：</p>
+<p><strong>差分速度的分辨率下限</strong>：用相邻两拍位置差分算速度，<span class="math inline">v=(x_k-x_{k-1})/T_s</span>，位置量化 1 μm 造成速度量化 <span class="math inline">1\ \mu\text{m}/1\ \text{ms}=1</span> mm/s。也就是说，<strong>在 1 ms 节拍、1 μm 分辨率下，速度的测量分辨率只有 1 mm/s</strong>。要测更慢的速度，只能加长差分窗口或提高分辨率——这正是第 97 章 §97.5.9 讲过的同一个问题。</p>
+<p><strong>相位预置的分辨率下限</strong>：啮合时要把从轴预置到 <span class="math inline">R\theta_m+\theta_0</span>，精度受 1 count 限制。本章的判据是“预置到 1 μm 以内”，恰好就是一个 count。</p>
+<h3 id="三种时基方案">98.5.7 三种时基方案</h3>
+<p>现场的时基同步按精度从低到高有三种：</p>
+<p><strong>软件时间戳</strong>：主站每拍读一次系统时间，随指令下发。精度受操作系统调度影响，典型 100 μs–1 ms。按表 98-5，1 ms 抖动在 0.5 m/s 下就是 500 μm，只能用于低速场合。</p>
+<p><strong>硬件同步信号</strong>：主站发一个同步脉冲，所有从站同时锁存。精度由传输延迟决定，典型 1–10 μs。按表 98-5，10 μs 在 0.5 m/s 下是 5.0 μm，可以用于绝大多数场合。</p>
+<p><strong>分布式时钟</strong>：从站之间互相测量传输延迟并补偿，典型抖动 &lt; 100 ns。按表 98-5 反推，100 ns 在 0.5 m/s 下是 0.05 μm，已经低于量化下限 1 μm，可以忽略。</p>
+<p><strong>选型判据只有一条：时基抖动造成的位置误差要低于量化下限（1 μm）。</strong> 按这条判据，0.5 m/s 下需要抖动 &lt; 2 μs，只有硬件同步或分布式时钟能满足。这也解释了为什么高端多轴控制器一定要上实时总线，而不用“软件发脉冲”。</p>
+<h3 id="抖动为什么不能靠滤波消掉">98.5.8 抖动为什么不能靠滤波消掉</h3>
+<p>插补时基的抖动 <span class="math inline">\tau_k</span> 是一串白噪声，标准差 <span class="math inline">\sigma</span>。它造成的位置误差 <span class="math inline">v\tau_k</span> 也是白的，功率谱从直流一直铺到奈奎斯特频率 <span class="math inline">1/(2T_s)=500</span> Hz。与“两轴带宽不同”造成的误差不同，<strong>它不是某个频段的现象，而是全频段的</strong>。这决定了它不能靠常规手段处理。</p>
+<p><strong>第一，低通滤波能压幅值，但压不掉“两轴之差”。</strong> 若两根轴用同一个滤波器、同一组系数，抖动被同样地平滑，剩下的仍是共模——轮廓误差不变，只多了一点滞后。<strong>真正决定轮廓的是两个滤波器是否相同，而不是滤波器的截止频率。</strong> 现场给一根轴单独加滤波（常见于“Y 轴有共振，加个陷波”）就是在制造差模：100 μs 的抖动、0.5 m/s 下是 50 μm，滤波把它压到 20 μm，同时引入的相位差又把这一份差额变成了轮廓误差。</p>
+<p><strong>第二，平均能压 <span class="math inline">\sqrt N</span>，但平均窗不同就变成差模。</strong> 取 <span class="math inline">N</span> 点滑动平均，白噪声的标准差降到 <span class="math inline">\sigma/\sqrt N</span>，代价是 <span class="math inline">(N-1)T_s/2</span> 的群延迟。两轴用同样的 <span class="math inline">N</span>，延迟是共模，安全；两轴用不同的 <span class="math inline">N</span>（比如按各自的共振频率选），延迟差就是差模：<span class="math inline">N</span> 差 4 拍、<span class="math inline">T_s=1</span> ms、0.314 m/s 下是 2 ms 的等效时间差，折合 <span class="math inline">0.31416\times0.002=628</span> μm 的轮廓误差——<strong>比它想压掉的 31.4 μm 大 20 倍。</strong></p>
+<p><strong>第三，唯一有效的办法是让抖动本身变小。</strong> 表 98-5 已经给出判据：抖动要让 <span class="math inline">v\sigma&lt;1</span> μm，0.5 m/s 下就是 <span class="math inline">\sigma&lt;2</span> μs。这个数只能靠硬件同步或分布式时钟拿到，靠软件补不回来。</p>
+<p>一句话：<strong>抖动是“时间戳的误差”，不是“位置的误差”；滤波器作用在位置上，所以它治不了病，只能把病换个样子。</strong></p>
+<h3 id="一拍之内的顺序">98.5.9 一拍之内的顺序</h3>
+<p>离散域还有一笔账不在公式里，而在代码的顺序里。每个插补周期，控制器大致要做五件事：</p>
+<ol type="1">
+<li>读两根轴的反馈（同一时刻锁存）。</li>
+<li>由轨迹参数算出本拍的参考 <span class="math inline">\mathbf{r}_k</span>。</li>
+<li>用参考与实际算误差 <span class="math inline">\mathbf{e}_k</span>，再投影出法向分量 <span class="math inline">e_n</span>。</li>
+<li>加 CCC 修正、限幅，得到本拍的指令 <span class="math inline">\mathbf{u}_k</span>。</li>
+<li>下发指令，等下一拍。</li>
+</ol>
+<p>关键在于<strong>第 3 步用的是哪一拍的反馈</strong>。反馈在第 1 步读进来，但读到的是“上一拍结束时的位置”，于是 <span class="math inline">e_n</span> 天然带一拍延时。这一拍不是浪费，而是物理事实：<strong>你只能对已经发生的位置误差做修正。</strong></p>
+<p>一拍的延时在法向环里意味着多少相位？按 §98.6.4 的经验，CCC 的带宽取 8 Hz，1 ms 对应</p>
+<p><span class="math display">
+360°\times0.001\times8=2.88°
+</span></p>
+<p>不到 3°，可以忽略。<strong>但如果把 CCC 的带宽提到 40 Hz（与位置环齐平），同样的 1 ms 就是 14.4°</strong>——这就是 §98.6.4 第三条“CCC 带宽不超过位置环 1/5”的另一半理由：不只是“三环耦合”，还有“一拍延时在高带宽下变成实打实的相位损失”。</p>
+<p>顺序上还有两条规矩：</p>
+<ul>
+<li><strong>限幅必须在最后一步之前。</strong> 先限幅再算指令，等于用一个被削过的修正量去算下一拍的法向，误差会自己滚起来。</li>
+<li><strong>CCC 的修正量不能回写进“参考”。</strong> 它只能加在指令上；一旦写进参考，下一拍的 <span class="math inline">e_n</span> 就用被污染的值算，等价于把闭环变成了正反馈。这是实现上最容易犯的错，也是最难查的——现象是“<span class="math inline">K_c</span> 越大误差越大”，而 §98.12.6 的断言三正好能抓到它。</li>
+</ul>
+<h3 id="离散域的判据">98.5.10 离散域的判据</h3>
+<p>把 §98.5 收成三条判据，供设计时逐条核对：</p>
+<ol type="1">
+<li><strong>共享插补器</strong>：两轴必须用同一个插补器、同一个节拍，否则直接损失 314.2 μm。</li>
+<li><strong>时基抖动 &lt; 2 μs</strong>（0.5 m/s 下），或者按 <span class="math inline">v\sigma&lt;1</span> μm 反算自己的速度上限。</li>
+<li><strong>绝对位置取整</strong>，不用增量取整，避免随机游走。</li>
+</ol>
+<p>三条都是架构级的，一旦定错，后面调什么参数都补不回来。</p>
+<h2 id="稳定性与性能ccc-能压到多低">98.6 稳定性与性能：CCC 能压到多低</h2>
+<h3 id="三个性能度量不能互相替代">98.6.1 三个性能度量不能互相替代</h3>
+<p>多轴系统的性能至少要三个数：</p>
+<ul>
+<li><strong>单轴跟随误差</strong>：<span class="math inline">e_x</span>、<span class="math inline">e_y</span>，衡量“每根轴自己跟得准不准”。</li>
+<li><strong>同步误差</strong>：<span class="math inline">e_{syn}=e_y-e_x</span>，衡量“两根轴的相对关系”。</li>
+<li><strong>轮廓误差</strong>：<span class="math inline">e_n</span>，衡量“工件上的几何偏差”。</li>
+</ul>
+<p>三者的排序可以完全不同。本章的无 CCC 情形：单轴 2.813/4.502 mm，同步 1.688 mm，轮廓 1.194 mm——数值一个比一个小，容易让人误以为“轮廓最好”。实际上它们单位相同但含义不同，不能比大小。主从情形就反过来了：单轴不变，同步 4.502 mm，轮廓 3.183 mm。</p>
+<p>调参时最容易犯的错是<strong>拿单轴指标去验收多轴设备</strong>。本章的算例里，把 Y 轴带宽从 25 Hz 提到 40 Hz，单轴误差从 4.502 降到 2.813 mm（改善 37.5%），同步误差从 1.688 降到 0（改善 100%），轮廓误差从 1.194 降到 0。<strong>同一个动作，三个指标的改善幅度完全不同</strong>，因为同步与轮廓误差只反映“差”，不反映“绝对值”。</p>
+<h3 id="ccc-加进来之后环路怎么变">98.6.2 CCC 加进来之后环路怎么变</h3>
+<p>无 CCC 时，两个位置环是独立的：</p>
+<p><span class="math display">
+e_x=\frac{1}{1+G_x}r_x,\qquad e_y=\frac{1}{1+G_y}r_y
+</span></p>
+<p>（这里 <span class="math inline">G</span> 是开环传递函数，<span class="math inline">1/(1+G)</span> 是误差传递函数。）加 CCC 后，两轴的指令里出现了 <span class="math inline">e_n</span> 的耦合项，两个环就不再独立。把 <span class="math inline">e_n=-e_x\sin\theta+e_y\cos\theta</span> 代入，整理成矩阵形式：</p>
+<p><span class="math display">
+\begin{bmatrix}e_x\\e_y\end{bmatrix}=\frac{1}{1+G}
+\begin{bmatrix}1+K_c\sin^2\theta &amp; -K_c\sin\theta\cos\theta\\ -K_c\sin\theta\cos\theta &amp; 1+K_c\cos^2\theta\end{bmatrix}
+\begin{bmatrix}r_x\\r_y\end{bmatrix}
+</span></p>
+<p>（这里假设 <span class="math inline">G_x=G_y=G</span>，只是为看清结构；带宽不同时矩阵元会带 <span class="math inline">G_x/G_y</span> 的因子。）矩阵的两个特征值可以算出来：一个是 1，另一个是 <span class="math inline">1+K_c</span>。对应两个特征方向——<strong>沿轨迹切向</strong>（特征值 1，不受 CCC 影响）与<strong>沿法向</strong>（特征值 <span class="math inline">1+K_c</span>，误差被压 <span class="math inline">1+K_c</span> 倍）。</p>
+<p><strong>这就是 CCC 的几何本质：它只在法向上加了一个增益为 <span class="math inline">K_c</span> 的反馈，切向完全不动。</strong> 这个结论解释了三件事：</p>
+<ul>
+<li>为什么 CCC 不影响“到得早晚”（切向），只影响“走得准不准”（法向）。</li>
+<li>为什么 <span class="math inline">1/(1+K_c)</span> 是天然的压缩率——法向环路的开环增益从 <span class="math inline">G</span> 变成 <span class="math inline">(1+K_c)G</span>。</li>
+<li>为什么增益过大时会在法向上先失稳——法向是唯一被改动的方向。</li>
+</ul>
+<h3 id="增益扫描">98.6.3 增益扫描</h3>
+<p>表 98-6 是六个增益下的实测值。</p>
+<p><strong>表 98-6 交叉耦合增益扫描</strong>（圆弧 R=50 mm、1 Hz；直线 45°、0.5 m/s）</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;"><span class="math inline">K_c</span></th>
+<th style="text-align: left;">圆弧 RMS</th>
+<th style="text-align: left;">与无 CCC 之比</th>
+<th style="text-align: left;"><span class="math inline">1/(1+K_c)</span></th>
+<th style="text-align: left;">直线轮廓误差</th>
+<th style="text-align: left;">与无 CCC 之比</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">0.0</td>
+<td style="text-align: left;">532.7 μm</td>
+<td style="text-align: left;">1.000</td>
+<td style="text-align: left;">1.000</td>
+<td style="text-align: left;">1.194 mm</td>
+<td style="text-align: left;">1.000</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">0.2</td>
+<td style="text-align: left;">445.0 μm</td>
+<td style="text-align: left;">0.835</td>
+<td style="text-align: left;">0.833</td>
+<td style="text-align: left;">0.995 mm</td>
+<td style="text-align: left;">0.833</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">0.5</td>
+<td style="text-align: left;">356.8 μm</td>
+<td style="text-align: left;">0.670</td>
+<td style="text-align: left;">0.667</td>
+<td style="text-align: left;">0.796 mm</td>
+<td style="text-align: left;">0.667</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">1.0</td>
+<td style="text-align: left;">268.0 μm</td>
+<td style="text-align: left;">0.503</td>
+<td style="text-align: left;">0.500</td>
+<td style="text-align: left;">0.597 mm</td>
+<td style="text-align: left;">0.500</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">2.0</td>
+<td style="text-align: left;">178.9 μm</td>
+<td style="text-align: left;">0.336</td>
+<td style="text-align: left;">0.333</td>
+<td style="text-align: left;">0.398 mm</td>
+<td style="text-align: left;">0.333</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">5.0</td>
+<td style="text-align: left;">89.5 μm</td>
+<td style="text-align: left;">0.168</td>
+<td style="text-align: left;">0.167</td>
+<td style="text-align: left;">0.199 mm</td>
+<td style="text-align: left;">0.167</td>
+</tr>
+</tbody>
+</table>
+<p>表里第四列与第三、第六列的对照是本章最干净的一处验证：<strong>六个点，两种轨迹，误差全部在 0.5% 以内吻合 <span class="math inline">1/(1+K_c)</span>。</strong> 这说明 CCC 的作用机制与轨迹形状无关——直线与圆弧用的是同一套法向反馈，只是法向的算法不同（直线是固定方向，圆弧是径向）。</p>
+<p>图 98-9 把两组数画成双纵轴。</p>
+<figure>
+<img src="figs/ch098/fig_098_07_ccc.svg" alt="图 98-9　交叉耦合增益对圆弧与直线轮廓误差的影响" /><figcaption aria-hidden="true">图 98-9　交叉耦合增益对圆弧与直线轮廓误差的影响</figcaption>
+</figure>
+<p>左纵轴是圆弧 RMS（μm），右纵轴是直线轮廓误差（mm）。两条曲线在半对数坐标下几乎平行，因为两者的压缩率相同。<strong>这张图最该看的不是“下降”，而是“下降的斜率”</strong>：<span class="math inline">K_c</span> 从 0 到 1 压掉一半（532.7→268.0），从 1 到 5 再压掉三分之二（268.0→89.5），从 5 到 10 还能再压 46%（89.5→48.5）。收益按 <span class="math inline">1/(1+K_c)</span> 递减，但绝对量每一档几乎相同——这是所有反馈环的共同规律。</p>
+<h3 id="ccc-的上限由三件事决定">98.6.4 CCC 的上限由三件事决定</h3>
+<p>线性模型里 <span class="math inline">K_c</span> 可以无限加，实际不行。三个上限：</p>
+<p><strong>第一，法向估计的噪声。</strong> CCC 需要知道“法向朝哪”。直线的法向可以由轨迹几何直接给出，噪声很小；自由曲线的法向要靠差分或拟合，噪声大。噪声 <span class="math inline">\eta</span> 经 <span class="math inline">K_c</span> 放大后灌进两轴，位置指令的抖动变成 <span class="math inline">\sqrt2K_c\eta</span>。若 <span class="math inline">\eta=1</span> μm、<span class="math inline">K_c=5</span>，就是 7 μm 的指令抖动——已经与量化误差同量级。</p>
+<p><strong>第二，法向估计的误差。</strong> 若法向算错了 <span class="math inline">\alpha</span> 角（把切向当成法向），CCC 就会把误差“往错的方向推”，效果从压缩变成放大。设真实法向与算法向的夹角为 <span class="math inline">\alpha</span>，则有效增益变成 <span class="math inline">K_c\cos\alpha</span>，同时引入一个 <span class="math inline">K_c\sin\alpha</span> 的切向串扰。<span class="math inline">\alpha=10°</span> 时有效增益降 1.5%、串扰 17%——串扰会把一部分切向滞后转成法向误差，反而变差。</p>
+<p><strong>第三，与位置环的耦合。</strong> CCC 的法向环与两个位置环并联，三者在同一个频段上叠加。若 CCC 的增益带宽接近位置环带宽，会出现一个“三环耦合”的谐振峰。工程上的经验是 <strong>CCC 的穿越频率不超过位置环带宽的 1/5</strong>，本章 40 Hz 的轴对应 8 Hz 的 CCC 带宽，<span class="math inline">K_c</span> 大致落在 1–3。</p>
+<p>三件事合起来，<span class="math inline">K_c</span> 的合理区间是 0.5–3，能把误差压到 1/2 到 1/4。<strong>再往上加，得到的是“更小的仿真误差”和“更大的现场抖动”。</strong></p>
+<h3 id="饱和ccc-也会被限幅">98.6.5 饱和：CCC 也会被限幅</h3>
+<p>CCC 的输出是加到指令上的修正量 <span class="math inline">K_ce_n</span>。<span class="math inline">e_n=1.194</span> mm、<span class="math inline">K_c=5</span> 时，修正量是 5.97 mm——这个量级已经超过很多驱动器的“位置偏差过大”报警阈值。真实系统里必须在三处设限：</p>
+<ul>
+<li><strong>修正量限幅</strong>：<span class="math inline">|K_ce_n|\le\Delta_{\max}</span>，通常取几个毫米。</li>
+<li><strong>误差限幅</strong>：<span class="math inline">|e_n|\le e_{\max}</span>，超过就不做 CCC（说明是撞了或者丢步，不是正常跟踪误差）。</li>
+<li><strong>变化率限幅</strong>：修正量的每拍增量受限，避免阶跃。</li>
+</ul>
+<p>若不设限，起步瞬间的 <span class="math inline">e_n</span> 可能很大（本章起步段的暂态），CCC 会把一个大修正量砸给两根轴，造成过冲甚至报警。<strong>CCC 的调试顺序永远是“先限幅，再加增益”</strong>，反过来一定炸。</p>
+<h3 id="带宽比与性能的权衡">98.6.6 带宽比与性能的权衡</h3>
+<p>回到“两轴带宽”这件事。本章的 40/25 给出 1.688 mm 的同步误差，若把 Y 提到 40 Hz，同步误差归零。但提高 Y 带宽有三重代价：</p>
+<ul>
+<li><strong>机械</strong>：Y 轴负载重、共振频率低，带宽提到 40 Hz 可能踩到共振。</li>
+<li><strong>噪声</strong>：带宽每提高一倍，编码器噪声的放大也约一倍。</li>
+<li><strong>发热</strong>：高增益意味着电流的高频分量增大，电机与驱动器发热上升。</li>
+</ul>
+<p>所以现场的取舍通常是“把带宽比压到 1.25 以内”，而不是“追平”。1.25 对应同步误差降到 45% 左右（按 <span class="math inline">e\propto1/\omega_n</span> 的差模部分估），配合 <span class="math inline">K_c=1</span> 的 CCC，总压缩能到 0.22 左右，比单纯提带宽划算。</p>
+<p><strong>一条经验：带宽差造成的误差，用带宽补；补不动的地方，用 CCC 补；CCC 也补不动的，改机械。</strong> 顺序反了就会陷入“加增益—抖动—再加滤波—更滞后”的循环。</p>
+<h3 id="三个稳定裕量">98.6.7 三个稳定裕量</h3>
+<p>多轴系统除单轴的幅值/相位裕量外，还要单独核三个：</p>
+<p><strong>法向环的相位裕量。</strong> CCC 的法向环是“误差 → 修正 → 误差”的闭环，穿越频率处要有 45° 以上裕量。若不足，法向上会出现 2–5 Hz 的振荡，表现是工件表面出现规律波纹。</p>
+<p><strong>两轴交叉项的增益裕量。</strong> 把 §98.6.2 的矩阵看作一个多变量系统，其交叉项 <span class="math inline">-K_c\sin\theta\cos\theta</span> 在 45° 时最大（<span class="math inline">-K_c/2</span>）。这一项造成两轴互相“拉扯”，增益过大时会出现“你追我、我追你”的拍频。</p>
+<p><strong>时基的相位裕量。</strong> 独立插补器的 1 ms 延时在 40 Hz 处是 14.4° 的相位（<span class="math inline">360\times0.001\times40</span>）。这部分相位会直接吃掉位置环的裕量，所以“独立插补 + 高带宽”是最危险的组合。</p>
+<h3 id="什么时候不该用-ccc">98.6.8 什么时候不该用 CCC</h3>
+<p>四种情形，CCC 会帮倒忙：</p>
+<p><strong>轨迹有尖角。</strong> 尖角处法向不唯一（左右两个法向），CCC 会在角点抖动。此时应在角点附近把 <span class="math inline">K_c</span> 降到 0，过一个“拐角过渡区”再恢复。</p>
+<p><strong>两轴带宽差很大（&gt; 3 倍）。</strong> 低带宽轴跟不上 CCC 的修正，修正量会被它“吃掉”并延迟，效果从压缩变成“延迟放大”。</p>
+<p><strong>位置环本身已经很软。</strong> 若单轴带宽只有几赫兹，CCC 的修正带宽也只能在 1 Hz 以下，此时 CCC 的收益还不如直接把进给速度降一半。</p>
+<p><strong>设备有机械耦合。</strong> 龙门双驱的两台电机通过横梁刚性耦合，此时两轴不是独立的，CCC 的“两轴独立”假设不成立，要用“主从 + 力矩均衡”而不是 CCC。</p>
+<p>四条之外，CCC 都是一个便宜且有效的选择：不改机械、不改驱动器参数，只加一段外挂代码，就能把轮廓误差压一半。</p>
+<h3 id="时变的法向残余为什么还是-2-次谐波">98.6.9 时变的法向：残余为什么还是 2 次谐波</h3>
+<p>CCC 的增益定义在“瞬时法向”上，而法向本身在转。对圆轨迹，法向角 <span class="math inline">\theta=\omega t</span>，于是增益矩阵随时间以 <span class="math inline">\omega</span> 旋转——<strong>CCC 是一个时变反馈</strong>。</p>
+<p>时变系统不能直接套 §98.6.2 的特征值。§98.6.2 的矩阵是在某个固定 <span class="math inline">\theta</span> 上“冻结”后算的，它给出的是<strong>瞬时压缩率</strong>：每一时刻，法向误差被压 <span class="math inline">1+K_c</span> 倍，切向不动。把瞬时压缩率沿一圈积起来，得到的就是本章实测的结果：形状不变、幅值整体缩小。图 98-7 的两条曲线正是这样——加上 CCC 后 2 次谐波依然在，只是幅值从 810.9 降到 545.7 μm。</p>
+<p>由此有两条工程结论。</p>
+<p><strong>第一，CCC 治不了“谐波次数”。</strong> 它只按比例压幅值，不改变频谱结构。若实测到 1 次谐波（零点偏置）、3 次以上谐波（丝杠周期误差），CCC 会把它们一起压，压完仍然是 1 次、3 次。<strong>诊断信息没有被破坏，这是好事</strong>：加了 CCC 之后再做频谱分析，仍然看得出原始误差的机制；反过来，若加了 CCC 之后频谱“变干净”了，那说明是滤波器在起作用，不是 CCC。</p>
+<p><strong>第二，CCC 的有效带宽要与“法向转多快”比。</strong> 法向以 <span class="math inline">f</span> 转；CCC 自身的闭环带宽按 §98.6.4 的经验不超过位置环的 1/5，本章就是 8 Hz。<span class="math inline">f=1</span> Hz 时比值 8，法向的旋转对 CCC 接近“准静态”，<span class="math inline">1/(1+K_c)</span> 的压缩率能全额拿到。若圆频率提到 2 Hz，比值降到 4，CCC 的相位滞后开始显现，实测压缩率会明显低于 <span class="math inline">1/(1+K_c)</span>。<strong>表 98-6 的六个点只对 1 Hz 成立，换频率要重测</strong>——这是本章所有扫描表的一个共同前提。</p>
+<h3 id="把-ccc-折算成法向刚度">98.6.10 把 CCC 折算成“法向刚度”</h3>
+<p>还有一种更直观的读法：CCC 相当于给法向单独加了一根弹簧。</p>
+<p>设位置环的等效刚度为 <span class="math inline">K_p</span>（单位 N/m 或 N·m/rad）。法向受力 <span class="math inline">F</span> 时，无 CCC 的偏差是 <span class="math inline">F/K_p</span>；有 CCC 时，CCC 把这个偏差读出来、再乘以 <span class="math inline">K_c</span> 加到指令上，等效于把法向刚度改成 <span class="math inline">(1+K_c)K_p</span>，于是偏差变成 <span class="math inline">F/[(1+K_c)K_p]</span>。这与 <span class="math inline">1/(1+K_c)</span> 是同一件事，只是从“力的语言”说了一遍。</p>
+<p>这个读法解释了两件容易混淆的事：</p>
+<p><strong>第一，压的是“低频刚度”，不是“动态响应”。</strong> 法向的低频增益提高了 <span class="math inline">1+K_c</span> 倍，但穿越频率受 §98.6.4 第三条约束并没有提高——所以同样的 <span class="math inline">K_c</span> 下，稳态轮廓误差降了，而“误差建立得多快”没变。图 98-7 里两条曲线的峰谷位置完全对齐，正是这个原因：时间常数还是那两根轴的 <span class="math inline">1/\omega_n</span>。</p>
+<p><strong>第二，切向刚度没变，所以“到得早晚”没变。</strong> 这就是为什么 CCC 不能改善“跟随误差”这个单轴指标——它加的法向力在切向上分量不为零时确实会有一点点串扰（§98.6.4 第二条），但那是误差源，不是收益。</p>
+<p><strong>“只压轮廓、不改跟随”这句话，物理图像就是“只在法向加了一根弹簧”。</strong> 现场若有人问“CCC 能不能把跟随误差也降下来”，答案是不能，而且不该指望——要降跟随误差，用前馈（§98.9.1）。</p>
+<h3 id="直线与圆弧同一个算法两种实现">98.6.11 直线与圆弧：同一个算法，两种实现</h3>
+<p>CCC 的公式只有一个，但在两种轨迹上的实现代价差得很远。</p>
+<p><strong>直线上，法向是常向量。</strong> <span class="math inline">\theta</span> 在整段程序里不变，<span class="math inline">\mathbf{n}=(-\sin\theta,\cos\theta)</span> 是一个常数，于是 §98.6.2 的矩阵也是常数。45° 时它就是</p>
+<p><span class="math display">
+\begin{bmatrix}1+K_c/2 &amp; -K_c/2\\ -K_c/2 &amp; 1+K_c/2\end{bmatrix}
+</span></p>
+<p>两个特征值 1 与 <span class="math inline">1+K_c</span>，与理论一致。<span class="math inline">K_c=0.5</span> 时矩阵是 <span class="math inline">[[1.25,-0.25],[-0.25,1.25]]</span>——<strong>CCC 在直线上退化成一次固定的线性变换</strong>，可以在插补前算好，运行时只做四次乘法，开销可以忽略。这也是本章 <span class="math inline">K_c</span> 扫描能在直线算例上跑六个点的原因：它不涉及任何“实时的法向估计”。</p>
+<p><strong>圆弧上，法向每拍都要算。</strong> <span class="math inline">\mathbf{n}=(x,y)/\sqrt{x^2+y^2}</span>，要一次开方、两次除法。<span class="math inline">R=50</span> mm、1 kHz 下，这个开销对现代控制器不算什么，但有两个坑：</p>
+<ul>
+<li><strong>起点附近不能用“参考点法向”代替“实际点法向”。</strong> 起步时实际位置与参考差几毫米，用参考法向会把修正方向指偏，<span class="math inline">K_c</span> 越大偏得越多。本章的实现用实测的 <span class="math inline">x/r_{\text{act}}</span>，正是为了避开这个坑。</li>
+<li><strong>半径趋零时奇异。</strong> 若程序里出现极小的圆弧（<span class="math inline">R&lt;1</span> mm）或尖角，<span class="math inline">r_{\text{act}}</span> 可能接近 0，除法会放大噪声。工程上加一条“<span class="math inline">R&lt;0.5</span> mm 时冻结 CCC”，比在除法里加保护更省事。</li>
+</ul>
+<p><strong>自由曲线上，两者都不成立。</strong> 法向既非常数、也不能靠 <span class="math inline">x/r</span> 得到，只能用 §98.9.4 的观测器从 <span class="math inline">\dot{\mathbf{r}}_r</span> 反推。这是 CCC 从“直角平台的直线与圆弧”走向“任意轨迹”必须付的代价：<strong>从四次乘法，变成一次开方加一次除法，再加一个低速冻结逻辑。</strong></p>
+<p>三种情形的实现难度递增，但压缩率不变——<strong>难的是“怎么知道法向朝哪”，不是“怎么加反馈”。</strong></p>
+<h2 id="参数逐个讲意义">98.7 参数逐个讲意义</h2>
+<h3 id="参数分四类">98.7.1 参数分四类</h3>
+<p>本章脚本顶部有二十来个常量，按作用分四类：</p>
+<ul>
+<li><strong>传动类</strong>：导程、编码器线数、齿比。它们决定“一个 count 对应多少物理量”与“从轴要转多快”。</li>
+<li><strong>动态类</strong>：带宽、阻尼比、惯量、额定力矩。它们决定“跟得上跟不上”。</li>
+<li><strong>几何类</strong>：速度、半径、分度角、分度时间。它们决定“要跑多快”。</li>
+<li><strong>节拍类</strong>：插补周期、积分步长、抖动。它们决定“离散化要付多少”。</li>
+</ul>
+<p>四类的耦合方式不同：传动类是<strong>乘法</strong>（改一个，所有长度单位都变），动态类是<strong>反比</strong>（带宽翻倍，误差减半），几何类是<strong>线性</strong>，节拍类是<strong>一次或二次</strong>。下面逐个说。</p>
+<h3 id="导程与每转计数决定了1-个-count-有多长">98.7.2 导程与每转计数：决定了“1 个 count 有多长”</h3>
+<p><span class="math display">
+\Delta x=\frac{L}{N}=\frac{10\ \text{mm}}{10000}=1.000\ \mu\text{m/count}
+</span></p>
+<p>这个数一旦定了，整个系统的精度下限就定了：轮廓误差不可能小于它（除非用插补细分或多点平均），速度分辨率的差分下限也由它决定（§98.5.6 的 1 mm/s）。</p>
+<p>改导程：<span class="math inline">L</span> 从 10 mm 改成 5 mm，分辨率变成 0.5 μm（好一倍），但同样转速下速度减半（差一倍）。<strong>导程是“精度与速度”的直接交换</strong>，没有免费的一侧。</p>
+<p>改每转计数：2500 ppr × 4 = 10000，若改成 17 位绝对值编码器（131072 counts/rev），分辨率变成 0.076 μm，提高 13 倍。代价是成本与“分辨率高于机械精度”的浪费——丝杠本身的导程误差通常在 5–10 μm/300 mm，比 0.076 μm 大两个数量级。<strong>分辨率超过机械精度一个数量级之后，再加就没有意义了。</strong></p>
+<h3 id="带宽唯一能同时改善三个指标的参数">98.7.3 带宽：唯一能同时改善三个指标的参数</h3>
+<p>带宽是本章最有“杠杆”的参数，因为三个指标都随它走：</p>
+<ul>
+<li>跟随误差 <span class="math inline">e\propto1/\omega_n</span>，带宽翻倍误差减半。</li>
+<li>同步误差（差模部分）也 <span class="math inline">\propto1/\omega_n</span>，但因为两根轴同时变，比值不变时同步误差不变。</li>
+<li>圆弧轮廓误差 <span class="math inline">\propto\delta\propto1/\omega_n</span>（小 <span class="math inline">\omega</span> 下相位近似线性），带宽翻倍误差减半。</li>
+</ul>
+<p>所以“两根轴同时把带宽翻倍”能改善单轴与轮廓，但不改善同步；“只提低的那根”能改善三者，但机械风险最大。这是 §98.6.6 那条经验的定量依据。</p>
+<h3 id="带宽比同步误差的唯一决定因素">98.7.4 带宽比：同步误差的唯一决定因素</h3>
+<p>在“两根轴都近似一阶”的频段（<span class="math inline">\omega\ll\omega_n</span>），斜坡误差差模部分可以写成</p>
+<p><span class="math display">
+e_{syn}\approx2v\left(\frac{1}{\omega_{ny}}-\frac{1}{\omega_{nx}}\right)
+</span></p>
+<p>代入本章：<span class="math inline">2\times0.35355\times(1/157.08-1/251.33)=2\times0.35355\times0.002388=1.688</span> mm。<strong>与仿真逐位相同。</strong> 这个式子说明：同步误差只与“两个 <span class="math inline">\omega_n</span> 的倒数之差”有关，与绝对带宽无关。所以 40/25、20/12.5、80/50 三组的同步误差完全相同（都是 1.688 mm），只有单轴误差不同。</p>
+<p><strong>这条结论是本章最重要的一条工程判据：想改同步误差，改比值；想改单轴误差，改绝对值。</strong></p>
+<h3 id="阻尼比被固定成-1-的那个参数">98.7.5 阻尼比：被固定成 1 的那个参数</h3>
+<p>本章一律取 <span class="math inline">\zeta=1</span>。原因有两个：临界阻尼无超调，误差响应单调，所有闭式都最简；真实位置环通常也整定在 0.9–1.1。</p>
+<p><span class="math inline">\zeta</span> 的影响主要在斜坡误差的系数 <span class="math inline">2\zeta</span>：<span class="math inline">\zeta=0.7</span> 时误差降 30%，但会有 4.3% 的超调。多轴系统一般不为了这 30% 去换超调，因为超调会在换向时造成“过冲—回退”，反而增加轮廓误差。</p>
+<h3 id="惯量与额定力矩啮合与凸轮的硬约束">98.7.6 惯量与额定力矩：啮合与凸轮的硬约束</h3>
+<p>两个数只在“加速”与“凸轮”两处出现，但都是硬约束：</p>
+<ul>
+<li>啮合：<span class="math inline">t_{\min}=J\omega_s/T_{\text{rated}}</span>，本章 70.7 ms。</li>
+<li>凸轮：<span class="math inline">T=J_{\text{table}}\ddot\theta_{\max}</span>，本章摆线 2.193 N·m。</li>
+</ul>
+<p>惯量增大 50%，两个时间/力矩都增大 50%。<strong>惯量是“负载”的总代表，它一变，所有与加速度有关的账都要重算。</strong></p>
+<h3 id="齿比一个参数改三笔账">98.7.7 齿比：一个参数改三笔账</h3>
+<p><span class="math inline">R</span> 从 1.5 改成 2.0：</p>
+<ul>
+<li>从轴转速从 2250 变 3000 r/min，加速力矩从 1.414 变 1.885 N·m（+33%）。</li>
+<li>分数化从 3/2 变 2/1，仍然精确（0.00 ppm）。</li>
+<li>从轴单拍计数从 375 变 500，折合直线 500 μm/ms。</li>
+</ul>
+<p>三笔账一起变，而且方向都是“更吃力”。<strong>齿比是工艺定的，但它同时是一个动力学参数，选之前必须核力矩。</strong></p>
+<h3 id="速度与半径几何类的线性缩放">98.7.8 速度与半径：几何类的线性缩放</h3>
+<p><span class="math inline">v</span> 从 0.5 降到 0.25 m/s，<span class="math inline">e_x</span>、<span class="math inline">e_y</span>、<span class="math inline">e_{syn}</span>、<span class="math inline">e_n</span> 全部减半（线性）。<span class="math inline">R</span> 从 50 降到 25 mm，轮廓误差减半（也是线性，因为 <span class="math inline">R\delta/2</span>）。<span class="math inline">f</span> 从 1 Hz 提到 2 Hz，<span class="math inline">\delta</span> 翻倍，轮廓误差也翻倍。</p>
+<p>三个几何参数都是“一阶线性”，没有阈值、没有饱和。所以现场的“降速保精度”永远有效，代价是节拍。</p>
+<h3 id="插补周期与抖动离散类的两个幂次">98.7.9 插补周期与抖动：离散类的两个幂次</h3>
+<p><span class="math inline">T_s</span> 从 1 ms 降到 0.5 ms：</p>
+<ul>
+<li>共享插补的共模滞后从 157.1 降到 78.5 μm（线性）。</li>
+<li>独立插补的差模误差从 314.2 降到 157.1 μm（线性）。</li>
+<li>差分速度误差按 <span class="math inline">T_s^2</span> 走（第 97 章的结论）。</li>
+</ul>
+<p>抖动 <span class="math inline">\sigma</span> 只影响一项：<span class="math inline">v\sigma</span>，线性。</p>
+<p><strong>注意 <span class="math inline">T_s</span> 在这里是线性的，在第 97 章的弦高里是二次的</strong>——同一个参数在两章里幂次不同，因为误差机制不同（这里是时间对齐，那里是几何逼近）。这一点在跨章估算时最容易搞混。</p>
+<h3 id="凸轮的两个尺度分度角与分度时间">98.7.10 凸轮的两个尺度：分度角与分度时间</h3>
+<p><span class="math inline">\Delta\theta</span> 与 <span class="math inline">T</span> 决定三个峰值：<span class="math inline">v\propto\Delta\theta/T</span>、<span class="math inline">a\propto\Delta\theta/T^2</span>、<span class="math inline">j\propto\Delta\theta/T^3</span>。</p>
+<p>本章 90°/300 ms：摆线加速度 109.66 rad/s²。若把时间压到 200 ms，加速度变成 <span class="math inline">109.66\times(300/200)^2=246.7</span> rad/s²，力矩 4.934 N·m——直接翻 2.25 倍。<strong>节拍是凸轮设计里最贵的参数，压 1/3 的时间要付 2.25 倍的力矩。</strong></p>
+<p>表 98-7 把上面这些缩放律汇总。</p>
+<p><strong>表 98-7 参数变化的缩放律</strong></p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">参数</th>
+<th style="text-align: left;">变化</th>
+<th style="text-align: left;">跟随误差</th>
+<th style="text-align: left;">同步误差</th>
+<th style="text-align: left;">轮廓误差</th>
+<th style="text-align: left;">力矩</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">带宽（单轴）</td>
+<td style="text-align: left;">×2</td>
+<td style="text-align: left;">÷2</td>
+<td style="text-align: left;">不变（同改）</td>
+<td style="text-align: left;">÷2</td>
+<td style="text-align: left;">不变</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">带宽比</td>
+<td style="text-align: left;">1.6→1.25</td>
+<td style="text-align: left;">—</td>
+<td style="text-align: left;">×0.42</td>
+<td style="text-align: left;">×0.42</td>
+<td style="text-align: left;">不变</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">速度 <span class="math inline">v</span></td>
+<td style="text-align: left;">×2</td>
+<td style="text-align: left;">×2</td>
+<td style="text-align: left;">×2</td>
+<td style="text-align: left;">×2</td>
+<td style="text-align: left;">不变</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">半径 <span class="math inline">R</span></td>
+<td style="text-align: left;">×2</td>
+<td style="text-align: left;">不变</td>
+<td style="text-align: left;">不变</td>
+<td style="text-align: left;">×2</td>
+<td style="text-align: left;">不变</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">圆频率 <span class="math inline">f</span></td>
+<td style="text-align: left;">×2</td>
+<td style="text-align: left;">不变</td>
+<td style="text-align: left;">不变</td>
+<td style="text-align: left;">×2</td>
+<td style="text-align: left;">不变</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">插补周期 <span class="math inline">T_s</span></td>
+<td style="text-align: left;">×2</td>
+<td style="text-align: left;">不变</td>
+<td style="text-align: left;">×2</td>
+<td style="text-align: left;">×2</td>
+<td style="text-align: left;">不变</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">抖动 <span class="math inline">\sigma</span></td>
+<td style="text-align: left;">×2</td>
+<td style="text-align: left;">×2</td>
+<td style="text-align: left;">×2</td>
+<td style="text-align: left;">×2</td>
+<td style="text-align: left;">不变</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">惯量 <span class="math inline">J</span></td>
+<td style="text-align: left;">×2</td>
+<td style="text-align: left;">不变</td>
+<td style="text-align: left;">不变</td>
+<td style="text-align: left;">不变</td>
+<td style="text-align: left;">×2</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">分度时间 <span class="math inline">T</span></td>
+<td style="text-align: left;">×1/2</td>
+<td style="text-align: left;">—</td>
+<td style="text-align: left;">—</td>
+<td style="text-align: left;">—</td>
+<td style="text-align: left;">×4</td>
+</tr>
+</tbody>
+</table>
+<p>表的用法：<strong>先在“不变”的列上画勾，再看“变”的列</strong>。比如“我想提高轮廓精度但不想换电机”，那就只能动 <span class="math inline">v</span>、<span class="math inline">R</span>、<span class="math inline">f</span>、<span class="math inline">T_s</span>、<span class="math inline">\sigma</span>、带宽——力矩那一列全是“不变”。反过来“我想加快节拍”，力矩那一列就要翻倍。</p>
+<h3 id="哪些参数是看起来能调其实不能">98.7.11 哪些参数是“看起来能调其实不能”</h3>
+<p>三个参数经常被当成调参旋钮，其实不是：</p>
+<p><strong>编码器分辨率</strong>：它是传感器决定的，改不了。想提高只能换硬件。</p>
+<p><strong>齿比</strong>：工艺定死。改它等于改产品。</p>
+<p><strong>插补周期</strong>：受控制器与总线限制，通常只有几档可选。而且它改的是架构，不是参数。</p>
+<p>真正可调的是四个：<strong>带宽（增益）、<span class="math inline">K_c</span>、速度、前馈系数</strong>。前三个在 §98.8 讲，前馈在 §98.9 讲。</p>
+<h3 id="敏感度把定性说法换成一列数">98.7.12 敏感度：把定性说法换成一列数</h3>
+<p>§98.7.3 到 §98.7.10 说的都是方向，现场要的是“动一格值多少”。以本章的工作点（45° 直线、0.5 m/s、40/25 Hz、<span class="math inline">K_c=0</span>）为基准，各参数动一小格：</p>
+<ul>
+<li><strong>Y 轴带宽 1 Hz</strong>：同步误差变 0.180 mm，轮廓误差变 <span class="math inline">0.180\times0.7071=0.127</span> mm。</li>
+<li><strong>X 轴带宽 1 Hz</strong>：同步误差变 0.070 mm，轮廓误差变 0.050 mm。</li>
+<li><strong><span class="math inline">K_c</span> 加 0.1</strong>：轮廓误差从 1.194 mm 降到 <span class="math inline">1.194/1.1=1.085</span> mm，即 0.109 mm。</li>
+<li><strong>速度 1%</strong>：同步误差变 16.9 μm，轮廓误差变 11.9 μm。</li>
+<li><strong>抖动加 100 μs</strong>：轮廓误差加 35.4 μm。</li>
+<li><strong>插补周期加 1 ms（独立插补）</strong>：轮廓误差加 314.2 μm。</li>
+</ul>
+<p>三点读数。</p>
+<p><strong>第一，慢轴的杠杆是快轴的 2.56 倍。</strong> 0.180 对 0.070，比值正好是带宽比的平方（§98.4.7 第三条）。所以“调整哪根轴”不是随便选的：<strong>永远先动慢的那根</strong>。</p>
+<p><strong>第二，<span class="math inline">K_c</span> 的一格与 Y 轴 1 Hz 是同一量级（109 对 127 μm），但前者不动机械。</strong> 这就是 §98.9 把 CCC 排在提带宽之前的定量理由。不过要注意 <span class="math inline">K_c</span> 的边际收益是递减的：0.1 在第一档值 109 μm，在 <span class="math inline">K_c=1</span> 附近只值 <span class="math inline">1.194/4\times0.1=30</span> μm，在 <span class="math inline">K_c=5</span> 附近只值 3 μm 左右。</p>
+<p><strong>第三，速度与抖动都是小杠杆。</strong> 1% 的速度只值 12 μm，100 μs 的抖动只值 35 μm。它们的正确用法是<strong>微调</strong>（指标差一点点时用），不是<strong>救指标</strong>（差一个数量级时用）——后者只能靠架构（共享插补）或前馈。</p>
+<p>这张“一格值多少”的清单还有一个用法：<strong>反过来校验现场改造的收益</strong>。若换了驱动器、把 Y 轴带宽从 25 提到 28 Hz，轮廓误差的改善应该是 0.34 mm 左右（1.194→0.853）；实测若只改善 0.05 mm，说明瓶颈不在带宽，而在别处。</p>
+<h3 id="两个当量1.000-μm-与-0.628-mrad">98.7.13 两个当量：1.000 μm 与 0.628 mrad</h3>
+<p>本章反复出现两个数，它们是同一个 count 的两种说法：</p>
+<p><span class="math display">
+\Delta x=\frac{10\ \text{mm}}{10000}=1.000\ \mu\text{m},\qquad \Delta\theta=\frac{2\pi}{10000}=0.628\ \text{mrad}=0.036°
+</span></p>
+<p>换算关系是 <span class="math inline">1.000\ \mu\text{m}/10\ \text{mm}\times2\pi=6.283\times10^{-4}</span> rad，与 <span class="math inline">\Delta\theta</span> 一致。<strong>同一个脉冲，在直线轴上是 1 μm，在电机轴上是 0.628 mrad，两者不能混用。</strong></p>
+<p>混用的后果很具体：电子齿轮的比值是“从轴转角 / 主轴转角”，如果一边用 rev、一边用 rad，比值就差 <span class="math inline">2\pi</span>；如果一边用 mm、一边用 count，差 10000。本章的 3:2 是转角之比（2250/1500），不是线速度之比——只有两根轴的导程相同时，两者才等价。</p>
+<p><strong>另一处容易混的是“每转计数”与“每转脉冲数”。</strong> 2500 ppr 是线数，四倍频之后 10000 counts/rev；驱动器手册里若写“分辨率 10000”，说的通常是后者。<strong>啮合的预置精度 1 count、凸轮的顶点误差 1 count、§98.5.5 的取整误差 ±0.5 count，用的都是后者。</strong></p>
+<h2 id="调参方法与经验">98.8 调参方法与经验</h2>
+<h3 id="顺序不能乱">98.8.1 顺序不能乱</h3>
+<p>多轴调试的顺序是四层，<strong>任何一层没做完就跳到下一层，后面全部要返工</strong>：</p>
+<ol type="1">
+<li><strong>机械层</strong>：导轨、丝杠、联轴器、反向间隙。这一层的问题任何算法都盖不住。</li>
+<li><strong>单轴层</strong>：电流环、速度环、位置环，加上编码器方向与零位。</li>
+<li><strong>协调层</strong>：时基、插补架构、齿比/凸轮表、<span class="math inline">K_c</span>。</li>
+<li><strong>工艺层</strong>：速度、加减速、拐角过渡。</li>
+</ol>
+<p>本章的 15 段读数全部假设前三层是理想的，所以现场对不上时，先怀疑前三层。<strong>最常见的“多轴不同步”，根因是联轴器松动或单轴反向间隙，而不是算法。</strong></p>
+<h3 id="单轴层的三个旋钮">98.8.2 单轴层的三个旋钮</h3>
+<p>单轴只调三个东西：位置环增益、速度环增益、速度环积分。三者的关系在第 95 章讲过，这里只补多轴特有的两条：</p>
+<p><strong>两根轴要用同一套整定方法，但允许不同的增益。</strong> 因为负载不同，带宽必然不同；强行用同一组增益，重的那根会响应慢、轻的那根会抖。</p>
+<p><strong>整定完成后必须记录带宽（用阶跃响应或扫频测），而不是记录增益值。</strong> 带宽才是与本章所有公式对应的量，增益只是手段。</p>
+<h3 id="同步误差怎么测">98.8.3 同步误差怎么测</h3>
+<p>三种手段，精度从低到高：</p>
+<p><strong>编码器交叉读数</strong>：主轴的位置由从轴的控制器读进来，与从轴自身位置相减。优点是不加硬件，缺点是两边的采样时刻不同（正是 §98.5 要测的那一项），会把时基误差混进结果。</p>
+<p><strong>双光栅/双激光</strong>：两根轴各装一个独立的光栅或激光干涉仪，同一台记录仪采集。优点是绕开了控制器的时基，能测出真实的机械同步误差；缺点是贵。</p>
+<p><strong>球杆仪（ballbar）</strong>：让设备走一个圆，用一根伸缩杆测半径变化。它直接给出轮廓误差，是机床行业的标准手段。本章的 532.7 μm RMS 就是球杆仪能测到的量级。</p>
+<p>选择判据：<strong>要验证算法，用双光栅；要验收机床，用球杆仪；要日常监控，用编码器交叉读数（看趋势不看绝对值）。</strong></p>
+<h3 id="用斜坡试验量-omega_n">98.8.4 用斜坡试验量 <span class="math inline">\omega_n</span></h3>
+<p>让一根轴以恒定速度走一段长行程（至少 20 倍时间常数），记录稳态跟随误差，直接反解：</p>
+<p><span class="math display">
+\omega_n=\frac{2v}{e_{ss}}
+</span></p>
+<p>本章 X 轴：<span class="math inline">v=0.354</span> m/s、<span class="math inline">e=2.813</span> mm，反解 <span class="math inline">\omega_n=251.6</span> rad/s，即 40.0 Hz。<strong>这个方法的优点是只需要一段匀速运动与一个位置读数，不要求任何激励设备。</strong></p>
+<p>注意三个前提：行程要够长（否则测到的是暂态）、速度要恒定（否则 <span class="math inline">v</span> 本身在变）、摩擦要小（摩擦会额外贡献一个恒定的误差，把 <span class="math inline">\omega_n</span> 估小）。第三条是最容易踩的：有 0.5 N·m 库仑摩擦的轴，斜坡误差里会多出一项 <span class="math inline">T_f/K_p</span>，反解出来的带宽偏低 20–30%。</p>
+<h3 id="用正弦试验量相位差">98.8.5 用正弦试验量相位差</h3>
+<p>让两根轴走一个圆，用双光栅同时记录 <span class="math inline">x(t)</span>、<span class="math inline">y(t)</span>，对两个通道做正弦拟合，得到各自的幅值与相位。相位差就是 §98.2.10 的 <span class="math inline">\delta</span>，直接代入 <span class="math inline">R\delta/2</span> 就是预期的轮廓误差峰值。</p>
+<p>本章的 <span class="math inline">\delta=1.717°</span> 对应 749 μm，实测 810.9 μm，差 8%。这 8% 就是幅值项的贡献。<strong>如果实测比估算大很多（比如 2 倍），说明还有别的机制</strong>：反向间隙、摩擦死区、或者两轴的正交度误差。</p>
+<h3 id="k_c-怎么加">98.8.6 <span class="math inline">K_c</span> 怎么加</h3>
+<p>四步：</p>
+<ol type="1">
+<li><strong>先关 CCC</strong>，测出基线（本章 532.7 μm RMS）。</li>
+<li><strong>加限幅</strong>：修正量限 2 mm、误差限 5 mm、变化率限 0.5 mm/ms。</li>
+<li><strong>从 0.2 起</strong>，每加一档测一次轮廓误差与表面波纹。本章 0.2 时是 445.0 μm，改善 16.5%。</li>
+<li><strong>出现 2–5 Hz 的波纹就退回上一档</strong>。波纹是法向环失稳的第一征兆。</li>
+</ol>
+<p>按 <span class="math inline">1/(1+K_c)</span>，<span class="math inline">K_c</span> 从 0.2 加到 0.5 只多改善 20%，从 0.5 加到 1 再多 25%，从 1 加到 2 再多 33%。<strong>相对改善看着还行，绝对量却掉得很快</strong>：0.2 到 0.5 是从 445.0 降到 356.8 μm（88 μm），1 到 2 是从 268.0 降到 178.9 μm（89 μm），2 到 5 是从 178.9 降到 89.5 μm（89 μm）——<strong>每一档的绝对收益几乎一样，但噪声按 <span class="math inline">K_c</span> 线性涨。</strong> 所以停手点由噪声定，不由收益定。</p>
+<h3 id="五组经验数">98.8.7 五组经验数</h3>
+<p>本章反复出现的五个数，可以直接当经验值用：</p>
+<ul>
+<li><strong>带宽比 ≤ 1.25</strong>：超过这个值，CCC 的收益开始被机械风险抵消。</li>
+<li><strong><span class="math inline">K_c</span> = 0.5–3</strong>：低于 0.5 效果不明显，高于 3 噪声与稳定性风险陡增。</li>
+<li><strong>时基抖动 &lt; 2 μs</strong>：按 <span class="math inline">v\sigma&lt;1</span> μm 在 0.5 m/s 下反算。</li>
+<li><strong>离散项 ≤ 动态项的 1/3</strong>：超过就改架构，别调参。</li>
+<li><strong>路径速度按 0.7 折</strong>：给关节速度限幅留 30% 裕量，本章 0.355/0.5 = 70.9% 正好。</li>
+</ul>
+<p>五个数都来自“误差源之间不叠加成主项”的原则：任何一项超过总误差的 1/3，它就变成了瓶颈，其他项的优化都白费。</p>
+<h3 id="症状与原因对照">98.8.8 症状与原因对照</h3>
+<p><strong>症状一：45° 直线合格，0° 与 90° 直线不合格。</strong> 说明误差在切向（沿运动方向）。切向误差不影响轮廓，但会影响“到得早晚”。查插补时序与前馈。</p>
+<p><strong>症状二：圆弧上出现 2 次谐波的波纹。</strong> 两轴相位差或幅值差，按 §98.4.5 处理。先看带宽比，再看 <span class="math inline">K_c</span> 是否过大。</p>
+<p><strong>症状三：圆弧上出现 1 次谐波。</strong> 两轴有零点偏置或垂直度误差。查回零与机械装配，不要动控制参数。</p>
+<p><strong>症状四：换向处出现尖峰。</strong> 反向间隙或摩擦死区。这是机械问题，CCC 会把尖峰放大。</p>
+<p><strong>症状五：长时间运行后同步误差缓慢增大。</strong> 时基漂移或热伸长。前者查分布式时钟，后者查丝杠补偿。</p>
+<p>五个症状里只有第二、第五个属于本章的算法范围，其余三个都是机械或时序问题。<strong>这就是为什么 §98.8.1 把“机械层”放在第一位。</strong></p>
+<h3 id="什么时候该停手">98.8.9 什么时候该停手</h3>
+<p>三条停手线：</p>
+<p><strong>轮廓误差已经低于机械精度的一半。</strong> 本章的机械精度（丝杠导程误差）约 5–10 μm/300 mm，若轮廓误差已经压到 5 μm 以下，再压就是“测量噪声”了。</p>
+<p><strong><span class="math inline">K_c</span> 再加一档，绝对收益已经小于噪声的增长。</strong> 按 <span class="math inline">1/(1+K_c)</span>，<span class="math inline">K_c</span> 每翻一倍残差降到原来的约 55%（<span class="math inline">K_c=5\to10</span> 时从 1/6 到 1/11），但法向估计噪声按 <span class="math inline">K_c</span> 线性放大。<strong>残差按双曲线降、噪声按直线升，两条线的交点就是上限。</strong></p>
+<p><strong>出现任何 2–5 Hz 的振荡。</strong> 立刻退回，不要试图用滤波器压——滤波器会加相位滞后，反而更容易振。</p>
+<p>停手不是放弃，而是把资源转到别处：机械精度、温度补偿、工艺参数。<strong>多轴协调的边际收益曲线很陡，前 80% 的改善花 20% 的力气，后 20% 要花 80%。</strong></p>
+<h3 id="一次完整的调参记录">98.8.10 一次完整的调参记录</h3>
+<p>把 §98.8 的规则按时间顺序走一遍，记成六行。每一行的数都来自本章的仿真，因此可以逐行复核。</p>
+<p><strong>第 0 行，基线。</strong> 关掉 CCC、用独立插补器、0.5 m/s、1 Hz 圆：532.7 μm RMS、810.9 μm 峰值。<strong>这一行必须先有</strong>，否则后面每一行的“改善”都没有分母。</p>
+<p><strong>第 1 行，改架构。</strong> 两轴并到同一个插补器、同一个节拍。按 §98.5.3，这一改去掉的是“最坏差一整拍”这个差模项 314.2 μm；它不改变 §98.4 算出的 532.7 μm 动态误差，因为那部分只与带宽有关。<strong>所以这一步的收益体现为“上限被削掉”，不是“平均值下降”</strong>——单看 RMS 可能一点变化都没有，但最坏点从约 619 μm（两项按平方和合成，见 §98.9.10）收到 532.7 μm。这一步必须先做，因为后面所有 <span class="math inline">K_c</span> 的扫描都假设两轴用的是同一个节拍。</p>
+<p><strong>第 2 行，<span class="math inline">K_c=0.2</span>。</strong> 445.0 μm，比基线降 16.5%。第一档要给得小（§98.8.6 第 3 步），目的是“确认方向对不对”，不是“一步到位”。</p>
+<p><strong>第 3 行，<span class="math inline">K_c=0.5</span>。</strong> 356.8 μm，降 33.0%。到这一档，压缩率已经达到理论值 <span class="math inline">1/(1+0.5)=0.667</span> 的 99.6%（<span class="math inline">356.8/532.7=0.670</span>），说明 CCC 的实现是对的。</p>
+<p><strong>第 4 行，<span class="math inline">K_c=1.0</span>。</strong> 268.0 μm，降 49.7%。理论值 0.500，实测 0.503，仍然对得上。<strong>到此停手</strong>：按 §98.8.9 第二条，再翻一倍只值 89 μm，而法向估计的噪声按 <span class="math inline">K_c</span> 线性涨。要说明的是，本章的仿真里没有噪声，15 段读数里看不出这一档的风险——它只在现场出现，所以判断依据只能是 §98.8.9 的判据，不能是仿真。</p>
+<p><strong>第 5 行，降速到 0.709。</strong> <span class="math inline">268.0\times0.709=190.1</span> μm。这是唯一一步“不改任何参数、只改工艺”的动作，也是唯一没有副作用的动作。</p>
+<p>六行的净结果是 532.7→190.1 μm，压缩 2.80 倍。拆开看：CCC 贡献 <span class="math inline">532.7/268.0=1.99</span> 倍，降速贡献 <span class="math inline">268.0/190.1=1.41</span> 倍，两者相乘 2.80。<strong>架构那一行（第 1 行）在这笔乘式里不出现，因为它削的是上限，不是均值——这也是为什么“改善了多少倍”这个说法必须先说清“说的是均值还是最坏值”。</strong></p>
+<p><strong>记录的价值在于可复核。</strong> 六行里任何一行被质疑，都能回到 §98.12 的 15 段读数找到出处；现场若测出的数与本表差一个数量级，先怀疑机械（§98.8.1 的第一层），再怀疑时基（§98.5.10）。</p>
+<h3 id="三类设备的调参差异">98.8.11 三类设备的调参差异</h3>
+<p>同一套方法，落到不同设备上，第一件事完全不同。</p>
+<p><strong>飞剪与分度盘：先保“关系”，精度排第二。</strong> 这类设备的齿比是不可违反的约束，一个脉冲丢了就永久错位。所以调参顺序是：先验预置（1 count 以内）、再验啮合斜坡（大于 <span class="math inline">t_{\min}</span>）、最后才看误差。<strong>同步误差 4.502 mm 在这类设备上往往是可接受的</strong>，因为工艺要的是“每一刀都切在同一相位上”，而不是“轨迹与理论差多少”。这里最该盯的指标是<strong>重复性</strong>：每次剪的位置散布，而不是单次的绝对偏差。</p>
+<p><strong>切割、涂胶、雕刻：先保“轮廓”，关系可以松。</strong> 这类设备没有“永久错位”的风险，一根轴丢步只会让这一件工件报废，下一件重新回零即可。所以调参顺序是：先建基线（532.7 μm）、再按 §98.8.10 逐档加 <span class="math inline">K_c</span>、最后用降速兜底。<strong>这里最该盯的是球杆仪测出的圆度</strong>，而不是同步误差——同步误差是中间量，轮廓才是工件上的量。</p>
+<p><strong>龙门双驱：先保“不拧”，精度最后。</strong> 两台电机推一个刚体，最怕的是横梁被拧。所以调参顺序是：先做力矩均衡（§98.9.7）、再验两台电机的电流差、最后才谈轮廓。<strong>CCC 在这里不适用</strong>（§98.6.8 第四条），因为两轴不是两个独立自由度。这里最该盯的是<strong>两端的位置差随速度的变化</strong>——匀速时不差、加减速时差，说明是增益不匹配；一直差，说明是零位或机械。</p>
+<p>三类设备的共同点是：<strong>先确定“哪一个量是不可违反的”，再决定其他量可以松到什么程度。</strong> 这个判断在 §98.3.2 就被做掉了；调参只是执行，不是重新决策。现场最常见的浪费，是拿切割机的指标（轮廓 50 μm）去要求飞剪，或者拿飞剪的关注点（重复性）去要求雕刻机。</p>
+<h2 id="优化与改进">98.9 优化与改进</h2>
+<h3 id="前馈先把共模误差拿掉">98.9.1 前馈：先把共模误差拿掉</h3>
+<p>第 97 章已经算过前馈的账：跟踪误差从 166.886 mrad 压到 1.769 mrad，94.3 倍。同一套办法搬到多轴，效果是<strong>把两根轴的跟随误差同时压到接近零，同步误差随之消失</strong>。</p>
+<p>这一点值得说清楚，因为它与 §98.1.6 那句“前馈不能消除两轴带宽差”看似矛盾。两者都对，但说的是不同的事：</p>
+<ul>
+<li>对<strong>参考信号</strong>的响应，前馈能消掉几乎全部误差，因为两根轴用的是同一条参考、同一套前馈。前馈之后剩下的残余由模型误差与延时决定，两者对两根轴的影响相近，差模部分很小。</li>
+<li>对<strong>扰动</strong>（切削力、摩擦变化、负载突变）的响应，前馈完全无能为力，仍然由各自的带宽决定。带宽比 1.6 意味着同样的扰动在 Y 轴上造成的偏差是 X 轴的 1.6 倍。</li>
+</ul>
+<p>所以准确的说法是：<strong>前馈消掉“跟随”造成的同步误差，消不掉“扰动”造成的同步误差。</strong> 本章的 1.688 mm 是纯跟随误差，前馈能把它压到几十微米；真实机床的同步误差里有一半来自切削力扰动，前馈对它无效。</p>
+<h3 id="前馈的三种给法">98.9.2 前馈的三种给法</h3>
+<p><strong>速度前馈</strong>：给速度环加 <span class="math inline">K_v\dot r</span>，消掉速度环的滞后。这是最基本的一层，能把斜坡误差压掉 80–90%。</p>
+<p><strong>加速度前馈</strong>：给电流环加 <span class="math inline">J\ddot r</span>，消掉惯量造成的滞后。这一层需要知道折算惯量，惯量估错 20%，前馈就多给或少给 20%。</p>
+<p><strong>加加速度前馈</strong>：给电流环加 <span class="math inline">J\dddot r</span> 的一个滤波版本，消掉 jerk 造成的残余。这一层在高速曲线上有用，在低速直线上收益很小。</p>
+<p>三层的效果是逐层递减的：速度前馈压一个数量级，加速度前馈再压 3–5 倍，jerk 前馈再压 1.5–2 倍。<strong>到了第三层，收益已经与测量噪声同量级。</strong></p>
+<h3 id="ccc-的三种变体">98.9.3 CCC 的三种变体</h3>
+<p><strong>位置型</strong>（本章用的）：<span class="math inline">u=r-K_ce_n\mathbf{n}</span>，直接改位置指令。实现最简单，但对 <span class="math inline">e_n</span> 的噪声最敏感。</p>
+<p><strong>速度型</strong>：<span class="math inline">u=r-\int K_ce_n\mathbf{n}\,dt</span>，把修正量加到速度指令上。等效于在法向上加了一个积分器，对低频误差更有效，对高频噪声不敏感。代价是引入相位滞后，<span class="math inline">K_c</span> 不能大。</p>
+<p><strong>变增益</strong>：<span class="math inline">K_c</span> 随曲率或误差大小变化。曲率大（拐角）时降 <span class="math inline">K_c</span>，避免法向跳变；误差大（撞了）时降 <span class="math inline">K_c</span>，避免修正量饱和。本章 §98.6.5 说的三处限幅，本质上就是变增益的简化版。</p>
+<h3 id="轮廓误差观测器">98.9.4 轮廓误差观测器</h3>
+<p>CCC 需要法向，自由曲线上法向要靠几何算。若几何不可得（比如示教轨迹），可以用一个观测器从两轴的位置与参考反推：</p>
+<p><span class="math display">
+\hat e_n=\frac{\dot x_r e_y-\dot y_r e_x}{\sqrt{\dot x_r^2+\dot y_r^2}}
+</span></p>
+<p>分子是误差向量与切向的叉积（二维的“叉积”是标量），分母是切向长度。这个式子的几何含义是“误差向量在法向上的投影”，与 §98.2.8 的 <span class="math inline">-e_x\sin\theta+e_y\cos\theta</span> 完全等价（把 <span class="math inline">\sin\theta</span>、<span class="math inline">\cos\theta</span> 用 <span class="math inline">\dot y_r/|\dot r|</span>、<span class="math inline">\dot x_r/|\dot r|</span> 代入即可）。</p>
+<p>观测器的好处是不需要轨迹的解析式，只需要参考的瞬时速度；坏处是低速时分母趋零，估出来的法向噪声极大。工程上要加一个“速度低于阈值时冻结 <span class="math inline">K_c</span>”的保护。</p>
+<h3 id="降速最便宜也最有效的优化">98.9.5 降速：最便宜也最有效的优化</h3>
+<p>§98.3.10 的算例把路径速度从 0.5 压到 0.355 m/s，所有误差按 0.709 缩放。这是<strong>唯一一个“改善所有指标且不增加任何风险”的操作</strong>，代价只是节拍。</p>
+<p>图 98-10 是这一步的依据。</p>
+<figure>
+<img src="figs/ch098/fig_098_10_limits.svg" alt="图 98-10　两连杆走直线时的关节速度与限幅" /><figcaption aria-hidden="true">图 98-10　两连杆走直线时的关节速度与限幅</figcaption>
+</figure>
+<p>横轴是路径参数 <span class="math inline">s</span>（0 到 1），纵轴是关节速度的绝对值。两条曲线：关节 1 峰值 1.357 rad/s、关节 2 峰值 1.691 rad/s，比值 0.802。两条水平虚线是限幅 2.0 与 1.2 rad/s。<strong>关节 2 的峰值 1.691 超过了自己的限幅 1.2，用掉 141.0%；关节 1 的 1.357 在限幅 2.0 内，用掉 67.8%。</strong> 于是限制轴是关节 2，路径速度只能按 <span class="math inline">1/1.4097</span> 缩放，得 0.355 m/s。</p>
+<p>这张图有一条容易被忽略的信息：<strong>两条曲线的峰值都落在路径终点（<span class="math inline">s=1</span>），不是起点，也不是中段。</strong> 起点处 <span class="math inline">q_2=90°</span>，雅可比行列式 <span class="math inline">L_1L_2\sin q_2</span> 取最大值，条件最好；走到终点 <span class="math inline">q_2=60°</span>，行列式降到 <span class="math inline">0.866L_1L_2</span>，同样的末端速度需要更大的关节速度。所以“限速”不能只看起点，要看全程，而且要看终点。这与第 97 章 §97.6.3 的结论一致。</p>
+<h3 id="分段增益拐角处把-k_c-关掉">98.9.6 分段增益：拐角处把 <span class="math inline">K_c</span> 关掉</h3>
+<p>直线与圆弧的 CCC 都很稳，因为法向连续。拐角处法向跳变（从一条边的法向跳到另一条边），CCC 会试图“把误差推向两个方向”，结果是角点抖动。</p>
+<p>做法：在拐角前后各留一个“过渡区”，长度取 <span class="math inline">vT_{\text{blend}}</span>（<span class="math inline">T_{\text{blend}}</span> 取 10–20 ms），区内 <span class="math inline">K_c</span> 按余弦从 0 升到额定值。本章的 0.5 m/s 对应过渡区 5–10 mm。</p>
+<p>代价是过渡区内轮廓误差不受控。但拐角本身就有几何误差（尖角在物理上不可实现），所以这笔账通常划得来。</p>
+<h3 id="双驱的力矩均衡">98.9.7 双驱的力矩均衡</h3>
+<p>龙门双驱不是“两根独立的轴”，而是“一个刚体由两台电机推”。此时的协调目标不是轮廓，而是<strong>两台电机的力矩均衡</strong>：</p>
+<ul>
+<li>若两台电机力矩不等，横梁会被拧，导轨受侧向力。</li>
+<li>力矩差的主要来源是两台驱动器的增益不一致、编码器零位偏差、机械预紧不同。</li>
+</ul>
+<p>标准做法是“主从 + 力矩前馈”：一台做位置主站，另一台做位置从站，同时把主站的力矩指令按 50% 前馈给从站。这样两台电机分担同一份负载，位置由主站保证。</p>
+<p>CCC 在这个场合不适用，因为两根轴的位置不是“两个独立的自由度”，而是“一个自由度的两个测点”。</p>
+<h3 id="电子凸轮的三个改进">98.9.8 电子凸轮的三个改进</h3>
+<p><strong>拼接</strong>：把“停—转—停”拆成三段，停顿段用零速保持，转位段用摆线或五次，两段之间用 <span class="math inline">C^2</span> 连续的条件拼接。本章的四种曲线都是单段，实际凸轮常是三段拼接。</p>
+<p><strong>预置</strong>：与电子齿轮一样，啮合前把从轴预置到曲线起点，精度 1 count。</p>
+<p><strong>降 jerk 的折中</strong>：摆线的 jerk 在两端最大（<span class="math inline">4\pi^2</span>），若机械在某个频率有共振，可以把摆线换成“摆线 + 五次”的混合，把 jerk 峰值压 20–30%，代价是加速度峰值升 5–10%。</p>
+<h3 id="优化的优先级">98.9.9 优化的优先级</h3>
+<p>五条优化按“性价比”排序：</p>
+<ol type="1">
+<li><strong>降速</strong>（0.709 倍）：零风险，全部指标改善，代价是节拍。</li>
+<li><strong>共享插补器</strong>（去掉 314.2 μm）：零风险，一次架构改动。</li>
+<li><strong>前馈</strong>（把跟随误差压一个数量级）：需要模型，收益最大。</li>
+<li><strong><span class="math inline">K_c</span> = 0.5–2</strong>（压 1.5–3 倍）：需要法向，收益中等，有稳定性风险。</li>
+<li><strong>提高带宽</strong>（压 2 倍）：收益大，但机械风险最高，通常放到最后。</li>
+</ol>
+<p><strong>顺序不能反。</strong> 现场最常见的错误是先加 <span class="math inline">K_c</span>、再提带宽，把两个有风险的动作用在最前面，结果一抖动就不知道是谁的问题。<strong>先把零风险的动作做完，再看剩下多少账要还。</strong></p>
+<h3 id="误差怎么合成平方和还是相加">98.9.10 误差怎么合成：平方和还是相加</h3>
+<p>前面每一笔都是单独算的，真实设备上它们同时存在。合成规则取决于两件事：<strong>是否同源、是否同相。</strong></p>
+<p><strong>同源且同相：直接相加。</strong> 两轴带宽差造成的两个分量 <span class="math inline">e_x</span>、<span class="math inline">e_y</span> 就是同源的，所以 <span class="math inline">e_{syn}=e_y-e_x</span> 是代数相加，不是平方和。这一点在本章已经被反复用到——主从的 4.502 mm 与并行的 1.688 mm 都是“相减”减出来的，不是“开根”开出来的。</p>
+<p><strong>异源、相位不相关：平方和开根。</strong> 动态误差（1 Hz 的正弦形状）与时基抖动（白噪声）不相关，合成是 <span class="math inline">\sqrt{532.7^2+35.4^2}=533.9</span> μm。<strong>抖动在这一档几乎不影响总量</strong>——这就是“离散项要小一个量级”这条经验的来历：小一个量级，平方和里只占 1%，可以忽略。</p>
+<p><strong>异源但同相：介于两者之间。</strong> 动态误差 532.7 μm 与独立插补的 314.2 μm 都是“随轨迹重复的”确定量，严格说应代数相加得 846.9 μm；但这要求两者的相位恰好对齐。实际相位是随机的，结果落在 <span class="math inline">\sqrt{532.7^2+314.2^2}=618.5</span> μm 与 846.9 μm 之间。</p>
+<p>本章取平方和 618.5 μm 作为“典型值”，因为它对应“相位不对齐”这个最常见的情形。<strong>验收时若测到的比 618.5 还大，就要怀疑相位确实对齐了，或者还有第三个误差源没有算进来。</strong></p>
+<p>把这条规则用到优化上，就能看清每一步值多少：</p>
+<ul>
+<li>共享插补器：618.5→532.7，去掉 85.8 μm。</li>
+<li>再叠 <span class="math inline">K_c=0.5</span>：532.7→356.8，去掉 175.9 μm。</li>
+<li>再降速 0.709：356.8→253.0，去掉 103.8 μm。</li>
+</ul>
+<p><strong>注意“叠加”不是把两个压缩比相乘。</strong> 1.49（CCC）与 1.16（618.5/532.7）相乘是 1.73，而实际的 618.5/356.8 也是 1.73——这次恰好对上了，因为两步都作用在同一个标量误差上，且都是乘性压缩。换成“降速 + CCC”同样成立（0.709 与 0.667 相乘）。<strong>能乘的前提是“两步作用在同一个标量上”；一旦一步作用在动态项、另一步作用在离散项，就只能先合成再压缩</strong>，这也是为什么本章要先把 618.5 合一，再谈 CCC 的 1.49 倍。</p>
+<p>最后提醒一句：<strong>平方和永远小于代数和</strong>。若有人报出“优化后最坏值反而变大”，多半是把该相加的两项开了根，或者把该开根的两项加了。<strong>判据只有一条：问一句“这两项会不会同时取到极值”。</strong> 会，相加；不会，开根。</p>
+<h2 id="工程落地时序测量与补偿">98.10 工程落地：时序、测量与补偿</h2>
+<h3 id="落地的三件事">98.10.1 落地的三件事</h3>
+<p>前九节算的是“误差有多大”，这一节算“怎么让设备按算出来的方式动”。三件事：</p>
+<ul>
+<li><strong>启停时序</strong>：几根轴什么时候上使能、什么时候开始动、什么时候断使能。</li>
+<li><strong>测量</strong>：同步误差怎么采、在哪采、采样时刻怎么对齐。</li>
+<li><strong>补偿</strong>：测出来的静态误差怎么补进指令。</li>
+</ul>
+<p>三件事都不涉及控制算法，但任何一件做错，前面九节的账全部作废。</p>
+<h3 id="启停时序20-ms-与-100-ms">98.10.2 启停时序：20 ms 与 100 ms</h3>
+<p>五根轴同时启动，每根轴的使能—抱闸释放—伺服准备好需要 20 ms。同时启动总耗时 20 ms；依次启动是 <span class="math inline">5\times20=100</span> ms，多花 80 ms。</p>
+<p>80 ms 看着不多，但它是<strong>每个节拍</strong>都要付的。若设备节拍是 2 s，80 ms 是 4%；若节拍是 300 ms（分度盘），80 ms 是 27%——直接决定产能。</p>
+<p>同时启动的代价是<strong>电流冲击叠加</strong>：五台电机同时从零速建立励磁、同时释放抱闸、同时开始加速，母线电流的峰值是单台的 5 倍。若供电容量按单台设计，五轴同时启动会把母线电压拉低，轻则驱动器报欠压，重则整机复位。</p>
+<p>工程上的折中是<strong>分组错相启动</strong>：把五轴分成 2–3 组，组间错开 5–10 ms。这样总耗时 30–50 ms（仍远小于 100 ms），电流峰值降到 2–3 倍。<strong>错相的时间只要大于“励磁建立时间”，不必等于 20 ms</strong>——真正需要错开的是电流峰值，不是整个启动过程。</p>
+<p>把这两个数放进不同节拍里看，取舍就更清楚：节拍 2 s 时，100 ms 的依次启动只占 5%，错相到 30 ms 占 1.5%，两者都无所谓，直接选最简单的“依次启动”；节拍 300 ms 时，100 ms 占 33%，错相到 30 ms 占 10%，错相就是必须的；节拍 1 s 时，两者分别是 10% 与 3%，看产能要求定。<strong>同一个错相方案，在 300 ms 节拍上省下 70 ms（23%），在 2 s 节拍上只省 70 ms（3.5%）——比例差了 6 倍以上</strong>，所以“要不要做错相”这个问题没有统一答案，只有“你的节拍是多少”。</p>
+<h3 id="启停时序的三条约束">98.10.3 启停时序的三条约束</h3>
+<p><strong>约束一：机械上不能有相对运动。</strong> 若 X 与 Y 通过一个刚性工件相连（比如夹持着一个框），两根轴必须同时使能、同时断使能，否则工件会被拧。此时错相启动要按“机械连接关系”分组，而不是按电流峰值分组。</p>
+<p><strong>约束二：抱闸要先于使能释放。</strong> 顺序错了，电机会在抱闸未松时出力，电流飙升而位置不动，驱动器会报“位置偏差过大”。正确顺序是：使能 → 等 5–10 ms（励磁建立）→ 松抱闸 → 等 5–10 ms（抱闸确实松开）→ 允许运动。</p>
+<p><strong>约束三：断使能要先停再断。</strong> 先给零速指令、等轴停稳（速度 &lt; 阈值）、再断使能、最后合抱闸。反过来会让轴“掉”一小段，位置丢失，下次上电要回零。</p>
+<h3 id="啮合时序三个数">98.10.4 啮合时序：三个数</h3>
+<p>电子齿轮/凸轮的啮合，本章给了三个数：</p>
+<ul>
+<li><strong>预置精度 1 count = 1.000 μm</strong>。低于这个值，啮合瞬间的相位跳变不可见。</li>
+<li><strong>加速时间 ≥ 70.7 ms</strong>（额定力矩下的物理下限）。本章取 50 ms 是为了展示“超载”，实际应取 80–100 ms。</li>
+<li><strong>不预置的冲击能量 8.33 J</strong>。这是 235.62 rad/s 下从轴的全部动能，全部由机械吸收。</li>
+</ul>
+<p>现场常见的错误是“先把齿轮比设好，再上使能”。这时从轴的指令位置由主轴位置算出，可能是一个与当前位置差很远的值，位置环会立刻全力去追——等于把 8.33 J 的冲击提前到使能瞬间，而且是以“位置阶跃”的形式，比速度阶跃更糟。</p>
+<p><strong>正确顺序</strong>：上使能 → 从轴预置到 <span class="math inline">R\theta_m+\theta_0</span> → 从轴按斜坡升速 → 速度到位后接上齿轮关系 → 位置闭环接管。</p>
+<h3 id="同步误差的测量三个采样点">98.10.5 同步误差的测量：三个采样点</h3>
+<p>测同步误差要在<strong>同一时刻</strong>采两根轴的位置。三个可选采样点：</p>
+<p><strong>驱动器内部</strong>：每台驱动器在电流环中断里锁存位置，误差由主站事后对齐时间戳。精度取决于驱动器时钟同步（§98.5.7），典型 1–10 μs。</p>
+<p><strong>控制器内部</strong>：主站在每个插补周期读两台驱动器的反馈，同一拍的值直接相减。精度取决于总线传输抖动，典型 1–100 μs。</p>
+<p><strong>外部记录仪</strong>：双光栅/球杆仪/激光干涉仪，独立时钟，精度最高（&lt; 1 μs），但只能离线分析。</p>
+<p><strong>三条路测出来的数不一样，而且差值正好是时基误差。</strong> 本章的 35.4 μm（σ=100 μs）就是“控制器内部”与“外部记录仪”之间的典型差值。验收时要说清楚用的是哪一路，否则会为“35 μm 的差别”扯皮。</p>
+<h3 id="静态补偿把测出来的误差补进指令">98.10.6 静态补偿：把测出来的误差补进指令</h3>
+<p>测出同步误差之后，如果它是<strong>可重复的</strong>（同一个位置、同一个方向、每次一样），就可以补偿。</p>
+<p><strong>螺距误差补偿</strong>：每根轴一张表，<span class="math inline">n</span> 个位置点、每个点的修正量。本章的 10000 counts/rev、10 mm 导程，若丝杠导程误差是 8 μm/300 mm，就是 0.0027% 的斜率，需要每 20 mm 一个补偿点。</p>
+<p><strong>垂直度补偿</strong>：两根轴不正交，走 45° 直线时会变成一条略微弯曲的线。补偿办法是给其中一根轴加一个与另一根轴位置成正比的修正：<span class="math inline">x&#39;=x+\kappa y</span>，<span class="math inline">\kappa</span> 是垂直度误差（典型 5–20 μm/m）。</p>
+<p><strong>零点偏置补偿</strong>：两轴回零后的零点不一致，表现为圆弧上的 1 次谐波（§98.8.8 症状三）。补偿办法是给一个固定偏置。</p>
+<p>三种补偿都是“查表 + 插值”，与 §98.5.5 的绝对位置取整配合：<strong>补偿量加在绝对位置上，再一起圆整</strong>，避免增量累积。</p>
+<h3 id="动态补偿相位超前">98.10.7 动态补偿：相位超前</h3>
+<p>动态误差（相位差 1.717°）不能靠查表补，因为它随速度变化。两种做法：</p>
+<p><strong>相位超前</strong>：给低带宽轴的指令加一个超前量 <span class="math inline">\tau\dot r</span>，<span class="math inline">\tau</span> 取两轴滞后之差。本章 <span class="math inline">\tau=1.717°/(360°\times1\text{ Hz})=4.77</span> ms，即在 Y 轴指令上加 4.77 ms 的超前。这等效于把 Y 轴的相位“拨快” 1.717°。</p>
+<p><strong>增益均衡</strong>：把 Y 轴的带宽提到 40 Hz，从根本上消除相位差。代价见 §98.6.6。</p>
+<p><strong>前者的优点是只改指令、不动环路，可以随时开关；缺点是超前量对速度敏感</strong>——速度降一半，需要的超前时间不变（相位差只与频率有关），但超前量（位置）减半。所以超前补偿是“按时间补”，不是“按位置补”，实现时要用 <span class="math inline">\tau\dot r</span> 而不是固定偏移。</p>
+<h3 id="日志怎么打">98.10.8 日志怎么打</h3>
+<p>现场排查同步问题，日志里至少要有五列：时间戳、X 指令、X 反馈、Y 指令、Y 反馈。五列就能算出跟随误差、同步误差、轮廓误差。</p>
+<p>三个细节：</p>
+<ul>
+<li><strong>时间戳要来自同一个时钟</strong>。两根轴各打各的时间戳，等于什么都没测。</li>
+<li><strong>采样率要 ≥ 10 倍带宽</strong>。40 Hz 的轴要 400 Hz 以上采样，本章的 1 kHz 刚好。</li>
+<li><strong>要记录“使能”“抱闸”“啮合”这几个事件</strong>。很多同步问题是时序造成的，没有事件标记就无法定位。</li>
+</ul>
+<h3 id="一个时序骨架">98.10.9 一个时序骨架</h3>
+<p>把上面的约束写成顺序（以两轴平台为例）：</p>
+<ol type="1">
+<li><span class="math inline">t=0</span>：主站上电，两轴使能。</li>
+<li><span class="math inline">t=10</span> ms：两轴松抱闸。</li>
+<li><span class="math inline">t=20</span> ms：读当前位置，建立零点（或用绝对值编码器）。</li>
+<li><span class="math inline">t=20</span> ms：加载补偿表、加载凸轮/齿轮表。</li>
+<li><span class="math inline">t=30</span> ms：从轴预置到曲线起点，误差 &lt; 1 count。</li>
+<li><span class="math inline">t=30</span> ms：主站开始发插补指令，两轴同时进入位置闭环。</li>
+<li>运行中：每拍算 <span class="math inline">e_n</span>、加 CCC（带三处限幅）。</li>
+<li>结束：零速指令 → 等停稳 → 断使能 → 合抱闸。</li>
+</ol>
+<p>八步里第 5 步最容易被跳过，第 8 步最容易被简化。两者都会造成“位置丢失”，而位置丢失在多轴系统里意味着<strong>几何关系被破坏</strong>，必须重新回零。</p>
+<h3 id="补偿的闭环测算补再测">98.10.10 补偿的闭环：测—算—补—再测</h3>
+<p>静态补偿不是“测一次、填一张表”。它是一个迭代：测出来的误差里，只有“可重复”的部分能补，而“可重复”这件事本身要测两次才能确认。</p>
+<p><strong>第一步，测两遍。</strong> 同一段程序跑两次，逐点比较同步误差。两次的差就是“不可重复部分”（时基抖动、随机扰动、热漂移的短期分量），本章的 35.4 μm 就是这一档。<strong>可补的是两次的平均值，不是任何一次的瞬时值。</strong></p>
+<p><strong>第二步，分离机制。</strong> 把可重复部分按谐波分解：1 次谐波对应零点偏置与偏心，2 次谐波对应带宽差与椭圆化，高次谐波对应丝杠周期误差。<strong>只有 1 次与高次谐波该补，2 次谐波不该补</strong>——它是动态的、随速度变化，补进去只会在别的速度下变成新的误差（§98.4.5 的 <span class="math inline">2\theta</span> 谐波就是这一类）。</p>
+<p><strong>第三步，按位置建表。</strong> 螺距误差 8 μm/300 mm 折合 26.7 ppm，在 100 mm 行程上是 2.67 μm；垂直度 10 μm/m 在 100 mm、45° 上造成 <span class="math inline">10\times10^{-6}\times0.1\times0.7071=0.71</span> μm 的法向偏差。两者量级不同，但都必须按位置建表，不能用一个常数补。</p>
+<p><strong>第四步，再测一遍，看残差。</strong> 补偿后的残差应该落到“不可重复部分”的量级（本章 35.4 μm 的时基项、1 μm 的量化项）。<strong>若残差还在 10 μm 以上，说明表建错了</strong>——最常见的原因是补偿量加在圆整之后（违反 §98.10.6 的规矩），或者插值节点太稀。</p>
+<p>四步的成本是两次测量，收益是“把可重复的静态误差压到量化下限”。<strong>这笔生意在多轴系统上几乎总是划算的，因为它不动任何环路参数。</strong></p>
+<h3 id="现场五条检查清单">98.10.11 现场五条检查清单</h3>
+<ol type="1">
+<li><strong>两根轴的编码器方向是否一致？</strong> 方向反了，CCC 会把误差推向反方向，越补越大。</li>
+<li><strong>两轴的 count 当量是否相同？</strong> 不同的话，CCC 的 <span class="math inline">\mathbf{n}</span> 要按各自的当量换算，否则修正量比例错。</li>
+<li><strong>补偿表是在圆整前加还是圆整后加？</strong> 必须在圆整前，否则补偿量本身被量化。</li>
+<li><strong>CCC 的限幅是否按各轴自己的行程设置？</strong> 共用一个限幅值，短行程那根轴会先饱和。</li>
+<li><strong>日志的时间戳是否同源？</strong> 不同源的话，测出来的 35.4 μm 里有一半是假的。</li>
+</ol>
+<p>五条都是“配置错误”，不是“算法错误”。<strong>多轴系统的现场故障，九成在这五条里。</strong></p>
+<p>这五条之所以放在最后而不放在最前，是因为它们<strong>不产生任何新数</strong>，只决定已有的数字是真是假。测出来的 35.4 μm 如果是假的，后面所有的判断都跟着假；而五条又都不需要仪器、不需要拆机，坐在控制柜前翻一遍配置就能核完——<strong>这是本章性价比最高的一次检查。</strong></p>
+<h2 id="优缺点与适用边界">98.11 优缺点与适用边界</h2>
+<h3 id="三种结构的三句话">98.11.1 三种结构的三句话</h3>
+<p><strong>并行</strong>：最简单、最鲁棒、误差不可控。适合“两根轴只是碰巧一起动”的场合。</p>
+<p><strong>主从</strong>：几何关系结构性保证，误差被复制。适合“齿轮比/凸轮关系必须严格成立”的场合，如飞剪、分度、龙门。</p>
+<p><strong>并行 + CCC</strong>：误差可控、需要法向、有稳定性风险。适合“轮廓精度优先、轨迹几何已知”的场合，如切割、涂胶、雕刻。</p>
+<p>三句话之外，还有一句总纲：<strong>结构选择由“什么是不可违反的约束”决定，而不是由“哪个精度高”决定。</strong> 飞剪如果改成并行 + CCC，齿轮比就不再是结构性的，一旦丢一个脉冲就永久错位；切割机如果改成主从，轮廓误差直接翻 2.667 倍。两者的最优解不同，因为约束不同。</p>
+<h3 id="六条假设">98.11.2 六条假设</h3>
+<p>本章全部结论建立在六条假设上：</p>
+<ol type="1">
+<li><strong>两根轴之间没有机械耦合</strong>，可以各自建模。</li>
+<li><strong>负载是线性的</strong>，没有间隙、摩擦、饱和。</li>
+<li><strong>扰动可以忽略</strong>，或者扰动对两根轴的影响相同。</li>
+<li><strong>轨迹的几何已知</strong>，法向可以算出来。</li>
+<li><strong>两轴共享时基</strong>，或者时基误差远小于量化。</li>
+<li><strong>轴数是 2</strong>，轮廓误差是二维平面上的法向距离。</li>
+</ol>
+<p>六条在实验室都成立，在现场大多不成立。下面逐条看破了之后会怎样。</p>
+<h3 id="假设一破了机械耦合">98.11.3 假设一破了：机械耦合</h3>
+<p>龙门双驱是最典型的反例：两台电机通过横梁刚性连接，一台动，另一台被带着动。此时“两根轴”其实是“一个自由度 + 两个测点”，不能各自建模。</p>
+<p>后果有三：</p>
+<ul>
+<li><strong>CCC 失效</strong>：CCC 假设两轴可以独立修正，但耦合下改一根必然改另一根，修正量互相抵消。</li>
+<li><strong>主从可用，但要加力矩均衡</strong>（§98.9.7）。</li>
+<li><strong>“同步误差”的定义要改</strong>：从“两轴位置之差”变成“横梁两端的偏斜角”，量纲从 mm 变成 mrad。</li>
+</ul>
+<p>判断有没有耦合，做一个试验：只让 X 轴动，看 Y 轴的编码器是否变化。变化超过 1 count 就是有耦合。</p>
+<h3 id="假设二破了非线性">98.11.4 假设二破了：非线性</h3>
+<p>间隙与摩擦是两大多轴杀手。</p>
+<p><strong>反向间隙</strong>：换向时有一小段“空程”，位置不动而指令在动，表现为跟随误差突然增大。在圆弧上，反向间隙造成“过象限”处的凸起——这是机床行业的经典问题，四个象限各一个尖峰。CCC 会把这个尖峰当成法向误差去“修正”，结果把尖峰放大。</p>
+<p><strong>摩擦死区</strong>：低速时摩擦力随速度变化剧烈（Stribeck），两根轴的摩擦特性不同，低速同步误差会比模型预测的大几倍。本章的 1.688 mm 在低速下可能变成 5 mm 以上。</p>
+<p>两种非线性都不能靠 CCC 解决，只能靠机械（预紧、导轨选型）与摩擦补偿（第 95 章）。<strong>CCC 在非线性系统里的作用是“减小可建模的那部分误差”，剩下的部分它无能为力，甚至会放大。</strong></p>
+<h3 id="假设三破了扰动">98.11.5 假设三破了：扰动</h3>
+<p>扰动包括切削力、工件重量变化、风阻、线缆拖拽。它们的共同特点是<strong>不可预测、只作用于某一根轴</strong>。</p>
+<p>扰动响应的传递函数是 <span class="math inline">1/(1+G)</span>，与跟随误差同一个形式。所以：</p>
+<ul>
+<li>带宽高的轴，扰动造成的偏差小。</li>
+<li>带宽差 1.6 倍，同样的扰动在两根轴上的偏差差 1.6 倍，这个差就是同步误差。</li>
+</ul>
+<p>CCC 对扰动的效果有限，因为 CCC 修正的是“已经发生的轮廓误差”，而扰动是持续作用的。要压扰动，只有提高带宽或加扰动观测器（第 99 章）。</p>
+<h3 id="假设四破了法向不唯一">98.11.6 假设四破了：法向不唯一</h3>
+<p>自由曲线上法向处处唯一（只要曲率连续），但三种情形会破：</p>
+<p><strong>尖角</strong>：两条边的法向不同，角点处无定义。处理办法是 §98.9.6 的分段增益。</p>
+<p><strong>曲率突变</strong>：直线接圆弧，曲率从 0 跳到 <span class="math inline">1/R</span>，法向连续但曲率不连续，CCC 的修正量会出现一个阶跃。处理办法是加过渡段（圆弧或样条）。</p>
+<p><strong>自交或极小半径</strong>：法向在极小半径处变化极快，CCC 的修正量跟不上，反而制造误差。处理办法是降速或忽略该段的 CCC。</p>
+<h3 id="假设五破了时基不可靠">98.11.7 假设五破了：时基不可靠</h3>
+<p>若两轴的时间戳不同源，本章的所有同步误差读数都要重新解释。§98.5 给了三档：10 μs、100 μs、1 ms，对应 3.1–314.2 μm。</p>
+<p>这一条的破坏力最隐蔽，因为<strong>它看起来不像误差，像“噪声”</strong>。表现形式是同步误差的读数每次都不一样、重复性差。遇到这种情况，先查时基，别查算法。</p>
+<h3 id="假设六破了三轴以上">98.11.8 假设六破了：三轴以上</h3>
+<p>三轴以上，轮廓误差的定义要改：它是实际点到理想曲线的<strong>空间距离</strong>，不再是平面法向距离。</p>
+<p><span class="math display">
+e_n=\|\mathbf{p}-\mathbf{p}_r(s^*)\|,\qquad s^*=\arg\min_s\|\mathbf{p}-\mathbf{p}_r(s)\|
+</span></p>
+<p>即“到曲线上最近点的距离”。这个定义对任意维数都成立，但计算量随轴数增长，实时性变差。工程上的近似是“用当前参考点代替最近点”，在曲率不大时误差很小。</p>
+<p>三轴以上还有一个新问题：<strong>误差的分配</strong>。两轴时，法向只有一个方向，<span class="math inline">e_n</span> 分配给两根轴的比例是 <span class="math inline">\sin\theta</span> 与 <span class="math inline">\cos\theta</span>，唯一确定。三轴时，法向是一个三维向量，分配给三根轴的比例仍唯一（就是法向的三个分量），但“哪根轴该多承担”变成一个有自由度的问题——可以按带宽分、按惯量分、按行程分。</p>
+<h3 id="与相邻章的边界">98.11.9 与相邻章的边界</h3>
+<p><strong>与 PID（第 44/106 章）</strong>：PID 解决“单轴怎么跟”，本章解决“两轴怎么齐”。PID 的积分能消静差，但对斜坡误差无能为力（斜坡误差是“速度型”的，需要前馈或提高增益）。本章的 <span class="math inline">2v/\omega_n</span> 就是 PID 位置环的固有斜坡误差。</p>
+<p><strong>与 MPC（第 58/80 章）</strong>：MPC 可以把多轴协调写进目标函数（比如“最小化轮廓误差”），从优化角度统一处理约束。本章的 CCC 是它的一个“一次迭代、无约束”的简化版。若设备有明确的力矩/速度约束且需要前瞻，MPC 更合适；若只是要压轮廓误差，CCC 的性价比高得多。</p>
+<p><strong>与 Smith（第 47/107 章）</strong>：Smith 预估解决“纯滞后”，本章的 ZOH 滞后（<span class="math inline">T_s/2</span>）也是一种滞后，但它是共模的，不影响轮廓。所以 Smith 预估在本章的问题上收益很小——<strong>共模滞后不需要补偿，差模滞后才需要</strong>。</p>
+<h3 id="从两轴到-n-轴法向从一条线变成一个空间">98.11.10 从两轴到 N 轴：法向从一条线变成一个空间</h3>
+<p>两轴时，法向是二维里的一条线，CCC 的修正量只有两个分量，且由 <span class="math inline">\mathbf{n}=(-\sin\theta,\cos\theta)</span> 唯一确定。<span class="math inline">N</span> 轴时，法空间是 <span class="math inline">N-1</span> 维：</p>
+<p><span class="math display">
+\mathbf{e}_n=(\mathbf{I}-\mathbf{t}\mathbf{t}^{\mathsf T})\mathbf{e},\qquad \mathbf{t}=\frac{\dot{\mathbf{r}}_r}{\|\dot{\mathbf{r}}_r\|}
+</span></p>
+<p><span class="math inline">\mathbf{I}-\mathbf{t}\mathbf{t}^{\mathsf T}</span> 把误差投影到“垂直于切向”的子空间，秩为 <span class="math inline">N-1</span>。CCC 的推广就是</p>
+<p><span class="math display">
+\mathbf{u}=\mathbf{r}-K_c\mathbf{e}_n
+</span></p>
+<p>即“沿法空间加一个增益为 <span class="math inline">K_c</span> 的反馈”。它的特征值结构与两轴完全一样：切向 1、法空间 <span class="math inline">1+K_c</span>（重数 <span class="math inline">N-1</span>）。<strong>所以“按 <span class="math inline">1/(1+K_c)</span> 压缩”这条结论与轴数无关，这是本章唯一一条可以直接搬到任意轴数的结论。</strong></p>
+<p>三轴以上真正变难的是另外两件事。</p>
+<p><strong>第一，法空间里“怎么分配”出现了自由度。</strong> 两轴时，<span class="math inline">\mathbf{n}</span> 的两个分量就是分配比例，唯一。三轴时，<span class="math inline">\mathbf{e}_n</span> 的三个分量仍然唯一（就是 <span class="math inline">\mathbf{n}</span> 的三个分量），但“哪根轴该多承担”可以按带宽、惯量、行程加权——而一旦加权，投影矩阵不再是正交投影，<span class="math inline">1/(1+K_c)</span> 的解析式就没了。<strong>工程上的做法是不加权，直接用正交投影，把“分配”交给各轴自己的位置环。</strong></p>
+<p><strong>第二，差模误差的项数按 <span class="math inline">N(N-1)/2</span> 增长。</strong> 两轴只有一对（X-Y），三轴有三对（X-Y、Y-Z、Z-X），五轴有十对。每一对都有自己的带宽比、自己的时基差、自己的一组补偿表。<strong>这就是为什么五轴机床的轮廓标定远比三轴贵：不是算法复杂了，是要测的对数涨得快。</strong></p>
+<p>一句话：<strong>法空间的维数涨了，压缩率没变，要测的东西涨了。</strong></p>
+<h3 id="哪些结论可以带走">98.11.11 哪些结论可以带走</h3>
+<p>六条，全部与具体参数无关：</p>
+<p><strong>第一，同步误差的根源是传递函数不同。</strong> 两根一样的轴，同步误差恒为零。</p>
+<p><strong>第二，主从的同步误差等于从轴自身误差。</strong> 与主轴误差无关，这是定义性的。</p>
+<p><strong>第三，共模不影响轮廓，差模才影响。</strong> 相位差、时基差、幅值差里，只有“差”的部分进轮廓误差。</p>
+<p><strong>第四，CCC 按 <span class="math inline">1/(1+K_c)</span> 压法向误差，切向不动。</strong> 六个点、两种轨迹、0.5% 以内验证。</p>
+<p><strong>第五，圆弧误差的主项是 <span class="math inline">R\delta/2</span>，不是幅值衰减。</strong> 差一个数量级。</p>
+<p><strong>第六，离散项与动态项同量级，必须一起算。</strong> 314.2 μm 对 532.7 μm，比值 0.59。</p>
+<p>六条之外，所有具体数字（1.688、4.502、810.9、314.2）都只对本章的算例成立。换一组参数，要按表 98-7 的缩放律重算。</p>
+<p>同样要说清的是本章<strong>不能</strong>带走的三条：一是 1.688 mm 这个数，它只对 40/25 Hz 与 0.5 m/s 成立，换个速度就按比例变；二是 <span class="math inline">K_c=0.5</span> 这个值，它只对 1 Hz 的圆、8 Hz 的 CCC 带宽成立（§98.6.9），换频率要重测；三是“主从更差”这个印象——在主从的场合（飞剪、分度），它保证的是关系而不是精度，谈不上更差，只是<strong>换了一个要保证的量</strong>。</p>
+<p><strong>能带走的是“怎么算”，带不走的是“算出来是多少”。</strong> 这句话适用于本章每一条结论。</p>
+<h2 id="代码与复现">98.12 代码与复现</h2>
+<h3 id="两个脚本的分工">98.12.1 两个脚本的分工</h3>
+<p><code>code/ch098_sim.py</code> 只算数：15 段 <code>report()</code>，覆盖从轴参数、电子齿轮、凸轮曲线、同步误差、CCC 扫描、抖动、插补、启停、运动学约束，全部打印到终端。</p>
+<p><code>code/ch098_figs.py</code> 只画图：10 个函数，各自调用 <code>sim</code> 的接口取数，不含任何自己的公式。</p>
+<p>这样分的好处是<strong>数与图不会打架</strong>：正文引用的每个数字都来自 <code>sim</code>，图上画的也是 <code>sim</code> 的输出，两边不可能不一致。第 97 章也是这个结构。</p>
+<h3 id="怎么跑">98.12.2 怎么跑</h3>
+<div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="st">&quot;D:\Anaconda3\envs\py311\python.exe&quot;</span> book<span class="dt">\c</span>ode<span class="dt">\c</span>h098_sim.py</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="st">&quot;D:\Anaconda3\envs\py311\python.exe&quot;</span> book<span class="dt">\c</span>ode<span class="dt">\c</span>h098_figs.py</span></code></pre></div>
+<p>两个脚本都无命令行参数，参数集中在常量区。<code>sim</code> 约 15 s（主要是 <code>line_sync</code> 与 <code>circle_path</code> 的 4001 点积分，以及 <code>ratio_quantize</code> 的 1000 次搜索），<code>figs</code> 约 9 s。</p>
+<p>输出：<code>sim</code> 打印 15 段；<code>figs</code> 在 <code>book/figs/ch098/</code> 下生成 10 张图，每张 SVG + PDF 各一份，共 20 个文件。</p>
+<h3 id="段读数索引">98.12.3 15 段读数索引</h3>
+<p><strong>表 98-8 15 段读数的内容与正文位置</strong></p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">段号</th>
+<th style="text-align: left;">内容</th>
+<th style="text-align: left;">正文位置</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">[0]</td>
+<td style="text-align: left;">两轴参数、单脉冲当量</td>
+<td style="text-align: left;">§98.1.4、§98.7.2</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">[1]</td>
+<td style="text-align: left;">电子齿轮的转速、单拍计数、啮合力矩</td>
+<td style="text-align: left;">§98.2.3、§98.7.7</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">[2]</td>
+<td style="text-align: left;">齿轮比的分数化与 ppm</td>
+<td style="text-align: left;">§98.2.2</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">[3]</td>
+<td style="text-align: left;">四种凸轮曲线的无量纲峰值</td>
+<td style="text-align: left;">§98.2.5</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">[4]</td>
+<td style="text-align: left;">实际转角与时间下的峰值、力矩</td>
+<td style="text-align: left;">§98.2.6、§98.7.10</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">[5]</td>
+<td style="text-align: left;">斜坡跟随误差与轮廓误差</td>
+<td style="text-align: left;">§98.4.2、§98.7.4</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">[6]</td>
+<td style="text-align: left;">主从与并行的同步误差对比</td>
+<td style="text-align: left;">§98.4.3</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">[7]</td>
+<td style="text-align: left;">圆弧的幅值、相位与轮廓误差</td>
+<td style="text-align: left;">§98.4.5</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">[8]</td>
+<td style="text-align: left;">CCC（<span class="math inline">K_c=0.5</span>）的效果</td>
+<td style="text-align: left;">§98.4.6</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">[9]</td>
+<td style="text-align: left;">CCC 增益扫描</td>
+<td style="text-align: left;">§98.6.3</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">[10]</td>
+<td style="text-align: left;">三档时间戳抖动</td>
+<td style="text-align: left;">§98.5.4</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">[11]</td>
+<td style="text-align: left;">共享与独立插补</td>
+<td style="text-align: left;">§98.5.2、§98.5.3</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">[12]</td>
+<td style="text-align: left;">五轴启停时序与啮合冲击</td>
+<td style="text-align: left;">§98.10.2、§98.10.4</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">[13]</td>
+<td style="text-align: left;">两连杆走直线的关节速度</td>
+<td style="text-align: left;">§98.9.5</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">[14]</td>
+<td style="text-align: left;">全章读数汇总</td>
+<td style="text-align: left;">§98.12.10</td>
+</tr>
+</tbody>
+</table>
+<p>表 98-8 是正文与代码的对照。正文里每个数后面的 <code>[k]</code> 就是段号。</p>
+<h3 id="关键函数">98.12.4 关键函数</h3>
+<p><strong><code>axis_track(u, t, f_bw, zeta)</code></strong>：二阶闭环的时域积分，返回实际位置与跟随误差。它是全章唯一的“轴模型”，所有同步误差都由它产生。</p>
+<p><strong><code>ramp_error(v, f_bw)</code></strong>：<span class="math inline">2v/\omega_n</span> 的闭式，用来与仿真对照。</p>
+<p><strong><code>sine_gain_phase(f, f_bw, zeta)</code></strong>：二阶幅相闭式，用来算圆弧的幅值衰减与相位滞后。</p>
+<p><strong><code>line_sync(mode, kc, v, angle, t_end)</code></strong>：45° 直线的两轴协调，<code>mode="parallel"</code> 或 <code>"master"</code>，<code>kc</code> 是 CCC 增益。返回 <span class="math inline">t</span>、轮廓误差、同步误差、两轴误差。它是 [5]、[6] 与 [9] 直线部分的来源。</p>
+<p><strong><code>circle_path(kc, radius, f, t_end)</code></strong>：圆轨迹的两轴协调，返回坐标与轮廓误差。它是 [7]、[8]、[9] 圆弧部分的来源。</p>
+<p><strong><code>gearing()</code></strong>：主轴转速、从轴转速、脉冲频率、单拍计数。</p>
+<p><strong><code>ratio_quantize(ratio, max_den)</code></strong>：分数化搜索，返回 <span class="math inline">p</span>、<span class="math inline">q</span>、ppm。</p>
+<p><strong><code>cam_curve(kind)</code></strong> 与 <strong><code>cam_metrics(kind)</code></strong>：凸轮曲线的无量纲形状与实际峰值。四族用同一个接口，只换 <code>kind</code>。</p>
+<p><strong><code>kinematic_limit(v_tip)</code></strong>：调用第 96 章的 <code>ik</code> 与 <code>joint_rates</code>，返回关节速度峰值与限制轴。</p>
+<p>核心的协调循环只有十几行，摘出来看：</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(n <span class="op">+</span> <span class="dv">1</span>):</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    ex <span class="op">=</span> <span class="bu">float</span>(xr[i]) <span class="op">-</span> x</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    ey <span class="op">=</span> <span class="bu">float</span>(yr[i]) <span class="op">-</span> y</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    e_n <span class="op">=</span> <span class="op">-</span>ex <span class="op">*</span> st <span class="op">+</span> ey <span class="op">*</span> ct          <span class="co"># 法向误差</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> mode <span class="op">==</span> <span class="st">&quot;parallel&quot;</span>:</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>        ux <span class="op">=</span> <span class="bu">float</span>(xr[i]) <span class="op">-</span> kc <span class="op">*</span> e_n <span class="op">*</span> st</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>        uy <span class="op">=</span> <span class="bu">float</span>(yr[i]) <span class="op">+</span> kc <span class="op">*</span> e_n <span class="op">*</span> ct</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">else</span>:                              <span class="co"># 主从：Y 指令 = 比例 × X 实际</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>        ux <span class="op">=</span> <span class="bu">float</span>(xr[i])</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>        uy <span class="op">=</span> x <span class="op">*</span> (st <span class="op">/</span> ct)</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>    ax <span class="op">=</span> wn_x <span class="op">*</span> wn_x <span class="op">*</span> (ux <span class="op">-</span> x) <span class="op">-</span> <span class="fl">2.0</span> <span class="op">*</span> ZETA <span class="op">*</span> wn_x <span class="op">*</span> vx</span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>    ay <span class="op">=</span> wn_y <span class="op">*</span> wn_y <span class="op">*</span> (uy <span class="op">-</span> y) <span class="op">-</span> <span class="fl">2.0</span> <span class="op">*</span> ZETA <span class="op">*</span> wn_y <span class="op">*</span> vy</span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>    vx <span class="op">+=</span> ax <span class="op">*</span> DT</span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>    x <span class="op">+=</span> vx <span class="op">*</span> DT</span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>    vy <span class="op">+=</span> ay <span class="op">*</span> DT</span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>    y <span class="op">+=</span> vy <span class="op">*</span> DT</span></code></pre></div>
+<p>三行值得注意：<code>e_n</code> 的符号（参考减实际，法向取 <span class="math inline">(-\sin\theta,\cos\theta)</span>）、CCC 的两项符号相反（一个减一个加）、主从用的是 <code>x</code>（实际）而不是 <code>xr[i]</code>（参考）。<strong>最后这一处是主从与并行的唯一区别，也是最容易写错的地方</strong>——写成 <code>xr[i]</code> 就退化成并行，同步误差会从 4.502 变成 1.688 mm。</p>
+<h3 id="十张图的清单">98.12.5 十张图的清单</h3>
+<p><strong>表 98-9 本章插图清单</strong></p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">图号</th>
+<th style="text-align: left;">文件</th>
+<th style="text-align: left;">内容</th>
+<th style="text-align: left;">正文</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">98-1</td>
+<td style="text-align: left;"><code>fig_098_01_gearing</code></td>
+<td style="text-align: left;">啮合转速跳变、加速时间-力矩</td>
+<td style="text-align: left;">§98.2.3</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">98-2</td>
+<td style="text-align: left;"><code>fig_098_02_cam</code></td>
+<td style="text-align: left;">四种凸轮的位移/速度/加速度</td>
+<td style="text-align: left;">§98.2.5</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">98-3</td>
+<td style="text-align: left;"><code>fig_098_09_cam_peaks</code></td>
+<td style="text-align: left;">相对峰值对比</td>
+<td style="text-align: left;">§98.2.6</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">98-4</td>
+<td style="text-align: left;"><code>fig_098_03_ramp</code></td>
+<td style="text-align: left;">两轴跟随误差与轮廓误差</td>
+<td style="text-align: left;">§98.4.2</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">98-5</td>
+<td style="text-align: left;"><code>fig_098_04_sync</code></td>
+<td style="text-align: left;">主从与并行的同步误差</td>
+<td style="text-align: left;">§98.4.3</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">98-6</td>
+<td style="text-align: left;"><code>fig_098_05_radius</code></td>
+<td style="text-align: left;">圆弧的半径偏差（椭圆化）</td>
+<td style="text-align: left;">§98.4.5</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">98-7</td>
+<td style="text-align: left;"><code>fig_098_06_contour</code></td>
+<td style="text-align: left;">轮廓误差：无 CCC 与 <span class="math inline">K_c=0.5</span></td>
+<td style="text-align: left;">§98.4.6</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">98-8</td>
+<td style="text-align: left;"><code>fig_098_08_jitter</code></td>
+<td style="text-align: left;">抖动与轮廓误差的双对数图</td>
+<td style="text-align: left;">§98.5.4</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">98-9</td>
+<td style="text-align: left;"><code>fig_098_07_ccc</code></td>
+<td style="text-align: left;">CCC 增益扫描（双纵轴）</td>
+<td style="text-align: left;">§98.6.3</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">98-10</td>
+<td style="text-align: left;"><code>fig_098_10_limits</code></td>
+<td style="text-align: left;">关节速度与限幅</td>
+<td style="text-align: left;">§98.9.5</td>
+</tr>
+</tbody>
+</table>
+<p>图的文件编号与图号不同序（<code>fig_098_09</code> 是图 98-3，<code>fig_098_07</code> 是图 98-9），原因是最初按“先写脚本后定章节顺序”排的文件号，而图号按正文出现顺序重排过。引用时以图号为准，文件名只是路径。</p>
+<h3 id="三条回归断言">98.12.6 三条回归断言</h3>
+<p>改动脚本后，用三条断言快速判断有没有改坏：</p>
+<p><strong>断言一：斜坡误差必须与闭式逐位相同。</strong> <code>line_sync</code> 的稳态 <span class="math inline">e_x</span> 应等于 <code>ramp_error(0.35355, 40)</code> 的结果 2.813 mm。若不等，说明积分或参考写错了。</p>
+<p><strong>断言二：主从的同步误差必须等于从轴的斜坡误差。</strong> 4.502 mm。若变成 7.315 mm（两者之和），说明主从分支里把 <code>x</code> 写成了 <code>xr[i]</code> 的某种变体，误差被叠加了两次。</p>
+<p><strong>断言三：CCC 扫描必须落在 <span class="math inline">1/(1+K_c)</span> 的 1% 内。</strong> 六个点都要过。若不满足，先查法向的符号——符号反了会变成“放大”而不是“压缩”，误差会随 <span class="math inline">K_c</span> 上升。</p>
+<p>三条都是“结构性”的，不依赖具体数值调优，因此特别适合做回归。</p>
+<h3 id="读代码的顺序">98.12.7 读代码的顺序</h3>
+<p><strong>第一步，常量区。</strong> 导程、编码器、带宽、惯量、齿比、速度、半径、周期、抖动。读懂这一区，就知道 15 段各自在什么条件下成立。</p>
+<p><strong>第二步，<code>axis_track</code>。</strong> 十行，是全部误差的来源。重点看 <code>acc = wn*wn*err - 2*zeta*wn*vel</code> 这一行，它就是二阶闭环的离散化。</p>
+<p><strong>第三步，<code>line_sync</code> 与 <code>circle_path</code>。</strong> 两个协调循环。重点看 <code>mode</code> 分支与 <code>kc</code> 的两项符号。</p>
+<p><strong>第四步，<code>report</code> 的 15 段。</strong> 每段对应表 98-8 的一行。读到哪段不清楚，就回正文对应小节。</p>
+<p><strong>第五步，<code>ch098_figs.py</code>。</strong> 10 个函数各自独立，只调 <code>sim</code> 的接口，没有公式。读它是为了确认“图上画的就是正文说的”。</p>
+<h3 id="跑不出来时的四个检查点">98.12.8 跑不出来时的四个检查点</h3>
+<p><strong>第一，解释器。</strong> 必须用装了 numpy 与 matplotlib 的环境。用系统 Python 时最常见的报错是 <code>ModuleNotFoundError: No module named 'numpy'</code>。</p>
+<p><strong>第二，路径。</strong> 两个脚本都用 <code>Path(__file__).resolve().parents[1]</code> 定位 <code>book/</code>，必须从源码树里运行。复制到桌面后，<code>import ch096_sim</code> 与输出目录都会失效。</p>
+<p><strong>第三，中文字体。</strong> 图里的中文依赖系统字体。缺字体时中文变方块，不影响数值，但会让图不能用。另一个相关的坑是 §98.12.5 提到的：<strong>中文与 <code>$...$</code> 不能写进同一个字符串</strong>，STIX 没有中日韩字形，混写会丢字。</p>
+<p><strong>第四，<code>ch096_sim</code> 的依赖。</strong> <code>kinematic_limit</code> 要 import 第 96 章的模块，若那个文件被改名或移动，<code>sim</code> 会在 import 阶段就失败，15 段一段都跑不出来。</p>
+<p>四条都不涉及算法。排查顺序建议：先环境、再路径、再字体、最后才怀疑代码。</p>
+<p>还有一种情形不是“跑不出来”，而是“跑出来了但数不对”。三种典型，都能在十秒内定位：<strong>[5] 的 X 若给出 2.500 而不是 2.813</strong>，说明把 <span class="math inline">v</span> 当成了路径速度、忘了乘 <span class="math inline">1/\sqrt2</span>（§98.2.13）；<strong>[6] 的主从若给出 1.688</strong>，说明 <code>uy</code> 里写的是 <code>xr[i]</code> 而不是 <code>x</code>（§98.12.4）；<strong>[9] 的 RMS 若不随 <span class="math inline">K_c</span> 下降</strong>，说明法向的两个分量符号反了（§98.12.6 断言三）。</p>
+<h3 id="把本章用到自己设备上的四步">98.12.9 把本章用到自己设备上的四步</h3>
+<p>换一台设备，不必从头推一遍，按四步走：</p>
+<p><strong>第一步，量两根轴的带宽。</strong> 用 §98.8.4 的斜坡试验：让单轴以恒定速度走一段长行程，读稳态跟随误差，<span class="math inline">\omega_n=2v/e_{ss}</span> 反解。两根轴各做一次，得到 <span class="math inline">\omega_{nx}</span>、<span class="math inline">\omega_{ny}</span> 与比值 <span class="math inline">\rho</span>。这是唯一必须实测的量，其余都能算。</p>
+<p><strong>第二步，用口算公式估预期误差。</strong> §98.2.13 的两条：45° 直线用 <span class="math inline">0.225v/f_{bw}</span>，圆弧用 <span class="math inline">0.318v/f_{bw}</span>，代入自己的 <span class="math inline">v</span> 与 <span class="math inline">f_{bw}</span>，得到单轴误差；再按 §98.4.7 的倒数之差算同步误差，按 §98.4.5 的 <span class="math inline">R\delta/2</span> 算圆弧轮廓。</p>
+<p><strong>第三步，把实测与估算对比，判断主项。</strong> 若实测与估算同量级（±30%），说明主项就是带宽差，按本章的办法优化；若实测大几倍，按 §98.8.8 的五条症状查——1 次谐波查零点，换向尖峰查间隙，重复性差查时基。<strong>这一步的价值在于“别把机械问题当算法问题调”。</strong></p>
+<p><strong>第四步，按 §98.9.9 的顺序施工。</strong> 先做零风险的（共享插补、降速裕量），再加 CCC，最后才动带宽。每做一步测一次，记进 §98.8.10 那样的六行表。</p>
+<p>四步之外，有一个前提容易被跳过：<strong>这台设备的工艺约束是什么？</strong> 飞剪的齿比不可违反，切割机的轮廓优先，龙门的两台电机必须力矩均衡。<strong>结构选错，四步全白做</strong>——这正是 §98.11.1 那句“结构由不可违反的约束决定”的实际含义。</p>
+<h3 id="本章小结">98.12.10 本章小结</h3>
+<p>回到开头的立场句：多轴协调的难点不在把每根轴调准，而在让几根轴错得一样多。十二节的账收成七条。</p>
+<p><strong>第一，同步误差的根源是传递函数不同。</strong> 两根一样的轴，同步误差恒为零；带宽比 1.600 给出 1.688 mm，且这个数只与“两个 <span class="math inline">\omega_n</span> 的倒数之差”有关，与绝对带宽无关。</p>
+<p><strong>第二，主从的同步误差等于从轴自身误差。</strong> 4.502 mm，恰好等于从轴自己的斜坡误差；并行是 1.688 mm，两者差 2.667 倍。主从把主轴误差完整复制，并行不会。</p>
+<p><strong>第三，共模不影响轮廓，差模才影响。</strong> 2.499 mm 与 3.998 mm 的弧长滞后只让轨迹整体后移；1.717° 的相位差造成 810.9 μm 的峰值、532.7 μm 的 RMS，其中 <span class="math inline">R\delta/2=749</span> μm 是主项，幅值衰减只占十分之一。</p>
+<p><strong>第四，CCC 按 <span class="math inline">1/(1+K_c)</span> 压法向误差，切向不动。</strong> 六个增益、两种轨迹，误差全部在 0.5% 以内吻合；<span class="math inline">K_c=0.5</span> 时 532.7 降到 356.8 μm，是 1.49 倍。</p>
+<p><strong>第五，离散项与动态项同量级。</strong> 1 ms 独立插补引入 314.2 μm，是动态误差的 0.59 倍；共享插补则完全不增加轮廓误差，只留 157.1 μm 的共模滞后。时间戳抖动按 <span class="math inline">v\sigma/\sqrt2</span> 算，100 μs 对应 35.4 μm。</p>
+<p><strong>第六，电子齿轮与凸轮的账是力矩账。</strong> 3:2 比值下从轴要 2250 r/min，50 ms 加速需 1.414 N·m（141.4% 额定），物理下限 70.7 ms；不预置的冲击 8.33 J；齿轮比分数化的残余 1.09 ppm，恰好一个脉冲当量。</p>
+<p><strong>第七，多轴的账要按顺序算。</strong> 传动 → 动力学 → 协调 → 离散 → 运动学约束，每一步的输出是下一步的输入。降速系数 0.709 必须最后统一乘，不能每步各乘一次。</p>
+<p>七条合起来还是一句话：<strong>先让两根轴“错得一样”，再谈“错得少”。</strong> 顺序反了，就会在单轴指标上刷出漂亮的数字，而工件上仍然是一条歪的斜边。</p>
+<p>下一章进入高级控制：滑模、自适应、鲁棒。那里要回答的是“模型不准、扰动未知时怎么保证性能”，而本章的所有结论都建立在“模型精确、扰动为零”的前提上——这正是下一章要拆掉的两块地基。</p>
+
+<nav class="footnav"><a href="ch097.html">← 上一章</a><a href="index.html">返回目录</a><a href="ch099.html">下一章 →</a></nav>
+</body>
+</html>

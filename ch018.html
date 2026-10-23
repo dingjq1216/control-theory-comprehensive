@@ -1,0 +1,1351 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="zh-CN" xml:lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>第 18 章　参数辨识：最小二乘族 · 控制大综合</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    span.underline{text-decoration: underline;}
+    div.column{display: inline-block; vertical-align: top; width: 50%;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    ul.task-list{list-style: none;}
+  </style>
+  <link rel="stylesheet" href="assets/book.css" />
+  <script src="assets/katex/katex.min.js"></script>
+  <script>document.addEventListener("DOMContentLoaded", function () {
+   var mathElements = document.getElementsByClassName("math");
+   var macros = [];
+   for (var i = 0; i < mathElements.length; i++) {
+    var texText = mathElements[i].firstChild;
+    if (mathElements[i].tagName == "SPAN") {
+     katex.render(texText.data, mathElements[i], {
+      displayMode: mathElements[i].classList.contains('display'),
+      throwOnError: false,
+      macros: macros,
+      fleqn: false
+     });
+  }}});
+  </script>
+  <link rel="stylesheet" href="assets/katex/katex.min.css" />
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+  <link rel="stylesheet" href="assets/site.css" />
+</head>
+<body>
+<nav class="topnav"><a class="home" href="index.html">目录</a><span class="pos">018 / 115</span><span class="pager"><a href="ch017.html">上一章</a><a href="ch019.html">下一章</a></span></nav>
+
+<nav id="TOC" role="doc-toc">
+<ul>
+<li><a href="#第18章-参数辨识最小二乘族">第18章 参数辨识：最小二乘族</a>
+<ul>
+<li><a href="#动机与要解决的问题">18.1 动机与要解决的问题</a></li>
+<li><a href="#定义与数学基础">18.2 定义与数学基础</a></li>
+<li><a href="#推导与性质">18.3 推导与性质</a></li>
+<li><a href="#离散对应与数值实现">18.4 离散对应与数值实现</a></li>
+<li><a href="#工程含义与适用边界">18.5 工程含义与适用边界</a></li>
+<li><a href="#仿真与验证">18.6 仿真与验证</a></li>
+<li><a href="#小结与常见错误">18.7 小结与常见错误</a></li>
+</ul></li>
+</ul>
+</nav>
+<h1 id="第18章-参数辨识最小二乘族">第18章 参数辨识：最小二乘族</h1>
+<h2 id="动机与要解决的问题">18.1 动机与要解决的问题</h2>
+<p>第 17 章把一段实验数据做成了一条曲线。曲线回答的是“输入动一下，输出怎么走”，它不假设阶数、不假设噪声进来，因此几乎不会错；但它也几乎不能用来做别的事。现场把这条曲线交给控制器设计者，对方第一个问题通常是：“给我一个能算的模型，我要在 2 s 的采样周期上做预测。”曲线答不上来。</p>
+<p>从曲线到系数，就是参数辨识要做的事。本章只讲这一族方法里最基础的一支：最小二乘（least squares，LS）及其递推形式（recursive least squares，RLS）。它们不是最好的方法——后面第 19 章会用工具变量和极大似然去修它们的偏差，第 20 章会用子空间方法绕开阶数——但它们是所有方法的坐标系：任何一个参数辨识结果，最终都会被折算成一组 <span class="math inline">\hat\theta</span>，而判断这组 <span class="math inline">\hat\theta</span> 靠不靠谱的语言，全部来自最小二乘的误差分析。</p>
+<h3 id="曲线不够用的三处">18.1.1 曲线不够用的三处</h3>
+<p><strong>第一处是外推。</strong> 非参数曲线只在激励覆盖到的工况上有效。第 17 章实验 1 里，0.02 V 幅值的阶跃只把对象推了 0.91 mm，0.4 V 推了 1.76 mm。如果产线后来要求走 3 mm 的行程，那么每 0.1 mm 对应多少伏，只能从这两条曲线的斜率去猜；一旦对象在大行程处出现饱和或死区变化，猜出来的斜率就是错的，而且错得没有任何征兆——因为曲线本身没有“参数”这个概念，也就没有“参数在别的工况下会变”这个警告。</p>
+<p><strong>第二处是结构。</strong> 曲线不能回答“这个对象是几阶”。第 17 章 §17.1.3 说过，从一个阶跃响应的最初十毫秒能看出三阶的指纹，但那是定性判断。真要把模型交给一个需要状态空间的算法（比如第 58 章和第 80 章的预测控制），就必须把曲线拟合成 <span class="math inline">n</span> 个极点、<span class="math inline">m</span> 个零点，并给出每个极点的置信区间。曲线本身不含这个信息，它只含“第几秒到多少毫米”。</p>
+<p><strong>第三处是接口。</strong> 全书后面所有控制器的设计公式，输入都是系数而不是曲线：PID 整定要用增益和时间常数（第 44 章），Smith 预估要用延迟和主导极点（第 47 章），内模控制要用模型的逆。这些公式里没有一项能直接吃一条 4096 点的阶跃响应。所以哪怕只是为了“能对接”，也必须把曲线压成一组数。</p>
+<p>这三处不够用，指向同一个结论：<strong>非参数结果是验收集，参数模型才是交付物。</strong> 第 17 章反复强调“先非参数、后参数”，说的不是非参数更准，而是非参数更不容易错——它没有可错的自由度。一旦有了这条不会错的参照，就可以放心地去拟合一个会错的模型，并用两者的差来判断错在哪里。</p>
+<h3 id="为什么从最小二乘开始">18.1.2 为什么从最小二乘开始</h3>
+<p>参数辨识的方法很多，把最小二乘放在第一位，有三个不走运但很硬的理由。</p>
+<p><strong>它是唯一有闭式解的。</strong> 给定数据矩阵 <span class="math inline">\Phi</span> 和输出向量 <span class="math inline">Y</span>，最小二乘的解是</p>
+<p><span class="math display">\hat\theta=(\Phi^{\top}\Phi)^{-1}\Phi^{\top}Y \tag{18-1}</span></p>
+<p>一行公式，不需要迭代，不需要初值，不需要调步长。这意味着两件事：一是它给出的结果是确定的，同一批数据跑两遍必然一样，可作为后面所有迭代法的对照基准；二是它的误差可以解析地写出来，而不必靠蒙特卡洛去试。</p>
+<p><strong>它是所有迭代法的第一拍。</strong> 第 19 章的极大似然、第 20 章的子空间、第 21 章的闭环辨识，几乎都把最小二乘的解当作初值。原因是这些方法的目标函数在最优点附近近似二次型，而最小二乘给的正是这个二次型的中心。初值选在这里，迭代三五步就收敛；初值选偏了，可能要几十步，甚至收敛到局部极小。所以哪怕最终不用 LS，也必须会算 LS。</p>
+<p><strong>它的偏差结构最清楚。</strong> 最小二乘什么时候准、什么时候偏，可以精确地写成一句话：<strong>回归向量与噪声不相关时无偏，相关时有偏。</strong> 这句话的证明只有三行（§18.3.2），但它解释了工程上绝大多数“模型在训练集上很准、换一批数据就不准”的现象。后面所有改进方法，本质上都是在想办法让这句话重新成立——工具变量换一个与噪声无关的回归向量，极大似然换一个把噪声相关性写进目标的准则。</p>
+<p>用一句话概括本章的定位：<strong>最小二乘不是终点，它是度量其他方法好坏的尺子。</strong></p>
+<h3 id="三个必须先说清的前提">18.1.3 三个必须先说清的前提</h3>
+<p>在写公式之前，有三件事必须先钉死，否则后面每一个数字都会被误读。</p>
+<p><strong>第一，辨识用的采样周期不等于控制用的采样周期。</strong> 本章全部实验用 <span class="math inline">T_s=0.05</span> s，是对象主导时间常数 0.5 s 的十分之一；而第 17 章的仿真用的是 0.01 s。之所以放慢，是因为 0.01 s 下 <span class="math inline">1+\sum a_i=0.00045</span>，分母几乎抵消，增益估计会被噪声彻底带偏（§18.6.6 会给出 −66.99% 的实测）。这个选择不是“精度更高”，而是“条件数更讲理”。</p>
+<p><strong>第二，本章的数据是按方程误差结构生成的。</strong> 也就是</p>
+<p><span class="math display">y_k=-\sum_{i=1}^{n_a}a_i y_{k-i}+\sum_{j=1}^{n_b}b_j u_{k-n_k-j+1}+e_k \tag{18-2}</span></p>
+<p>噪声 <span class="math inline">e_k</span> 直接加在方程右端，而不是加在对象输出端。这两种加法在数学上只差一个位置，在结论上差别巨大：方程误差下白噪声的 LS 是无偏的（本章实测偏差 +0.08%），输出误差下白噪声的 LS 也是有偏的。教学上必须从方程误差起步，否则第一句话就站不住。真实的传感器噪声更接近输出误差，这个落差会在 §18.3.3 和 §18.5.1 反复交代。</p>
+<p><strong>第三，本章的“真值”是一个已知的三阶对象。</strong> 与第 16、17 章同一个：</p>
+<p><span class="math display">G(s)=\frac{1.8}{(0.5s+1)(0.12s+1)(0.03s+1)}e^{-0.04s} \tag{18-3}</span></p>
+<p>按 <span class="math inline">T_s=0.05</span> s 零阶保持离散，纯延迟折成 <span class="math inline">n_k=1</span> 拍，ARX 结构取 <span class="math inline">n_a=3</span>、<span class="math inline">n_b=3</span>，真值参数为</p>
+<p><span class="math display">\theta^{\ast}=[-1.752954,\;0.891922,\;-0.112665,\;0.012576,\;0.030521,\;0.004248]^{\top} \tag{18-4}</span></p>
+<p>这六个数是本章所有表格的参照。注意它们的量级差得很远：<span class="math inline">a_1</span> 是 1.75，<span class="math inline">b_3</span> 是 0.0042，相差 400 倍。这个量级差本身就是一个警告——它意味着“每个参数都估准”是一个远比“增益估准”苛刻的要求。</p>
+<h3 id="三个真实场景">18.1.4 三个真实场景</h3>
+<p><strong>场景一：老设备的“再整定”。</strong> 一台运行了八年的液压位置伺服，机械磨损让阻尼变了，原来的控制器参数开始振荡。此时不可能拆机重做阶跃测试，只能在正常节拍里采集指令与位置。这类数据的问题不是噪声大，而是<strong>输入几乎不变</strong>：每一段的指令都来自同一个轨迹，回归向量在参数空间里只覆盖了一条很窄的方向。此时 LS 能给出一个解，但解只在这个方向上是确定的，垂直方向的参数组合完全靠噪声决定。§18.6.6 的阶数表会显示，<span class="math inline">n=4</span> 与 <span class="math inline">n=5</span> 的增益估计几乎一样（1.8207 与 1.8218），但条件数从 5.063e+02 涨到 6.470e+02——多出来的两个参数没有信息支撑，只是在吃噪声。</p>
+<p><strong>场景二：批量生产的“一模一件”。</strong> 注塑机的每一模都是一次天然的阶跃：保压压力一跳，模腔压力跟着走。这类数据量极大（一天几千模），但每一模的初始状态不同、料温在漂。把几千模的数据拼成一个回归矩阵，LS 会把“料温漂移”误当成“对象参数变了”，估出来的增益在一天之内单调下降。正确做法是先按模次做差分，把慢漂移除掉，再合并；这一步在 §18.4.1 会给具体算法。</p>
+<p><strong>场景三：在线自适应。</strong> 一台机械臂的负载随抓取物变化，控制器需要在几秒内更新模型。此时不能用批 LS——它要求把整段数据存下来重算，而数据每 0.05 s 增加一行。必须用递推形式，每来一个样本更新一次。§18.6.4 会给出四种初值的收敛轨迹：<span class="math inline">P_0=10^4</span> 时增益 0.85 s 进 2%，而 <span class="math inline">P_0=10^{-2}</span> 时跑完 20 s 还差 70.76%。初值选错，自适应就变成了“永远学不会”。</p>
+<p>三个场景对应三种数据条件：输入激励不足、慢漂移混入、要求在线更新。它们恰好是本章三块内容（偏差分析、预处理、RLS）各自的主场。</p>
+<h3 id="模型误差为什么不能靠反馈吃掉">18.1.5 模型误差为什么不能靠反馈吃掉</h3>
+<p>一个常见的说法是：“模型差点没关系，闭环会修。”这句话对一半，错一半，而错的那一半恰好决定了辨识该做到什么精度。</p>
+<p><strong>能被反馈吃掉的是增益误差。</strong> 控制器里有积分环节时，稳态误差会被压到零，增益偏 20% 只影响动态过程的快慢，不影响最终停在哪里。这就是为什么很多现场设备用着不准的模型也能跑——积分器在兜底。</p>
+<p><strong>不能被反馈吃掉的是相位误差。</strong> 延迟估错、极点位置估错，都会直接改变开环相位。相位裕度是按模型算的，模型说 45°、实际只有 15°，闭环就会振荡。积分器对此无能为力，因为它只在低频起作用，而相位误差通常出现在穿越频率附近。</p>
+<p><strong>最麻烦的是“看起来能跑”的中间地带。</strong> 增益偏 30% 配上保守的控制器，响应慢一点，操作工不会抱怨；直到某天换了批料、负载变了，裕度掉到零，系统突然振荡。此时回头查，模型是三个月前辨识的，偏差一直在，只是被工况掩盖了。</p>
+<p>这条区分给出辨识的精度分配原则：<strong>相位相关的量（延迟、极点）要做准，增益可以宽一点。</strong> 本章的实验设计正是按这个原则：实验 0 花力气讨论为什么六个参数都估不准但增益只差 4.55%，是因为增益本来就不需要那么准；实验 5 花大力气讨论采样周期，是因为采样周期直接决定极点位置，而极点位置决定相位。</p>
+<h3 id="本章路线">18.1.6 本章路线</h3>
+<p>§18.2 给定义：ARX 模型、回归形式、四种误差结构、辨识三要素。§18.3 做推导：正规方程、无偏性证明、偏差的三种来源、参数协方差、RLS 递推、遗忘因子、条件数与增益放大因子的关系、AIC 与阶数选择。§18.4 讲实现：数据预处理、批 LS 的数值稳定写法、RLS 的工程细节、异常值与饱和的处理。§18.5 讲边界：什么条件下可信、闭环数据的坑、时变对象、交付物该包含什么。§18.6 用六个实验把上述结论逐个量化，每个数字都能由 <code>ch018_sim.py</code> 复算。§18.7 给决策流程、常见错误表和与后续章节的接口。</p>
+<p>全章围绕一个判断：<strong>这组系数，是对象的性质，还是数据的性质。</strong> 最小二乘永远会给出一个解，哪怕数据里根本没有信息；能不能看出这个解是“算出来的”还是“编出来的”，是本章要训练的核心能力。</p>
+<h2 id="定义与数学基础">18.2 定义与数学基础</h2>
+<h3 id="arx-模型与回归形式">18.2.1 ARX 模型与回归形式</h3>
+<p>把式 (18-2) 写成矩阵形式，就是本章的基本方程：</p>
+<p><span class="math display">y_k=\varphi_k^{\top}\theta+e_k,\qquad \varphi_k=[-y_{k-1},\dots,-y_{k-n_a},\,u_{k-n_k},\dots,u_{k-n_k-n_b+1}]^{\top} \tag{18-5}</span></p>
+<p>其中 <span class="math inline">\theta=[a_1,\dots,a_{n_a},b_1,\dots,b_{n_b}]^{\top}</span>。<span class="math inline">n_a</span> 是极点个数，<span class="math inline">n_b</span> 是零点个数加一，<span class="math inline">n_k</span> 是纯延迟拍数。三个整数加一个向量，就是这个模型的全部。</p>
+<p>这个结构叫 ARX，三个字母分别对应自回归（AR）、外生输入（X）和方程噪声。它的名字已经说明了噪声的位置：噪声和回归项是相加关系，处在同一个方程里，而不是在方程外面再套一层。</p>
+<p><span class="math inline">n_b=n_z+1</span> 这个“+1”容易被记错。原因是 <span class="math inline">q^{-1}</span> 形式的分子是 <span class="math inline">b_1q^{-1}+b_2q^{-2}+\dots</span>，它从 <span class="math inline">q^{-1}</span> 开始，而 <span class="math inline">q^{-1}</span> 项对应的是 <span class="math inline">u_{k-1}</span>。把公因子 <span class="math inline">q^{-1}</span> 提出来，剩下的才是真正的零点多项式，它的阶数等于零点个数。所以“从 <span class="math inline">u_k</span> 到 <span class="math inline">y_k</span> 有 <span class="math inline">n_b</span> 个系数”与“分子有 <span class="math inline">n_z=n_b-1</span> 个零点”是同一件事。本章 <span class="math inline">n_b=3</span>，对应两个有限零点——这与三阶对象“三个极点、没有有限零点”并不矛盾，因为离散化会在分子里引入与极点配对的零点。</p>
+<p><span class="math inline">n_k</span> 的定义也有一个约定问题。本章取 <span class="math inline">n_k=\mathrm{round}(L/T_s)=1</span>，意味着 <span class="math inline">u_{k-1}</span> 是第一个对 <span class="math inline">y_k</span> 有影响的输入。若把 <span class="math inline">n_k</span> 定义成“延迟拍数加一”，同样的物理延迟会写成 2，两种写法都有人用。<strong>读别人的代码时，第一件事是确认 <span class="math inline">n_k</span> 的约定，否则整套参数都会错位一拍。</strong> 这是协作中最常见的低级错误，也是最难发现的一类——因为估出来的模型在训练数据上仍然拟合得很好。</p>
+<p>把 <span class="math inline">N</span> 个样本堆起来：</p>
+<p><span class="math display">Y=\Phi\theta+E,\qquad \Phi=\begin{bmatrix}\varphi_{k_0}^{\top}\\ \vdots\\ \varphi_{N}^{\top}\end{bmatrix},\quad Y=\begin{bmatrix}y_{k_0}\\ \vdots\\ y_{N}\end{bmatrix} \tag{18-6}</span></p>
+<p>其中 <span class="math inline">k_0=\max(n_a,\,n_k+n_b-1)</span> 是第一个能凑齐回归向量的时刻。这个下标不起眼，但它决定了“用多少个样本”——如果 <span class="math inline">n_a=3</span>、<span class="math inline">n_k=1</span>、<span class="math inline">n_b=3</span>，则 <span class="math inline">k_0=3</span>，前三个样本必须丢掉。丢掉的这三个样本在长记录里无所谓，在短记录里就是 10% 的数据。</p>
+<h3 id="最小二乘的三种读法">18.2.2 最小二乘的三种读法</h3>
+<p>同一个式 (18-1)，可以从三个完全不同的角度得到，每一种都对应一种工程直觉。</p>
+<p><strong>几何读法：投影。</strong> <span class="math inline">Y</span> 是 <span class="math inline">N</span> 维空间里的一个点，<span class="math inline">\Phi</span> 的每一列是一个方向。<span class="math inline">\Phi\hat\theta</span> 是 <span class="math inline">Y</span> 在 <span class="math inline">\Phi</span> 的列空间上的正交投影，残差 <span class="math inline">Y-\Phi\hat\theta</span> 垂直于这个列空间。所以最小二乘做的事情是：<strong>在模型能表达的所有输出里，找一个离实测最近的。</strong> 图 18-1 左图给的就是这个图像在二维情形下的样子——散点是一堆观测，直线是列空间，竖直的虚线段是残差，最小二乘让这些虚线段的长度的平方和最小。</p>
+<figure>
+<img src="figs/ch018/fig_018_01_ls_geometry.svg" alt="图 18-1　最小二乘的几何图像与估计散布" /><figcaption aria-hidden="true">图 18-1　最小二乘的几何图像与估计散布</figcaption>
+</figure>
+<p><strong>统计读法：最小方差线性无偏估计。</strong> 如果噪声零均值、同方差、互不相关，那么在所有 <span class="math inline">\theta</span> 的线性无偏估计里，最小二乘的方差最小（Gauss-Markov 定理）。注意这个定理的条件：它不要求噪声是高斯分布，只要求二阶矩结构对。这一点在工程上很重要——真实噪声很少是高斯，但只要它近似白、近似同方差，LS 就仍然是“线性无偏里最好的”。</p>
+<p><strong>概率读法：极大似然。</strong> 如果 <span class="math inline">e_k\sim\mathcal{N}(0,\sigma^2)</span> 独立同分布，那么似然函数是</p>
+<p><span class="math display">p(Y\mid\theta)=\prod_{k}\frac{1}{\sqrt{2\pi}\sigma}\exp\left(-\frac{(y_k-\varphi_k^{\top}\theta)^2}{2\sigma^2}\right) \tag{18-7}</span></p>
+<p>取对数、对 <span class="math inline">\theta</span> 求极大，等价于最小化 <span class="math inline">\sum(y_k-\varphi_k^{\top}\theta)^2</span>。所以<strong>高斯白噪声下，最小二乘就是极大似然。</strong> 这句话反过来读更有用：当噪声不是高斯白噪声时，最小二乘就不再是极大似然，也就失去了“渐近有效”这个性质——这正是第 19 章要处理的缺口。</p>
+<p>三种读法给出同一个公式，但给出三种不同的失败预警：几何读法警告“列空间太窄”（激励不足），统计读法警告“二阶矩不对”（噪声有色），概率读法警告“分布假设不成立”（异常值）。§18.5 会把这三条预警逐一展开。</p>
+<h3 id="四种误差结构">18.2.3 四种误差结构</h3>
+<p>ARX 只是四种常见结构之一。它们的区别全在“噪声从哪里进来”，而这一点决定了 LS 是否有偏。</p>
+<p><strong>表 18-1 四种误差结构与 LS 的适用性</strong></p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">结构</th>
+<th style="text-align: left;">方程</th>
+<th style="text-align: left;">噪声位置</th>
+<th style="text-align: left;">白噪声下 LS</th>
+<th style="text-align: left;">典型场景</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">FIR</td>
+<td style="text-align: left;"><span class="math inline">y_k=\sum b_j u_{k-j}+e_k</span></td>
+<td style="text-align: left;">方程</td>
+<td style="text-align: left;">无偏</td>
+<td style="text-align: left;">有限脉冲响应、自适应滤波</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">ARX</td>
+<td style="text-align: left;"><span class="math inline">y_k=-\sum a_i y_{k-i}+\sum b_j u_{k-j}+e_k</span></td>
+<td style="text-align: left;">方程</td>
+<td style="text-align: left;">无偏</td>
+<td style="text-align: left;">采样快、噪声小、教学基准</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">ARMAX</td>
+<td style="text-align: left;"><span class="math inline">A y_k=B u_k+C e_k</span></td>
+<td style="text-align: left;">方程，经 <span class="math inline">C</span> 整形</td>
+<td style="text-align: left;">有偏</td>
+<td style="text-align: left;">噪声有色但可建模</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">OE</td>
+<td style="text-align: left;"><span class="math inline">y_k=\dfrac{B}{A}u_k+e_k</span></td>
+<td style="text-align: left;">对象输出</td>
+<td style="text-align: left;">有偏</td>
+<td style="text-align: left;">传感器噪声主导</td>
+</tr>
+</tbody>
+</table>
+<p>表里“白噪声下 LS”这一列是本章的骨架。FIR 与 ARX 的噪声与回归向量无关（FIR 的回归向量只含 <span class="math inline">u</span>，ARX 的回归向量含 <span class="math inline">y</span>，但 <span class="math inline">y_{k-i}</span> 里的 <span class="math inline">e_{k-i}</span> 与当前的 <span class="math inline">e_k</span> 无关），所以无偏；ARMAX 的噪声经过 <span class="math inline">C(q^{-1})</span> 整形后，<span class="math inline">y_{k-i}</span> 里含有 <span class="math inline">e_{k-i}</span> 的滤波结果，与 <span class="math inline">e_k</span> 相关，所以有偏；OE 的噪声直接加在输出上，<span class="math inline">y_{k-i}</span> 里含 <span class="math inline">e_{k-i}</span>，同样有偏。</p>
+<p>这里有一个容易被忽略的细节：ARX 的“无偏”依赖于 <span class="math inline">e_k</span> 是白的。一旦 <span class="math inline">e_k</span> 有色，<span class="math inline">y_{k-i}</span> 里的 <span class="math inline">e_{k-i}</span> 与 <span class="math inline">e_k</span> 就相关了，无偏性立刻失效。§18.6.3 会用 <span class="math inline">\rho=0.95</span> 的 AR(1) 噪声把增益从 1.8 推到 2.2986，偏差 +27.70%。</p>
+<h3 id="辨识三要素">18.2.4 辨识三要素</h3>
+<p>任何一次参数辨识，都由三个选择构成，缺一不可：</p>
+<ol type="1">
+<li><strong>数据</strong>：激励信号、采样周期、记录长度、噪声水平。第 16 章已经逐项讨论，本章只补采样周期与条件数的关系。</li>
+<li><strong>结构</strong>：<span class="math inline">n_a</span>、<span class="math inline">n_b</span>、<span class="math inline">n_k</span>，以及误差结构（表 18-1 的四选一）。结构选错，参数估得再准也没用——那是在给一个错误的模型找最好的拟合。</li>
+<li><strong>准则</strong>：最小化什么。LS 最小化一步预测误差的平方和；§18.3.7 会引入 AIC，它在平方和上加一个参数个数的惩罚；第 19 章的极大似然最小化负对数似然。</li>
+</ol>
+<p>三者之中，<strong>结构是最容易被忽视的</strong>。现场工程师往往把注意力放在“用哪个算法”，而真实项目里 80% 的失败来自结构选错：把纯延迟当成极点、把积分环节当成大时间常数、把执行器死区当成对象非线性。§18.5.2 会给一份结构自检清单。</p>
+<h3 id="加权最小二乘与广义最小二乘">18.2.5 加权最小二乘与广义最小二乘</h3>
+<p>式 (18-8) 对每个样本一视同仁。如果噪声方差不一样（异方差），或者我们更关心某些样本，就应该给样本加权：</p>
+<p><span class="math display">J_W(\theta)=(Y-\Phi\theta)^{\top}W(Y-\Phi\theta) \tag{18-8a}</span></p>
+<p><span class="math inline">W</span> 是正定权矩阵。令梯度为零，得</p>
+<p><span class="math display">\hat\theta_W=(\Phi^{\top}W\Phi)^{-1}\Phi^{\top}WY \tag{18-8b}</span></p>
+<p>当 <span class="math inline">W=\Sigma^{-1}</span>（<span class="math inline">\Sigma</span> 是噪声协方差）时，这就是马尔可夫估计，方差最小。这条公式比式 (18-1) 更一般，普通 LS 是 <span class="math inline">W=I</span> 的特例。</p>
+<p>加权在工程上有三个用途。<strong>一是异方差</strong>：传感器在大信号段噪声大、小信号段噪声小，按方差的倒数加权能让大噪声样本少说话。<strong>二是去趋势</strong>：把 <span class="math inline">W</span> 取成差分矩阵的转置乘自身，等价于对差分后的数据做 LS，这就是 §18.4.1 的去趋势。<strong>三是抗野点</strong>：把野点对应的权设为零，等价于剔除，但不用改变矩阵维度。</p>
+<p>广义最小二乘（GLS）走得更远：它假设噪声是有色的，<span class="math inline">E</span> 的协方差是 <span class="math inline">\sigma^2\Sigma</span>，<span class="math inline">\Sigma</span> 未知。做法是两步迭代：先用普通 LS 估 <span class="math inline">\theta</span>，从残差估出 <span class="math inline">\Sigma</span>，再用 <span class="math inline">W=\hat\Sigma^{-1}</span> 重估 <span class="math inline">\theta</span>，如此往复。这实际上是在逼近极大似然，第 19 章会给出更直接的写法。本章提它，是因为它揭示了一个重要的思路：<strong>偏差可以通过“对噪声建模”来修，而不一定要换回归向量。</strong> 工具变量和 GLS 是两条不同的路，前者换回归量，后者换权矩阵。</p>
+<p>GLS 的局限是它要求 <span class="math inline">\Sigma</span> 的结构已知（通常假设噪声是 AR 过程，阶数已知）。若噪声的谱形状复杂，估 <span class="math inline">\Sigma</span> 本身就是一个难题，迭代可能不收敛。工程上更常用的是 ARMAX 结构，因为它把噪声模型和对象模型放在一起估，避免了两步迭代的不稳定。</p>
+<h3 id="持续激励与信息矩阵">18.2.6 持续激励与信息矩阵</h3>
+<p>§18.3.1 说“<span class="math inline">\Phi</span> 列满秩”是解存在的条件。这个条件在统计上有一个更精确的版本：<strong>持续激励</strong>（persistent excitation，PE）。</p>
+<p>定义：输入序列 <span class="math inline">\{u_k\}</span> 是 <span class="math inline">n</span> 阶持续激励的，若存在 <span class="math inline">\alpha&gt;0</span> 使得对任意非零的 <span class="math inline">n</span> 维向量 <span class="math inline">c</span>，</p>
+<p><span class="math display">\frac{1}{N}\sum_{k=1}^{N}\left(\sum_{i=1}^{n}c_i u_{k-i}\right)^2\ge\alpha \tag{18-8c}</span></p>
+<p>用大白话说：<strong>任何 <span class="math inline">n</span> 个相邻输入的线性组合，都不能恒为零。</strong> 这排除了“输入只在少数几个方向上变化”的情形。</p>
+<p>阶数与模型阶数的关系是：ARX 模型要可辨，输入至少要是 <span class="math inline">n_a+n_b</span> 阶持续激励的。原因很直观：模型有 <span class="math inline">n_a+n_b</span> 个待估参数，每个参数对应回归空间的一个方向，输入必须把这 <span class="math inline">n_a+n_b</span> 个方向都激励到。本章实验 1 用 PRBS，钟周期 5 拍，PRBS 的阶数足够高，所以 <span class="math inline">n=5</span> 时仍能解出（虽然 AIC 说不用那么高）；实验 0 用单个阶跃，只在“阶跃”这一个方向上激励，所以只有增益可辨，其余五个参数的相对标准差从 4.3% 到 96.5% 不等。</p>
+<p>信息矩阵（Fisher information matrix）把这件事量化。对高斯噪声，<span class="math inline">\mathcal{I}(\theta)=\Phi^{\top}\Phi/\sigma^2</span>，它的特征值就是“每个参数方向上信息的多少”。克拉美-罗下界说，任何无偏估计的协方差都不小于 <span class="math inline">\mathcal{I}^{-1}</span>，即</p>
+<p><span class="math display">\mathrm{Cov}(\hat\theta)\succeq\sigma^2(\Phi^{\top}\Phi)^{-1} \tag{18-8d}</span></p>
+<p><strong>LS 在高斯白噪声下恰好达到这个下界</strong>，这是它“最优”的确切含义。而在有色噪声下，LS 达不到下界——差距就是偏差那部分，第 19 章的极大似然能达到。</p>
+<p>信息矩阵还有一个实用价值：它给出“加多少数据才能把标准差降一半”的答案。<span class="math inline">\Phi^{\top}\Phi</span> 随样本数线性增长，所以标准差按 <span class="math inline">1/\sqrt{N}</span> 下降。要把相对标准差从 4.3% 降到 2%，样本数要翻四倍。这条规律在安排实验时长时很有用——<strong>如果当前精度不够，先算一下需要多少倍的记录长度，再决定值不值得重新做实验。</strong></p>
+<h3 id="偏差与方差的权衡">18.2.7 偏差与方差的权衡</h3>
+<p>任何估计误差都可以拆成两半：</p>
+<p><span class="math display">\mathbb{E}\left[(\hat\theta-\theta^{\ast})^2\right]=\underbrace{\left(\mathbb{E}[\hat\theta]-\theta^{\ast}\right)^2}_{\text{偏差}^2}+\underbrace{\mathrm{Var}(\hat\theta)}_{\text{方差}} \tag{18-8e}</span></p>
+<p>这两项随模型复杂度的变化方向相反。阶数越高，模型能表达的对象越多，偏差越小；但参数越多，每个参数的方差越大。总误差是一个 U 形曲线，最低点在两者平衡处。</p>
+<p>本章有两组数据可以把这个 U 形画出来。<strong>偏差那一半</strong>看表 18-4 的增益：<span class="math inline">n=1</span> 偏 +65.29%，<span class="math inline">n=2</span> 偏 −3.04%，<span class="math inline">n=3</span> 偏 +0.08%，<span class="math inline">n=4</span> 偏 −0.07%，<span class="math inline">n=5</span> 偏 −0.62%。从 <span class="math inline">n=1</span> 到 <span class="math inline">n=3</span>，偏差掉了三个数量级；从 <span class="math inline">n=3</span> 往上，偏差基本不动（都在 1% 以内）。<strong>方差那一半</strong>看表 18-10 的条件数：<span class="math inline">n=1</span> 是 1.340e+00，<span class="math inline">n=3</span> 是 2.950e+02，<span class="math inline">n=5</span> 是 6.470e+02。条件数涨，方差跟着涨，因为 <span class="math inline">\mathrm{Cov}(\hat\theta)=\sigma^2(\Phi^{\top}\Phi)^{-1}</span>。</p>
+<p>把两半合起来：<span class="math inline">n=1</span> 偏差大、方差小，总误差由偏差主导；<span class="math inline">n=5</span> 偏差小、方差大，总误差由方差主导；<span class="math inline">n=3</span> 在中间，两项都小。这就是 AIC 选出 <span class="math inline">n=3</span> 的几何含义——AIC 的 <span class="math inline">2p</span> 项本质上是在估计方差那一半。</p>
+<p>这个视角解释了一个常见的困惑：“为什么加了数据，参数反而变了？”答案是方差那一半在起作用：换一批噪声，<span class="math inline">\hat\theta</span> 会在这个方差的范围内跳动。<span class="math inline">n=3</span> 时 16 个种子的增益标准差是 0.0258，意味着换一批数据，增益可能从 1.76 跳到 1.84。若模型是 <span class="math inline">n=5</span>，这个跳动会更大。</p>
+<p>工程上的应对不是“消掉方差”（消不掉），而是<strong>把方差算出来，写进交付物</strong>。§18.3.4 的协方差公式就是干这个的。一个报告写“<span class="math inline">K=1.80</span>”和写“<span class="math inline">K=1.80\pm0.03</span>”，对使用者的意义完全不同：前者让人以为这是精确值，后者让人知道该留多少裕度。</p>
+<h3 id="为什么-arx-最容易估">18.2.8 为什么 ARX 最容易估</h3>
+<p>表 18-1 里的四种结构，只有 FIR 和 ARX 能用一次线性最小二乘解出来。这不是巧合，需要说清楚，因为它决定了后面几章的方法为什么必须迭代。</p>
+<p>看 ARMAX：<span class="math inline">A(q^{-1})y_k=B(q^{-1})u_k+C(q^{-1})e_k</span>。把 <span class="math inline">e_k</span> 解出来：</p>
+<p><span class="math display">e_k=\frac{A(q^{-1})y_k-B(q^{-1})u_k}{C(q^{-1})} \tag{18-8f}</span></p>
+<p>这个式子里 <span class="math inline">e_k</span> 依赖于过去的 <span class="math inline">e_{k-i}</span>，而 <span class="math inline">e_{k-i}</span> 又依赖于参数 <span class="math inline">c_i</span>。所以“给定参数能算残差”这件事本身就需要先知道参数——这是一个隐式方程，不能写成 <span class="math inline">y=\Phi\theta+e</span> 的线性形式。要估它，只能迭代：先猜一组 <span class="math inline">c_i</span>，算残差，再更新，直到收敛。这就是第 19 章的 PEM（预测误差方法）。</p>
+<p>OE 结构更麻烦：<span class="math inline">y_k=\frac{B}{A}u_k+e_k</span>，噪声在输出端，预测器是 <span class="math inline">A^{-1}B</span>，它对参数是非线性的（分母含参数）。所以 OE 的估计也是迭代的。</p>
+<p>ARX 之所以线性，是因为它的噪声项直接是 <span class="math inline">e_k</span>，没有经过滤波器。把 <span class="math inline">A(q^{-1})y_k</span> 移到右边，<span class="math inline">y_k</span> 就是“过去的 <span class="math inline">y</span> 与现在的 <span class="math inline">u</span> 的线性组合加 <span class="math inline">e_k</span>”，回归向量里全是已知量。<strong>这个“噪声不过滤”的简化，换来的是线性；代价是它假设噪声就长这样，一旦真实噪声不是白的，模型就偏。</strong></p>
+<p>这条权衡可以总结成一张表：</p>
+<p><strong>表 18-2a 四种结构的估计代价</strong></p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">结构</th>
+<th style="text-align: left;">是否线性</th>
+<th style="text-align: left;">求解方式</th>
+<th style="text-align: left;">一致性条件</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">FIR</td>
+<td style="text-align: left;">是</td>
+<td style="text-align: left;">一次 LS</td>
+<td style="text-align: left;">噪声白、<span class="math inline">n_b</span> 足够</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">ARX</td>
+<td style="text-align: left;">是</td>
+<td style="text-align: left;">一次 LS</td>
+<td style="text-align: left;">噪声白</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">ARMAX</td>
+<td style="text-align: left;">否</td>
+<td style="text-align: left;">迭代 PEM</td>
+<td style="text-align: left;">噪声可被 <span class="math inline">C</span> 建模</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">OE</td>
+<td style="text-align: left;">否</td>
+<td style="text-align: left;">迭代 PEM</td>
+<td style="text-align: left;">噪声与输入无关</td>
+</tr>
+</tbody>
+</table>
+<p>从 ARX 到 ARMAX/OE，是“用计算量换一致性”。工程上选哪个，取决于噪声有多强、计算资源有多少。本章用 ARX 是因为它是理解偏差的起点；真实项目里，若噪声明显有色，直接上 ARMAX 或 OE 更省事，不必先用 ARX 再修。</p>
+<p>还有一条实践上的细节：ARMAX 的迭代需要一个初值，而 ARX 的解正好可以当这个初值——把 ARX 估出的 <span class="math inline">a_i</span>、<span class="math inline">b_j</span> 填进去，<span class="math inline">c_i</span> 初值取零，PEM 通常几步就收敛。<strong>这就是 §18.1.2 说的“LS 是所有迭代法的第一拍”的具体用法。</strong></p>
+<h2 id="推导与性质">18.3 推导与性质</h2>
+<h3 id="正规方程">18.3.1 正规方程</h3>
+<p>把准则写成</p>
+<p><span class="math display">J(\theta)=\|Y-\Phi\theta\|^2=Y^{\top}Y-2\theta^{\top}\Phi^{\top}Y+\theta^{\top}\Phi^{\top}\Phi\theta \tag{18-8}</span></p>
+<p>对 <span class="math inline">\theta</span> 求梯度并令其为零：</p>
+<p><span class="math display">\nabla J=-2\Phi^{\top}Y+2\Phi^{\top}\Phi\theta=0 \quad\Longrightarrow\quad \Phi^{\top}\Phi\,\hat\theta=\Phi^{\top}Y \tag{18-9}</span></p>
+<p>这就是正规方程（normal equations）。当 <span class="math inline">\Phi^{\top}\Phi</span> 可逆时，解为式 (18-1)。</p>
+<p>可逆的条件是 <span class="math inline">\Phi</span> 列满秩，也就是<strong>回归向量在各个方向上都有变化</strong>。这个条件在数值上对应条件数有限，在物理上对应“激励充分”。两者是同一件事的两种说法：激励不足时，某些参数组合对输出的影响几乎为零，<span class="math inline">\Phi</span> 的对应方向接近零向量，<span class="math inline">\Phi^{\top}\Phi</span> 的特征值就趋近于零，求逆会把噪声放大成任意大的数。</p>
+<p>正规方程有一个不太直观的性质：<strong>它的条件数是 <span class="math inline">\Phi</span> 条件数的平方。</strong> 所以直接对 <span class="math inline">\Phi^{\top}\Phi</span> 求逆，在 <span class="math inline">\mathrm{cond}(\Phi)=10^4</span> 时会面对 <span class="math inline">10^8</span> 的条件数，双精度下已经丢掉一半有效位。§18.4.2 会给出用 QR 分解绕开这一步的写法。这不是“更优雅”，而是必需——本章实验 0 的无噪声数据条件数就是 1.149e+04。</p>
+<h3 id="无偏性三行证明">18.3.2 无偏性：三行证明</h3>
+<p>把真实模型 <span class="math inline">Y=\Phi\theta^{\ast}+E</span> 代入式 (18-1)：</p>
+<p><span class="math display">\hat\theta=\theta^{\ast}+(\Phi^{\top}\Phi)^{-1}\Phi^{\top}E \tag{18-10}</span></p>
+<p>两边取期望：</p>
+<p><span class="math display">\mathbb{E}[\hat\theta]-\theta^{\ast}=(\Phi^{\top}\Phi)^{-1}\,\mathbb{E}[\Phi^{\top}E] \tag{18-11}</span></p>
+<p>所以<strong>无偏的充要条件是 <span class="math inline">\mathbb{E}[\Phi^{\top}E]=0</span></strong>，即回归矩阵的每一列都与噪声正交。写成样本形式是 <span class="math inline">\frac{1}{N}\sum_k\varphi_k e_k\to 0</span>。</p>
+<p>这个条件在 ARX 结构下能不能成立，取决于 <span class="math inline">e_k</span> 是不是白的：</p>
+<ul>
+<li>若 <span class="math inline">e_k</span> 白，<span class="math inline">\varphi_k</span> 里的 <span class="math inline">y_{k-i}</span> 只含 <span class="math inline">e_{k-i}</span>（<span class="math inline">i\ge 1</span>），与 <span class="math inline">e_k</span> 不相关，故 <span class="math inline">\mathbb{E}[\varphi_k e_k]=0</span>，无偏。</li>
+<li>若 <span class="math inline">e_k</span> 是 AR(1)，<span class="math inline">e_k=\rho e_{k-1}+w_k</span>，则 <span class="math inline">y_{k-1}</span> 里含 <span class="math inline">e_{k-1}</span>，而 <span class="math inline">\mathbb{E}[e_{k-1}e_k]=\rho\sigma^2\neq0</span>，故 <span class="math inline">\mathbb{E}[\varphi_k e_k]\neq0</span>，有偏。</li>
+</ul>
+<p>这就是一句话结论的全部证明。它值得反复看，因为在工程上它等价于一个可以现场执行的检查：<strong>算完 LS，把残差拿去做自相关；如果一阶自相关系数显著不为零，那么这个解就是有偏的。</strong> §18.6.3 会给出这条检查的量化门槛：<span class="math inline">N=800</span> 时，白噪声的一阶自相关应在 <span class="math inline">\pm1/\sqrt{N}=\pm0.0354</span> 以内；实测 <span class="math inline">\rho=0.95</span> 那一组的残差一阶自相关是 0.194，超出五倍。</p>
+<h3 id="偏差的三种来源">18.3.3 偏差的三种来源</h3>
+<p>偏差不是一种东西，而是三种不同的机制，处理方式完全不同。</p>
+<p><strong>第一种：噪声有色。</strong> 上面的推导已经说清。它的特征是残差自相关显著、Durbin-Watson 统计量明显小于 2。修法是换结构（ARMAX、OE）或换方法（工具变量、极大似然，见第 19 章）。注意提高阶数<strong>不能</strong>修掉这种偏差：§18.6.3 里把阶数从 3 提到 4，残差一阶自相关从 0.194 降到 0.018（残差变白了），但增益从 2.2986 变成 1.8473，仍然偏离真值 2.6%。残差变白只说明“模型把噪声的相关性也拟合进去了”，不说明“参数回到了真值”。</p>
+<p><strong>第二种：闭环相关。</strong> 对象在闭环下运行时，<span class="math inline">u_k</span> 由 <span class="math inline">y_k</span> 反馈算出，因此 <span class="math inline">u_k</span> 与 <span class="math inline">e_k</span> 天然相关。此时 <span class="math inline">\mathbb{E}[\Phi^{\top}E]\neq0</span>，哪怕噪声是白的。这种偏差的可怕之处在于它不会被残差检查发现——残差可以很白，参数却偏得很远。第 21 章会专门处理闭环辨识，本章只在 §18.5.2 给出识别方法：看输入与残差是否相关，而不是看残差本身。</p>
+<p><strong>第三种：结构失配。</strong> 真实对象有死区、饱和、摩擦，模型里没有。这些非线性会把一部分输入能量“吃掉”或“放大”，等效于在回归方程里加了一个与 <span class="math inline">u</span> 相关的误差项。本章实验 0 的 5 μm 噪声组就同时含死区与饱和，结果增益 1.7181，偏差 −4.552%。这个偏差在残差上表现不出来（残差 RMS 0.004850，与噪声标准差 0.005 几乎一样），因为死区造成的误差与噪声同量级，混在一起看不出来。</p>
+<p>三种偏差的识别手段完全不同，见表 18-2。</p>
+<p><strong>表 18-2 三种偏差的识别与处理</strong></p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">来源</th>
+<th style="text-align: left;">残差自相关</th>
+<th style="text-align: left;">输入-残差相关</th>
+<th style="text-align: left;">提高阶数是否有效</th>
+<th style="text-align: left;">处理</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">噪声有色</td>
+<td style="text-align: left;">显著</td>
+<td style="text-align: left;">不显著</td>
+<td style="text-align: left;">否（只变白，不消偏）</td>
+<td style="text-align: left;">ARMAX/OE、工具变量、ML</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">闭环相关</td>
+<td style="text-align: left;">可能不显著</td>
+<td style="text-align: left;">显著</td>
+<td style="text-align: left;">否</td>
+<td style="text-align: left;">第 21 章闭环方法</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">结构失配</td>
+<td style="text-align: left;">不显著</td>
+<td style="text-align: left;">可能显著</td>
+<td style="text-align: left;">部分（用高阶凑）</td>
+<td style="text-align: left;">补非线性环节、分段建模</td>
+</tr>
+</tbody>
+</table>
+<p>这张表最实用的一行是“提高阶数是否有效”。现场最常见的错误反应是“模型不准就加阶数”，而三种偏差里只有第三种能靠加阶数缓解，前两种加了只会让参数更分散。</p>
+<h3 id="参数协方差与置信区间">18.3.4 参数协方差与置信区间</h3>
+<p>在式 (18-10) 的基础上，若 <span class="math inline">E</span> 的协方差为 <span class="math inline">\sigma^2I</span>，则</p>
+<p><span class="math display">\mathrm{Cov}(\hat\theta)=\sigma^2(\Phi^{\top}\Phi)^{-1} \tag{18-12}</span></p>
+<p><span class="math inline">\sigma^2</span> 用残差估计：<span class="math inline">\hat\sigma^2=\|Y-\Phi\hat\theta\|^2/(N-p)</span>，<span class="math inline">p=n_a+n_b</span> 是参数个数。开方得到每个参数的标准差，<span class="math inline">2\hat\sigma_{\theta_i}</span> 就是 95% 置信区间的半宽。</p>
+<p>这条公式在工程上有两个用法，第二个比第一个重要。</p>
+<p><strong>用法一：给出参数的精度。</strong> 本章实验 0 的 5 μm 噪声组，<span class="math inline">a_1</span> 的相对标准差是 4.3%，<span class="math inline">b_1</span> 是 96.5%。前者说明 <span class="math inline">a_1</span> 估得还算稳，后者说明 <span class="math inline">b_1</span> 几乎没估出来——虽然它的点估计是 0.021092（真值 0.012576，误差 +67.72%），但置信区间宽到 <span class="math inline">[-0.0025,\,0.0446]</span>，跨过零两次。<strong>一个相对标准差 96.5% 的参数，等于没有估。</strong></p>
+<p><strong>用法二：判断哪些参数组合是可辨的。</strong> 单看每个参数的标准差会漏掉一类问题：两个参数各自都很准，但它们的差很不准，因为二者强相关。这时要看协方差矩阵的特征值。特征值最小的方向就是“最不可辨”的参数组合。对于阶跃数据，这个方向几乎总是“分子系数的组合”——因为阶跃只激励了低频，高频段的零点位置对输出几乎没有影响。这也是为什么本章反复强调“增益比参数可靠”：增益是分子系数之和除以分母系数之和，它是一个低频量，恰好落在阶跃数据最有信息的方向上。</p>
+<h3 id="rls-的递推推导">18.3.5 RLS 的递推推导</h3>
+<p>批 LS 每次都要重算 <span class="math inline">(\Phi^{\top}\Phi)^{-1}</span>，数据一多就无法在线用。RLS 的做法是把它改写成“新息修正”的形式。</p>
+<p>记 <span class="math inline">P_k=(\Phi_k^{\top}\Phi_k)^{-1}</span>，其中 <span class="math inline">\Phi_k</span> 是前 <span class="math inline">k</span> 个样本组成的回归矩阵。加入第 <span class="math inline">k+1</span> 个样本后，</p>
+<p><span class="math display">P_{k+1}^{-1}=P_k^{-1}+\varphi_{k+1}\varphi_{k+1}^{\top} \tag{18-13}</span></p>
+<p>用矩阵求逆引理（Sherman-Morrison）展开：</p>
+<p><span class="math display">P_{k+1}=P_k-\frac{P_k\varphi_{k+1}\varphi_{k+1}^{\top}P_k}{1+\varphi_{k+1}^{\top}P_k\varphi_{k+1}} \tag{18-14}</span></p>
+<p>定义增益向量</p>
+<p><span class="math display">K_{k+1}=\frac{P_k\varphi_{k+1}}{1+\varphi_{k+1}^{\top}P_k\varphi_{k+1}} \tag{18-15}</span></p>
+<p>则参数更新为</p>
+<p><span class="math display">\hat\theta_{k+1}=\hat\theta_k+K_{k+1}\left(y_{k+1}-\varphi_{k+1}^{\top}\hat\theta_k\right) \tag{18-16}</span></p>
+<p>括号里那一项是<strong>新息</strong>（innovation）：实测输出减去用旧参数预测的输出。整个 RLS 就是“按新息的大小和方向修正参数”，<span class="math inline">K</span> 决定修正多少。</p>
+<p>式 (18-15) 的分母 <span class="math inline">1+\varphi^{\top}P\varphi</span> 永远大于 1，所以 <span class="math inline">K</span> 的范数随 <span class="math inline">P</span> 收缩而衰减。这解释了 RLS 的收敛：<span class="math inline">P</span> 的迹从初值 <span class="math inline">P_0</span> 单调下降，修正量随之变小，参数逐渐“冻结”。§18.6.4 会给出这条曲线的四个版本：<span class="math inline">P_0=10^4</span> 时 <span class="math inline">P</span> 的迹末值是 3.593e+02，<span class="math inline">P_0=10^{-2}</span> 时只剩 4.249e-02，后者已经小到几乎不再更新。</p>
+<h3 id="遗忘因子-rls">18.3.6 遗忘因子 RLS</h3>
+<p>式 (18-13) 把所有历史样本等权看待，因此它估的是“整段数据的平均参数”。对象参数变了，RLS 要很久才能跟上。遗忘因子的做法是给旧数据乘一个衰减：</p>
+<p><span class="math display">P_{k+1}^{-1}=\lambda P_k^{-1}+\varphi_{k+1}\varphi_{k+1}^{\top},\qquad 0&lt;\lambda\le1 \tag{18-17}</span></p>
+<p>对应的更新式只比分母多一个 <span class="math inline">\lambda</span>：</p>
+<p><span class="math display">P_{k+1}=\frac{1}{\lambda}\left(P_k-\frac{P_k\varphi_{k+1}\varphi_{k+1}^{\top}P_k}{\lambda+\varphi_{k+1}^{\top}P_k\varphi_{k+1}}\right) \tag{18-18}</span></p>
+<p><span class="math inline">\lambda</span> 的物理含义是“等效记忆长度”。令 <span class="math inline">\lambda^{M}=e^{-1}</span>，得</p>
+<p><span class="math display">M\approx\frac{1}{1-\lambda} \tag{18-19}</span></p>
+<p><span class="math inline">\lambda=0.98</span> 对应 <span class="math inline">M=50</span> 拍，在 <span class="math inline">T_s=0.05</span> s 下是 2.5 s；<span class="math inline">\lambda=0.95</span> 对应 20 拍，即 1 s。这个窗口决定了“多久以前的数据还算数”。</p>
+<p><span class="math inline">\lambda</span> 的选择是一个纯粹的折中，没有最优值。<span class="math inline">\lambda</span> 越接近 1，稳态方差越小、跟踪越慢；越小，跟踪越快、稳态抖动越大。§18.6.5 的实测把这个折中量化成一张表：<span class="math inline">\lambda=1</span> 时切换后 2 s 的增益误差是 −15.80%，末端标准差 0.0600；<span class="math inline">\lambda=0.98</span> 时误差降到 −4.21%，标准差升到 0.0664；<span class="math inline">\lambda=0.95</span> 时误差变成 +6.33%（过冲），标准差升到 0.1195。<strong>误差从负到正穿过零点的那一档，就是“跟踪速度刚好够”的那一档。</strong></p>
+<p>还有两个工程细节必须提。第一，<span class="math inline">\lambda&lt;1</span> 会让 <span class="math inline">P</span> 指数增长，若某段时间输入恒定（回归向量为零），<span class="math inline">P</span> 会涨到溢出，工程上叫“协方差爆炸”（covariance windup）。标准做法是设一个 <span class="math inline">P</span> 的迹上限，或者加死区：<span class="math inline">|y-\varphi^{\top}\hat\theta|&lt;\epsilon</span> 时不更新。第二，<span class="math inline">\lambda</span> 不能太小：<span class="math inline">M</span> 小于参数个数的 5 倍时，<span class="math inline">\Phi^{\top}\Phi</span> 的有效秩不够，估计会剧烈震荡。<span class="math inline">p=6</span> 时，<span class="math inline">\lambda</span> 不应低于 <span class="math inline">1-1/30\approx0.967</span>。</p>
+<h3 id="条件数与增益放大因子">18.3.7 条件数与增益放大因子</h3>
+<p>条件数 <span class="math inline">\mathrm{cond}(\Phi)=\sigma_{\max}/\sigma_{\min}</span> 是数值线性代数里的标准指标，但它在辨识里会骗人。本章实验 5 给了一个反例：<span class="math inline">T_s=0.05</span> s 时条件数 2.950e+02，增益误差 +1.17%；<span class="math inline">T_s=0.01</span> s 时条件数 5.289e+02，只大不到一倍，增益误差却是 −66.99%。条件数只差 1.8 倍，误差差了 57 倍。</p>
+<p>原因在分母的抵消。离散模型的直流增益是</p>
+<p><span class="math display">K=\frac{\sum_j b_j}{1+\sum_i a_i} \tag{18-20}</span></p>
+<p>当 <span class="math inline">T_s\to0</span> 时，所有 <span class="math inline">a_i\to</span> 离散极点靠近 1，<span class="math inline">\sum a_i\to-1</span>，分母趋近于零。定义<strong>增益放大因子</strong></p>
+<p><span class="math display">\kappa_K=\frac{\sum_i|a_i|}{\left|1+\sum_i a_i\right|} \tag{18-21}</span></p>
+<p>它衡量“分母的绝对误差被放大多少倍变成增益的相对误差”。实测：<span class="math inline">T_s=0.01</span> 时 <span class="math inline">\sum|a_i|=5.526</span>、<span class="math inline">1+\sum a_i=0.00045</span>，<span class="math inline">\kappa_K=12313.8</span>；<span class="math inline">T_s=0.05</span> 时 <span class="math inline">\sum|a_i|=2.758</span>、<span class="math inline">1+\sum a_i=0.02630</span>，<span class="math inline">\kappa_K=104.8</span>；<span class="math inline">T_s=0.2</span> 时 <span class="math inline">\kappa_K=3.7</span>。</p>
+<p>所以真正的指标不是 <span class="math inline">\mathrm{cond}(\Phi)</span>，而是 <span class="math inline">\mathrm{cond}(\Phi)\times\kappa_K</span>。前者说“回归矩阵病不病”，后者说“病的部分会不会传到增益上”。<span class="math inline">T_s=0.01</span> 那一组，条件数只涨了 79%，放大因子却涨了 117 倍，乘积涨了两个数量级——这才是 −66.99% 的来源。</p>
+<p>这条结论有一个直接的工程推论：<strong>辨识用的采样周期不能照抄控制用的采样周期。</strong> 控制要快采样是为了相位裕度，辨识要慢采样是为了让分母不抵消。经验值是 <span class="math inline">T_s</span> 取主导时间常数的 <span class="math inline">1/10</span> 到 <span class="math inline">1/20</span>，本章取 0.05 s（<span class="math inline">0.5/10</span>）。再快就要用 §18.4.5 的频域加权或连续时间辨识，而不是硬扛。</p>
+<h3 id="aic-与阶数选择">18.3.8 AIC 与阶数选择</h3>
+<p>阶数 <span class="math inline">n</span> 越高，残差平方和越小——这是必然的，因为高階模型包含低阶模型作为特例。所以“残差最小”不能用来选阶数。常用的修正是 AIC：</p>
+<p><span class="math display">\mathrm{AIC}=N\ln\left(\frac{\|Y-\Phi\hat\theta\|^2}{N}\right)+2p \tag{18-22}</span></p>
+<p>第一项奖励拟合，第二项惩罚参数个数 <span class="math inline">p=n_a+n_b</span>。取最小值即为所选阶数。</p>
+<p>AIC 的推导来自信息论：它估计的是“用这个模型去预测新数据时的信息损失”。<span class="math inline">2p</span> 这一项不是随手加的，它等于 <span class="math inline">\chi^2_p</span> 分布的期望，也就是“多出来的 <span class="math inline">p</span> 个参数平均能把残差平方和压低多少”。所以 AIC 的比较是公平的：它已经扣掉了“加参数必然带来的一点好处”。</p>
+<p>本章实验 1 给了一个教科书式的例子。同样一段 PRBS 数据，扫 <span class="math inline">n=1</span> 到 <span class="math inline">5</span>：</p>
+<ul>
+<li>一步预测 RMSE 从 0.03882 单调降到 0.00497，最小值在 <span class="math inline">n=5</span>；</li>
+<li>自由仿真 RMSE 从 0.20788 降到 0.03627，最小值在 <span class="math inline">n=4</span>；</li>
+<li>AIC 从 −5187.7 降到 −8437.3 后回升，最小值在 <span class="math inline">n=3</span>。</li>
+</ul>
+<p>三个指标给出三个答案。<strong>AIC 的答案才是对的</strong>，因为真值结构就是 <span class="math inline">n_a=n_b=3</span>。一步误差永远偏向高阶（多两个参数总能多拟合一点噪声），自由仿真误差偏向“能稳住”的阶数（<span class="math inline">n=4</span> 多出的极点被放在高频，对仿真影响小），只有 AIC 的惩罚项恰好抵消了这份虚假收益。</p>
+<p>实践中的用法是：<strong>AIC 定阶，另外两个指标做交叉验证。</strong> 如果三个指标指向同一个 <span class="math inline">n</span>，那基本可以放心；如果分歧很大（像本例这样），以 AIC 为准，但要检查高阶模型的极点位置——如果多出来的极点跑到单位圆外或贴近单位圆，那是在拟合噪声，不是在建模。</p>
+<h3 id="模型验证的三个统计量">18.3.9 模型验证的三个统计量</h3>
+<p>参数估完，必须回答“这个模型能不能要”。三个统计量各有分工。</p>
+<p><strong>残差白性检验。</strong> 若模型正确，残差应是白噪声。用 <span class="math inline">L</span> 个延迟上的自相关组成统计量：</p>
+<p><span class="math display">Q=L\sum_{\tau=1}^{L}\hat\rho_{\tau}^{2}\ \sim\ \chi^{2}(L-p) \tag{18-23}</span></p>
+<p>这就是 Ljung-Box 统计量。<span class="math inline">Q</span> 超过 <span class="math inline">\chi^2(L-p)</span> 的 95% 分位点，就拒绝“残差是白的”。<span class="math inline">L</span> 一般取 <span class="math inline">\min(20,N/5)</span>。本章 <span class="math inline">N=800</span> 时取 20。实验 2 的 <span class="math inline">\rho=0.95</span> 组，<span class="math inline">\hat\rho_1=0.194</span>、<span class="math inline">\hat\rho_2=0.078</span>，仅这两项就贡献 <span class="math inline">20\times(0.0376+0.0061)=0.874</span>，加上后面几项必然远超 14 自由度的 95% 分位点（23.7），所以判据非常灵敏。</p>
+<p><strong>输入残差互相关检验。</strong> 若模型把输入到输出的路径都表达完了，残差不应再与输入相关。统计量是</p>
+<p><span class="math display">\xi=\frac{N}{\hat\sigma^2}\sum_{\tau=0}^{M}\hat r_{ru}^{2}(\tau)\ \sim\ \chi^{2}(M+1) \tag{18-24}</span></p>
+<p><span class="math inline">\hat r_{ru}</span> 是残差与输入的互相关。这个检验专门抓“残差白但漏了一条路径”的情形，闭环辨识里最常用。本章的六个实验都是开环的，所以这项都通过；但 §18.5.2 说过，闭环数据上它是唯一可靠的检查。</p>
+<p><strong>阶数差的 F 检验。</strong> 比较 <span class="math inline">n</span> 与 <span class="math inline">n+1</span> 两个模型，若增加参数带来的残差下降不显著，就选小的：</p>
+<p><span class="math display">F=\frac{(J_n-J_{n+1})/(p_{n+1}-p_n)}{J_{n+1}/(N-p_{n+1})} \tag{18-25}</span></p>
+<p><span class="math inline">F</span> 超过 <span class="math inline">F</span> 分布的 95% 分位点才认为高阶显著。用实验 1 的数据算：<span class="math inline">n=3</span> 到 <span class="math inline">n=4</span>，残差平方和之比约 <span class="math inline">(0.00498/0.00499)^2=0.996</span>，含义是加了两个参数只把残差降了 0.4%，而自由度损失是 2。这个 <span class="math inline">F</span> 值远小于临界值，所以 <span class="math inline">n=4</span> 不显著；<span class="math inline">n=4</span> 到 <span class="math inline">n=5</span> 更不显著（残差反而上升）。F 检验与 AIC 在实验 1 上给出一致的结论，这不是巧合——两者都是“拟合收益 vs 参数代价”的权衡，只是尺度不同。</p>
+<p>三个统计量的分工可以这样记：<strong>白性检验查“有没有漏动态”，互相关检验查“有没有漏路径”，F 检验查“多出来的参数值不值”。</strong> 三条都过，模型才算通过统计验收；再叠加 §18.5.1 的物理检查，才算完整。</p>
+<h3 id="一步误差与多步误差为什么差那么多">18.3.10 一步误差与多步误差为什么差那么多</h3>
+<p>实验 1 里 <span class="math inline">n=1</span> 的一步 RMSE 是 0.03882，自由仿真 RMSE 是 0.20788，差了 5.35 倍。这个差距不是偶然，它有一个解析的解释。</p>
+<p>一步预测用的是实测的 <span class="math inline">y_{k-1},\dots,y_{k-n_a}</span>，误差只来自当前这一步的噪声 <span class="math inline">e_k</span>。自由仿真把预测值反馈回去当作历史，误差会累积：第 <span class="math inline">k</span> 步的误差通过 <span class="math inline">y_{k-1}</span> 传到第 <span class="math inline">k+1</span> 步，再通过 <span class="math inline">y_{k-2}</span> 继续传下去。累积的速度由极点决定：极点越靠近单位圆，误差衰减越慢，累积越严重。</p>
+<p>对稳定对象，多步误差的增长有一个上界：<span class="math inline">\|G(z)\|_{\infty}</span>，即模型的 <span class="math inline">H_\infty</span> 范数。<span class="math inline">n=1</span> 的模型为了拟合三阶对象，把极点放在了接近单位圆的位置（否则幅值不够），于是 <span class="math inline">\|G\|_\infty</span> 很大，误差一累积就发散到 0.2 的量级。<span class="math inline">n=3</span> 的模型极点位置正确，<span class="math inline">\|G\|_\infty</span> 接近 1，所以仿真误差只有 0.03629。</p>
+<p>这条解释给出一个实用的判断：<strong>若一步误差小而仿真误差大，先查极点位置。</strong> 打开模型的极点，若有一个极点的模超过 0.95，基本可以确定它在“凑幅值”。本章 <span class="math inline">T_s=0.05</span> s、<span class="math inline">T_1=0.5</span> s，主导极点应该是 <span class="math inline">e^{-0.05/0.5}=0.905</span>，次主导 <span class="math inline">e^{-0.05/0.12}=0.659</span>，第三个 <span class="math inline">e^{-0.05/0.03}=0.189</span>。三个极点的模分别是 0.905、0.659、0.189，都远离单位圆，这是对象本身的性质；如果辨识结果给出一个 0.99 的极点，那一定是在拟合噪声或补偿结构失配。</p>
+<p>顺带说一句：控制器的稳定性裕度直接由最靠近单位圆的极点决定。一个模 0.99 的假极点会让设计者误以为对象很“慢”，从而把控制器调得过保守；反过来，若真实的 0.905 极点被估成 0.7，控制器会调得过激，实际投运时振荡。<strong>极点位置的误差比增益误差更危险，因为它直接改变控制器的设计方向。</strong></p>
+<h3 id="偏差的近似解析式">18.3.11 偏差的近似解析式</h3>
+<p>式 (18-11) 是精确的，但它含 <span class="math inline">\mathbb{E}[\Phi^{\top}E]</span>，实际算不出来。工程上想知道“偏差大概多大、朝哪个方向”，需要一个可算的近似。</p>
+<p>把噪声写成两部分：与回归向量无关的白部分 <span class="math inline">w_k</span>，和与回归向量相关的有色部分。对 ARX 结构，相关来自 <span class="math inline">y_{k-i}</span> 里的旧噪声。在 <span class="math inline">N</span> 很大时，用样本平均代替期望，得到一阶近似：</p>
+<p><span class="math display">\hat\theta-\theta^{\ast}\approx-\left(\frac{1}{N}\Phi^{\top}\Phi\right)^{-1}\frac{1}{N}\Phi^{\top}\nu \tag{18-26}</span></p>
+<p><span class="math inline">\nu</span> 是噪声中有色成分在方程右端的等效项。对 AR(1) 噪声 <span class="math inline">e_k=\rho e_{k-1}+w_k</span>，可以证明 <span class="math inline">\nu_k\approx\rho e_{k-1}</span>，于是</p>
+<p><span class="math display">\hat\theta-\theta^{\ast}\approx-\rho\,R_{\varphi\varphi}^{-1}\,\mathbb{E}[\varphi_k e_{k-1}] \tag{18-27}</span></p>
+<p>这个式子给出三条可用的判断。</p>
+<p><strong>第一，偏差随 <span class="math inline">\rho</span> 增长得比线性更快。</strong> 实验 2 的三组数据：<span class="math inline">\rho=0</span> 时偏差 0.08%，<span class="math inline">\rho=0.8</span> 时 3.73%，<span class="math inline">\rho=0.95</span> 时 27.70%。从 0 到 0.8 涨了四十多倍，已经远快于线性；到 0.95 再涨七倍，说明 <span class="math inline">\rho\to1</span> 时 <span class="math inline">\mathbb{E}[\varphi e]</span> 的相关结构发生了质变。<strong>实用结论：<span class="math inline">\rho&lt;0.5</span> 时偏差可以忽略，<span class="math inline">\rho&gt;0.9</span> 时必须换方法。</strong></p>
+<p><strong>第二，偏差的方向由 <span class="math inline">R_{\varphi\varphi}^{-1}\mathbb{E}[\varphi e_{k-1}]</span> 的符号决定。</strong> 对本章的对象，这个方向恰好让增益偏大（+27.70%），<span class="math inline">a_1</span> 偏小（−44.08%）。两者符号相反不是巧合：增益的分母含 <span class="math inline">1+\sum a_i</span>，<span class="math inline">a_1</span> 变小会让分母变大，本该让增益变小；但分子 <span class="math inline">b</span> 同时变大（+8.27%），两者叠加后净效果是增益变大。<strong>这说明偏差不是简单地“某个参数偏大”，而是沿着回归空间里最不可辨的方向偏移。</strong> 这也解释了为什么单看某个参数的误差方向没有意义。</p>
+<p><strong>第三，偏差不能用“多测几次取平均”消掉。</strong> 偏差是系统性的，换数据只会在均值附近抖动方差那一半，偏差那一半原样保留。<span class="math inline">\rho=0.95</span> 组的均值会稳定停在 2.3 附近而不是 1.8，测一百次也一样——平均只能压方差，压不掉偏差。<strong>这是偏差与方差的根本区别，也是为什么必须换方法而不是加数据。</strong></p>
+<p>式 (18-27) 还可以反用：若已知 <span class="math inline">\rho</span>，可以先估出偏差，再从 <span class="math inline">\hat\theta</span> 里减掉。这叫“偏差补偿”，在 <span class="math inline">\rho</span> 已知且稳定时有效。缺点是 <span class="math inline">\rho</span> 本身也要估，估错了补偿就反向放大误差。第 19 章的极大似然把这步做成了联合估计，不需要事先知道 <span class="math inline">\rho</span>。</p>
+<h3 id="平方根-rls-与-ud-分解">18.3.12 平方根 RLS 与 UD 分解</h3>
+<p>式 (18-14) 的 <span class="math inline">P</span> 更新是“两个矩阵相减”，长期运行会丢掉正定性。解决办法是不存 <span class="math inline">P</span>，而存它的平方根。</p>
+<p>取 <span class="math inline">P=S S^{\top}</span>，<span class="math inline">S</span> 是下三角。更新时不对 <span class="math inline">P</span> 做减法，而是对一个增广矩阵做正交变换：</p>
+<p><span class="math display">\begin{bmatrix}S_{k}^{-1}\varphi &amp; S_{k}^{-1}\end{bmatrix}\Theta=\begin{bmatrix}0 &amp; S_{k+1}^{-1}\end{bmatrix} \tag{18-28}</span></p>
+<p><span class="math inline">\Theta</span> 是 Householder 或 Givens 变换。这个式子只做正交变换，不放大误差，所以 <span class="math inline">S</span> 的正定性自动保持。代价是每步的计算量从 <span class="math inline">O(p^2)</span> 涨到 <span class="math inline">O(p^3)</span>，<span class="math inline">p=6</span> 时是 216 次对 36 次，在现代 MCU 上仍然可承受。</p>
+<p>更省算力的是 UD 分解：把 <span class="math inline">P=UDU^{\top}</span>，<span class="math inline">U</span> 是单位上三角，<span class="math inline">D</span> 是对角。更新只涉及 <span class="math inline">D</span> 的标量除法和 <span class="math inline">U</span> 的秩一修正，计算量回到 <span class="math inline">O(p^2)</span> 且无数值损失。Bierman 在 1977 年给出的这套算法，至今仍是自适应滤波的标准实现。</p>
+<p>什么时候必须用平方根形式？三个判据：<strong>运行超过 <span class="math inline">10^5</span> 步、<span class="math inline">\lambda&lt;0.99</span>、或者 <span class="math inline">p&gt;20</span>。</strong> 满足任一条，普通 RLS 的 <span class="math inline">P</span> 就可能在某个时刻失去正定性，表现为增益突然反向、参数跳到远处。本章的仿真只跑 320 到 800 步，普通形式足够；但工业现场 24 小时运行（<span class="math inline">T_s=0.05</span> s 时每天 173 万步）必须用平方根形式。</p>
+<p>这条工程细节在教材里常被略过，但它是“算法能跑”和“算法能长期跑”的分界线。<strong>数值稳定性不是数学上的优雅问题，是设备连续运行三个月后还能不能工作的实际问题。</strong></p>
+<h2 id="离散对应与数值实现">18.4 离散对应与数值实现</h2>
+<h3 id="数据预处理">18.4.1 数据预处理</h3>
+<p>式 (18-1) 假设 <span class="math inline">E</span> 零均值、同方差。真实数据很少满足，预处理就是把数据改造成“接近满足”。</p>
+<p><strong>去均值。</strong> 若输出有一个恒定的偏置 <span class="math inline">y_0</span>（传感器零点、工作点），模型会把它硬塞进 <span class="math inline">\sum b_j</span>，估出的增益整体偏移。正确做法是先减去工作点：<span class="math inline">y_k\leftarrow y_k-\bar y</span>、<span class="math inline">u_k\leftarrow u_k-\bar u</span>，辨识完再把偏置加回。这一步在位置伺服上尤其重要，因为光栅尺的零点通常不在行程中点。</p>
+<p><strong>去趋势。</strong> 场景二里的料温漂移是慢变趋势，它不是噪声，也不是对象动态，但会被 LS 当成低频动态拟合进去。标准做法是用一阶差分：<span class="math inline">\Delta y_k=y_k-y_{k-1}</span>。差分把常数和线性趋势都消掉，代价是把噪声的高频部分放大（差分是高通滤波器，白噪声方差翻倍）。若趋势比噪声强得多，差分是划算的；否则应改用高通滤波或分段去均值。</p>
+<p><strong>归一化。</strong> 输入和输出的量纲差得远时（比如 <span class="math inline">u</span> 是伏、<span class="math inline">y</span> 是微米），回归矩阵的列尺度差几个数量级，条件数会被人为放大。把每列除以其标准差，辨识完再折算回去，可以不改变解的数学性质而改善数值条件。本章实验 5 的表里给了对照：<span class="math inline">n=3</span> 时原始条件数 2.950e+02，归一化后 2.471e+02，改善 16%。这个改善不算大，因为本章的 <span class="math inline">u</span> 和 <span class="math inline">y</span> 都在 1 附近；在真实的多传感器系统里，归一化能把条件数降一到两个数量级。</p>
+<p><strong>剔除启动段。</strong> 记录开始的前几个样本往往有执行器从静止启动的瞬态，与模型的线性假设不符。标准做法是丢掉前 <span class="math inline">k_0</span> 个样本，<span class="math inline">k_0</span> 取 <span class="math inline">\max(n_a,n_k+n_b-1)</span> 再加几拍余量。</p>
+<p>这四步没有一步涉及“算法”，但它们决定了算法有没有可用的输入。工程上一个常见的现象是：同一套 LS 代码，换一批预处理就从不收敛变收敛。原因通常就是上面某一步没做。</p>
+<h3 id="批-ls-的数值稳定写法">18.4.2 批 LS 的数值稳定写法</h3>
+<p>直接写 <code>inv(Phi.T @ Phi) @ Phi.T @ Y</code> 有三个问题：条件数平方、对称性丢失、奇异时直接报错。工程实现应该走 QR 分解。</p>
+<p>对 <span class="math inline">\Phi</span> 做经济型 QR：<span class="math inline">\Phi=QR</span>，<span class="math inline">Q</span> 是 <span class="math inline">N\times p</span> 正交矩阵，<span class="math inline">R</span> 是 <span class="math inline">p\times p</span> 上三角。代入正规方程：</p>
+<p><span class="math display">\Phi^{\top}\Phi=R^{\top}Q^{\top}QR=R^{\top}R,\qquad \Phi^{\top}Y=R^{\top}Q^{\top}Y \tag{18-29}</span></p>
+<p>于是 <span class="math inline">R^{\top}R\hat\theta=R^{\top}Q^{\top}Y</span>，即</p>
+<p><span class="math display">R\hat\theta=Q^{\top}Y \tag{18-30}</span></p>
+<p>这是一个上三角方程组，回代即可，不需要求逆。整个过程的误差放大倍数正比于 <span class="math inline">\mathrm{cond}(\Phi)</span> 而不是它的平方。本章实验 0 的无噪声数据条件数是 1.149e+04，直接求逆要面对 <span class="math inline">1.3\times10^8</span> 的条件数，QR 只需要面对 <span class="math inline">10^4</span>。</p>
+<p>NumPy 里 <code>np.linalg.lstsq</code> 内部就是 SVD，比 QR 更稳，代价是慢一点。SVD 的额外好处是能直接看出秩亏：奇异值一旦小于 <span class="math inline">\sigma_{\max}\times10^{-12}</span>，就说明该方向没有信息，此时应该降阶而不是硬解。</p>
+<p>若确实需要正则化（比如输入激励不足但仍想得到一个有界解），用岭回归：</p>
+<p><span class="math display">\hat\theta=(\Phi^{\top}\Phi+\mu I)^{-1}\Phi^{\top}Y \tag{18-31}</span></p>
+<p><span class="math inline">\mu&gt;0</span> 保证可逆，代价是引入偏差。<span class="math inline">\mu</span> 的选择可以用广义交叉验证，工程上更常用的是“取到解不再随 <span class="math inline">\mu</span> 剧烈变化为止”。要注意岭回归不是万能的：它把不可辨方向的参数压向零，如果真值本来就在那个方向上很大，压向零就是错的。<strong>正则化只能让解稳定，不能让它正确。</strong></p>
+<h3 id="rls-的工程实现">18.4.3 RLS 的工程实现</h3>
+<p>式 (18-14) 到 (18-16) 是教科书形式，直接实现会在跑几万步后出问题。四个必须加的补丁：</p>
+<p><strong>第一，保持 <span class="math inline">P</span> 对称。</strong> 式 (18-14) 在数学上保持对称，浮点运算下会累积不对称。每步强制 <span class="math inline">P\leftarrow(P+P^{\top})/2</span>，代价是 <span class="math inline">p^2</span> 次加法，收益是避免特征值跑成负数。</p>
+<p><strong>第二，防止 <span class="math inline">P</span> 失去正定性。</strong> 长期运行后 <span class="math inline">P</span> 的最小特征值可能变成 <span class="math inline">-10^{-9}</span>，此时 <span class="math inline">\varphi^{\top}P\varphi</span> 可能为负，分母穿过零，增益爆炸。检测方法：每步算 <span class="math inline">\varphi^{\top}P\varphi</span>，若为负就重置 <span class="math inline">P=P_0I</span>。</p>
+<p><strong>第三，协方差重置。</strong> 若连续 <span class="math inline">M</span> 步的新息都小于阈值（说明模型已经贴合，或者输入没有激励），把 <span class="math inline">P</span> 重置为 <span class="math inline">P_0I</span>，让 RLS 重新进入“学习”状态。这是自适应控制里的标准做法，防止模型“睡死”。</p>
+<p><strong>第四，增益限幅。</strong> <span class="math inline">K</span> 的范数设上限，比如 <span class="math inline">\|K\|\le10</span>。正常情况下 <span class="math inline">K</span> 不会接近这个值，一旦触发就说明数值出了问题，限幅能避免参数跳到无意义的区域，给上层逻辑一个报警的机会。</p>
+<p>这四条都不是理论必需的，但在 24 小时连续运行的自适应回路里，缺任何一条都会在某个时刻失效。§18.6.4 的 <span class="math inline">P_0=10^{-2}</span> 那一组就是“没有重置”的极端情形：<span class="math inline">P</span> 的迹停在 4.249e-02，增益永远停在 0.5156，偏差 70.76%。</p>
+<h3 id="异常值饱和与死区">18.4.4 异常值、饱和与死区</h3>
+<p><strong>异常值。</strong> 一个孤立的野点（比如传感器丢帧导致的尖峰）在 LS 里的影响是平方级的：它会把整条回归线往自己那边拉。检测用残差的门限：<span class="math inline">|y_k-\varphi_k^{\top}\hat\theta|&gt;4\hat\sigma</span> 判为野点。处理有两种：剔除（丢掉这个样本重算）或降权（用 Huber 权函数，残差超过阈值后权重按 <span class="math inline">1/|r|</span> 衰减）。剔除更简单，但会让样本数不确定；降权更平滑，适合在线场景。</p>
+<p><strong>饱和。</strong> 执行器饱和时，指令继续增大而实际输入不变。若回归向量里放的是指令 <span class="math inline">u</span>，模型会认为“输入加了这么多，输出只动了那么少”，于是低估增益。本章实验 0 的 5 μm 组就含饱和，增益低估 4.552%。处理办法是在数据里标出饱和段，整段剔除；或者把实际输入（如果有阀位反馈）作为回归量。<strong>用指令代替实际输入，是辨识里最常见的一类系统性错误。</strong></p>
+<p><strong>死区。</strong> 死区比饱和更麻烦，因为它在小信号段把增益变成零，在大信号段又恢复正常。LS 会给出一个“平均增益”，既不匹配小信号也不匹配大信号。本章对象的死区半宽是 0.010 V，相对 0.4 V 的阶跃是 2.5%，造成的增益偏差是 −4.552%——比死区占比还大，因为死区还改变了动态（起步延迟）。处理办法是把死区建模成一个已知的非线性环节，先做逆补偿再辨识；或者用第 22 章的非线性辨识方法。</p>
+<h3 id="采样周期与离散化的对应">18.4.5 采样周期与离散化的对应</h3>
+<p>连续对象到离散模型有三条路，选哪条影响参数的含义。</p>
+<p><strong>零阶保持（ZOH）</strong> 是最常用的，它假设输入在两个采样点之间保持不变。这正是数字控制器的实际行为，所以 ZOH 离散的模型可以直接用于控制器设计。本章全部实验用 ZOH。</p>
+<p><strong>双线性变换（Tustin）</strong> 保频率轴，适合滤波器设计，不适合辨识——它给出的极点位置与 ZOH 不同，<code>c2d</code> 的默认方法一旦改错，真值就会对不上。</p>
+<p><strong>直接辨识连续模型</strong> 用频域数据或广义 Poisson 矩，绕开离散化。它的好处是没有“分母抵消”问题，坏处是需要特殊的回归构造。本章不展开，只在 §18.5.3 提一句适用场景。</p>
+<p>离散化还有一个细节：纯延迟。<span class="math inline">\mathrm{round}(L/T_s)</span> 在 <span class="math inline">L</span> 不是 <span class="math inline">T_s</span> 整数倍时会引入最多半拍的误差。本章 <span class="math inline">L=0.04</span> s、<span class="math inline">T_s=0.05</span> s，<span class="math inline">\mathrm{round}(0.8)=1</span>，即把 0.04 s 的延迟当成 0.05 s，多算了 0.01 s。这个误差会混进极点里，让 <span class="math inline">a_i</span> 略微偏移。更精确的做法是把延迟拆成整数拍加小数拍（Thiran 逼近），或者干脆把 <span class="math inline">T_s</span> 选成 <span class="math inline">L</span> 的整数分之一。本章为了让 <span class="math inline">T_s</span> 对齐主导时间常数，接受了这半拍误差，它在增益上的影响小于 0.5%。</p>
+<p>还有一条常被混淆的关系：辨识用的离散模型与控制器用的离散模型可以不同步。控制器按 0.01 s 运行，而模型按 0.05 s 辨识，这没有问题——把辨识结果用 <code>c2d</code> 的逆过程（或直接对连续模型重新离散）转到 0.01 s 即可。麻烦的是反向操作：用 0.01 s 的数据辨识出一个 0.01 s 的模型，再降采样给 0.05 s 的控制器用，降采样会把高频极点折叠到低频，模型完全变形。<strong>结论：辨识的采样率可以低于控制率，但不能高于控制率后再降。</strong></p>
+<h3 id="代码结构与复算方式">18.4.6 代码结构与复算方式</h3>
+<p>本章的两个脚本分工明确：<code>code/ch018_sim.py</code> 只做数值，<code>code/ch018_figs.py</code> 只做画图。前者定义对象、离散化、数据生成、LS、RLS、六个实验，每个实验打印一张表；后者 import 前者，把表格里的数字画成图。</p>
+<p>数据生成的函数是 <code>sim_arx</code>，它按式 (18-2) 逐拍递推，噪声可以是白的，也可以是 AR(1)。这里有一个容易写错的地方：<code>python-control</code> 的 <code>c2d</code> 会去掉分子多项式的前导零，所以 <code>num</code> 的长度可能小于 <span class="math inline">n_b</span>。<code>discrete_arx</code> 用 <code>b[-num.size:] = num</code> 把零补齐，保证 <span class="math inline">b_1</span> 对应第一个非零拍。这个细节不处理，真值就会整体错位一拍。</p>
+<p>LS 用 <code>np.linalg.lstsq</code>（SVD 实现），RLS 用标准递推。六个实验全部用固定随机种子，所以每次运行的输出完全一致——这是“正文数字可复算”的前提。</p>
+<h3 id="数据对齐与多采样率">18.4.7 数据对齐与多采样率</h3>
+<p>式 (18-5) 假设 <span class="math inline">u_k</span> 与 <span class="math inline">y_k</span> 是同一时刻的一对样本。真实系统里这个假设经常不成立，而且不成立的后果比想象中严重。</p>
+<p><strong>时间戳错位。</strong> 控制器在每个周期先读传感器再写执行器，两者之间有几个毫秒的间隔；如果采集系统分别打时间戳，<span class="math inline">u</span> 与 <span class="math inline">y</span> 就会错开固定的一拍。一拍错位在 ARX 里的表现是 <span class="math inline">n_k</span> 系统性偏大或偏小，进而把延迟算错。本章 <span class="math inline">T_s=0.05</span> s，错一拍就是 0.05 s 的延迟误差——比真实延迟 0.04 s 还大。<strong>检查办法：分别对 <span class="math inline">u</span> 和 <span class="math inline">y</span> 做阶跃，看两者的起始沿相差几拍。</strong></p>
+<p><strong>多采样率。</strong> 传感器 100 Hz、执行器 20 Hz，这是常见配置。此时不能简单地“取最近的一个 <span class="math inline">u</span>”，因为执行器在两个控制周期之间保持的值与采到的 <span class="math inline">u</span> 不是同一个时刻的。正确做法是把 <span class="math inline">u</span> 按零阶保持展开到 <span class="math inline">y</span> 的采样率上，再对齐；或反过来把 <span class="math inline">y</span> 抽取到 <span class="math inline">u</span> 的采样率上（抽取前要先抗混叠滤波）。前者信息多但样本相关性强，后者信息少但样本独立，选哪个取决于噪声水平。</p>
+<p><strong>通信延迟。</strong> 分布式系统里 <span class="math inline">u</span> 从控制器到执行器有网络延迟，这个延迟是随机的（几十毫秒到几百毫秒）。它会让 <span class="math inline">n_k</span> 时变，ARX 无法表达。工程上的处理是把延迟建模成一个额外的状态（增广状态空间），或者用第 21 章的闭环方法把它和对象一起估。</p>
+<p>三条里最容易被忽略的是第一条。时间戳错位不会让残差变大多少，但会让 <span class="math inline">n_k</span> 错，而 <span class="math inline">n_k</span> 错会让所有参数都偏。<strong>排查顺序：先对时间戳，再看 <span class="math inline">n_k</span>，最后才调算法。</strong></p>
+<h3 id="从-arx-到状态空间">18.4.8 从 ARX 到状态空间</h3>
+<p>辨识出的 ARX 模型要交给控制器设计，通常需要转成状态空间。标准形式是能控规范型：</p>
+<p><span class="math display">A=\begin{bmatrix}-a_1&amp;-a_2&amp;\cdots&amp;-a_{n_a}\\ 1&amp;0&amp;\cdots&amp;0\\ \vdots&amp;\ddots&amp;&amp;\vdots\\ 0&amp;\cdots&amp;1&amp;0\end{bmatrix},\quad B=\begin{bmatrix}1\\0\\\vdots\\0\end{bmatrix},\quad C=[b_1,\dots,b_{n_b}] \tag{18-32}</span></p>
+<p>这个转换是等价的，不丢信息。但要注意两点。</p>
+<p><strong>第一，延迟要单独处理。</strong> <span class="math inline">n_k&gt;1</span> 时，状态空间里要在输入端串 <span class="math inline">n_k-1</span> 个延迟单元，或者把 <span class="math inline">B</span> 换成 <span class="math inline">[0,\dots,0,1,0,\dots]^{\top}</span> 的形式。直接把 <span class="math inline">n_k</span> 忽略掉，控制器会提前 <span class="math inline">n_k</span> 拍动作，闭环必然振荡。</p>
+<p><strong>第二，能控规范型的数值条件不好。</strong> <span class="math inline">A</span> 的第一行是 <span class="math inline">a_i</span> 的原值，<span class="math inline">a_i</span> 的量级可能相差几百倍（本章 <span class="math inline">a_1=1.75</span>、<span class="math inline">a_3=0.11</span>），这会让 <span class="math inline">A</span> 的特征值对参数误差非常敏感。若要做数值计算（比如算极点、解 Riccati 方程），应该先做平衡变换（<code>scipy.signal.ss2ss</code> 的 <code>balance</code> 参数），或者用观测规范型。</p>
+<p>本章实验 0 的参数可以直接代入式 (18-32)，得到的三阶状态空间模型与 <code>control.tf2ss</code> 的结果一致。这个一致性可以用作代码的自检：如果两者差得远，说明 <span class="math inline">a_i</span> 的符号或顺序取错了。</p>
+<h3 id="定点实现与量化误差">18.4.9 定点实现与量化误差</h3>
+<p>嵌入式平台上的 RLS 常常用定点数实现。定点带来的误差不是简单的“精度低一点”，它会系统性地破坏 RLS 的稳定性。</p>
+<p><strong>最危险的是 <span class="math inline">P</span> 的更新。</strong> 式 (18-14) 里 <span class="math inline">P_{k+1}=P_k-\text{修正项}</span>，这是一个减法。定点运算下，当修正项小于 <span class="math inline">P_k</span> 的最低位时，减法结果为零，<span class="math inline">P</span> 停止下降——看上去“收敛了”，实际上是量化卡住了。此时参数被锁死在一个与真值有偏差的位置，而 <span class="math inline">\mathrm{tr}(P)</span> 看起来正常，不会有任何报警。</p>
+<p><strong>第二个问题是动态范围。</strong> <span class="math inline">P_0=10^4</span>、末端 <span class="math inline">P</span> 的迹 3.593e+02（表 18-6），跨两个数量级；若用 Q15 格式（范围 ±1），<span class="math inline">P_0</span> 根本表示不了。标准做法是给 <span class="math inline">P</span> 单独用一个缩放因子，每次更新后重新归一化，并把缩放因子记在变量里。这一步增加了代码复杂度，但省不掉。</p>
+<p><strong>第三个问题是新息的计算。</strong> <span class="math inline">y_k-\varphi_k^{\top}\hat\theta_k</span> 是两个大数相减，结果往往很小。若 <span class="math inline">y</span> 的量程是 ±10 V、量化到 16 位，最低位约 0.3 mV；而本章的噪声标准差是 5 mV，新息在稳态时可能只有 1 mV 量级，只剩三级有效位。<strong>这意味着定点 RLS 在稳态时几乎学不到东西——不是算法的问题，是分辨率的限制。</strong></p>
+<p>规避办法有三个：一是用浮点（Cortex-M4F 以上的核都有单精度 FPU，成本已经不高）；二是把 <span class="math inline">y</span> 去均值后再量化，让新息落在大数附近；三是降低更新频率，每 <span class="math inline">M</span> 拍更新一次，用累加的新息提高有效位数。三条里第一条最省事，第三条最适合低端 MCU。</p>
+<h3 id="数据记录的最低字段">18.4.10 数据记录的最低字段</h3>
+<p>辨识失败最常见的原因不是算法，而是“数据拿到手才发现缺了某个字段”。一份可用的辨识数据，至少要带八个字段：</p>
+<ol type="1">
+<li><strong>原始时间戳</strong>，不是采集卡的相对计数。相对计数一旦跨设备，就无法对齐。</li>
+<li><strong>输入的实际值</strong>，不是指令值。有阀位反馈就记阀位，没有就记指令并标注“未验证”。</li>
+<li><strong>输出的量程与单位</strong>。本章输出是毫米，若某次记录成了微米，增益会差一千倍而没人发现。</li>
+<li><strong>采样周期的标称值与实测值</strong>。标称 0.05 s 实际 0.0503 s，在 40 s 的记录上会累积 0.24 s 的漂移，足以让延迟算错。</li>
+<li><strong>工况变量</strong>：负载、温度、压力、批次。它们不是模型的一部分，但决定了模型在哪个范围内有效。</li>
+<li><strong>饱和与报警标志</strong>。这些标志让后续处理能整段剔除，而不是靠猜。</li>
+<li><strong>传感器与执行器的型号、量程、分辨率</strong>。分辨率决定了新息的最小可辨量（§18.4.9）。</li>
+<li><strong>实验类型与激励参数</strong>：阶跃幅值、PRBS 钟周期、多正弦的频率组。</li>
+</ol>
+<p>这八项里，第 2 和第 4 项最常缺失，也最致命。前者让模型学到一个不存在的对象，后者让延迟和极点系统性偏移。<strong>一条经验：数据记录表的设计，应该由做辨识的人来写，而不是由采集系统的人来定。</strong> 前者知道哪些字段会被用到，后者只关心能不能存下来。</p>
+<h2 id="工程含义与适用边界">18.5 工程含义与适用边界</h2>
+<h3 id="四条可信性自检">18.5.1 四条可信性自检</h3>
+<p>LS 永远会给一个解，所以“跑通了”什么也不说明。下面四条检查，每条都能在十分钟内做完，任何一条不过，模型就不能交付。</p>
+<p><strong>第一条：残差白不白。</strong> 算残差 <span class="math inline">r_k=y_k-\varphi_k^{\top}\hat\theta</span>，做一阶自相关和 Durbin-Watson。<span class="math inline">N=800</span> 时一阶自相关的门槛是 <span class="math inline">\pm0.0354</span>，DW 应在 1.9 到 2.1 之间。本章实验 2 的三组数据：白噪声组 <span class="math inline">\rho_1=0.001</span>、DW=1.997（过），AR(1) <span class="math inline">\rho=0.8</span> 组 <span class="math inline">\rho_1=0.113</span>、DW=1.774（不过），<span class="math inline">\rho=0.95</span> 组 <span class="math inline">\rho_1=0.194</span>、DW=1.611（严重不过）。这条检查过不了，说明模型至少漏了一部分动态，参数不能当“对象参数”用。</p>
+<p><strong>第二条：残差与输入相关不相关。</strong> 算 <span class="math inline">\mathrm{corr}(r_k,u_{k-\tau})</span>，<span class="math inline">\tau</span> 从 0 扫到 <span class="math inline">n_k+n_b</span>。若有一个 <span class="math inline">\tau</span> 的相关系数超过 <span class="math inline">2/\sqrt{N}</span>，说明模型没有把输入到输出的某条路径表达出来。这条检查能抓住残差白但参数偏的情形——典型的就是闭环数据。</p>
+<p><strong>第三条：自由仿真跑得远不远。</strong> 把估出的模型单独拿出来，喂同样的输入，不喂输出，做纯仿真。仿真误差若在几秒内发散，说明极点有问题；若缓慢漂移，说明有积分环节没建模。本章实验 1 的 <span class="math inline">n=1</span> 模型自由仿真 RMSE 是 0.20788，比一步误差 0.03882 大五倍，这正是“一步准、多步不准”的典型。</p>
+<p><strong>第四条：参数落在物理上说得通的范围里。</strong> 增益的符号对不对、时间常数的量级对不对、延迟是不是非负。这一条最土，但抓到的错误最多。实验 0 的 5 μm 组，<span class="math inline">a_3</span> 的估计是 <span class="math inline">-0.280807</span>，真值 <span class="math inline">-0.112665</span>，相对误差 −149.24%——单看数字完全可能通过前三条检查，但从物理上说，三阶对象的第三个极点的位置偏离了一倍半，这个模型在任何频段上的相位都不会对。</p>
+<p>四条检查的顺序不能颠倒：先查白（模型结构对不对），再查相关（有没有漏路径），再查仿真（多步稳不稳），最后查物理（数值合不合理）。反过来做，很容易被“物理上差不多”麻痹过去。</p>
+<p><strong>表 18-2b 四条自检的量化门槛</strong></p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">检查</th>
+<th style="text-align: left;">统计量</th>
+<th style="text-align: left;">通过</th>
+<th style="text-align: left;">警告</th>
+<th style="text-align: left;">不通过</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">残差白性</td>
+<td style="text-align: left;"><span class="math inline">\lvert\rho_1\rvert</span></td>
+<td style="text-align: left;"><span class="math inline">&lt;1/\sqrt{N}</span></td>
+<td style="text-align: left;"><span class="math inline">1\sim3/\sqrt{N}</span></td>
+<td style="text-align: left;"><span class="math inline">&gt;3/\sqrt{N}</span></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">DW</td>
+<td style="text-align: left;"><span class="math inline">\mathrm{DW}</span></td>
+<td style="text-align: left;">1.9–2.1</td>
+<td style="text-align: left;">1.7–1.9</td>
+<td style="text-align: left;"><span class="math inline">&lt;1.7</span></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">输入残差相关</td>
+<td style="text-align: left;"><span class="math inline">\max\lvert r_{ru}\rvert</span></td>
+<td style="text-align: left;"><span class="math inline">&lt;2/\sqrt{N}</span></td>
+<td style="text-align: left;"><span class="math inline">2\sim3/\sqrt{N}</span></td>
+<td style="text-align: left;"><span class="math inline">&gt;3/\sqrt{N}</span></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">自由仿真</td>
+<td style="text-align: left;">RMSE / 输出量程</td>
+<td style="text-align: left;"><span class="math inline">&lt;5\%</span></td>
+<td style="text-align: left;">5–15%</td>
+<td style="text-align: left;"><span class="math inline">&gt;15\%</span> 或发散</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">参数标准差</td>
+<td style="text-align: left;">相对值</td>
+<td style="text-align: left;"><span class="math inline">&lt;10\%</span></td>
+<td style="text-align: left;">10–30%</td>
+<td style="text-align: left;"><span class="math inline">&gt;30\%</span></td>
+</tr>
+</tbody>
+</table>
+<p>这张表把“过/不过”变成一个可查的数。本章实验 2 的 <span class="math inline">\rho=0.95</span> 组，<span class="math inline">\lvert\rho_1\rvert=0.194</span>，<span class="math inline">3/\sqrt{800}=0.106</span>，落在“不通过”；实验 0 的 <span class="math inline">b_1</span> 相对标准差 96.5%，落在“不通过”。两处都能被这张表直接抓住，不需要任何主观判断。</p>
+<h3 id="闭环数据的三个坑">18.5.2 闭环数据的三个坑</h3>
+<p>现场拿到的数据十有八九是闭环的，因为没人会让一台运行中的设备开环跑几分钟。闭环数据有三个坑，一个比一个隐蔽。</p>
+<p><strong>坑一：输入与噪声相关。</strong> 反馈控制器用 <span class="math inline">y</span> 算 <span class="math inline">u</span>，<span class="math inline">y</span> 里含噪声，所以 <span class="math inline">u</span> 里也含噪声。此时 <span class="math inline">\mathbb{E}[\Phi^{\top}E]\neq0</span>，LS 有偏。这个偏差的方向取决于控制器：高增益控制器会让 <span class="math inline">u</span> 强烈跟随噪声，偏差最大；低增益控制器（比如纯手动操作）偏差小，但激励也弱。<strong>闭环辨识的第一条经验是：控制器越“好”，辨识越难。</strong></p>
+<p><strong>坑二：激励被反馈吃掉。</strong> 设定值恒定时，控制器会把扰动压掉，输入输出的变化只剩下噪声驱动的那一点点。此时信噪比极低，条件数极差。解决办法是在设定值上叠加一个小幅值的 PRBS（这叫“抖动”，dither），幅值取到不影响产品质量的最小值。第 16 章讨论过这个问题，本章只补一句量化的：抖动幅值至少要等于噪声标准差的 3 倍，否则回归向量仍被噪声主导。</p>
+<p><strong>坑三：偏差在残差上看不出来。</strong> 这是最坑的一点。闭环下 LS 会把“控制器的作用”也拟合进对象模型，残差可以很白、DW 可以很接近 2，但参数是错的。原因是控制器提供了另一条从 <span class="math inline">u</span> 到 <span class="math inline">y</span> 的路径，LS 把两条路径合起来当成一条。<strong>唯一可靠的识别方法是做开环验证</strong>：用估出的模型去预测一段开环数据，如果预测偏差远大于闭环残差，就说明模型是闭环拟合出来的假象。</p>
+<p>第 21 章会给出闭环辨识的系统方法（间接法、直接法、联合输入输出法），本节只给出“什么时候必须怀疑”的判断。一个实用的经验：如果闭环数据的输入自相关在延迟 1 拍就掉到 0.3 以下，说明激励带宽不足，此时的辨识结果不应直接用于控制器设计。</p>
+<h3 id="时变对象遗忘因子之外">18.5.3 时变对象：遗忘因子之外</h3>
+<p>遗忘因子是最简单的时变处理，但它只适合“参数缓慢漂移”这一种情形。另外三种情形需要别的手段。</p>
+<p><strong>突变。</strong> 参数在某时刻跳变（比如换料、换模）。遗忘因子 RLS 会用一个指数窗口平滑地跟过去，过渡期内估计是旧值与新值的混合，没有物理意义。更好的做法是变点检测：监控新息的滑动平均，一旦超过阈值就判定发生了突变，把 <span class="math inline">P</span> 重置为 <span class="math inline">P_0I</span>，让 RLS 重新学习。本章实验 4 的 8 s 处增益从 1.8 跳到 2.4，就是这种情形。<span class="math inline">\lambda=0.98</span> 时切换后 2 s 的误差还有 −4.21%，说明指数窗口跟得不够快；若加变点检测，重置后 0.5 s 内就能收敛到 2% 以内。</p>
+<p><strong>周期变化。</strong> 参数随工况周期性变化（比如曲柄滑块机构在不同角度下的等效惯量）。此时遗忘因子会把“周期性”当成“漂移”，估计出一个平均值。正确做法是按相位分段建模，或者把工况变量作为附加回归量。</p>
+<p><strong>慢漂移叠加噪声。</strong> 参数一年漂 5%，而噪声每天都在。此时遗忘因子的窗口必须很长（<span class="math inline">\lambda</span> 极接近 1），长到跟踪不上漂移；窗口短了又被噪声主导。这种情形应该用“批 LS + 定期重跑”：每周采一段数据，跑一次批 LS，用 §18.3.4 的协方差判断这次估出的参数与上次的差是否显著。显著就更新，不显著就不动。</p>
+<p>这三种情形对应三种时间尺度：秒级突变、分钟级周期、年级漂移。遗忘因子的时间常数只有一个，所以它只能覆盖其中一种。工程上把这三套逻辑叠起来用，是常见的做法。</p>
+<h3 id="数据量与计算量">18.5.4 数据量与计算量</h3>
+<p>LS 的计算量是 <span class="math inline">O(Np^2)</span>，<span class="math inline">p</span> 是参数个数。<span class="math inline">N=800</span>、<span class="math inline">p=6</span> 时不到一百万次浮点运算，单片机都能跑。RLS 每步是 <span class="math inline">O(p^2)</span>，<span class="math inline">p=6</span> 时每步 36 次乘法，在 0.05 s 的采样周期里绰绰有余。</p>
+<p>真正的约束不是算力，是<strong>数据量够不够</strong>。经验法则是 <span class="math inline">N\ge10p</span>，低于这个数，参数协方差会大到没有意义。本章实验 0 用 8 s 的阶跃数据，<span class="math inline">N=157</span>（<span class="math inline">8/0.05-3</span>），<span class="math inline">p=6</span>，比值 26，还算安全。但注意这 157 个样本高度相关（阶跃响应是一条平滑曲线），<strong>有效样本数远小于 157</strong>。这就是为什么 <span class="math inline">b_1</span> 的相对标准差高达 96.5%——名义上有 157 个样本，实际上独立信息只够估两三个参数。</p>
+<p>判断有效样本数的一个粗略办法是看输入的自相关长度：若自相关在 <span class="math inline">\tau_c</span> 拍后降到 0.1，则有效样本数约为 <span class="math inline">N/\tau_c</span>。阶跃数据的 <span class="math inline">\tau_c</span> 接近整个记录长度，所以有效样本数接近 1；PRBS 的 <span class="math inline">\tau_c</span> 等于钟周期，本章是 5 拍，800 个样本的有效数约 160。这解释了为什么实验 1 用 PRBS 能把六个参数都估到 1% 以内，而实验 0 用阶跃只能把增益估到 4.5%。</p>
+<h3 id="交付物与验收">18.5.5 交付物与验收</h3>
+<p>一个参数辨识项目的交付物，不应该只是“一组系数”。至少应包含五项：</p>
+<ol type="1">
+<li><strong>模型方程与参数</strong>，注明 <span class="math inline">n_a</span>、<span class="math inline">n_b</span>、<span class="math inline">n_k</span>、<span class="math inline">T_s</span> 与离散化方法。</li>
+<li><strong>参数协方差矩阵</strong>，或至少每个参数的相对标准差。</li>
+<li><strong>四项自检的结果</strong>：残差自相关、输入残差相关、自由仿真误差、物理合理性。</li>
+<li><strong>验证数据集上的表现</strong>：用另一段数据（不是辨识用的那段）算一步误差和自由仿真误差，两者都要给。</li>
+<li><strong>适用边界</strong>：模型在哪个幅值范围、哪个频段、哪个工况下验证过，超出这个范围会发生什么。</li>
+</ol>
+<p>第 5 项最容易被省略，也最容易被误用。本章实验 0 的 5 μm 组，模型在 0.4 V 阶跃下增益偏差 4.552%；如果有人拿这个模型去算 0.02 V 的微动，偏差会大得多，因为死区在小信号段的相对占比从 2.5% 涨到了 50%。<strong>模型的精度不是一个数，是一个随工况变化的函数</strong>——这一点必须在交付物里写清楚，否则使用者会默认它是常数。</p>
+<h3 id="与控制器设计的接口">18.5.6 与控制器设计的接口</h3>
+<p>辨识不是终点，模型最终要交给控制器。这一节说清楚“控制器真正在乎模型的哪些部分”，这决定了辨识时该把有限的实验时间花在哪里。</p>
+<p><strong>PID 在乎三个量：增益、主导时间常数、延迟。</strong> 第 44 章的整定公式只用到这三个。它们恰好是最容易估准的三个量：增益是低频量，阶跃数据就够；主导时间常数由阶跃的 63% 时刻决定，噪声影响小；延迟由起始沿决定。<strong>所以对 PID 应用，一个 <span class="math inline">n=1</span> 或 <span class="math inline">n=2</span> 的模型加上准确的延迟，比一个 <span class="math inline">n=5</span> 但延迟算错的模型有用得多。</strong></p>
+<p><strong>Smith 预估在乎延迟的绝对值。</strong> 第 47 章的补偿器把延迟单独拿出来做预测，延迟错 10%，补偿就错 10%。本章 <span class="math inline">T_s=0.05</span> s、<span class="math inline">L=0.04</span> s，<span class="math inline">n_k</span> 取 1 拍意味着把 0.04 s 当成 0.05 s，误差 25%。这个误差在 PID 上无所谓（它只影响相位裕度几个度），在 Smith 上就是致命的。<strong>所以做 Smith 之前，必须把采样周期选成延迟的整数分之一，或者用小数延迟逼近。</strong></p>
+<p><strong>预测控制在乎模型的多步预测能力。</strong> 第 58 章和第 80 章的 MPC 用模型往前推 <span class="math inline">N_p</span> 步，所以它需要的是“多步误差小”，而不是“一步误差小”。§18.3.10 说过这两者可以差五倍。<strong>给 MPC 用的模型，验收指标必须是自由仿真误差，不能是一步误差。</strong></p>
+<p><strong>鲁棒控制在乎模型的频域误差界。</strong> 第 60 章之后的方法需要一个“模型误差上界”函数，通常由辨识的协方差在频域上折算得到。这要求辨识时保留协方差矩阵，而不只是点估计。<strong>只交一组系数的辨识报告，对鲁棒设计是不够用的。</strong></p>
+<p>这张对应关系可以压成一句话：<strong>先问模型给谁用，再决定辨识的精度分配。</strong> 给 PID 用的模型，把时间花在延迟和增益上；给 MPC 用的，把时间花在多点激励和自由仿真验证上；给鲁棒控制用的，把时间花在协方差和频域覆盖上。反过来，不分用途地追求“所有参数都准”，往往是在追求一个没人需要的指标。</p>
+<h3 id="三个失败案例">18.5.7 三个失败案例</h3>
+<p>下面三个案例都不是“算法错了”，而是某一条前提没被满足。它们的共同点是：<strong>代码跑通、残差正常、报告写得出来，但模型不能用。</strong></p>
+<p><strong>案例一：增益偏低 12%，因为执行器饱和。</strong> 一台热风炉的温度回路，辨识时给了 20% 的阀门阶跃，实际阀位在 60% 处已经接近全开。后 40% 的阶跃里，指令继续增大而风量不再增加，LS 把这部分“输入增加、输出不变”的数据当成“增益变小”，估出的增益比实际低 12%。残差检查全过（噪声很小），自由仿真也接近（因为仿真用的是同样的饱和数据）。直到控制器投运，发现同样的温度偏差需要更大的阀位才压得住，才回头查。<strong>特征：增益偏低、残差正常、输入有削顶。</strong> 处理是剔除饱和段，或者在回归里用实际阀位而不是指令。</p>
+<p><strong>案例二：模型在训练集上完美，换工况就发散。</strong> 一台伺服压机，用一段 2 mm 行程的数据辨识出 <span class="math inline">n=4</span> 的模型，一步误差极小。换到 0.2 mm 的小行程，模型给出的预测完全对不上。原因是小行程下摩擦力占主导，而 2 mm 行程的数据里摩擦力被平均掉了，模型学到的是“线性惯性+阻尼”。<strong>特征：一步误差极小、参数标准差也小、但换幅值就失效。</strong> 这说明残差和协方差都只在“辨识数据的工况邻域内”有效。处理是分段建模，或者把摩擦力作为附加项（第 22 章）。</p>
+<p><strong>案例三：参数一直在漂，因为遗忘因子在追噪声。</strong> 一台张力控制系统用了 <span class="math inline">\lambda=0.9</span> 的 RLS，操作工发现增益估计每天都不一样，而且没有规律。查下来，<span class="math inline">\lambda=0.9</span> 对应窗口 10 拍，而 <span class="math inline">p=6</span>，有效自由度只剩 4，估计的方差大到把噪声当成参数变化。<strong>特征：参数持续抖动、无收敛趋势、<span class="math inline">\mathrm{tr}(P)</span> 不小。</strong> 处理是把 <span class="math inline">\lambda</span> 提到 0.98 以上，或者改用批 LS 定期重跑。表 18-7 给的量级可以参考：<span class="math inline">\lambda=0.95</span>（窗口 20）的标准差已经是 <span class="math inline">\lambda=1</span> 的两倍，<span class="math inline">\lambda=0.9</span> 会更糟。</p>
+<p>三个案例对应三条被违反的前提：输入没有削顶（§18.4.4）、工况在辨识范围内（§18.5.5）、窗口长度与参数个数匹配（§18.3.6）。<strong>它们都不是“再调调参数”能解决的，必须回到数据本身。</strong></p>
+<h3 id="现场实验的安全与工时">18.5.8 现场实验的安全与工时</h3>
+<p>参数辨识要激励对象，而激励意味着让设备偏离正常工况。这一步的安全账必须提前算，不能边做边想。</p>
+<p><strong>幅值上限由三个约束取小。</strong> 一是工艺允许的偏差（温度不能超、压力不能越限）；二是执行器的线性区（本章的饱和在 1.00 V，死区在 0.010 V，实际可用区间是 0.01 到 1.00 V）；三是安全联锁的阈值（离联锁点至少留 30% 裕度）。三个约束里最紧的那个决定幅值，本章实验用 0.4 V，正是留了两倍半裕度。</p>
+<p><strong>时长下限由最慢的时间常数决定。</strong> 经验值是记录长度至少覆盖 5 到 10 倍的主导时间常数。本章 <span class="math inline">T_1=0.5</span> s，实验 1 用 40 s，是 80 倍，远超需要；实验 0 用 8 s，是 16 倍，也够。反过来，如果只记录 2 s（4 倍），末段的稳态还没到，增益会被低估——第 17 章实验 5 给过这个数字：2 s 时读数偏低 2.78%。</p>
+<p><strong>工时主要花在等待和协调上。</strong> 一次完整的辨识实验包括：与产线协调停机窗口、安装传感器、空跑确认、正式激励、数据检查、恢复生产。真正“打激励”的时间往往只占十分之一。这也解释了为什么现场倾向于“用运行数据”而不是“专门做实验”——后者的隐性成本远高于算法成本。</p>
+<p><strong>停机窗口的分配建议：</strong> 把 70% 的时间留给“确认数据可用”，30% 留给“正式采集”。前者包括检查时间戳、量程、噪声水平、有没有饱和；这些检查做完，正式采集往往一次就过。反过来，急着采集、事后发现数据不能用，要重新协调窗口，代价高得多。<strong>一次做对，比做得快重要。</strong></p>
+<h3 id="什么时候不该用最小二乘">18.5.9 什么时候不该用最小二乘</h3>
+<p>最小二乘不是万能的，有四种情形应该直接换方法，硬用只会得到“看起来有解”的错误结果。</p>
+<p><strong>第一，噪声明显有色（<span class="math inline">\rho&gt;0.9</span>）。</strong> 实验 2 已经量化：增益偏 +27.70%，而且加阶数修不掉。此时应该上 ARMAX/OE 或第 19 章的工具变量。判断方法很简单：跑一次 LS，看残差一阶自相关，超过 <span class="math inline">3/\sqrt{N}</span> 就换。</p>
+<p><strong>第二，数据是闭环采的且激励很弱。</strong> 此时 <span class="math inline">\mathbb{E}[\Phi^{\top}E]\neq0</span> 且残差检查看不出来。应该用第 21 章的闭环方法，或者在设定值上加抖动后重采。</p>
+<p><strong>第三，对象有明显的非线性。</strong> 死区、饱和、摩擦占主导时，线性模型只能在一个很窄的工况内有效。本章实验 0 的死区造成的偏差是 4.55%，如果死区再大三倍，偏差会超过 15%，模型没法用于控制器设计。此时应该用第 22 章的非线性辨识。</p>
+<p><strong>第四，输入输出都是多变量且交互强。</strong> 逐通道做 SISO 辨识会把交互作用当成噪声，得到的模型在闭环下互相打架。应该用第 20 章的子空间方法，一次性估出状态空间矩阵。</p>
+<p>这四种情形的共同点是：<strong>问题的根源不在“怎么解方程”，而在“方程写得对不对”。</strong> 最小二乘只会老老实实地解你给它的方程，它不会告诉你方程本身有问题。识别这四种情形，比熟练使用 LS 更重要——这也是本章把大量篇幅放在诊断而不是推导上的原因。</p>
+<h2 id="仿真与验证">18.6 仿真与验证</h2>
+<p>六个实验共用同一个对象（式 18-3）与同一个采样周期（0.05 s），差别只在数据条件。每个实验打印一张表，正文引用其中关键行。全部数字由 <code>code/ch018_sim.py</code> 生成，固定随机种子，可逐位复算。</p>
+<h3 id="实验-0基线以及完美数据的假象">18.6.1 实验 0：基线，以及“完美数据”的假象</h3>
+<p>先看最简单的情形：0.4 V 阶跃、8 s、<span class="math inline">n_a=n_b=3</span>、<span class="math inline">n_k=1</span>、不加噪声、旁路执行器非线性。LS 给出的参数与真值（式 18-4）逐位相同，相对误差全部是 0.00%，增益 1.8000，一步残差 RMS 是 0.000000。</p>
+<p>这个结果说明两件事。第一，代码是对的：结构、延迟拍数、离散化都对得上，否则不可能精确复原。第二，<strong>这个结果没有任何工程价值</strong>——真实数据不可能无噪声，而“无噪声时能估准”这句话在有噪声时完全不成立。</p>
+<p>把噪声加回去（5 μm 标准差），同时打开死区与饱和，结果立刻变了样：</p>
+<p><strong>表 18-3 实验 0：无噪声与有噪声的对照</strong></p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">项</th>
+<th style="text-align: left;">无噪声</th>
+<th style="text-align: left;">5 μm 噪声 + 死区饱和</th>
+<th style="text-align: left;">真值</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><span class="math inline">a_1</span></td>
+<td style="text-align: left;">−1.752954</td>
+<td style="text-align: left;">−1.869841（−6.67%）</td>
+<td style="text-align: left;">−1.752954</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><span class="math inline">a_2</span></td>
+<td style="text-align: left;">+0.891922</td>
+<td style="text-align: left;">+1.182281（+32.55%）</td>
+<td style="text-align: left;">+0.891922</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><span class="math inline">a_3</span></td>
+<td style="text-align: left;">−0.112665</td>
+<td style="text-align: left;">−0.280807（−149.24%）</td>
+<td style="text-align: left;">−0.112665</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><span class="math inline">b_1</span></td>
+<td style="text-align: left;">+0.012576</td>
+<td style="text-align: left;">+0.021092（+67.72%）</td>
+<td style="text-align: left;">+0.012576</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><span class="math inline">b_2</span></td>
+<td style="text-align: left;">+0.030521</td>
+<td style="text-align: left;">+0.019306（−36.75%）</td>
+<td style="text-align: left;">+0.030521</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><span class="math inline">b_3</span></td>
+<td style="text-align: left;">+0.004248</td>
+<td style="text-align: left;">+0.013950（+228.38%）</td>
+<td style="text-align: left;">+0.004248</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">增益 <span class="math inline">K</span></td>
+<td style="text-align: left;">1.8000</td>
+<td style="text-align: left;">1.7181（−4.552%）</td>
+<td style="text-align: left;">1.8</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">残差 RMS</td>
+<td style="text-align: left;">0.000000</td>
+<td style="text-align: left;">0.004850</td>
+<td style="text-align: left;">—</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><span class="math inline">\mathrm{cond}(\Phi)</span></td>
+<td style="text-align: left;">1.149e+04</td>
+<td style="text-align: left;">5.119e+02</td>
+<td style="text-align: left;">—</td>
+</tr>
+</tbody>
+</table>
+<p>这张表有三个值得盯的地方。</p>
+<p><strong>第一，六个参数里没有一个估准，但增益只差 4.55%。</strong> 参数误差从 −149% 到 +228%，量级差得离谱；而增益——也就是分子系数之和除以分母系数之和——只偏了 4.55%。原因在 §18.3.4 说过：阶跃数据只在低频有信息，高频的零点位置（即 <span class="math inline">b_j</span> 的分布）几乎不可辨，而增益是一个纯低频量。<strong>这就是为什么工程上“参数都估出来了”和“模型能用”是两件事。</strong></p>
+<p><strong>第二，残差 RMS 是 0.004850，比噪声标准差 0.005 还小。</strong> 如果只看残差，会以为模型拟合得极好——残差已经和噪声同量级，再小就说明在拟合噪声了。但参数误差高达 149%，说明这个“好”是假的：模型把死区造成的系统性偏差也吸收进了参数里，残差里剩下的只有随机噪声。<strong>残差小不等于模型对，它只说明模型把能拟合的都拟合了。</strong></p>
+<p><strong>第三，条件数从 1.149e+04 降到 5.119e+02。</strong> 加了噪声条件数反而变好，这看起来反直觉。原因是无噪声时阶跃响应的后半段几乎是一条水平线，回归向量里 <span class="math inline">y_{k-i}</span> 的三列高度共线；噪声打散了这条直线，反而让列之间“看起来”更独立。这又是一个条件数骗人的例子：条件数小不等于信息多，它只是说“矩阵在数值上不那么接近奇异”，而“信息够不够”要看 §18.3.4 的协方差。</p>
+<h3 id="实验-1阶数扫描三个指标三个答案">18.6.2 实验 1：阶数扫描，三个指标三个答案</h3>
+<p>用 PRBS 激励（钟周期 0.25 s、记录 40 s、800 个样本、方程噪声 0.005），扫 <span class="math inline">n=1</span> 到 <span class="math inline">5</span>，每个阶数算三个指标：一步预测 RMSE、自由仿真 RMSE、AIC。</p>
+<p><strong>表 18-4 实验 1：阶数对三个指标的影响</strong></p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;"><span class="math inline">n</span></th>
+<th style="text-align: left;">参数数</th>
+<th style="text-align: left;">一步 RMSE</th>
+<th style="text-align: left;">自由仿真 RMSE</th>
+<th style="text-align: left;">AIC</th>
+<th style="text-align: left;"><span class="math inline">K</span> 估计</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">1</td>
+<td style="text-align: left;">2</td>
+<td style="text-align: left;">0.03882</td>
+<td style="text-align: left;">0.20788</td>
+<td style="text-align: left;">−5187.7</td>
+<td style="text-align: left;">2.9752</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">2</td>
+<td style="text-align: left;">4</td>
+<td style="text-align: left;">0.00550</td>
+<td style="text-align: left;">0.03977</td>
+<td style="text-align: left;">−8297.0</td>
+<td style="text-align: left;">1.7453</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">3</td>
+<td style="text-align: left;">6</td>
+<td style="text-align: left;">0.00499</td>
+<td style="text-align: left;">0.03629</td>
+<td style="text-align: left;">−8437.3</td>
+<td style="text-align: left;">1.8014</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">4</td>
+<td style="text-align: left;">8</td>
+<td style="text-align: left;">0.00498</td>
+<td style="text-align: left;">0.03627</td>
+<td style="text-align: left;">−8424.0</td>
+<td style="text-align: left;">1.7987</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">5</td>
+<td style="text-align: left;">10</td>
+<td style="text-align: left;">0.00497</td>
+<td style="text-align: left;">0.03633</td>
+<td style="text-align: left;">−8414.3</td>
+<td style="text-align: left;">1.7888</td>
+</tr>
+</tbody>
+</table>
+<p>三个最小值出现在三个不同的阶数：一步误差在 <span class="math inline">n=5</span>、自由仿真在 <span class="math inline">n=4</span>、AIC 在 <span class="math inline">n=3</span>。真值结构是 <span class="math inline">n=3</span>，所以只有 AIC 是对的。</p>
+<p>三个指标的偏向可以逐个解释。<strong>一步误差</strong>从 <span class="math inline">n=3</span> 到 <span class="math inline">n=5</span> 只降了 0.4%（0.00499 → 0.00497），但参数从 6 个涨到 10 个——多出来的四个参数每个都在拟合一点噪声，拟合收益微小但恒为正，所以它永远偏向高阶。<strong>自由仿真误差</strong>在 <span class="math inline">n=4</span> 最小，因为多出的那一对极零被放在高频，对仿真轨迹的影响小于它对噪声的拟合收益；但它同样没有惩罚项，只是碰巧在 <span class="math inline">n=4</span> 达到平衡。<strong>AIC</strong> 的 <span class="math inline">2p</span> 惩罚项在 <span class="math inline">n=3</span> 之后超过了拟合收益，于是曲线回升。</p>
+<p>再看增益。<span class="math inline">n=1</span> 时 <span class="math inline">K=2.9752</span>，误差 +65.29%——一阶模型无法表达三阶对象的相位滞后，只能靠放大增益去凑幅值。<span class="math inline">n=2</span> 时降到 1.7453（−3.04%），<span class="math inline">n=3</span> 时 1.8014（+0.08%）。<strong>从 <span class="math inline">n=1</span> 到 <span class="math inline">n=3</span>，增益误差降了三个数量级</strong>，这是阶数选择最重要的一笔账：阶数不够的代价不是“精度差一点”，而是“参数完全错”。</p>
+<p>图 18-2 把这两件事画在一起：左图是实测输出与三个阶数下的自由仿真轨迹，<span class="math inline">n=1</span> 的曲线明显跟不上，<span class="math inline">n=3</span> 与 <span class="math inline">n=5</span> 几乎重合；右图是三个指标随阶数的变化，三条曲线的谷底错开，直观地显示了“没有唯一正确答案”。</p>
+<figure>
+<img src="figs/ch018/fig_018_02_order.svg" alt="图 18-2　阶数对拟合与 AIC 的影响" /><figcaption aria-hidden="true">图 18-2　阶数对拟合与 AIC 的影响</figcaption>
+</figure>
+<p>最后是重复性。换 16 个噪声种子，<span class="math inline">n=3</span> 的增益估计均值 1.8005、标准差 0.0258、范围 1.7611–1.8409。标准差 0.0258 对应 1.43% 的相对波动，与 §18.3.4 的协方差不完全一样——后者算的是“给定这批数据，参数的不确定性”，前者算的是“换一批噪声，估计会变多少”。两者在量级上一致（都是百分之一量级），说明协方差公式在这个规模下是可信的。</p>
+<h3 id="实验-2噪声颜色决定偏差">18.6.3 实验 2：噪声颜色决定偏差</h3>
+<p>保持 <span class="math inline">n=3</span>、PRBS 激励不变，只改噪声的颜色：第一组白噪声，第二组 AR(1) 系数 0.8，第三组 AR(1) 系数 0.95。三组的噪声标准差都归一化到 0.005，所以差别只在相关性，不在幅度。</p>
+<p><strong>表 18-5 实验 2：噪声颜色对参数偏差的影响</strong></p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">噪声</th>
+<th style="text-align: left;"><span class="math inline">K</span> 估计</th>
+<th style="text-align: left;"><span class="math inline">K</span> 误差</th>
+<th style="text-align: left;"><span class="math inline">a_1</span> 误差</th>
+<th style="text-align: left;"><span class="math inline">b_1</span> 误差</th>
+<th style="text-align: left;"><span class="math inline">\rho_1</span></th>
+<th style="text-align: left;"><span class="math inline">\rho_2</span></th>
+<th style="text-align: left;">DW</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">白噪声</td>
+<td style="text-align: left;">1.8014</td>
+<td style="text-align: left;">+0.08%</td>
+<td style="text-align: left;">−0.25%</td>
+<td style="text-align: left;">+3.06%</td>
+<td style="text-align: left;">0.001</td>
+<td style="text-align: left;">−0.013</td>
+<td style="text-align: left;">1.997</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">AR(1) <span class="math inline">\rho=0.8</span></td>
+<td style="text-align: left;">1.8671</td>
+<td style="text-align: left;">+3.73%</td>
+<td style="text-align: left;">−37.44%</td>
+<td style="text-align: left;">+5.09%</td>
+<td style="text-align: left;">0.113</td>
+<td style="text-align: left;">0.066</td>
+<td style="text-align: left;">1.774</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">AR(1) <span class="math inline">\rho=0.95</span></td>
+<td style="text-align: left;">2.2986</td>
+<td style="text-align: left;">+27.70%</td>
+<td style="text-align: left;">−44.08%</td>
+<td style="text-align: left;">+8.27%</td>
+<td style="text-align: left;">0.194</td>
+<td style="text-align: left;">0.078</td>
+<td style="text-align: left;">1.611</td>
+</tr>
+</tbody>
+</table>
+<p>白噪声组几乎完美：增益误差 +0.08%，残差一阶自相关 0.001，DW=1.997。这一组验证了式 (18-11) 的结论——方程误差下白噪声的 LS 是无偏的。</p>
+<p>AR(1) <span class="math inline">\rho=0.8</span> 组开始偏：增益 +3.73%，<span class="math inline">a_1</span> 偏了 −37.44%。注意 <span class="math inline">a_1</span> 的偏差比增益大一个数量级，因为增益是分子分母的组合，部分偏差相互抵消了。这也说明<strong>“增益对了”不代表“模型对了”</strong>，只是恰好在这个指标上抵消了。</p>
+<p>AR(1) <span class="math inline">\rho=0.95</span> 组偏得离谱：增益 2.2986，偏差 +27.70%。<span class="math inline">N=800</span> 时一阶自相关的门槛是 <span class="math inline">\pm0.0354</span>，实测 0.194，超出五倍半；DW 从 1.997 掉到 1.611。<strong>这两个指标只要看一眼，就知道这个解不能用。</strong></p>
+<p>图 18-3 把三组的残差自相关和增益估计画在一起。左图是残差的自相关函数，白噪声组在零延迟之外全部落在置信带里，<span class="math inline">\rho=0.95</span> 组在延迟 1 到 5 拍上都明显超出；右图是增益的柱状对比，三根柱子分别对应 1.8014、1.8671、2.2986，真值线画在 1.8 处。</p>
+<figure>
+<img src="figs/ch018/fig_018_03_bias.svg" alt="图 18-3　噪声颜色造成的偏差与残差自相关" /><figcaption aria-hidden="true">图 18-3　噪声颜色造成的偏差与残差自相关</figcaption>
+</figure>
+<p>接下来是最关键的一步：<strong>提高阶数能不能修掉这个偏差？</strong> 对 <span class="math inline">\rho=0.95</span> 那一组，把阶数从 3 提到 4、5：</p>
+<ul>
+<li><span class="math inline">n=3</span>：<span class="math inline">K=2.2986</span>，残差 <span class="math inline">\rho_1=0.194</span>；</li>
+<li><span class="math inline">n=4</span>：<span class="math inline">K=1.8473</span>，残差 <span class="math inline">\rho_1=0.018</span>；</li>
+<li><span class="math inline">n=5</span>：<span class="math inline">K=1.8619</span>，残差 <span class="math inline">\rho_1=0.002</span>。</li>
+</ul>
+<p>残差确实变白了：<span class="math inline">\rho_1</span> 从 0.194 一路降到 0.002，落到门槛以内。但增益并没有回到真值：<span class="math inline">n=4</span> 是 1.8473（+2.6%），<span class="math inline">n=5</span> 是 1.8619（+3.4%），甚至比 <span class="math inline">n=4</span> 更远。原因是高阶模型用多出来的极点去拟合噪声的相关性，把“噪声有色”这件事吸收进了对象动态里，残差自然变白；但对象参数本身仍然是偏的，因为偏差的根源（<span class="math inline">\mathbb{E}[\varphi e]\neq0</span>）没有被消除，只是被重新分配了。</p>
+<p>这个结果值得单独记一条结论：<strong>残差白化是必要条件，不是充分条件。</strong> 一个模型可以残差全白、DW 接近 2，而参数偏 3%。要判断参数是否可信，必须再看 §18.5.1 的第二条（残差与输入是否相关）和开环验证。第 19 章的工具变量法正是针对这个缺口：它不改变阶数，而是换一个与噪声无关的回归向量，从根上让 <span class="math inline">\mathbb{E}[\varphi e]=0</span> 重新成立。</p>
+<h3 id="实验-3rls-与批-ls-的一致性以及初值的影响">18.6.4 实验 3：RLS 与批 LS 的一致性，以及初值的影响</h3>
+<p>先用批 LS 在 PRBS 数据上算一遍，得到 <span class="math inline">K=1.7634</span>，作为 RLS 的参照。然后用同样的数据跑 RLS，初值 <span class="math inline">\hat\theta_0=0</span>，协方差初值取四个不同的 <span class="math inline">P_0</span>。</p>
+<p><strong>表 18-6 实验 3：<span class="math inline">P_0</span> 对 RLS 收敛的影响</strong></p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;"><span class="math inline">P_0</span></th>
+<th style="text-align: left;">末端参数偏差</th>
+<th style="text-align: left;">末端 <span class="math inline">K</span></th>
+<th style="text-align: left;"><span class="math inline">K</span> 偏差</th>
+<th style="text-align: left;">进 2% 的时刻</th>
+<th style="text-align: left;"><span class="math inline">\mathrm{tr}(P)</span> 末值</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><span class="math inline">10^4</span></td>
+<td style="text-align: left;">2.97e-02</td>
+<td style="text-align: left;">1.7615</td>
+<td style="text-align: left;">0.11%</td>
+<td style="text-align: left;">0.85 s</td>
+<td style="text-align: left;">3.593e+02</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><span class="math inline">10^2</span></td>
+<td style="text-align: left;">6.54e-01</td>
+<td style="text-align: left;">1.7455</td>
+<td style="text-align: left;">1.01%</td>
+<td style="text-align: left;">4.60 s</td>
+<td style="text-align: left;">8.015e+01</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><span class="math inline">1</span></td>
+<td style="text-align: left;">8.71e-01</td>
+<td style="text-align: left;">1.9482</td>
+<td style="text-align: left;">10.48%</td>
+<td style="text-align: left;">未进入</td>
+<td style="text-align: left;">1.674e+00</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><span class="math inline">10^{-2}</span></td>
+<td style="text-align: left;">9.64e-01</td>
+<td style="text-align: left;">0.5156</td>
+<td style="text-align: left;">70.76%</td>
+<td style="text-align: left;">未进入</td>
+<td style="text-align: left;">4.249e-02</td>
+</tr>
+</tbody>
+</table>
+<p><span class="math inline">P_0</span> 的物理含义是“我对初值有多不确定”。<span class="math inline">P_0=10^4</span> 表示“完全不知道”，此时前几个样本的增益向量很大，参数一步就能跳到合理区域，0.85 s 后增益进入 2% 带，末端偏差 0.11%，与批 LS 的 1.7634 几乎一致——<strong>RLS 收敛后必须回到批 LS 的解，这是正确性的基本检验。</strong></p>
+<p><span class="math inline">P_0=10^2</span> 表示“我大概知道”，收敛慢一些，4.60 s 进 2%，末端 1.01%。</p>
+<p><span class="math inline">P_0=1</span> 和 <span class="math inline">P_0=10^{-2}</span> 则是错的用法。<span class="math inline">P_0</span> 太小意味着“我非常确定初值是对的”，而初值是零向量，与真值差得远。RLS 每步的修正量正比于 <span class="math inline">P</span>，<span class="math inline">P</span> 小则修正小，参数就被锁死在零附近。<span class="math inline">P_0=10^{-2}</span> 时跑完 20 s，增益还停在 0.5156，偏差 70.76%，<span class="math inline">\mathrm{tr}(P)</span> 只剩 4.249e-02——它已经“学不动”了。</p>
+<p>图 18-4 画了四条收敛轨迹（左）和 <span class="math inline">P_0=10^4</span> 时增益随时间的变化（右）。左图四条曲线在 0 到 2 s 之间分得很开，2 s 之后 <span class="math inline">10^4</span> 与 <span class="math inline">10^2</span> 两组收敛到一起，另外两组停在远处。右图在 0.5 s 处是 2.0781（过冲），1 s 降到 1.7747，2 s 回到 1.8083，之后在 1.72 到 1.81 之间小幅摆动，19.5 s 时是 1.7599。</p>
+<figure>
+<img src="figs/ch018/fig_018_04_rls.svg" alt="图 18-4　RLS 的收敛轨迹与初值影响" /><figcaption aria-hidden="true">图 18-4　RLS 的收敛轨迹与初值影响</figcaption>
+</figure>
+<p>右图这条轨迹有三个细节值得注意。<strong>第一，0.5 s 处的过冲不是错误</strong>，而是“信息还不够时的大修正”——前 10 个样本只够确定增益的大致量级，<span class="math inline">P</span> 还很大，所以修正幅度大。<strong>第二，2 s 到 5 s 之间从 1.8083 掉到 1.7720</strong>，说明后来的数据在修正早期的偏差；这段“回头”是 RLS 正常工作的标志，如果参数一路上升不再回头，反而要怀疑是不是 <span class="math inline">P</span> 设得太小。<strong>第三，稳态并不收敛到一个点，而是在 ±2% 内摆动</strong>，因为噪声一直在驱动新息。这个摆动的幅度就是 §18.3.4 的协方差，它不会随时间消失。</p>
+<p>把这三条合起来，得到 <span class="math inline">P_0</span> 的选择原则：<strong>取大到“不需要知道初值”的程度。</strong> 常规做法是 <span class="math inline">P_0=10^3\sim10^4</span> 乘单位阵，配合 §18.4.3 的协方差重置。只有在确实有一个可靠的先验（比如上一批数据的辨识结果）时，才用小的 <span class="math inline">P_0</span>，而且要在数据支持的前提下。</p>
+<h3 id="实验-4遗忘因子的折中">18.6.5 实验 4：遗忘因子的折中</h3>
+<p>让对象增益在 8 s 时从 1.8 跳到 2.4（模拟换料或换模），记录 16 s（320 个样本），用四个不同的遗忘因子跑 RLS。评价指标有两个：切换后 2 s 的增益误差（衡量跟踪速度），末端的增益标准差（衡量稳态抖动）。</p>
+<p><strong>表 18-7 实验 4：遗忘因子对跟踪速度与方差的影响</strong></p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;"><span class="math inline">\lambda</span></th>
+<th style="text-align: left;">切换后 2 s 的 <span class="math inline">K</span></th>
+<th style="text-align: left;">误差</th>
+<th style="text-align: left;">末端 <span class="math inline">K</span></th>
+<th style="text-align: left;">末端 std</th>
+<th style="text-align: left;">等效窗口（拍）</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">1.000</td>
+<td style="text-align: left;">2.0209</td>
+<td style="text-align: left;">−15.80%</td>
+<td style="text-align: left;">2.1885</td>
+<td style="text-align: left;">0.0600</td>
+<td style="text-align: left;">—</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">0.995</td>
+<td style="text-align: left;">2.0784</td>
+<td style="text-align: left;">−13.40%</td>
+<td style="text-align: left;">2.2943</td>
+<td style="text-align: left;">0.0748</td>
+<td style="text-align: left;">200</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">0.980</td>
+<td style="text-align: left;">2.2989</td>
+<td style="text-align: left;">−4.21%</td>
+<td style="text-align: left;">2.4101</td>
+<td style="text-align: left;">0.0664</td>
+<td style="text-align: left;">50</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">0.950</td>
+<td style="text-align: left;">2.5519</td>
+<td style="text-align: left;">+6.33%</td>
+<td style="text-align: left;">2.3791</td>
+<td style="text-align: left;">0.1195</td>
+<td style="text-align: left;">20</td>
+</tr>
+</tbody>
+</table>
+<p><span class="math inline">\lambda=1</span> 是标准 RLS，没有遗忘。切换 2 s 后增益只爬到 2.0209，还差 15.80%；一直到记录结束（切换后 8 s）才到 2.1885，仍差 8.8%。<strong>这就是“等权平均”的代价：20 s 的历史数据把 8 s 之后的 12 s 新数据压住了。</strong> 但它的稳态抖动最小，标准差 0.0600。</p>
+<p><span class="math inline">\lambda=0.98</span>（窗口 50 拍，即 2.5 s）是一个不错的折中：切换 2 s 后误差 −4.21%，末端 2.4101，只差 0.4%，标准差 0.0664，比 <span class="math inline">\lambda=1</span> 只大 10%。<strong>用 10% 的方差换 12 个百分点的跟踪速度，这笔交易在任何场合都划算。</strong></p>
+<p><span class="math inline">\lambda=0.95</span>（窗口 20 拍，即 1 s）跟踪最快，切换 2 s 后已经冲过真值到 2.5519（+6.33%），末端回落到 2.3791。但标准差涨到 0.1195，是 <span class="math inline">\lambda=1</span> 的两倍。<strong>这个过冲是窗口太短导致的：1 s 的窗口只含 20 个样本，而 <span class="math inline">p=6</span>，有效自由度只剩 14，估计的方差自然大。</strong></p>
+<p>图 18-5 画了四条跟踪曲线。8 s 之前四条线几乎重合（都在 1.8 附近小幅摆动），8 s 之后分道扬镳：<span class="math inline">\lambda=1</span> 爬得最慢，<span class="math inline">\lambda=0.95</span> 冲得最猛，<span class="math inline">\lambda=0.98</span> 贴着真值走。这张图的形状就是“折中”两个字的图形化——没有一条线在所有指标上都最好。</p>
+<figure>
+<img src="figs/ch018/fig_018_05_forget.svg" alt="图 18-5　遗忘因子对跟踪速度与方差的影响" /><figcaption aria-hidden="true">图 18-5　遗忘因子对跟踪速度与方差的影响</figcaption>
+</figure>
+<p>选择 <span class="math inline">\lambda</span> 的工程方法，是<strong>先定跟踪时间，再反推窗口</strong>。若要求“参数变化后 2 s 内跟上”，则窗口 <span class="math inline">M</span> 应满足 <span class="math inline">M\approx</span> 2 s <span class="math inline">/T_s=40</span> 拍，对应 <span class="math inline">\lambda=1-1/40=0.975</span>。本章取 0.98 得到 <span class="math inline">M=50</span>，跟踪时间 2.5 s，与要求接近。反过来，先随手定 <span class="math inline">\lambda=0.95</span> 再抱怨“稳态太抖”，是常见的错误顺序。</p>
+<p>还有一条容易被忽略的：<span class="math inline">\lambda</span> 的选择与噪声水平耦合。噪声大时，短窗口的方差会更大，所以 <span class="math inline">\lambda</span> 要更接近 1；噪声小时可以更激进。表 18-7 的条件是噪声标准差 0.005，若噪声涨到 0.02，<span class="math inline">\lambda=0.95</span> 的标准差会从 0.1195 涨到约 0.48，完全不可用。</p>
+<h3 id="实验-5采样周期条件数与增益放大因子">18.6.6 实验 5：采样周期、条件数与增益放大因子</h3>
+<p>这是本章最重要的一组实验，因为它推翻了一个常见的直觉：“采样越快，信息越多，估计越准。”</p>
+<p><strong>表 18-8 实验 5：采样周期对增益放大因子的影响</strong></p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;"><span class="math inline">T_s</span> / s</th>
+<th style="text-align: left;"><span class="math inline">\sum_i\lvert a_i\rvert</span></th>
+<th style="text-align: left;"><span class="math inline">1+\sum_i a_i</span></th>
+<th style="text-align: left;">放大因子 <span class="math inline">\kappa_K</span></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">0.010</td>
+<td style="text-align: left;">5.526</td>
+<td style="text-align: left;">0.00045</td>
+<td style="text-align: left;">12313.8</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">0.020</td>
+<td style="text-align: left;">4.479</td>
+<td style="text-align: left;">0.00293</td>
+<td style="text-align: left;">1529.3</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">0.050</td>
+<td style="text-align: left;">2.758</td>
+<td style="text-align: left;">0.02630</td>
+<td style="text-align: left;">104.8</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">0.100</td>
+<td style="text-align: left;">1.702</td>
+<td style="text-align: left;">0.09883</td>
+<td style="text-align: left;">17.2</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">0.200</td>
+<td style="text-align: left;">0.988</td>
+<td style="text-align: left;">0.26707</td>
+<td style="text-align: left;">3.7</td>
+</tr>
+</tbody>
+</table>
+<p><span class="math inline">T_s</span> 从 0.2 缩到 0.01，放大因子涨了 3300 倍。原因是离散极点随 <span class="math inline">T_s</span> 减小向 1 靠拢，<span class="math inline">\sum a_i</span> 趋近 <span class="math inline">-1</span>，分母 <span class="math inline">1+\sum a_i</span> 趋近零。表里最右一列的数字说明：<strong>在 <span class="math inline">T_s=0.01</span> s 下，分母的任何一个绝对误差都会被放大一万两千倍变成增益的相对误差。</strong></p>
+<p>把放大因子代回辨识，就是下面这张表。三组用同一段 PRBS（钟周期 0.25 s、40 s 记录），只改采样周期，样本数随 <span class="math inline">T_s</span> 反比变化：</p>
+<p><strong>表 18-9 实验 5：采样周期对增益估计的影响</strong></p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;"><span class="math inline">T_s</span> / s</th>
+<th style="text-align: left;"><span class="math inline">n_k</span></th>
+<th style="text-align: left;">样本数</th>
+<th style="text-align: left;"><span class="math inline">\mathrm{cond}(\Phi)</span></th>
+<th style="text-align: left;"><span class="math inline">K</span> 估计</th>
+<th style="text-align: left;"><span class="math inline">K</span> 误差</th>
+<th style="text-align: left;">8 种子 <span class="math inline">K</span> 标准差</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">0.010</td>
+<td style="text-align: left;">4</td>
+<td style="text-align: left;">4000</td>
+<td style="text-align: left;">5.289e+02</td>
+<td style="text-align: left;">0.5941</td>
+<td style="text-align: left;">−66.99%</td>
+<td style="text-align: left;">0.5993</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">0.020</td>
+<td style="text-align: left;">2</td>
+<td style="text-align: left;">2000</td>
+<td style="text-align: left;">3.516e+02</td>
+<td style="text-align: left;">1.5907</td>
+<td style="text-align: left;">−11.63%</td>
+<td style="text-align: left;">0.1139</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">0.050</td>
+<td style="text-align: left;">1</td>
+<td style="text-align: left;">800</td>
+<td style="text-align: left;">2.950e+02</td>
+<td style="text-align: left;">1.8211</td>
+<td style="text-align: left;">+1.17%</td>
+<td style="text-align: left;">0.0300</td>
+</tr>
+</tbody>
+</table>
+<p>这张表是整个实验的核心。<span class="math inline">T_s=0.01</span> 时样本数是 4000，是 0.05 s 那组的 5 倍，条件数只大 1.8 倍，但增益估计是 0.5941——偏差 66.99%，八个种子的标准差 0.5993，意味着换一批噪声结果能从 0 跳到 1.2。<strong>这组数据“信息最多”，但估计最差。</strong></p>
+<p><span class="math inline">T_s=0.05</span> 时样本只有 800 个，条件数 2.950e+02，增益 1.8211，偏差 +1.17%，标准差 0.0300。<strong>样本少五倍，结果好得多。</strong></p>
+<p>差异的来源就是表 18-8 的放大因子：<span class="math inline">12313.8/104.8=117.5</span>，而误差比是 <span class="math inline">66.99/1.17=57.3</span>（同号比较下量级一致）。条件数只解释了 1.8 倍，剩下的一百多倍全在放大因子上。<strong>所以评价“这批数据能不能用来辨识增益”，看的不是样本数、也不是条件数，而是两者的乘积。</strong></p>
+<p>图 18-6 把这件事画成双轴图：左轴是放大因子（对数刻度），右轴是条件数，横轴是采样周期。放大因子随 <span class="math inline">T_s</span> 减小单调上升，在 0.01 s 处冲到一万以上；条件数则相对平缓，从 2.950e+02 到 5.289e+02。两条曲线的斜率差了一个数量级，直观地说明“条件数看不出这个问题”。</p>
+<figure>
+<img src="figs/ch018/fig_018_06_condition.svg" alt="图 18-6　条件数与增益放大因子" /><figcaption aria-hidden="true">图 18-6　条件数与增益放大因子</figcaption>
+</figure>
+<p>最后是阶数的影响。固定 <span class="math inline">T_s=0.05</span> s，扫 <span class="math inline">n=1</span> 到 <span class="math inline">5</span>：</p>
+<p><strong>表 18-10 实验 5：阶数对条件数与增益估计的影响</strong></p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;"><span class="math inline">n</span></th>
+<th style="text-align: left;">参数数</th>
+<th style="text-align: left;"><span class="math inline">\mathrm{cond}(\Phi)</span></th>
+<th style="text-align: left;">归一化后条件数</th>
+<th style="text-align: left;"><span class="math inline">K</span> 估计</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">1</td>
+<td style="text-align: left;">2</td>
+<td style="text-align: left;">1.340e+00</td>
+<td style="text-align: left;">1.093e+00</td>
+<td style="text-align: left;">4.0414</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">2</td>
+<td style="text-align: left;">4</td>
+<td style="text-align: left;">2.393e+01</td>
+<td style="text-align: left;">1.946e+01</td>
+<td style="text-align: left;">1.7325</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">3</td>
+<td style="text-align: left;">6</td>
+<td style="text-align: left;">2.950e+02</td>
+<td style="text-align: left;">2.471e+02</td>
+<td style="text-align: left;">1.8211</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">4</td>
+<td style="text-align: left;">8</td>
+<td style="text-align: left;">5.063e+02</td>
+<td style="text-align: left;">4.368e+02</td>
+<td style="text-align: left;">1.8207</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">5</td>
+<td style="text-align: left;">10</td>
+<td style="text-align: left;">6.470e+02</td>
+<td style="text-align: left;">5.725e+02</td>
+<td style="text-align: left;">1.8218</td>
+</tr>
+</tbody>
+</table>
+<p><span class="math inline">n=1</span> 时 <span class="math inline">K=4.0414</span>，误差 +124.5%——一阶模型只能靠放大增益去凑三阶对象的幅值，这与实验 1 的 <span class="math inline">n=1</span> 结果（2.9752）方向一致，数值不同是因为激励与噪声种子不同。<span class="math inline">n=2</span> 时降到 1.7325（−3.75%），<span class="math inline">n=3</span> 时 1.8211（+1.17%）。从 <span class="math inline">n=3</span> 再往上，增益基本不动（1.8207、1.8218），但条件数从 2.950e+02 涨到 6.470e+02。<strong>多出来的参数没有带来增益上的收益，只是在消耗数值精度。</strong></p>
+<p>归一化前后的条件数差 16%（2.950e+02 → 2.471e+02），与 §18.4.1 的说法一致。这个改善不大，因为本章的输入输出量级相近；但如果 <span class="math inline">u</span> 是伏、<span class="math inline">y</span> 是微米，归一化能把条件数降一到两个数量级。</p>
+<h3 id="六组实验的结论汇总">18.6.7 六组实验的结论汇总</h3>
+<p>把六个实验的结论压成一张表：</p>
+<p><strong>表 18-11 六组实验的核心结论</strong></p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">实验</th>
+<th style="text-align: left;">变量</th>
+<th style="text-align: left;">关键数字</th>
+<th style="text-align: left;">结论</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">0</td>
+<td style="text-align: left;">有无噪声</td>
+<td style="text-align: left;">参数误差 −149%～+228%，增益 −4.55%</td>
+<td style="text-align: left;">残差小不等于模型对</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">1</td>
+<td style="text-align: left;">阶数</td>
+<td style="text-align: left;">一步 <span class="math inline">n=5</span>、仿真 <span class="math inline">n=4</span>、AIC <span class="math inline">n=3</span></td>
+<td style="text-align: left;">AIC 定阶，另两个交叉验证</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">2</td>
+<td style="text-align: left;">噪声颜色</td>
+<td style="text-align: left;"><span class="math inline">\rho=0.95</span> 时 <span class="math inline">K</span> 偏 +27.70%</td>
+<td style="text-align: left;">残差白化是必要不充分</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">3</td>
+<td style="text-align: left;"><span class="math inline">P_0</span></td>
+<td style="text-align: left;"><span class="math inline">10^{-2}</span> 时偏差 70.76%</td>
+<td style="text-align: left;"><span class="math inline">P_0</span> 取大，配合重置</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">4</td>
+<td style="text-align: left;"><span class="math inline">\lambda</span></td>
+<td style="text-align: left;">0.98 时误差 −4.21%、std 0.0664</td>
+<td style="text-align: left;">先定跟踪时间再反推窗口</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">5</td>
+<td style="text-align: left;"><span class="math inline">T_s</span></td>
+<td style="text-align: left;">0.01 s 时 <span class="math inline">K</span> 偏 −66.99%</td>
+<td style="text-align: left;">看 cond×放大因子，不看 cond</td>
+</tr>
+</tbody>
+</table>
+<p>这张表的每一行都可以单独作为一条工程规则。它们合起来指向一个统一的判断：<strong>参数辨识的误差，绝大多数不是算法算错，而是数据条件不满足算法假设。</strong> 六个实验里，没有一个是因为代码写错导致失败；全部是因为噪声有色、激励不足、初值不当、采样过快。这也是为什么本章花了大量篇幅在“检查”而不是“算法”上——先把数据的毛病挑出来，再谈算法的优劣，顺序反了就会一直在错误的地方找答案。</p>
+<h3 id="把六个实验串成一次完整的辨识">18.6.8 把六个实验串成一次完整的辨识</h3>
+<p>六个实验分开看是六条结论，串起来是一条流程。假设现在拿到一台新设备，只有一段 40 s 的 PRBS 数据（这是本章实验 1 到 5 的共同数据条件），按下面的顺序走：</p>
+<p><strong>第一步，定采样周期。</strong> 先估主导时间常数。若不知道，用第 17 章的阶跃曲线读 <span class="math inline">t_{63}</span>，本章是 0.5 s。取 <span class="math inline">T_s=T_1/10=0.05</span> s，对应放大因子 104.8（表 18-8）。如果控制周期是 0.01 s，不要直接用它辨识。</p>
+<p><strong>第二步，定阶数。</strong> 用 AIC 扫 <span class="math inline">n=1</span> 到 <span class="math inline">5</span>。表 18-4 给出的谷底是 <span class="math inline">n=3</span>，对应 <span class="math inline">p=6</span> 个参数。检查多出来的极点：<span class="math inline">n=4</span> 的增益 1.7987 与 <span class="math inline">n=3</span> 的 1.8014 几乎一样，说明第 4 对极零对增益没有贡献，可以删掉。</p>
+<p><strong>第三步，跑批 LS 并做三项检查。</strong> 本章数据的一步 RMSE 是 0.00499（表 18-4），残差自相关 0.001（表 18-5 白噪声行），DW=1.997，自由仿真 RMSE 0.03629。三项都过。若卡在第二步的白性检查上，回到实验 2 的思路：先判断噪声是否真的有色，再决定是否换结构。</p>
+<p><strong>第四步，看协方差。</strong> 本章阶跃数据（实验 0）给出 <span class="math inline">a_1</span> 的相对标准差 4.3%、<span class="math inline">b_1</span> 的 96.5%；PRBS 数据（实验 1）没有打印协方差，但从 16 个种子的标准差 0.0258 反推，增益的相对波动是 1.43%，比阶跃数据的 4.55% 好三倍。<strong>这直接说明了激励形式的价值：同样的模型阶数，PRBS 的每个参数都比阶跃可辨。</strong></p>
+<p><strong>第五步，决定是否需要在线更新。</strong> 若对象参数会变，加 RLS。<span class="math inline">P_0</span> 取 <span class="math inline">10^4</span>（表 18-6 的第一行），0.85 s 进 2%。若已知参数变化的时间尺度（比如换料每 8 s 一次），按 <span class="math inline">M=</span> 变化时间<span class="math inline">/T_s</span> 反推 <span class="math inline">\lambda</span>：8 s / 0.05 s = 160 拍，<span class="math inline">\lambda=1-1/160=0.994</span>。表 18-7 里 <span class="math inline">\lambda=0.995</span> 对应窗口 200 拍，切换后 2 s 误差 −13.40%，说明 160 拍的窗口对“2 s 内跟上”这个要求还是太慢；要更快就接受更大的方差。</p>
+<p><strong>第六步，交付。</strong> 按 §18.5.5 的五项写报告，其中“适用边界”必须写明：本章模型的精度在 0.4 V 阶跃下是 4.55%，在 0.02 V 微动下会显著变差。</p>
+<p>这条流程里，真正花时间的不是算法，而是第一步和第二步的判断。算法部分（第三步）用 <code>np.linalg.lstsq</code> 一行就完了。<strong>这也是本章想纠正的一个常见印象：参数辨识的难点在“选什么数据、选什么结构”，不在“解方程”。</strong></p>
+<p>回头看书名里的“最小二乘族”，这个“族”字是有含义的：普通 LS、加权 LS、广义 LS、RLS、遗忘因子 RLS，全都是同一个投影在不同权重、不同数据组织下的变形。它们的共同点是都有一个闭式或半闭式的更新，共同的弱点是都假设“回归向量与噪声不相关”。<strong>记住这个共同弱点，比记住五种算法的公式更有用</strong>——因为第 19 章要修的正是它。</p>
+<h3 id="误差预算三类误差各占多少">18.6.9 误差预算：三类误差各占多少</h3>
+<p>同一个“增益偏差 4.55%”（实验 0），来源其实是三份，混在一起看不出主次。把它们拆开，是本章最后一项练习。</p>
+<p><strong>第一份是随机误差（方差）。</strong> 用同一组参数、同一个噪声水平，换 16 个种子重跑，得到的标准差就是这一份。实验 1 给出 <span class="math inline">n=3</span> 时增益标准差 0.0258，相对 1.43%。实验 0 的阶跃数据没有做多种子，但从 <span class="math inline">a_1</span> 的相对标准差 4.3% 可以推断，增益的随机误差至少在百分之一到二量级。<strong>这一份不能靠算法消除，只能靠增加有效样本数（§18.2.6 的 <span class="math inline">1/\sqrt{N}</span> 规律）。</strong></p>
+<p><strong>第二份是系统性偏差。</strong> 噪声有色（实验 2 的 +27.70%）和结构失配（实验 0 的死区饱和）都属于这一份。它的特征是换种子不变、换数据不变、只在换方法或换结构时才变。<strong>这一份不能靠加数据消除，只能靠换方法（第 19 章）或补结构（第 22 章）。</strong></p>
+<p><strong>第三份是数值误差。</strong> 表 18-9 的 <span class="math inline">T_s=0.01</span> 那一行是极端例子：−66.99% 的偏差里，绝大部分不是统计意义上的偏差，而是分母抵消把浮点舍入放大了一万倍。它的特征是“换 <span class="math inline">T_s</span> 就变、换算法不变”。<strong>这一份靠选参数（采样周期、归一化、QR）消除。</strong></p>
+<p>三份误差的量级可以这样记：随机误差在 1% 量级，系统性偏差可以从 0 到 30%，数值误差可以从 0 到 70%。<strong>所以排查的顺序应该是“先看数值、再看系统、最后看随机”</strong>——因为数值误差最大且最容易查（换个 <span class="math inline">T_s</span> 跑一遍就知道），系统性偏差次之（看残差自相关），随机误差最小且无法消除。</p>
+<p>这个顺序与 §18.5.1 的四条自检不冲突，但侧重不同：四条自检是“模型能不能用”的判断，这里是“误差从哪来”的归因。前者用于验收，后者用于改进。</p>
+<h3 id="本章实验的适用限制">18.6.10 本章实验的适用限制</h3>
+<p>六个实验都是在一个已知的三阶线性对象上做的，这个设置有两个便利，也有两个限制，必须说清楚。</p>
+<p><strong>便利一：真值已知。</strong> 所有“偏差百分之几”的说法都依赖这个真值。真实项目里没有真值，只能用第 17 章的非参数曲线做参照，或多做几次独立实验看重复性。这意味着<strong>现场无法直接算出“偏差是多少”，只能算出“方差是多少”</strong>——偏差那一半只能靠残差检查和开环验证去间接判断。</p>
+<p><strong>便利二：噪声可控。</strong> 白噪声、AR(1) 都是人为造的，可以精确设定 <span class="math inline">\rho</span>。真实噪声的谱形状往往更复杂（机械振动、电网干扰、量化噪声混在一起），单一 <span class="math inline">\rho</span> 描述不了。此时实验 2 的结论（<span class="math inline">\rho&gt;0.9</span> 必须换方法）仍然成立，但“<span class="math inline">\rho</span> 是多少”本身要先估出来。</p>
+<p><strong>限制一：对象是线性的。</strong> 本章的死区与饱和是仅有的非线性，而且只出现在实验 0 的一组里。真实对象的非线性（摩擦、间隙、磁滞）比这复杂得多，第 22 章会专门处理。<strong>本章的结论对“弱非线性”对象成立，对“强非线性”对象只能作为起点。</strong></p>
+<p><strong>限制二：单输入单输出。</strong> 本章全部是 SISO。多变量系统的参数矩阵维度是 <span class="math inline">n_y\times n_u</span>，条件数问题会更严重（不同通道的量级差异），交互作用还会让“哪个通道该激励”变成一个新问题。第 20 章的子空间方法对 MIMO 更自然。</p>
+<p>这两条限制不影响本章的方法论价值：<strong>“先查数据条件、再选结构、最后解方程”这个顺序，在任何对象上都成立。</strong> 变的只是每一步的具体做法。</p>
+<h3 id="复算与代码走读">18.6.11 复算与代码走读</h3>
+<p>正文的每一个数字都能在 <code>code/ch018_sim.py</code> 里找到对应的打印语句。按下面的顺序读代码，可以在一小时内把六组实验全部复现。</p>
+<p><strong>第一步，对象与离散化。</strong> <code>true_theta(Ts)</code> 返回式 (18-4) 的六个系数。它内部调用 <code>discrete_arx</code>，后者用 <code>control.c2d</code> 做 ZOH 离散，再补上前导零。改 <code>TS</code> 就能复现表 18-8 与表 18-9 的全部行。</p>
+<p><strong>第二步，数据生成。</strong> <code>sim_arx(u, Ts, noise, rho, seed)</code> 按式 (18-2) 递推。<code>rho=0</code> 是白噪声，<code>rho=0.95</code> 复现实验 2 的第三行；<code>gain_scale</code> 参数用来实现实验 4 的增益跳变。</p>
+<p><strong>第三步，估计。</strong> <code>ls_fit</code> 用 <code>np.linalg.lstsq</code>，<code>arx_gain</code> 按式 (18-20) 折算增益，<code>rls</code> 按式 (18-14) 到 (18-16) 递推。三者都是十行左右的短函数，没有隐藏的技巧。</p>
+<p><strong>第四步，指标。</strong> 一步 RMSE 用 <code>res</code>，自由仿真 RMSE 用 <code>arx_sim</code>，AIC 按式 (18-22)，残差自相关与 DW 在 <code>exp2</code> 里现算。这些指标没有调用任何第三方统计库，目的是让读者能看清每个数是怎么来的。</p>
+<p><strong>第五步，图的对应。</strong> <code>ch018_figs.py</code> 里的六个函数与六张图一一对应。图 18-1 的数据是静态标定场景（不是时序），图 18-2 到 18-6 用的是时序数据。图的编号与正文的引用严格一致，改图时不能只改文件名。</p>
+<p>复算时有两个容易踩的坑。<strong>一是随机种子</strong>：所有实验都用固定种子，改种子会得到不同的数字，正文就对不上了。<strong>二是 <code>c2d</code> 的去前导零行为</strong>：若换了 <code>control</code> 的版本，<code>num</code> 的长度可能变化，<code>discrete_arx</code> 的补齐逻辑要重新检查。这两个坑都在 §18.4.6 提过，这里再强调一次，因为它们是“代码能跑但数字不对”的典型来源。</p>
+<h2 id="小结与常见错误">18.7 小结与常见错误</h2>
+<h3 id="三条主线">18.7.1 三条主线</h3>
+<p>本章的全部内容可以压成三句话。</p>
+<p><strong>第一句：最小二乘是一个投影，投影的质量取决于数据张成的空间。</strong> 式 (18-1) 把实测输出投到回归矩阵的列空间上，残差垂直于这个空间。如果列空间没有覆盖某个方向（激励不足），投影在这个方向上就是任意的——不是“估计不准”，而是“没有估计”。实验 1 的 <span class="math inline">n=1</span> 得到 <span class="math inline">K=2.9752</span>（+65.29%），不是因为噪声大，而是因为一阶模型的列空间里根本没有“三阶相位滞后”这个方向，LS 只能用增益去凑。表 18-10 里 <span class="math inline">n=1</span> 的条件数是 1.340e+00，好得不能再好，但增益错 124.5%——<strong>条件数只描述列空间的形状，不描述它有没有覆盖需要的方向。</strong></p>
+<p><strong>第二句：偏差来自回归向量与噪声相关，只有换方法才能消掉。</strong> 式 (18-11) 说得很清楚：<span class="math inline">\mathbb{E}[\hat\theta]-\theta^{\ast}=(\Phi^{\top}\Phi)^{-1}\mathbb{E}[\Phi^{\top}E]</span>。噪声白时第二项为零，噪声有色或闭环时第二项不为零。实验 2 把这个偏差量化为 +27.70%（<span class="math inline">\rho=0.95</span>），并证明了加阶数只能让残差变白、不能把偏差消掉。这解释了为什么第 19 章要引入工具变量：它不改变阶数，而是把回归向量换成一个与噪声无关的副本，让第二项重新归零。</p>
+<p><strong>第三句：数值实现的好坏，取决于有没有意识到“分母在抵消”。</strong> 实验 5 是最反直觉的一组：采样快五倍、样本多五倍、条件数只差 1.8 倍，增益却从 +1.17% 掉到 −66.99%。原因是离散模型的直流增益是一个“大数相减”的结果，<span class="math inline">1+\sum a_i</span> 在 <span class="math inline">T_s=0.01</span> 时只有 0.00045，任何一点误差都会被放大一万两千倍。这条结论的工程形式是：辨识用的采样周期取主导时间常数的 <span class="math inline">1/10</span> 到 <span class="math inline">1/20</span>，不要照抄控制周期。</p>
+<p>三句话对应三个层次：结构（列空间覆盖不覆盖）、统计（噪声相关不相关）、数值（分母抵消不抵消）。现场排查时按这个顺序走，能覆盖绝大多数失败。</p>
+<h3 id="常见错误表">18.7.2 常见错误表</h3>
+<p>下面这张表按“现象—原因—处理”组织，每一行都对应本章的一个实验或一节推导。</p>
+<p><strong>表 18-12 最小二乘辨识的常见错误</strong></p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">现象</th>
+<th style="text-align: left;">最可能的原因</th>
+<th style="text-align: left;">处理</th>
+<th style="text-align: left;">对应节</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">残差很小但换批数据就不准</td>
+<td style="text-align: left;">过拟合、残差被参数吸收</td>
+<td style="text-align: left;">看自由仿真误差与协方差</td>
+<td style="text-align: left;">§18.6.1</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">残差自相关显著、DW 远小于 2</td>
+<td style="text-align: left;">噪声有色、漏了动态</td>
+<td style="text-align: left;">ARMAX/OE、工具变量</td>
+<td style="text-align: left;">§18.6.3</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">残差白但参数仍偏</td>
+<td style="text-align: left;">闭环相关</td>
+<td style="text-align: left;">开环验证、第 21 章方法</td>
+<td style="text-align: left;">§18.5.2</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">增益偏差大、参数偏差更大</td>
+<td style="text-align: left;">阶数不足</td>
+<td style="text-align: left;">AIC 定阶、加零极点</td>
+<td style="text-align: left;">§18.6.2</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">加阶数后参数剧烈变化</td>
+<td style="text-align: left;">过参数化、条件数恶化</td>
+<td style="text-align: left;">回到 AIC 选出的阶数</td>
+<td style="text-align: left;">§18.6.6</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">增益偏低、残差正常</td>
+<td style="text-align: left;">执行器饱和</td>
+<td style="text-align: left;">剔除饱和段、用实际输入</td>
+<td style="text-align: left;">§18.4.4</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">小信号段完全不准</td>
+<td style="text-align: left;">死区</td>
+<td style="text-align: left;">逆补偿、分段建模</td>
+<td style="text-align: left;">§18.4.4</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">采样越快结果越差</td>
+<td style="text-align: left;">分母抵消</td>
+<td style="text-align: left;">放慢 <span class="math inline">T_s</span> 到 <span class="math inline">T_1/10</span></td>
+<td style="text-align: left;">§18.6.6</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">RLS 收敛到一个错值</td>
+<td style="text-align: left;"><span class="math inline">P_0</span> 太小</td>
+<td style="text-align: left;"><span class="math inline">P_0=10^3\sim10^4</span>、协方差重置</td>
+<td style="text-align: left;">§18.6.4</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">RLS 参数长期不变</td>
+<td style="text-align: left;"><span class="math inline">P</span> 衰减到零、无激励</td>
+<td style="text-align: left;">协方差重置、加抖动</td>
+<td style="text-align: left;">§18.4.3</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">遗忘因子 RLS 稳态抖动大</td>
+<td style="text-align: left;">窗口太短</td>
+<td style="text-align: left;">先定跟踪时间再反推 <span class="math inline">\lambda</span></td>
+<td style="text-align: left;">§18.6.5</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">遗忘因子 RLS 数值溢出</td>
+<td style="text-align: left;">协方差爆炸</td>
+<td style="text-align: left;"><span class="math inline">P</span> 的迹限幅、新息死区</td>
+<td style="text-align: left;">§18.3.6</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">参数标准差巨大（&gt;50%）</td>
+<td style="text-align: left;">该方向没有激励</td>
+<td style="text-align: left;">换激励、降阶、放弃该参数</td>
+<td style="text-align: left;">§18.3.4</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">增益对但相位全错</td>
+<td style="text-align: left;">延迟拍数取错</td>
+<td style="text-align: left;">检查 <span class="math inline">n_k=\mathrm{round}(L/T_s)</span></td>
+<td style="text-align: left;">§18.4.5</td>
+</tr>
+</tbody>
+</table>
+<p>表里前四行是最常见的，也是最容易被误判的。它们的共同点是“残差看起来没问题”——因为残差只反映一步预测的拟合程度，不反映参数的正确性。<strong>判模型不能只看残差，这是本章最想传达的一条操作习惯。</strong></p>
+<p>还有一个反过来的用法：这张表也可以从前向后读。若你怀疑某个环节有问题，先在“现象”列找到对应的描述，再跳到“对应节”复核那一节的实验数字。<strong>这样排查比从头读一遍快得多，也更不容易漏。</strong></p>
+<h3 id="现场排查的顺序">18.7.3 现场排查的顺序</h3>
+<p>拿到一组“不太对”的辨识结果，按下面五步走，每步都能在几分钟内给出是或否：</p>
+<ol type="1">
+<li><strong>先看数据。</strong> 输入有没有变化、输出有没有饱和、有没有明显的野点。这一步不需要任何算法，画两条时序曲线即可。很多“辨识失败”在这一步就结束了——数据里根本没有动态信息。</li>
+<li><strong>再定阶数。</strong> 用 AIC 扫 <span class="math inline">n=1</span> 到 <span class="math inline">5</span>（或用第 17 章的非参数曲线看形状）。不要凭经验拍一个阶数，也不要“先用高阶再降”。</li>
+<li><strong>跑批 LS，看三项。</strong> 残差自相关、残差与输入的相关、自由仿真误差。三项全过才进入下一步。</li>
+<li><strong>开环验证。</strong> 用另一段数据，喂输入、跑仿真、比输出。这一步能抓住闭环相关这种“残差看不出来”的问题。</li>
+<li><strong>算协方差。</strong> 看哪些参数的相对标准差超过 30%。超过的参数不能写进交付物，或者必须在交付物里注明“不可辨”。</li>
+</ol>
+<p>这五步的顺序不能换。先看数据是因为它是唯一不依赖模型的判断；先定阶数是因为阶数错了后面全错；开环验证放在协方差之前，是因为协方差只描述“给定结构下的不确定性”，结构错了协方差再小也没有意义。<strong>每一步都要留下记录，否则下一个接手的人只能从头再来。</strong></p>
+<h3 id="与后续章节的接口">18.7.4 与后续章节的接口</h3>
+<p>本章交付的是 <span class="math inline">\hat\theta</span> 与它的协方差。后面几章各自从这里接走一部分：</p>
+<p><strong>第 19 章（极大似然与工具变量）</strong> 接走“偏差”这个问题。它的起点是本章式 (18-11) 的第二项不为零，终点是让这一项重新为零。本章实验 2 的 +27.70% 就是它的靶子。</p>
+<p><strong>第 20 章（子空间辨识）</strong> 接走“阶数”这个问题。它不预设 <span class="math inline">n_a</span>、<span class="math inline">n_b</span>，而是从数据的奇异值谱里读出阶数，本质上是用另一种方式回答“列空间覆盖了哪些方向”。本章表 18-10 的条件数随阶数上升，正是它要绕开的困难。</p>
+<p><strong>第 21 章（闭环辨识）</strong> 接走 §18.5.2 的三个坑。本章只给出“什么时候必须怀疑”，它给出“怀疑之后怎么办”。</p>
+<p><strong>第 44 章（PID 整定）与第 47 章（Smith 预估）</strong> 接走“增益、时间常数、延迟”这三个量。本章反复强调“增益比参数可靠”，正是因为这两个应用只用到增益与主导极点，不需要每个 <span class="math inline">b_j</span> 都准。</p>
+<p><strong>第 22 章（非线性辨识）</strong> 接走 §18.4.4 的死区与饱和。本章把它们当成“要剔除的污染”，它把它们当成“要建模的对象”。</p>
+<p>一条实用建议：把这章的六个实验代码保留下来，当作模板。以后遇到新的对象，先套用同样的六组扫描（有无噪声、阶数、噪声颜色、初值、遗忘因子、采样周期），能在半天内摸清这个对象的辨识难度。<strong>这六组扫描不是本章的练习题，是现场的标准动作。</strong></p>
+<h3 id="一页速查">18.7.5 一页速查</h3>
+<p><strong>参数选择</strong></p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">项</th>
+<th style="text-align: left;">取值</th>
+<th style="text-align: left;">依据</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">采样周期</td>
+<td style="text-align: left;"><span class="math inline">T_s=T_1/10\sim T_1/20</span></td>
+<td style="text-align: left;">放大因子随 <span class="math inline">T_s</span> 减小急剧上升（表 18-8）</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">阶数</td>
+<td style="text-align: left;">AIC 最小点</td>
+<td style="text-align: left;">一步/仿真误差都偏向高阶（表 18-4）</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">延迟拍数</td>
+<td style="text-align: left;"><span class="math inline">n_k=\mathrm{round}(L/T_s)</span></td>
+<td style="text-align: left;">取整误差最多半拍，Smith 用要更精确</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><span class="math inline">P_0</span></td>
+<td style="text-align: left;"><span class="math inline">10^3\sim10^4</span></td>
+<td style="text-align: left;">小初值会锁死参数（表 18-6）</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><span class="math inline">\lambda</span></td>
+<td style="text-align: left;"><span class="math inline">1-T_s/T_{\text{track}}</span></td>
+<td style="text-align: left;">先定跟踪时间再反推（式 18-19）</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">数据量</td>
+<td style="text-align: left;"><span class="math inline">N\ge10p</span>，且看有效样本数</td>
+<td style="text-align: left;">阶跃的有效样本远小于名义样本（§18.5.4）</td>
+</tr>
+</tbody>
+</table>
+<p><strong>验收四查</strong></p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">检查</th>
+<th style="text-align: left;">判据</th>
+<th style="text-align: left;">不过说明什么</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">残差自相关</td>
+<td style="text-align: left;"><span class="math inline">\lvert\rho_1\rvert&lt;1/\sqrt{N}</span>，DW≈2</td>
+<td style="text-align: left;">漏动态或噪声有色</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">残差-输入互相关</td>
+<td style="text-align: left;">全部在 <span class="math inline">2/\sqrt{N}</span> 内</td>
+<td style="text-align: left;">漏了一条输入路径</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">自由仿真</td>
+<td style="text-align: left;">不发散、不漂移</td>
+<td style="text-align: left;">极点位置错、缺积分环节</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">参数物理性</td>
+<td style="text-align: left;">符号、量级、延迟非负</td>
+<td style="text-align: left;">结构或数据有问题</td>
+</tr>
+</tbody>
+</table>
+<p><strong>五个数字记牢</strong></p>
+<ul>
+<li>增益与参数的可靠性差一到两个数量级：实验 0 里参数误差最大 228%，增益只差 4.55%。</li>
+<li>有色噪声（<span class="math inline">\rho=0.95</span>）能把增益推偏 27.70%，加阶数只能让残差变白，消不掉偏差。</li>
+<li><span class="math inline">T_s</span> 缩小 5 倍，增益偏差从 +1.17% 变成 −66.99%——快采样是陷阱。</li>
+<li><span class="math inline">P_0=10^{-2}</span> 时 RLS 跑 20 s 仍差 70.76%——初值不是小事。</li>
+<li><span class="math inline">\lambda=0.98</span> 用 10% 的方差换 12 个百分点的跟踪速度——这是本章最划算的一笔交易。</li>
+</ul>
+<p>这张表可以单独撕下来贴在工位上。它的每一行都对应正文的一节，遇到问题时按行回溯即可。</p>
+<h3 id="最后一句">18.7.6 最后一句</h3>
+<p>最小二乘之所以值得用一整章来讲，不是因为它在工程上最常用——虽然它确实是——而是因为它的失败方式最透明。别的算法失败时，你往往不知道是哪里错了；最小二乘失败时，你总能指着一个具体的量说：这里条件数太大、这里残差有色、这里 <span class="math inline">P_0</span> 太小。<strong>能定位的失败，才是可以修的失败。</strong> 这也是为什么全书后面每讲一个新方法，都要先问一句“它相对最小二乘改了什么”。</p>
+
+<nav class="footnav"><a href="ch017.html">← 上一章</a><a href="index.html">返回目录</a><a href="ch019.html">下一章 →</a></nav>
+</body>
+</html>
